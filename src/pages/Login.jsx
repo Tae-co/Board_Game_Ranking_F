@@ -139,7 +139,7 @@ const Login = () => {
       </div>
 
       {/* Card */}
-      <div className="w-full rounded-2xl p-6 border shadow-lg" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
+      <div className="w-full rounded-2xl p-6 border shadow-lg overflow-hidden" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
 
         {/* Step 1 */}
         {step === 1 && (
@@ -217,12 +217,12 @@ const Login = () => {
               <p className="text-sm mb-4" style={{ color: '#8B7355' }}>{phone}{t('login', 'otpDesc')}</p>
               <div className="flex justify-center">
                 <InputOTP maxLength={6} value={otp} onChange={setOtp}>
-                  <InputOTPGroup>
+                  <InputOTPGroup className="gap-1">
                     {[0, 1, 2, 3, 4, 5].map((index) => (
                       <InputOTPSlot
                         key={index}
                         index={index}
-                        className="w-12 h-14 text-xl border rounded-lg mx-1"
+                        className="w-10 h-12 text-lg border rounded-lg"
                         style={{ backgroundColor: '#FFF8F0', borderColor: '#E5D5C0', color: '#2C1F0E' }}
                       />
                     ))}
