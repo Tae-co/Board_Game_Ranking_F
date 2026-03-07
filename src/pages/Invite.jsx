@@ -1,116 +1,196 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Copy, ArrowLeft, Check } from 'lucide-react';
 import api from '../api/axios';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const Invite = () => {
-  // App.jsx에서 <Route path="/invite/:roomId" /> 처럼 설정했다고 가정하고 URL에서 방 ID를 가져옴
-  const { roomId } = useParams(); 
+  const { roomId } = useParams();
   const navigate = useNavigate();
-  
+  const { t } = useLanguage();
+  const userId = Number(localStorage.getItem('userId'));
+
   const [roomInfo, setRoomInfo] = useState({ name: '', inviteCode: '' });
   const [members, setMembers] = useState([]);
+  const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    // 실제 백엔드 연동 시 사용할 코드 형태
-    const fetchRoomDetails = async () => {
-      try {
-        // 1. 방 정보 (이름, 초대코드 등) 가져오기
-        const roomRes = await api.get(`/rooms/${roomId}`);
-        setRoomInfo({ 
-          name: roomRes.data.name, 
-          inviteCode: roomRes.data.inviteCode 
-        });
+  const isHost = members.find(m => m.memberId === userId)?.isHost ?? false;
 
-        const memberRes = await api.get(`/rooms/${roomId}/members`);
-        setMembers(memberRes.data || []);
-        
-      } catch (err) {
-        console.error('방 정보를 불러오는데 실패했습니다.', err);
-      }
-    };
-    
-    fetchRoomDetails();
-  }, [roomId]);
-
-  // 초대 코드 복사 기능
-  const handleCopyCode = () => {
-    navigator.clipboard.writeText(roomInfo.inviteCode);
-    alert(`초대 코드 [${roomInfo.inviteCode}]가 복사되었습니다! 카톡으로 친구에게 공유해보세요.`);
+  const fetchRoomDetails = async () => {
+    try {
+      const roomRes = await api.get(`/rooms/${roomId}`);
+      setRoomInfo({
+        name: roomRes.data.roomName || roomRes.data.name,
+        inviteCode: roomRes.data.inviteCode,
+      });
+      const memberRes = await api.get(`/rooms/${roomId}/members`);
+      setMembers(memberRes.data || []);
+    } catch (err) {
+      console.error('방 정보를 불러오는데 실패했습니다.', err);
+    }
   };
 
-  // 게임 선택 화면으로 이동
-  const handleGoToGameSelect = () => {
-    // 다음 화면인 GameSelect.jsx로 넘어갈 때 어떤 방인지 알아야 하니까 roomId를 같이 넘겨줌
-    navigate(`/games/${roomId}`); 
+  useEffect(() => { fetchRoomDetails(); }, [roomId]);
+
+  const handleCopyCode = () => {
+    navigator.clipboard.writeText(roomInfo.inviteCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleLeaveRoom = async () => {
+    if (!window.confirm(t('invite', 'leaveConfirm'))) return;
+    try {
+      await api.delete(`/rooms/${roomId}/members/${userId}`);
+      navigate('/lobby');
+    } catch {
+      alert(t('invite', 'leaveFailed'));
+    }
+  };
+
+  const handleDeleteRoom = async () => {
+    if (!window.confirm(t('invite', 'deleteConfirm'))) return;
+    try {
+      await api.delete(`/rooms/${roomId}`);
+      navigate('/lobby');
+    } catch {
+      alert(t('invite', 'deleteFailed'));
+    }
+  };
+
+  const handleKickMember = async (member) => {
+    if (!window.confirm(`${member.nickname}${t('invite', 'kickConfirm')}`)) return;
+    try {
+      await api.delete(`/rooms/${roomId}/members/${member.memberId}`);
+      await fetchRoomDetails();
+    } catch {
+      alert(t('invite', 'kickFailed'));
+    }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center">
-      <div className="max-w-md w-full space-y-6 mt-10">
-        
-        {/* 상단 헤더 */}
-        <div className="flex justify-between items-center">
-          <button onClick={() => navigate(-1)} className="text-slate-400 font-bold hover:text-slate-700">
-            ← 뒤로가기
-          </button>
-          <h1 className="text-xl font-black text-slate-900">{roomInfo.name}</h1>
-          <div className="w-16"></div> {/* 가운데 정렬용 빈 공간 */}
-        </div>
+    <div className="min-h-screen px-6 py-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
 
-        {/* 초대 코드 영역 */}
-        <div className="bg-white p-8 rounded-3xl shadow-sm text-center space-y-4 border-2 border-blue-50">
-          <h2 className="text-sm font-bold text-slate-500">이 코드를 친구에게 알려주세요!</h2>
-          <div className="flex items-center justify-center">
-            <span className="text-4xl font-black tracking-widest text-blue-600">
-              {roomInfo.inviteCode}
-            </span>
-          </div>
-          <button 
-            onClick={handleCopyCode}
-            className="w-full mt-2 py-3 bg-slate-100 text-slate-700 rounded-2xl font-bold hover:bg-slate-200 transition-colors"
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center">
+          <button
+            onClick={() => navigate('/lobby')}
+            className="mr-3 p-2 rounded-lg transition-colors"
+            style={{ color: '#D4853A' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
-            초대 코드 복사하기
+            <ArrowLeft className="w-6 h-6" />
           </button>
+          <h1 className="text-xl" style={{ color: '#2C1F0E' }}>{roomInfo.name}</h1>
         </div>
+        {isHost ? (
+          <button
+            onClick={handleDeleteRoom}
+            className="text-sm font-bold transition-colors"
+            style={{ color: '#dc2626' }}
+          >
+            {t('invite', 'deleteRoom')}
+          </button>
+        ) : (
+          <button
+            onClick={handleLeaveRoom}
+            className="text-sm font-bold transition-colors"
+            style={{ color: '#8B7355' }}
+          >
+            {t('invite', 'leaveRoom')}
+          </button>
+        )}
+      </div>
 
-        {/* 현재 참가자 목록 */}
-        <div className="bg-white p-6 rounded-3xl shadow-sm space-y-4">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="text-lg font-bold text-slate-800">참가자</h2>
-            <span className="text-blue-600 font-black">{members.length}명</span>
-          </div>
-          
-          <div className="space-y-3">
-            {members.map((member) => (
-              <div key={member.memberId} className="flex items-center gap-4 p-3 bg-slate-50 rounded-2xl">
-                {/* 프로필 이미지 대신 이름 첫 글자 표시 */}
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-black text-lg">
-                  {member.nickname.charAt(0)}
+      {/* Invite Code Card */}
+      <div className="rounded-2xl p-6 mb-6 border shadow-sm text-center" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
+        <p className="text-sm mb-3" style={{ color: '#8B7355' }}>{t('invite', 'inviteCode')}</p>
+        <div className="text-4xl tracking-widest mb-4 font-mono" style={{ color: '#D4853A' }}>
+          {roomInfo.inviteCode}
+        </div>
+        <button
+          onClick={handleCopyCode}
+          className="flex items-center gap-2 mx-auto px-6 py-2 rounded-full transition-colors"
+          style={{
+            backgroundColor: copied ? '#FFFFFF' : '#D4853A',
+            color: copied ? '#D4853A' : '#FFFFFF',
+            border: copied ? '1px solid #D4853A' : 'none',
+          }}
+        >
+          {copied ? (
+            <><Check className="w-4 h-4" />{t('invite', 'copied')}</>
+          ) : (
+            <><Copy className="w-4 h-4" />{t('invite', 'copyCode')}</>
+          )}
+        </button>
+      </div>
+
+      {/* Members List */}
+      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
+        <h2 className="text-lg mb-4" style={{ color: '#2C1F0E' }}>{t('invite', 'members')} ({members.length})</h2>
+        <div className="space-y-3">
+          {members.map((member) => {
+            const isMe = member.memberId === userId;
+            return (
+              <div key={member.memberId} className="flex items-center gap-3">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                >
+                  {member.nickname[0]}
                 </div>
-                <div className="flex-1 font-bold text-slate-800 text-lg">
-                  {member.nickname}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p style={{ color: '#2C1F0E' }}>{member.nickname}</p>
+                    {isMe && (
+                      <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#FFF8F0', color: '#8B7355', border: '1px solid #E5D5C0' }}>{t('invite', 'me')}</span>
+                    )}
+                  </div>
                 </div>
-                {/* 방장 표시 마크 */}
-                {member.isHost && (
-                  <span className="text-xs bg-amber-100 text-amber-600 px-3 py-1.5 rounded-lg font-black">
-                    방장
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {member.isHost && (
+                    <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}>
+                      {t('invite', 'host')}
+                    </span>
+                  )}
+                  {isHost && !isMe && !member.isHost && (
+                    <button
+                      onClick={() => handleKickMember(member)}
+                      className="text-xs font-bold transition-colors"
+                      style={{ color: '#dc2626' }}
+                    >
+                      {t('invite', 'kick')}
+                    </button>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
+      </div>
 
-        {/* 하단 고정: 게임 선택 넘어가기 버튼 */}
-        <div className="pt-4">
-          <button 
-            onClick={handleGoToGameSelect}
-            className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black text-lg hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20"
-          >
-            어떤 게임 할까? (게임 선택)
-          </button>
-        </div>
-        
+      {/* Action Buttons */}
+      <div className="space-y-3">
+        <button
+          onClick={() => navigate(`/games/${roomId}`)}
+          className="w-full py-4 rounded-full transition-opacity"
+          style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+        >
+          {t('invite', 'startGame')}
+        </button>
+        <button
+          onClick={() => navigate(`/ranking/${roomId}`)}
+          className="w-full py-4 rounded-full border transition-colors"
+          style={{ backgroundColor: '#FFFFFF', color: '#D4853A', borderColor: '#D4853A' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#D4853A'; e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.color = '#D4853A'; }}
+        >
+          {t('invite', 'viewRanking')}
+        </button>
       </div>
     </div>
   );

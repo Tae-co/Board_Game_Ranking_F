@@ -1,125 +1,390 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { ArrowLeft, Trophy, Crown } from 'lucide-react';
+import { motion } from 'motion/react';
+import { TierBadge, TIERS } from '../components/TierBadge';
 import api from '../api/axios';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const Ranking = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const { t } = useLanguage();
+  const matchResult = location.state?.matchResult || null;
 
-  // 상태 관리: 현재 그룹 랭킹 vs 전체 랭킹 전환
-  const [isGlobal, setIsGlobal] = useState(false);
+  const [activeTab, setActiveTab] = useState('group');
   const [rankings, setRankings] = useState([]);
-  const [roomName, setRoomName] = useState('우리 방');
+  const [isLoading, setIsLoading] = useState(true);
+  const myNickname = localStorage.getItem('nickname');
+
+  const ratingChangeMap = matchResult
+    ? Object.fromEntries(matchResult.map(r => [r.memberId, r.ratingChange]))
+    : {};
 
   useEffect(() => {
     const fetchRankings = async () => {
       try {
-        // isGlobal 상태에 따라 백엔드 엔드포인트를 다르게 설정
-        const endpoint = isGlobal ? '/rankings/global' : `/rooms/${roomId}/rankings`;
+        setIsLoading(true);
+        const endpoint = activeTab === 'global'
+          ? '/rankings/global'
+          : `/rooms/${roomId}/rankings?boardGameId=1`;
         const res = await api.get(endpoint);
-        
-        // 백엔드 응답에 맞게 세팅 (예: res.data가 바로 배열인지 확인)
-        setRankings(res.data || []); 
+        setRankings(res.data || []);
       } catch (err) {
         console.error('랭킹 정보를 불러오는데 실패했습니다.', err);
+        setRankings([]);
+      } finally {
+        setIsLoading(false);
       }
     };
-
     fetchRankings();
-  }, [isGlobal, roomId]);
+  }, [activeTab, roomId]);
+
+  const getWinRate = (winCount, loseCount) => {
+    const total = winCount + loseCount;
+    if (total === 0) return 0;
+    return Math.round((winCount / total) * 100);
+  };
+
+  const getTier = (points) => {
+    if (points >= TIERS.diamond.minPoints) return TIERS.diamond;
+    if (points >= TIERS.platinum.minPoints) return TIERS.platinum;
+    if (points >= TIERS.gold.minPoints) return TIERS.gold;
+    if (points >= TIERS.silver.minPoints) return TIERS.silver;
+    return TIERS.bronze;
+  };
+
+  const getRankStyle = (index) => {
+    if (index === 0) return { color: '#FFD700', bgColor: '#FFD700' };
+    if (index === 1) return { color: '#C0C0C0', bgColor: '#C0C0C0' };
+    if (index === 2) return { color: '#CD7F32', bgColor: '#CD7F32' };
+    return { color: '#8B7355', bgColor: '#E5D5C0' };
+  };
+
+  const RankBadge = ({ index }) => {
+    const rankStyle = getRankStyle(index);
+    return (
+      <motion.div
+        className="w-12 h-12 rounded-full flex items-center justify-center font-bold relative flex-shrink-0"
+        style={{
+          background: index < 3
+            ? `linear-gradient(135deg, ${rankStyle.bgColor}, ${rankStyle.color}80)`
+            : '#E5D5C0',
+          color: index < 3 ? '#FFFFFF' : '#2C1F0E',
+          boxShadow: index < 3 ? `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40` : 'none',
+          fontSize: '16px',
+        }}
+        animate={index < 3 ? {
+          boxShadow: [
+            `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40`,
+            `0 6px 20px ${rankStyle.color}80, 0 0 30px ${rankStyle.color}60`,
+            `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40`,
+          ],
+        } : {}}
+        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+      >
+        {index + 1}
+        {index === 0 && (
+          <div className="absolute -top-1 -right-1" style={{ filter: 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.5))' }}>
+            <Crown className="w-4 h-4" style={{ color: '#FFD700', fill: '#FFD700' }} />
+          </div>
+        )}
+      </motion.div>
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center">
-      <div className="max-w-md w-full mt-10 space-y-8">
-        
-        {/* 상단 헤더 및 전환 버튼 */}
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-3xl font-black text-slate-900">
-              {isGlobal ? '전체 랭킹' : '그룹 랭킹'}
-            </h1>
-            <button 
-              onClick={() => navigate(`/invite/${roomId}`)}
-              className="text-slate-400 font-bold hover:text-slate-700"
-            >
-              닫기
-            </button>
-          </div>
+    <div className="min-h-screen pb-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
 
-          {/* 랭킹 전환 탭 */}
-          <div className="flex bg-white p-1.5 rounded-2xl shadow-sm border-2 border-slate-100">
-            <button 
-              onClick={() => setIsGlobal(false)}
-              className={`flex-1 py-3 rounded-xl font-black text-sm transition-all ${
-                !isGlobal ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              우리 방 랭킹
-            </button>
-            <button 
-              onClick={() => setIsGlobal(true)}
-              className={`flex-1 py-3 rounded-xl font-black text-sm transition-all ${
-                isGlobal ? 'bg-blue-600 text-white shadow-lg' : 'text-slate-400 hover:text-slate-600'
-              }`}
-            >
-              전체 랭킹 보기
-            </button>
-          </div>
-        </div>
+      {/* Header */}
+      <div className="px-6 py-6 flex items-center sticky top-0 z-10" style={{ backgroundColor: '#FFF8F0' }}>
+        <button
+          onClick={() => navigate(`/invite/${roomId}`)}
+          className="mr-3 p-2 rounded-lg transition-colors"
+          style={{ color: '#D4853A' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+        <Trophy className="w-6 h-6 mr-2" style={{ color: '#D4853A' }} />
+        <h1 className="text-xl" style={{ color: '#2C1F0E' }}>{t('ranking', 'title')}</h1>
+      </div>
 
-        {/* 랭킹 리스트 영역 */}
-        <div className="space-y-3">
-          {rankings.map((rank, index) => {
-            const isTop3 = index < 3;
-            const rankColors = ['bg-amber-400', 'bg-slate-300', 'bg-orange-400']; // 금, 은, 동
-
-            return (
-              <div 
-                key={rank.memberId}
-                className={`bg-white p-5 rounded-3xl shadow-sm flex items-center gap-4 border-2 transition-all ${
-                  rank.nickname === '태코' ? 'border-blue-500 bg-blue-50/30' : 'border-transparent'
-                }`}
-              >
-                {/* 순위 표시 */}
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-white ${
-                  isTop3 ? rankColors[index] : 'bg-slate-200 text-slate-500'
-                }`}>
-                  {index + 1}
-                </div>
-
-                {/* 유저 정보 */}
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-lg text-slate-800">{rank.nickname}</span>
-                    {rank.nickname === '태코' && (
-                      <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-black">MY</span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 font-bold">
-                    {rank.winCount}승 {rank.loseCount}패 (승률 {Math.round((rank.winCount / (rank.winCount + rank.loseCount)) * 100)}%)
-                  </p>
-                </div>
-
-                {/* 점수 표시 */}
-                <div className="text-right">
-                  <span className="block font-black text-xl text-slate-900">{rank.score.toLocaleString()}</span>
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Points</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* 하단 홈으로 가기 버튼 */}
-        <div className="pt-6">
-          <button 
-            onClick={() => navigate('/lobby')} // 대기실로 이동
-            className="w-full py-4 bg-slate-200 text-slate-600 rounded-2xl font-black text-lg hover:bg-slate-300 transition-all"
+      {/* Tab Toggle */}
+      <div className="px-6 mb-4">
+        <div className="flex rounded-full p-1" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5D5C0' }}>
+          <button
+            onClick={() => setActiveTab('group')}
+            className="flex-1 py-2 rounded-full transition-all"
+            style={{
+              backgroundColor: activeTab === 'group' ? '#D4853A' : 'transparent',
+              color: activeTab === 'group' ? '#FFFFFF' : '#8B7355',
+            }}
           >
-            대기실로 돌아가기
+            {t('ranking', 'groupTab')}
+          </button>
+          <button
+            onClick={() => setActiveTab('global')}
+            className="flex-1 py-2 rounded-full transition-all"
+            style={{
+              backgroundColor: activeTab === 'global' ? '#D4853A' : 'transparent',
+              color: activeTab === 'global' ? '#FFFFFF' : '#8B7355',
+            }}
+          >
+            {t('ranking', 'globalTab')}
           </button>
         </div>
+      </div>
 
+      {/* Match Result Banner */}
+      {matchResult && activeTab === 'group' && (
+        <div className="px-6 mb-4">
+          <div className="rounded-xl p-4 border" style={{ backgroundColor: '#FFFFFF', borderColor: '#D4853A' }}>
+            <p className="text-xs font-bold mb-3" style={{ color: '#D4853A' }}>🎮 {t('ranking', 'matchResult')}</p>
+            <div className="flex flex-wrap gap-2">
+              {matchResult.map((r) => {
+                const change = r.ratingChange;
+                const isPos = change > 0;
+                return (
+                  <div
+                    key={r.memberId}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                    style={{ backgroundColor: '#FFF8F0' }}
+                  >
+                    <span className="text-sm font-bold" style={{ color: '#2C1F0E' }}>{r.nickname}</span>
+                    <span className="text-sm font-bold" style={{ color: isPos ? '#16a34a' : '#dc2626' }}>
+                      {isPos ? '+' : ''}{Math.round(change)}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Ranking List */}
+      <div className="px-6">
+        {isLoading ? (
+          <div className="text-center py-16">
+            <div className="text-4xl mb-3">⏳</div>
+            <p style={{ color: '#8B7355' }}>{t('common', 'loading')}</p>
+          </div>
+        ) : rankings.length === 0 ? (
+          <div className="rounded-2xl p-10 border-2 border-dashed text-center" style={{ borderColor: '#E5D5C0' }}>
+            <div className="text-5xl mb-4">🎲</div>
+            <p className="text-lg" style={{ color: '#2C1F0E' }}>{t('ranking', 'noRecord')}</p>
+            <p className="text-sm mt-2" style={{ color: '#8B7355' }}>{t('ranking', 'noRecordDesc')}</p>
+          </div>
+        ) : activeTab === 'group' ? (
+          <div className="space-y-3">
+            {rankings.map((rank, index) => {
+              const isMe = rank.nickname === myNickname;
+              const tier = getTier(Math.round(rank.rating));
+              const change = ratingChangeMap[rank.memberId];
+              const winRate = getWinRate(rank.winCount, rank.loseCount);
+
+              return (
+                <motion.div
+                  key={rank.memberId}
+                  className="rounded-xl p-4 border"
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    borderColor: isMe ? '#D4853A' : '#E5D5C0',
+                    borderWidth: isMe ? '2px' : '1px',
+                    boxShadow: isMe ? '0 4px 12px rgba(212, 133, 58, 0.2)' : '0 2px 8px rgba(0,0,0,0.05)',
+                  }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', transition: { duration: 0.2 } }}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <RankBadge index={index} />
+
+                    {/* Avatar */}
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0"
+                      style={{ background: 'linear-gradient(135deg, #D4853A, #B86F2E)', color: '#FFFFFF', boxShadow: '0 4px 8px rgba(212, 133, 58, 0.3)' }}
+                    >
+                      {rank.nickname[0]}
+                    </div>
+
+                    {/* Player Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <p className="font-semibold truncate" style={{ color: '#2C1F0E' }}>{rank.nickname}</p>
+                        {isMe && (
+                          <motion.span
+                            className="px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0"
+                            style={{ background: 'linear-gradient(135deg, #D4853A, #E89A4F)', color: '#FFFFFF' }}
+                            animate={{ scale: [1, 1.08, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity }}
+                          >
+                            MY
+                          </motion.span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <TierBadge tier={tier} size="sm" />
+                        <span className="text-xs font-semibold" style={{ color: tier.color }}>{tier.name}</span>
+                      </div>
+                    </div>
+
+                    {/* Points */}
+                    <div className="text-right flex-shrink-0">
+                      <div className="flex items-center justify-end gap-1">
+                        <motion.p
+                          className="text-2xl font-bold"
+                          style={{ background: 'linear-gradient(135deg, #D4853A, #E89A4F)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                          animate={{ scale: [1, 1.05, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                        >
+                          {Math.round(rank.rating)}
+                        </motion.p>
+                        {change !== undefined && (
+                          <span className="text-xs font-bold" style={{ color: change > 0 ? '#16a34a' : '#dc2626' }}>
+                            {change > 0 ? '+' : ''}{Math.round(change)}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs" style={{ color: '#8B7355' }}>LP</p>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex gap-4 text-sm pt-3" style={{ borderTop: '1px solid #E5D5C0' }}>
+                    <div className="flex-1">
+                      <span style={{ color: '#8B7355' }}>{t('ranking', 'record')}: </span>
+                      <span style={{ color: '#2C1F0E', fontWeight: 600 }}>{rank.winCount}{t('ranking', 'wins')} {rank.loseCount}{t('ranking', 'losses')}</span>
+                    </div>
+                    <div>
+                      <span style={{ color: '#8B7355' }}>{t('ranking', 'winRate')}: </span>
+                      <span className="font-bold" style={{ color: winRate >= 60 ? '#D4853A' : winRate >= 50 ? '#8B7355' : '#999' }}>
+                        {winRate}%
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {rankings.map((rank, index) => {
+              const isMe = rank.nickname === myNickname;
+              const tier = getTier(Math.round(rank.rating));
+
+              return (
+                <motion.div
+                  key={rank.memberId}
+                  className="rounded-xl p-4 border flex items-center gap-3"
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    borderColor: isMe ? '#D4853A' : '#E5D5C0',
+                    borderWidth: isMe ? '2px' : '1px',
+                    boxShadow: isMe ? '0 4px 12px rgba(212, 133, 58, 0.2)' : '0 2px 8px rgba(0,0,0,0.05)',
+                  }}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', transition: { duration: 0.2 } }}
+                >
+                  <RankBadge index={index} />
+
+                  {/* Avatar */}
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #D4853A, #B86F2E)', color: '#FFFFFF', boxShadow: '0 4px 8px rgba(212, 133, 58, 0.3)' }}
+                  >
+                    {rank.nickname[0]}
+                  </div>
+
+                  {/* Player Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <p className="font-semibold truncate" style={{ color: '#2C1F0E' }}>{rank.nickname}</p>
+                      {isMe && (
+                        <motion.span
+                          className="px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0"
+                          style={{ background: 'linear-gradient(135deg, #D4853A, #E89A4F)', color: '#FFFFFF' }}
+                          animate={{ scale: [1, 1.08, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                          MY
+                        </motion.span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TierBadge tier={tier} size="sm" />
+                      <span className="text-xs font-semibold" style={{ color: tier.color }}>{tier.name}</span>
+                    </div>
+                  </div>
+
+                  {/* Points */}
+                  <div className="text-right flex-shrink-0">
+                    <motion.p
+                      className="text-2xl font-bold"
+                      style={{ background: 'linear-gradient(135deg, #D4853A, #E89A4F)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                      animate={{ scale: [1, 1.05, 1] }}
+                      transition={{ duration: 2, repeat: Infinity }}
+                    >
+                      {Math.round(rank.rating)}
+                    </motion.p>
+                    <p className="text-xs" style={{ color: '#8B7355' }}>LP</p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Tier Legend */}
+      <div className="px-6 mt-8">
+        <motion.div
+          className="rounded-xl p-5 border"
+          style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <h3 className="text-sm font-bold mb-4" style={{ color: '#2C1F0E' }}>{t('ranking', 'tierSystem')}</h3>
+          <div className="space-y-4">
+            {Object.values(TIERS).reverse().map((tier, index) => (
+              <motion.div
+                key={tier.name}
+                className="flex items-center gap-3"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 + index * 0.1 }}
+              >
+                <TierBadge tier={tier} size="md" />
+                <div>
+                  <p className="font-bold" style={{ color: tier.color }}>{tier.name}</p>
+                  <p className="text-xs" style={{ color: '#8B7355' }}>
+                    {tier.minPoints} ~ {tier.maxPoints === 9999 ? '∞' : tier.maxPoints} LP
+                  </p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </div>
+
+      {/* Back to Lobby */}
+      <div className="px-6 mt-6">
+        <motion.button
+          onClick={() => navigate('/lobby')}
+          className="w-full py-4 rounded-full border-2 font-bold"
+          style={{ backgroundColor: '#FFFFFF', color: '#D4853A', borderColor: '#D4853A' }}
+          whileHover={{ scale: 1.02, backgroundColor: '#D4853A', color: '#FFFFFF', boxShadow: '0 8px 16px rgba(212, 133, 58, 0.3)' }}
+          whileTap={{ scale: 0.98 }}
+        >
+          {t('ranking', 'backToLobby')}
+        </motion.button>
       </div>
     </div>
   );

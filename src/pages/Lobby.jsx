@@ -1,131 +1,198 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ChevronRight, LogOut } from 'lucide-react';
 import api from '../api/axios';
+import { useLanguage } from '../i18n/LanguageContext';
 
 const Lobby = () => {
+  const navigate = useNavigate();
+  const { t } = useLanguage();
   const [rooms, setRooms] = useState([]);
   const [newRoomName, setNewRoomName] = useState('');
-  const navigate = useNavigate();
+  const [joinCode, setJoinCode] = useState('');
+  const [showJoin, setShowJoin] = useState(false);
+  const [isJoining, setIsJoining] = useState(false);
+  const nickname = localStorage.getItem('nickname') || '플레이어';
+  const userId = localStorage.getItem('userId');
+  const isAdmin = localStorage.getItem('role') === 'ADMIN';
 
-  // 1. 방 목록 불러오기 (컴포넌트 마운트 시 실행)
-  useEffect(() => {
-    const fetchRooms = async () => {
-      try {
-        const userId = localStorage.getItem('userId');
-        const res = await api.get(`/rooms/my/${userId}`);
-        setRooms(res.data || []);
-      } catch (err) {
-        console.error('방 목록을 불러오는데 실패했습니다.', err);
-      }
-    };
-    fetchRooms();
-  }, []);
-
-  // 2. 새로운 방 만들기
-  const handleCreateRoom = async () => {
-    if (!newRoomName.trim()) {
-      alert('방 이름을 입력해주세요!');
-      return;
-    }
-
+  const fetchRooms = async () => {
     try {
-      const userId = localStorage.getItem('userId');
-      const res = await api.post('/rooms', {
-        roomName: newRoomName,
-        memberId: Number(userId)
-      });
-      
-      // ⚠️ 수정됨: 백엔드 응답(res.data.id)과 초대 화면 주소(/invite/)에 맞게 수정
-      navigate(`/invite/${res.data.id}`); 
+      const res = await api.get(`/rooms/my/${userId}`);
+      setRooms(res.data || []);
     } catch (err) {
-      alert('방 생성에 실패했습니다.');
-      console.error(err);
+      console.error('방 목록을 불러오는데 실패했습니다.', err);
     }
   };
 
-  // 3. 기존 방 입장하기
-  const handleEnterRoom = (roomId) => {
-    navigate(`/invite/${roomId}`);
+  useEffect(() => { fetchRooms(); }, []);
+
+  const handleCreateRoom = async () => {
+    if (!newRoomName.trim()) { alert(t('lobby', 'roomNameRequired')); return; }
+    try {
+      const res = await api.post('/rooms', { roomName: newRoomName, memberId: Number(userId) });
+      navigate(`/invite/${res.data.roomId}`);
+    } catch {
+      alert(t('lobby', 'createFailed'));
+    }
   };
 
-  // 4. 로그아웃 기능 (새로 추가됨!)
+  const handleJoinRoom = async () => {
+    if (!joinCode.trim()) { alert(t('lobby', 'codeRequired')); return; }
+    setIsJoining(true);
+    try {
+      await api.post('/rooms/join', { inviteCode: joinCode.trim(), memberId: Number(userId) });
+      setJoinCode('');
+      setShowJoin(false);
+      await fetchRooms();
+    } catch {
+      alert(t('lobby', 'joinFailed'));
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
   const handleLogout = () => {
-    if (window.confirm('로그아웃 하시겠습니까?')) {
-      localStorage.removeItem('userId'); // 저장된 유저 정보 삭제
-      localStorage.removeItem('nickname'); 
-      navigate('/login'); // 로그인 화면으로 돌려보내기
+    if (window.confirm(t('lobby', 'logoutConfirm'))) {
+      localStorage.removeItem('userId');
+      localStorage.removeItem('nickname');
+      localStorage.removeItem('role');
+      navigate('/login');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center">
-      <div className="max-w-md w-full space-y-8 mt-10">
-        
-        {/* 헤더 영역 */}
-        <div className="flex justify-between items-end">
-          <h1 className="text-3xl font-black text-slate-900">게임 대기실</h1>
-          {/* 로그아웃 버튼으로 변경됨! */}
-          <button 
-            onClick={handleLogout}
-            className="text-slate-400 font-bold hover:text-red-500 transition-colors"
-          >
-            로그아웃
-          </button>
-        </div>
+    <div className="min-h-screen px-6 py-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
 
-        {/* 새 방 만들기 영역 */}
-        <div className="bg-white p-6 rounded-3xl shadow-md space-y-4">
-          <h2 className="text-xl font-bold text-slate-800">새로운 그룹 만들기</h2>
-          <div className="flex gap-2">
-            <input 
-              type="text" 
-              placeholder="방 이름 (예: 주말 보드게임 팟)"
-              className="flex-1 p-4 bg-slate-50 border-2 rounded-2xl outline-none focus:border-blue-500 font-bold"
-              value={newRoomName} 
-              onChange={(e) => setNewRoomName(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleCreateRoom()}
-            />
-            <button 
-              onClick={handleCreateRoom} 
-              className="px-6 py-4 bg-blue-600 text-white rounded-2xl font-black hover:bg-blue-700 transition-colors whitespace-nowrap"
+      {/* Profile Card */}
+      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
+        <div className="flex items-center justify-between mb-3">
+          <div>
+            <p className="text-sm mb-1" style={{ color: '#8B7355' }}>{t('lobby', 'greeting')}</p>
+            <p className="text-xl" style={{ color: '#2C1F0E' }}>{nickname}{t('lobby', 'greetingSuffix')}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {isAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="px-3 py-1.5 rounded-full text-xs font-bold"
+                style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+              >
+                {t('lobby', 'manageGames')}
+              </button>
+            )}
+            <button
+              onClick={() => navigate('/profile')}
+              className="px-4 py-2 rounded-full text-sm transition-colors"
+              style={{ backgroundColor: '#FFF8F0', color: '#D4853A', border: '1px solid #E5D5C0' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E5D5C0'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFF8F0'}
             >
-              만들기
+              {t('lobby', 'profile')}
             </button>
           </div>
         </div>
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-1 text-sm transition-colors"
+          style={{ color: '#8B7355' }}
+          onMouseEnter={(e) => e.currentTarget.style.color = '#D4853A'}
+          onMouseLeave={(e) => e.currentTarget.style.color = '#8B7355'}
+        >
+          <LogOut className="w-4 h-4" />
+          {t('common', 'logout')}
+        </button>
+      </div>
 
-        {/* 방 목록 영역 */}
-        <div className="space-y-4">
-          <h2 className="text-xl font-bold text-slate-800 ml-2">참여 중인 그룹</h2>
-          
-          {rooms.length === 0 ? (
-            <div className="p-8 text-center text-slate-400 font-bold bg-white rounded-3xl shadow-sm border-2 border-dashed border-slate-200">
-              아직 참여 중인 방이 없어요.<br/>새로운 방을 만들어보세요!
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {rooms.map((room) => (
-                <div 
-                  key={room.id} 
-                  onClick={() => handleEnterRoom(room.id)}
-                  className="bg-white p-5 rounded-2xl shadow-sm flex justify-between items-center cursor-pointer border-2 border-transparent hover:border-blue-500 transition-all"
-                >
-                  <div>
-                    <h3 className="text-lg font-bold text-slate-900">{room.name}</h3>
-                    {/* 방 인원수가 백엔드에서 오지 않으면 렌더링 안 하도록 안전하게 처리 */}
-                    {room.memberCount && (
-                      <p className="text-sm text-slate-500 font-medium mt-1">현재 인원: {room.memberCount}명</p>
-                    )}
-                  </div>
-                  <div className="bg-slate-100 px-4 py-2 rounded-xl text-slate-700 font-bold text-sm">
-                    입장
-                  </div>
-                </div>
-              ))}
+      {/* Create/Join Room Card */}
+      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
+        <h2 className="text-lg mb-4" style={{ color: '#2C1F0E' }}>{t('lobby', 'createGroup')}</h2>
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={newRoomName}
+            onChange={(e) => setNewRoomName(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleCreateRoom()}
+            placeholder={t('lobby', 'roomNamePlaceholder')}
+            className="w-full px-4 py-3 rounded-lg border focus:outline-none transition-all"
+            style={{ backgroundColor: '#FFF8F0', borderColor: '#E5D5C0', color: '#2C1F0E' }}
+            onFocus={(e) => e.target.style.borderColor = '#D4853A'}
+            onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleCreateRoom}
+              disabled={!newRoomName.trim()}
+              className="flex-1 py-3 rounded-full transition-opacity disabled:opacity-50"
+              style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+            >
+              {t('lobby', 'createRoom')}
+            </button>
+            <button
+              onClick={() => { setShowJoin(!showJoin); setJoinCode(''); }}
+              className="flex-1 py-3 rounded-full border transition-colors"
+              style={{
+                backgroundColor: showJoin ? '#D4853A' : '#FFFFFF',
+                color: showJoin ? '#FFFFFF' : '#D4853A',
+                borderColor: '#D4853A',
+              }}
+            >
+              {t('lobby', 'joinWithCode')}
+            </button>
+          </div>
+          {showJoin && (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+                placeholder={t('lobby', 'inviteCodePlaceholder')}
+                autoFocus
+                maxLength={8}
+                className="flex-1 px-4 py-3 rounded-lg border focus:outline-none transition-all font-mono tracking-widest uppercase"
+                style={{ backgroundColor: '#FFF8F0', borderColor: '#E5D5C0', color: '#2C1F0E' }}
+                onFocus={(e) => e.target.style.borderColor = '#D4853A'}
+                onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+              />
+              <button
+                onClick={handleJoinRoom}
+                disabled={isJoining || !joinCode.trim()}
+                className="px-6 py-3 rounded-full transition-opacity disabled:opacity-50"
+                style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+              >
+                {isJoining ? t('lobby', 'joining') : t('lobby', 'join')}
+              </button>
             </div>
           )}
         </div>
+      </div>
 
+      {/* Room List */}
+      <div>
+        <h2 className="text-lg mb-4" style={{ color: '#2C1F0E' }}>{t('lobby', 'myGroups')}</h2>
+        {rooms.length === 0 ? (
+          <div className="rounded-2xl p-8 border-2 border-dashed text-center" style={{ borderColor: '#E5D5C0' }}>
+            <p style={{ color: '#8B7355' }}>{t('lobby', 'noGroups')}</p>
+            <p className="text-sm mt-2" style={{ color: '#8B7355' }}>{t('lobby', 'noGroupsDesc')}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {rooms.map((room) => (
+              <button
+                key={room.roomId}
+                onClick={() => navigate(`/invite/${room.roomId}`)}
+                className="w-full rounded-2xl p-5 border shadow-sm flex items-center justify-between transition-all hover:scale-[1.02]"
+                style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}
+              >
+                <div className="text-left">
+                  <p style={{ color: '#2C1F0E' }}>{room.roomName || room.name}</p>
+                </div>
+                <ChevronRight className="w-5 h-5" style={{ color: '#D4853A' }} />
+              </button>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
