@@ -32,7 +32,7 @@ function App() {
   useEffect(() => {
     // 앱 시작 시 refresh 쿠키로 access token 복구
     axios.post(
-      'http://localhost:8080/api/auth/refresh',
+      `${import.meta.env.VITE_API_URL}/auth/refresh`,
       {},
       { withCredentials: true }
     ).then((res) => {
