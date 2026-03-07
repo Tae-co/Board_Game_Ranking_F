@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Globe } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -12,11 +13,21 @@ const maskPhone = (phone) => {
 const Profile = () => {
   const navigate = useNavigate();
   const { lang, setLang, t } = useLanguage();
-  const currentNickname = localStorage.getItem('nickname') || '';
-  const phone = localStorage.getItem('phone') || '';
+  const queryClient = useQueryClient();
   const userId = localStorage.getItem('userId');
+  const phone = localStorage.getItem('phone') || '';
 
-  const [nickname, setNickname] = useState(currentNickname);
+  const { data: profileData } = useQuery({
+    queryKey: ['profile', userId],
+    queryFn: async () => {
+      const res = await api.get(`/members/${userId}`);
+      return res.data;
+    },
+  });
+
+  const currentNickname = profileData?.nickname || localStorage.getItem('nickname') || '';
+
+  const [nickname, setNickname] = useState('');
   const [nicknameStatus, setNicknameStatus] = useState(null);
   const [isNicknameSaving, setIsNicknameSaving] = useState(false);
 
@@ -53,6 +64,7 @@ const Profile = () => {
     try {
       await api.patch(`/members/${userId}/nickname`, { nickname: nickname.trim() });
       localStorage.setItem('nickname', nickname.trim());
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
       alert(t('profile', 'nicknameSaved'));
       navigate('/lobby');
     } catch {

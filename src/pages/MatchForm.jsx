@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Info } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -9,6 +10,7 @@ const MatchForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
 
   const { gameId, players } = location.state || { gameId: null, players: [] };
 
@@ -69,6 +71,8 @@ const MatchForm = () => {
         roomId: Number(roomId),
         participants: playerDetails.map(p => ({ memberId: p.memberId, placement: placements[p.memberId] })),
       });
+      queryClient.invalidateQueries({ queryKey: ['rankings'] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
       navigate(`/ranking/${roomId}`, { state: { matchResult: res.data } });
     } catch (err) {
       alert(t('matchForm', 'saveFailed'));

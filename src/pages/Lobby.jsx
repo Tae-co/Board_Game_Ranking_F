@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChevronRight, LogOut } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const Lobby = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [rooms, setRooms] = useState([]);
+  const queryClient = useQueryClient();
   const [newRoomName, setNewRoomName] = useState('');
   const [joinCode, setJoinCode] = useState('');
   const [showJoin, setShowJoin] = useState(false);
@@ -16,21 +17,19 @@ const Lobby = () => {
   const userId = localStorage.getItem('userId');
   const isAdmin = localStorage.getItem('role') === 'ADMIN';
 
-  const fetchRooms = async () => {
-    try {
+  const { data: rooms = [] } = useQuery({
+    queryKey: ['rooms', userId],
+    queryFn: async () => {
       const res = await api.get(`/rooms/my/${userId}`);
-      setRooms(res.data || []);
-    } catch (err) {
-      console.error('방 목록을 불러오는데 실패했습니다.', err);
-    }
-  };
-
-  useEffect(() => { fetchRooms(); }, []);
+      return res.data || [];
+    },
+  });
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) { alert(t('lobby', 'roomNameRequired')); return; }
     try {
       const res = await api.post('/rooms', { roomName: newRoomName, memberId: Number(userId) });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
       navigate(`/invite/${res.data.roomId}`);
     } catch {
       alert(t('lobby', 'createFailed'));
@@ -44,7 +43,7 @@ const Lobby = () => {
       await api.post('/rooms/join', { inviteCode: joinCode.trim(), memberId: Number(userId) });
       setJoinCode('');
       setShowJoin(false);
-      await fetchRooms();
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
     } catch {
       alert(t('lobby', 'joinFailed'));
     } finally {

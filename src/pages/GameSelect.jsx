@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Check } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -9,32 +10,31 @@ const GameSelect = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const [games, setGames] = useState([]);
-  const [members, setMembers] = useState([]);
   const [selectedGame, setSelectedGame] = useState(null);
   const [selectedPlayers, setSelectedPlayers] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const gameRes = await api.get('/games');
-        const gamesData = (gameRes.data || []).map(game => ({
-          ...game,
-          minPlayer: game.minPlayers,
-          maxPlayer: game.maxPlayers,
-        }));
-        setGames(gamesData);
-        const roomRes = await api.get(`/rooms/${roomId}/members`);
-        setMembers(roomRes.data || []);
-      } catch (err) {
-        console.error('데이터를 불러오는데 실패했습니다.', err);
-      }
-    };
-    fetchData();
-  }, [roomId]);
+  const { data: gamesRaw = [] } = useQuery({
+    queryKey: ['games'],
+    queryFn: async () => {
+      const res = await api.get('/games');
+      return (res.data || []).map(game => ({
+        ...game,
+        minPlayer: game.minPlayers,
+        maxPlayer: game.maxPlayers,
+      }));
+    },
+  });
 
-  const filteredGames = games.filter(g =>
+  const { data: members = [] } = useQuery({
+    queryKey: ['roomMembers', roomId],
+    queryFn: async () => {
+      const res = await api.get(`/rooms/${roomId}/members`);
+      return res.data || [];
+    },
+  });
+
+  const filteredGames = gamesRaw.filter(g =>
     g.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

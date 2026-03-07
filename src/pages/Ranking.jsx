@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Trophy, Crown } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useQuery } from '@tanstack/react-query';
 import { TierBadge, TIERS } from '../components/TierBadge';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -14,32 +15,23 @@ const Ranking = () => {
   const matchResult = location.state?.matchResult || null;
 
   const [activeTab, setActiveTab] = useState('group');
-  const [rankings, setRankings] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const myNickname = localStorage.getItem('nickname');
 
   const ratingChangeMap = matchResult
     ? Object.fromEntries(matchResult.map(r => [r.memberId, r.ratingChange]))
     : {};
 
-  useEffect(() => {
-    const fetchRankings = async () => {
-      try {
-        setIsLoading(true);
-        const endpoint = activeTab === 'global'
-          ? '/rankings/global'
-          : `/rooms/${roomId}/rankings?boardGameId=1`;
-        const res = await api.get(endpoint);
-        setRankings(res.data || []);
-      } catch (err) {
-        console.error('랭킹 정보를 불러오는데 실패했습니다.', err);
-        setRankings([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchRankings();
-  }, [activeTab, roomId]);
+  const { data: rankings = [], isLoading } = useQuery({
+    queryKey: ['rankings', roomId, activeTab],
+    queryFn: async () => {
+      const endpoint = activeTab === 'global'
+        ? '/rankings/global'
+        : `/rooms/${roomId}/rankings?boardGameId=1`;
+      const res = await api.get(endpoint);
+      return res.data || [];
+    },
+    staleTime: 1000 * 60 * 3,
+  });
 
   const getWinRate = (winCount, loseCount) => {
     const total = winCount + loseCount;
@@ -203,16 +195,12 @@ const Ranking = () => {
                 >
                   <div className="flex items-center gap-3 mb-3">
                     <RankBadge index={index} />
-
-                    {/* Avatar */}
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0"
                       style={{ background: 'linear-gradient(135deg, #D4853A, #B86F2E)', color: '#FFFFFF', boxShadow: '0 4px 8px rgba(212, 133, 58, 0.3)' }}
                     >
                       {rank.nickname[0]}
                     </div>
-
-                    {/* Player Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <p className="font-semibold truncate" style={{ color: '#2C1F0E' }}>{rank.nickname}</p>
@@ -232,8 +220,6 @@ const Ranking = () => {
                         <span className="text-xs font-semibold" style={{ color: tier.color }}>{tier.name}</span>
                       </div>
                     </div>
-
-                    {/* Points */}
                     <div className="text-right flex-shrink-0">
                       <div className="flex items-center justify-end gap-1">
                         <motion.p
@@ -253,8 +239,6 @@ const Ranking = () => {
                       <p className="text-xs" style={{ color: '#8B7355' }}>LP</p>
                     </div>
                   </div>
-
-                  {/* Stats */}
                   <div className="flex gap-4 text-sm pt-3" style={{ borderTop: '1px solid #E5D5C0' }}>
                     <div className="flex-1">
                       <span style={{ color: '#8B7355' }}>{t('ranking', 'record')}: </span>
@@ -293,16 +277,12 @@ const Ranking = () => {
                   whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', transition: { duration: 0.2 } }}
                 >
                   <RankBadge index={index} />
-
-                  {/* Avatar */}
                   <div
                     className="w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0"
                     style={{ background: 'linear-gradient(135deg, #D4853A, #B86F2E)', color: '#FFFFFF', boxShadow: '0 4px 8px rgba(212, 133, 58, 0.3)' }}
                   >
                     {rank.nickname[0]}
                   </div>
-
-                  {/* Player Info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="font-semibold truncate" style={{ color: '#2C1F0E' }}>{rank.nickname}</p>
@@ -322,8 +302,6 @@ const Ranking = () => {
                       <span className="text-xs font-semibold" style={{ color: tier.color }}>{tier.name}</span>
                     </div>
                   </div>
-
-                  {/* Points */}
                   <div className="text-right flex-shrink-0">
                     <motion.p
                       className="text-2xl font-bold"

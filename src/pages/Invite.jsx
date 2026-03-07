@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Copy, ArrowLeft, Check } from 'lucide-react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -8,29 +9,31 @@ const Invite = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const userId = Number(localStorage.getItem('userId'));
 
-  const [roomInfo, setRoomInfo] = useState({ name: '', inviteCode: '' });
-  const [members, setMembers] = useState([]);
   const [copied, setCopied] = useState(false);
 
+  const { data: roomInfo = { name: '', inviteCode: '' } } = useQuery({
+    queryKey: ['room', roomId],
+    queryFn: async () => {
+      const res = await api.get(`/rooms/${roomId}`);
+      return {
+        name: res.data.roomName || res.data.name,
+        inviteCode: res.data.inviteCode,
+      };
+    },
+  });
+
+  const { data: members = [], refetch: refetchMembers } = useQuery({
+    queryKey: ['roomMembers', roomId],
+    queryFn: async () => {
+      const res = await api.get(`/rooms/${roomId}/members`);
+      return res.data || [];
+    },
+  });
+
   const isHost = members.find(m => m.memberId === userId)?.isHost ?? false;
-
-  const fetchRoomDetails = async () => {
-    try {
-      const roomRes = await api.get(`/rooms/${roomId}`);
-      setRoomInfo({
-        name: roomRes.data.roomName || roomRes.data.name,
-        inviteCode: roomRes.data.inviteCode,
-      });
-      const memberRes = await api.get(`/rooms/${roomId}/members`);
-      setMembers(memberRes.data || []);
-    } catch (err) {
-      console.error('방 정보를 불러오는데 실패했습니다.', err);
-    }
-  };
-
-  useEffect(() => { fetchRoomDetails(); }, [roomId]);
 
   const handleCopyCode = () => {
     navigator.clipboard.writeText(roomInfo.inviteCode);
@@ -42,6 +45,7 @@ const Invite = () => {
     if (!window.confirm(t('invite', 'leaveConfirm'))) return;
     try {
       await api.delete(`/rooms/${roomId}/members/${userId}`);
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
       navigate('/lobby');
     } catch {
       alert(t('invite', 'leaveFailed'));
@@ -52,6 +56,7 @@ const Invite = () => {
     if (!window.confirm(t('invite', 'deleteConfirm'))) return;
     try {
       await api.delete(`/rooms/${roomId}`);
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
       navigate('/lobby');
     } catch {
       alert(t('invite', 'deleteFailed'));
@@ -62,7 +67,7 @@ const Invite = () => {
     if (!window.confirm(`${member.nickname}${t('invite', 'kickConfirm')}`)) return;
     try {
       await api.delete(`/rooms/${roomId}/members/${member.memberId}`);
-      await fetchRoomDetails();
+      refetchMembers();
     } catch {
       alert(t('invite', 'kickFailed'));
     }
