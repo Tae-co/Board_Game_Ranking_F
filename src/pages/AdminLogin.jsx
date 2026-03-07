@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import api, { setAccessToken } from '../api/axios';
 
 const AdminLogin = () => {
@@ -27,58 +28,89 @@ const AdminLogin = () => {
     }
   };
 
+  const inputStyle = {
+    backgroundColor: '#241A0A',
+    borderColor: '#3D2B14',
+    color: '#F5E6D0',
+  };
+
   return (
-    <div className="min-h-[100dvh] bg-[#1C1208] flex flex-col px-6 py-12">
-      {/* 뒤로가기 */}
-      <button
-        onClick={() => navigate('/login')}
-        className="text-[#A08060] text-sm font-semibold flex items-center gap-1 mb-10 self-start hover:text-[#D4853A] transition-colors"
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
+      style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#1C1208' }}
+    >
+      {/* Logo */}
+      <div className="text-center mb-12">
+        <div className="flex justify-center mb-4">
+          <div
+            className="w-20 h-20 rounded-2xl flex items-center justify-center"
+            style={{ backgroundColor: '#D4853A' }}
+          >
+            <ShieldCheck className="w-10 h-10" style={{ color: '#1C1208' }} />
+          </div>
+        </div>
+        <h1 className="text-3xl mb-2" style={{ color: '#F5E6D0' }}>관리자 로그인</h1>
+        <p className="text-sm" style={{ color: '#A08060' }}>관리자 전용 페이지입니다</p>
+      </div>
+
+      {/* Card */}
+      <div
+        className="w-full rounded-2xl p-6 border shadow-lg"
+        style={{ backgroundColor: '#2C1F0E', borderColor: '#3D2B14' }}
       >
-        ← 로그인으로
-      </button>
-
-      <div className="flex-1 flex flex-col items-center justify-center">
-        <div className="w-full max-w-sm bg-[#2C1F0E] rounded-2xl border border-[#3D2B14] shadow-lg overflow-hidden">
-          <div className="h-0.5 w-full bg-[#D4853A]" />
-          <div className="p-7 space-y-5">
-            <div>
-              <p className="text-xs font-semibold text-[#A08060] mb-1">관리자 전용</p>
-              <h2 className="text-2xl font-black text-[#F5E6D0]">관리자 로그인</h2>
-            </div>
-
+        <div className="space-y-4">
+          <div>
+            <label className="block mb-2 text-sm" style={{ color: '#A08060' }}>아이디</label>
             <input
               type="text"
-              placeholder="아이디"
-              className="w-full px-4 py-3.5 bg-[#241A0A] border border-[#3D2B14] rounded-xl text-[#F5E6D0] font-semibold outline-none focus:border-[#D4853A] transition-colors placeholder-[#A08060]"
               value={username}
               onChange={(e) => { setUsername(e.target.value); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              placeholder="관리자 아이디"
               autoFocus
+              className="w-full px-4 py-3 rounded-xl border focus:outline-none transition-all"
+              style={inputStyle}
+              onFocus={(e) => e.target.style.borderColor = '#D4853A'}
+              onBlur={(e) => e.target.style.borderColor = '#3D2B14'}
             />
-
+          </div>
+          <div>
+            <label className="block mb-2 text-sm" style={{ color: '#A08060' }}>비밀번호</label>
             <input
               type="password"
-              placeholder="비밀번호"
-              className="w-full px-4 py-3.5 bg-[#241A0A] border border-[#3D2B14] rounded-xl text-[#F5E6D0] font-semibold outline-none focus:border-[#D4853A] transition-colors placeholder-[#A08060]"
               value={password}
               onChange={(e) => { setPassword(e.target.value); setError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              placeholder="비밀번호"
+              className="w-full px-4 py-3 rounded-xl border focus:outline-none transition-all"
+              style={inputStyle}
+              onFocus={(e) => e.target.style.borderColor = '#D4853A'}
+              onBlur={(e) => e.target.style.borderColor = '#3D2B14'}
             />
-
-            {error && (
-              <p className="text-xs font-semibold text-red-400 px-1">{error}</p>
-            )}
-
-            <button
-              onClick={handleLogin}
-              disabled={isLoading}
-              className="w-full py-4 rounded-full bg-[#D4853A] text-[#1C1208] font-black text-base active:scale-95 transition-transform disabled:opacity-60"
-            >
-              {isLoading ? '로그인 중...' : '로그인'}
-            </button>
           </div>
+          {error && <p className="text-sm" style={{ color: '#f87171' }}>{error}</p>}
+          <button
+            onClick={handleLogin}
+            disabled={isLoading || !username.trim() || !password.trim()}
+            className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
+            style={{ backgroundColor: '#D4853A', color: '#1C1208' }}
+          >
+            {isLoading ? '로그인 중...' : '로그인'}
+          </button>
         </div>
       </div>
+
+      {/* Back link */}
+      <button
+        onClick={() => navigate('/login')}
+        className="mt-6 flex items-center gap-1 text-sm transition-colors"
+        style={{ color: '#A08060' }}
+        onMouseEnter={(e) => e.currentTarget.style.color = '#D4853A'}
+        onMouseLeave={(e) => e.currentTarget.style.color = '#A08060'}
+      >
+        <ArrowLeft className="w-4 h-4" />
+        일반 로그인으로 돌아가기
+      </button>
     </div>
   );
 };
