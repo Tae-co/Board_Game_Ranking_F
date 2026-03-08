@@ -13,6 +13,7 @@ import Ranking from './pages/Ranking';
 import Profile from './pages/Profile';
 import AdminLogin from './pages/AdminLogin';
 import Admin from './pages/Admin';
+import OAuthCallback from './pages/OAuthCallback';
 
 import './App.css';
 
@@ -57,6 +58,9 @@ function App() {
           <Route path="/games/:roomId" element={<PrivateRoute><GameSelect /></PrivateRoute>} />
           <Route path="/match-form/:roomId" element={<PrivateRoute><MatchForm /></PrivateRoute>} />
           <Route path="/ranking/:roomId" element={<PrivateRoute><Ranking /></PrivateRoute>} />
+
+          {/* OAuth2 콜백 */}
+          <Route path="/oauth-callback" element={<OAuthCallback />} />
 
           {/* 관리자 */}
           <Route path="/admin-login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
