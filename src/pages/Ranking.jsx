@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Trophy, Crown } from 'lucide-react';
 import { motion } from 'motion/react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TierBadge, TIERS } from '../components/TierBadge';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -46,21 +46,39 @@ const RankBadge = ({ index }) => {
   );
 };
 
+const formatDate = (dateStr) => {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+
 const Ranking = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const matchResult = location.state?.matchResult || null;
 
   const [activeTab, setActiveTab] = useState('group');
+  const [editModal, setEditModal] = useState(null);
   const myNickname = localStorage.getItem('nickname');
+  const myUserId = Number(localStorage.getItem('userId'));
 
   const ratingChangeMap = matchResult
     ? Object.fromEntries(matchResult.map(r => [r.memberId, r.ratingChange]))
     : {};
 
-  const { data: rankings = [], isLoading } = useQuery({
+  const { data: roomMembers = [] } = useQuery({
+    queryKey: ['roomMembers', roomId],
+    queryFn: async () => {
+      const res = await api.get(`/rooms/${roomId}/members`);
+      return res.data || [];
+    },
+  });
+
+  const isHost = roomMembers.find(m => m.memberId === myUserId)?.isHost ?? false;
+
+  const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
     queryKey: ['rankings', roomId, activeTab],
     queryFn: async () => {
       const endpoint = activeTab === 'global'
@@ -69,7 +87,17 @@ const Ranking = () => {
       const res = await api.get(endpoint);
       return res.data || [];
     },
+    enabled: activeTab !== 'matches',
     staleTime: 1000 * 60 * 3,
+  });
+
+  const { data: matches = [], isLoading: isMatchesLoading, refetch: refetchMatches } = useQuery({
+    queryKey: ['matches', roomId],
+    queryFn: async () => {
+      const res = await api.get(`/rooms/${roomId}/matches`);
+      return res.data || [];
+    },
+    enabled: activeTab === 'matches',
   });
 
   const getWinRate = (winCount, loseCount) => {
@@ -85,6 +113,36 @@ const Ranking = () => {
     if (points >= TIERS.silver.minPoints) return TIERS.silver;
     return TIERS.bronze;
   };
+
+  const handleUpdateMatch = async () => {
+    try {
+      await api.put(`/matches/${editModal.matchId}`, {
+        requesterId: myUserId,
+        participants: editModal.participants.map(p => ({
+          memberId: p.memberId,
+          placement: p.placement,
+        })),
+      });
+      setEditModal(null);
+      refetchMatches();
+      queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
+    } catch {
+      alert('수정에 실패했습니다.');
+    }
+  };
+
+  const handleDeleteMatch = async (matchId) => {
+    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+    try {
+      await api.delete(`/matches/${matchId}?requesterId=${myUserId}`);
+      refetchMatches();
+      queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
+    } catch {
+      alert('삭제에 실패했습니다.');
+    }
+  };
+
+  const isLoading = activeTab === 'matches' ? isMatchesLoading : isRankingLoading;
 
   return (
     <div className="min-h-screen pb-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
@@ -107,26 +165,23 @@ const Ranking = () => {
       {/* Tab Toggle */}
       <div className="px-6 mb-4">
         <div className="flex rounded-full p-1" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5D5C0' }}>
-          <button
-            onClick={() => setActiveTab('group')}
-            className="flex-1 py-2 rounded-full transition-all"
-            style={{
-              backgroundColor: activeTab === 'group' ? '#D4853A' : 'transparent',
-              color: activeTab === 'group' ? '#FFFFFF' : '#8B7355',
-            }}
-          >
-            {t('ranking', 'groupTab')}
-          </button>
-          <button
-            onClick={() => setActiveTab('global')}
-            className="flex-1 py-2 rounded-full transition-all"
-            style={{
-              backgroundColor: activeTab === 'global' ? '#D4853A' : 'transparent',
-              color: activeTab === 'global' ? '#FFFFFF' : '#8B7355',
-            }}
-          >
-            {t('ranking', 'globalTab')}
-          </button>
+          {[
+            { key: 'group', label: t('ranking', 'groupTab') },
+            { key: 'global', label: t('ranking', 'globalTab') },
+            { key: 'matches', label: '매치기록' },
+          ].map(tab => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className="flex-1 py-2 rounded-full transition-all text-xs"
+              style={{
+                backgroundColor: activeTab === tab.key ? '#D4853A' : 'transparent',
+                color: activeTab === tab.key ? '#FFFFFF' : '#8B7355',
+              }}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -157,13 +212,81 @@ const Ranking = () => {
         </div>
       )}
 
-      {/* Ranking List */}
+      {/* Content */}
       <div className="px-6">
         {isLoading ? (
           <div className="text-center py-16">
             <div className="text-4xl mb-3">⏳</div>
             <p style={{ color: '#8B7355' }}>{t('common', 'loading')}</p>
           </div>
+        ) : activeTab === 'matches' ? (
+          /* Match History */
+          matches.length === 0 ? (
+            <div className="rounded-2xl p-10 border-2 border-dashed text-center" style={{ borderColor: '#E5D5C0' }}>
+              <div className="text-5xl mb-4">🎲</div>
+              <p style={{ color: '#2C1F0E' }}>매치 기록이 없습니다</p>
+              <p className="text-sm mt-2" style={{ color: '#8B7355' }}>게임을 플레이하면 기록이 쌓여요</p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {matches.map((match) => (
+                <div
+                  key={match.matchId}
+                  className="rounded-xl p-4 border"
+                  style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="text-xs" style={{ color: '#8B7355' }}>{match.gameName}</p>
+                      <p className="text-sm font-semibold" style={{ color: '#2C1F0E' }}>{formatDate(match.playedAt)}</p>
+                    </div>
+                    {isHost && (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => setEditModal({ matchId: match.matchId, participants: match.participants.map(p => ({ ...p })) })}
+                          className="px-3 py-1 rounded-full text-xs"
+                          style={{ backgroundColor: '#FFF8F0', color: '#D4853A', border: '1px solid #D4853A' }}
+                        >
+                          수정
+                        </button>
+                        <button
+                          onClick={() => handleDeleteMatch(match.matchId)}
+                          className="px-3 py-1 rounded-full text-xs"
+                          style={{ backgroundColor: '#FFF8F0', color: '#dc2626', border: '1px solid #dc2626' }}
+                        >
+                          삭제
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {match.participants.map((p) => (
+                      <div key={p.memberId} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
+                            style={{
+                              backgroundColor: p.placement === 1 ? '#FFD700' : p.placement === 2 ? '#C0C0C0' : p.placement === 3 ? '#CD7F32' : '#E5D5C0',
+                              color: '#FFFFFF',
+                            }}
+                          >
+                            {p.placement}
+                          </span>
+                          <span className="text-sm" style={{ color: '#2C1F0E' }}>{p.nickname}</span>
+                        </div>
+                        <span
+                          className="text-xs font-bold"
+                          style={{ color: p.ratingChange > 0 ? '#16a34a' : '#dc2626' }}
+                        >
+                          {p.ratingChange > 0 ? '+' : ''}{Math.round(p.ratingChange)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
         ) : rankings.length === 0 ? (
           <div className="rounded-2xl p-10 border-2 border-dashed text-center" style={{ borderColor: '#E5D5C0' }}>
             <div className="text-5xl mb-4">🎲</div>
@@ -322,37 +445,39 @@ const Ranking = () => {
         )}
       </div>
 
-      {/* Tier Legend */}
-      <div className="px-6 mt-8">
-        <motion.div
-          className="rounded-xl p-5 border"
-          style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <h3 className="text-sm font-bold mb-4" style={{ color: '#2C1F0E' }}>{t('ranking', 'tierSystem')}</h3>
-          <div className="space-y-4">
-            {Object.values(TIERS).reverse().map((tier, index) => (
-              <motion.div
-                key={tier.name}
-                className="flex items-center gap-3"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.6 + index * 0.1 }}
-              >
-                <TierBadge tier={tier} size="md" />
-                <div>
-                  <p className="font-bold" style={{ color: tier.color }}>{tier.name}</p>
-                  <p className="text-xs" style={{ color: '#8B7355' }}>
-                    {tier.minPoints} ~ {tier.maxPoints === 9999 ? '∞' : tier.maxPoints} LP
-                  </p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
-      </div>
+      {/* Tier Legend (ranking tabs only) */}
+      {activeTab !== 'matches' && (
+        <div className="px-6 mt-8">
+          <motion.div
+            className="rounded-xl p-5 border"
+            style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <h3 className="text-sm font-bold mb-4" style={{ color: '#2C1F0E' }}>{t('ranking', 'tierSystem')}</h3>
+            <div className="space-y-4">
+              {Object.values(TIERS).reverse().map((tier, index) => (
+                <motion.div
+                  key={tier.name}
+                  className="flex items-center gap-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.6 + index * 0.1 }}
+                >
+                  <TierBadge tier={tier} size="md" />
+                  <div>
+                    <p className="font-bold" style={{ color: tier.color }}>{tier.name}</p>
+                    <p className="text-xs" style={{ color: '#8B7355' }}>
+                      {tier.minPoints} ~ {tier.maxPoints === 9999 ? '∞' : tier.maxPoints} LP
+                    </p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       {/* Back to Lobby */}
       <div className="px-6 mt-6">
@@ -366,6 +491,61 @@ const Ranking = () => {
           {t('ranking', 'backToLobby')}
         </motion.button>
       </div>
+
+      {/* Edit Match Modal */}
+      {editModal && (
+        <div
+          className="fixed inset-0 flex items-center justify-center z-50 p-6"
+          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
+          onClick={(e) => { if (e.target === e.currentTarget) setEditModal(null); }}
+        >
+          <div className="rounded-2xl p-6 w-full" style={{ backgroundColor: '#FFFFFF', maxWidth: '340px' }}>
+            <h3 className="text-lg font-bold mb-4" style={{ color: '#2C1F0E' }}>매치 수정</h3>
+            <div className="space-y-3 mb-6">
+              {editModal.participants.map((p) => (
+                <div key={p.memberId} className="flex items-center justify-between">
+                  <span className="text-sm" style={{ color: '#2C1F0E' }}>{p.nickname}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs" style={{ color: '#8B7355' }}>순위</span>
+                    <input
+                      type="number"
+                      min="1"
+                      max="10"
+                      value={p.placement}
+                      onChange={(e) => setEditModal(prev => ({
+                        ...prev,
+                        participants: prev.participants.map(pp =>
+                          pp.memberId === p.memberId
+                            ? { ...pp, placement: Number(e.target.value) }
+                            : pp
+                        ),
+                      }))}
+                      className="w-14 px-2 py-1 rounded-lg border text-sm text-center focus:outline-none"
+                      style={{ borderColor: '#E5D5C0', backgroundColor: '#FFF8F0', color: '#2C1F0E' }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setEditModal(null)}
+                className="flex-1 py-2 rounded-full text-sm border"
+                style={{ borderColor: '#E5D5C0', color: '#8B7355', backgroundColor: '#FFFFFF' }}
+              >
+                취소
+              </button>
+              <button
+                onClick={handleUpdateMatch}
+                className="flex-1 py-2 rounded-full text-sm"
+                style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
