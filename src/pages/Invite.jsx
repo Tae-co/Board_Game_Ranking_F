@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Copy, ArrowLeft, Check } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,6 +13,36 @@ const Invite = () => {
   const userId = Number(localStorage.getItem('userId'));
 
   const [copied, setCopied] = useState(false);
+  const qrRef = useRef(null);
+  const qrInstanceRef = useRef(null);
+
+  useEffect(() => {
+    if (!roomInfo.inviteCode || !qrRef.current) return;
+
+    const loadQR = () => {
+      if (qrInstanceRef.current) {
+        qrInstanceRef.current.clear();
+        qrInstanceRef.current.makeCode(roomInfo.inviteCode);
+        return;
+      }
+      qrInstanceRef.current = new window.QRCode(qrRef.current, {
+        text: roomInfo.inviteCode,
+        width: 160,
+        height: 160,
+        colorDark: '#2C1F0E',
+        colorLight: '#FFFFFF',
+      });
+    };
+
+    if (window.QRCode) {
+      loadQR();
+    } else {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+      script.onload = loadQR;
+      document.head.appendChild(script);
+    }
+  }, [roomInfo.inviteCode]);
 
   const { data: roomInfo = { name: '', inviteCode: '' } } = useQuery({
     queryKey: ['room', roomId],
@@ -109,10 +139,22 @@ const Invite = () => {
         )}
       </div>
 
-      {/* Invite Code Card */}
+      {/* Invite Code Card with QR */}
       <div className="rounded-2xl p-6 mb-6 border shadow-sm text-center" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
-        <p className="text-sm mb-3" style={{ color: '#8B7355' }}>{t('invite', 'inviteCode')}</p>
-        <div className="text-4xl tracking-widest mb-4 font-mono" style={{ color: '#D4853A' }}>
+        <p className="text-sm mb-4" style={{ color: '#8B7355' }}>{t('invite', 'inviteCode')}</p>
+        <div className="flex justify-center mb-3">
+          {!roomInfo.inviteCode ? (
+            <div
+              className="w-40 h-40 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: '#F0EBE3' }}
+            >
+              <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: '#E5D5C0', borderTopColor: 'transparent' }} />
+            </div>
+          ) : (
+            <div ref={qrRef} className="rounded-xl overflow-hidden" style={{ width: 160, height: 160 }} />
+          )}
+        </div>
+        <div className="text-lg tracking-widest mb-4 font-mono" style={{ color: '#D4853A' }}>
           {roomInfo.inviteCode}
         </div>
         <button

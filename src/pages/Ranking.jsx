@@ -239,16 +239,18 @@ const Ranking = () => {
                       <p className="text-xs" style={{ color: '#8B7355' }}>LP</p>
                     </div>
                   </div>
-                  <div className="flex gap-4 text-sm pt-3" style={{ borderTop: '1px solid #E5D5C0' }}>
-                    <div className="flex-1">
-                      <span style={{ color: '#8B7355' }}>{t('ranking', 'record')}: </span>
-                      <span style={{ color: '#2C1F0E', fontWeight: 600 }}>{rank.winCount}{t('ranking', 'wins')} {rank.loseCount}{t('ranking', 'losses')}</span>
+                  <div className="flex pt-3" style={{ borderTop: '1px solid #E5D5C0' }}>
+                    <div className="flex-1 text-center">
+                      <p className="text-xs mb-0.5" style={{ color: '#8B7355' }}>{t('ranking', 'wins')}</p>
+                      <p className="text-sm font-bold" style={{ color: '#2C1F0E' }}>{rank.winCount}</p>
                     </div>
-                    <div>
-                      <span style={{ color: '#8B7355' }}>{t('ranking', 'winRate')}: </span>
-                      <span className="font-bold" style={{ color: winRate >= 60 ? '#D4853A' : winRate >= 50 ? '#8B7355' : '#999' }}>
-                        {winRate}%
-                      </span>
+                    <div className="flex-1 text-center" style={{ borderLeft: '1px solid #E5D5C0', borderRight: '1px solid #E5D5C0' }}>
+                      <p className="text-xs mb-0.5" style={{ color: '#8B7355' }}>{t('ranking', 'losses')}</p>
+                      <p className="text-sm font-bold" style={{ color: '#2C1F0E' }}>{rank.loseCount}</p>
+                    </div>
+                    <div className="flex-1 text-center">
+                      <p className="text-xs mb-0.5" style={{ color: '#8B7355' }}>{t('ranking', 'winRate')}</p>
+                      <p className="text-sm font-bold" style={{ color: winRate >= 60 ? '#D4853A' : winRate >= 50 ? '#8B7355' : '#999' }}>{winRate}%</p>
                     </div>
                   </div>
                 </motion.div>

@@ -113,32 +113,26 @@ const Lobby = () => {
             onChange={(e) => setNewRoomName(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleCreateRoom()}
             placeholder={t('lobby', 'roomNamePlaceholder')}
-            className="w-full px-4 py-3 rounded-lg border focus:outline-none transition-all"
+            className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none transition-all"
             style={{ backgroundColor: '#FFF8F0', borderColor: '#E5D5C0', color: '#2C1F0E' }}
             onFocus={(e) => e.target.style.borderColor = '#D4853A'}
             onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
           />
-          <div className="flex gap-2">
-            <button
-              onClick={handleCreateRoom}
-              disabled={!newRoomName.trim()}
-              className="flex-1 py-3 rounded-full transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
-            >
-              {t('lobby', 'createRoom')}
-            </button>
-            <button
-              onClick={() => { setShowJoin(!showJoin); setJoinCode(''); }}
-              className="flex-1 py-3 rounded-full border transition-colors"
-              style={{
-                backgroundColor: showJoin ? '#D4853A' : '#FFFFFF',
-                color: showJoin ? '#FFFFFF' : '#D4853A',
-                borderColor: '#D4853A',
-              }}
-            >
-              {t('lobby', 'joinWithCode')}
-            </button>
-          </div>
+          <button
+            onClick={handleCreateRoom}
+            disabled={!newRoomName.trim()}
+            className="w-full py-2 rounded-full text-sm transition-opacity disabled:opacity-50"
+            style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+          >
+            {t('lobby', 'createRoom')}
+          </button>
+          <button
+            onClick={() => { setShowJoin(!showJoin); setJoinCode(''); }}
+            className="w-full text-sm transition-colors"
+            style={{ color: '#8B7355' }}
+          >
+            {showJoin ? '▲ 닫기' : `▼ ${t('lobby', 'joinWithCode')}`}
+          </button>
           {showJoin && (
             <div className="flex gap-2">
               <input
@@ -149,7 +143,7 @@ const Lobby = () => {
                 placeholder={t('lobby', 'inviteCodePlaceholder')}
                 autoFocus
                 maxLength={8}
-                className="flex-1 px-4 py-3 rounded-lg border focus:outline-none transition-all font-mono tracking-widest uppercase"
+                className="flex-1 px-3 py-2 rounded-lg border text-sm focus:outline-none transition-all font-mono tracking-widest uppercase"
                 style={{ backgroundColor: '#FFF8F0', borderColor: '#E5D5C0', color: '#2C1F0E' }}
                 onFocus={(e) => e.target.style.borderColor = '#D4853A'}
                 onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
@@ -157,7 +151,7 @@ const Lobby = () => {
               <button
                 onClick={handleJoinRoom}
                 disabled={isJoining || !joinCode.trim()}
-                className="px-6 py-3 rounded-full transition-opacity disabled:opacity-50"
+                className="px-4 py-2 rounded-full text-sm transition-opacity disabled:opacity-50"
                 style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
               >
                 {isJoining ? t('lobby', 'joining') : t('lobby', 'join')}
