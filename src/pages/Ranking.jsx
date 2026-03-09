@@ -527,7 +527,7 @@ const Ranking = () => {
                         <option
                           key={rank}
                           value={rank}
-                          disabled={usedPlacements.includes(rank)}
+                          disabled={usedPlacements.includes(rank) && rank !== p.placement}
                         >
                           {rank}위
                         </option>
