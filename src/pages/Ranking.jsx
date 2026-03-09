@@ -121,9 +121,15 @@ const Ranking = () => {
       alert('순위가 중복되었습니다. 모든 참여자의 순위를 다르게 설정해주세요.');
       return;
     }
+    const isUnchanged = editModal.participants.every(p => p.placement === p.originalPlacement);
+    if (isUnchanged) {
+      alert('변경된 순위가 없습니다.');
+      return;
+    }
     try {
       await api.put(`/matches/${editModal.matchId}`, {
-        requesterId: myUserId,
+        boardGameId: editModal.boardGameId,
+        roomId: Number(roomId),
         participants: editModal.participants.map(p => ({
           memberId: p.memberId,
           placement: p.placement,
@@ -249,7 +255,7 @@ const Ranking = () => {
                     {isHost && (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => setEditModal({ matchId: match.matchId, participants: match.participants.map(p => ({ ...p })) })}
+                          onClick={() => setEditModal({ matchId: match.matchId, boardGameId: match.boardGameId, participants: match.participants.map(p => ({ ...p, originalPlacement: p.placement })) })}
                           className="px-3 py-1 rounded-full text-xs"
                           style={{ backgroundColor: '#FFF8F0', color: '#D4853A', border: '1px solid #D4853A' }}
                         >
