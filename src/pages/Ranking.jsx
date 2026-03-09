@@ -7,6 +7,45 @@ import { TierBadge, TIERS } from '../components/TierBadge';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 
+const getRankStyle = (index) => {
+  if (index === 0) return { color: '#FFD700', bgColor: '#FFD700' };
+  if (index === 1) return { color: '#C0C0C0', bgColor: '#C0C0C0' };
+  if (index === 2) return { color: '#CD7F32', bgColor: '#CD7F32' };
+  return { color: '#8B7355', bgColor: '#E5D5C0' };
+};
+
+const RankBadge = ({ index }) => {
+  const rankStyle = getRankStyle(index);
+  return (
+    <motion.div
+      className="w-12 h-12 rounded-full flex items-center justify-center font-bold relative flex-shrink-0"
+      style={{
+        background: index < 3
+          ? `linear-gradient(135deg, ${rankStyle.bgColor}, ${rankStyle.color}80)`
+          : '#E5D5C0',
+        color: index < 3 ? '#FFFFFF' : '#2C1F0E',
+        boxShadow: index < 3 ? `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40` : 'none',
+        fontSize: '16px',
+      }}
+      animate={index < 3 ? {
+        boxShadow: [
+          `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40`,
+          `0 6px 20px ${rankStyle.color}80, 0 0 30px ${rankStyle.color}60`,
+          `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40`,
+        ],
+      } : {}}
+      transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+    >
+      {index + 1}
+      {index === 0 && (
+        <div className="absolute -top-1 -right-1" style={{ filter: 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.5))' }}>
+          <Crown className="w-4 h-4" style={{ color: '#FFD700', fill: '#FFD700' }} />
+        </div>
+      )}
+    </motion.div>
+  );
+};
+
 const Ranking = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -45,45 +84,6 @@ const Ranking = () => {
     if (points >= TIERS.gold.minPoints) return TIERS.gold;
     if (points >= TIERS.silver.minPoints) return TIERS.silver;
     return TIERS.bronze;
-  };
-
-  const getRankStyle = (index) => {
-    if (index === 0) return { color: '#FFD700', bgColor: '#FFD700' };
-    if (index === 1) return { color: '#C0C0C0', bgColor: '#C0C0C0' };
-    if (index === 2) return { color: '#CD7F32', bgColor: '#CD7F32' };
-    return { color: '#8B7355', bgColor: '#E5D5C0' };
-  };
-
-  const RankBadge = ({ index }) => {
-    const rankStyle = getRankStyle(index);
-    return (
-      <motion.div
-        className="w-12 h-12 rounded-full flex items-center justify-center font-bold relative flex-shrink-0"
-        style={{
-          background: index < 3
-            ? `linear-gradient(135deg, ${rankStyle.bgColor}, ${rankStyle.color}80)`
-            : '#E5D5C0',
-          color: index < 3 ? '#FFFFFF' : '#2C1F0E',
-          boxShadow: index < 3 ? `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40` : 'none',
-          fontSize: '16px',
-        }}
-        animate={index < 3 ? {
-          boxShadow: [
-            `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40`,
-            `0 6px 20px ${rankStyle.color}80, 0 0 30px ${rankStyle.color}60`,
-            `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40`,
-          ],
-        } : {}}
-        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-      >
-        {index + 1}
-        {index === 0 && (
-          <div className="absolute -top-1 -right-1" style={{ filter: 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.5))' }}>
-            <Crown className="w-4 h-4" style={{ color: '#FFD700', fill: '#FFD700' }} />
-          </div>
-        )}
-      </motion.div>
-    );
   };
 
   return (
