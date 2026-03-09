@@ -502,15 +502,15 @@ const Ranking = () => {
           <div className="rounded-2xl p-6 w-full" style={{ backgroundColor: '#FFFFFF', maxWidth: '340px' }}>
             <h3 className="text-lg font-bold mb-4" style={{ color: '#2C1F0E' }}>매치 수정</h3>
             <div className="space-y-3 mb-6">
-              {editModal.participants.map((p) => (
-                <div key={p.memberId} className="flex items-center justify-between">
-                  <span className="text-sm" style={{ color: '#2C1F0E' }}>{p.nickname}</span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs" style={{ color: '#8B7355' }}>순위</span>
-                    <input
-                      type="number"
-                      min="1"
-                      max="10"
+              {editModal.participants.map((p) => {
+                const total = editModal.participants.length;
+                const usedPlacements = editModal.participants
+                  .filter(pp => pp.memberId !== p.memberId)
+                  .map(pp => pp.placement);
+                return (
+                  <div key={p.memberId} className="flex items-center justify-between">
+                    <span className="text-sm" style={{ color: '#2C1F0E' }}>{p.nickname}</span>
+                    <select
                       value={p.placement}
                       onChange={(e) => setEditModal(prev => ({
                         ...prev,
@@ -520,12 +520,22 @@ const Ranking = () => {
                             : pp
                         ),
                       }))}
-                      className="w-14 px-2 py-1 rounded-lg border text-sm text-center focus:outline-none"
-                      style={{ borderColor: '#E5D5C0', backgroundColor: '#FFF8F0', color: '#2C1F0E' }}
-                    />
+                      className="rounded-xl border text-sm px-2 py-1.5 focus:outline-none"
+                      style={{ borderColor: '#E5D5C0', backgroundColor: '#FFF8F0', color: '#2C1F0E', minWidth: '72px' }}
+                    >
+                      {Array.from({ length: total }, (_, i) => i + 1).map(rank => (
+                        <option
+                          key={rank}
+                          value={rank}
+                          disabled={usedPlacements.includes(rank)}
+                        >
+                          {rank}위
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             <div className="flex gap-3">
               <button
