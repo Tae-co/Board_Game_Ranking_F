@@ -115,6 +115,12 @@ const Ranking = () => {
   };
 
   const handleUpdateMatch = async () => {
+    const placements = editModal.participants.map(p => p.placement);
+    const uniquePlacements = new Set(placements);
+    if (uniquePlacements.size !== placements.length) {
+      alert('순위가 중복되었습니다. 모든 참여자의 순위를 다르게 설정해주세요.');
+      return;
+    }
     try {
       await api.put(`/matches/${editModal.matchId}`, {
         requesterId: myUserId,
@@ -504,9 +510,6 @@ const Ranking = () => {
             <div className="space-y-3 mb-6">
               {editModal.participants.map((p) => {
                 const total = editModal.participants.length;
-                const usedPlacements = editModal.participants
-                  .filter(pp => pp.memberId !== p.memberId)
-                  .map(pp => pp.placement);
                 return (
                   <div key={p.memberId} className="flex items-center justify-between">
                     <span className="text-sm" style={{ color: '#2C1F0E' }}>{p.nickname}</span>
@@ -524,13 +527,7 @@ const Ranking = () => {
                       style={{ borderColor: '#E5D5C0', backgroundColor: '#FFF8F0', color: '#2C1F0E', minWidth: '72px' }}
                     >
                       {Array.from({ length: total }, (_, i) => i + 1).map(rank => (
-                        <option
-                          key={rank}
-                          value={rank}
-                          disabled={usedPlacements.includes(rank) && rank !== p.placement}
-                        >
-                          {rank}위
-                        </option>
+                        <option key={rank} value={rank}>{rank}위</option>
                       ))}
                     </select>
                   </div>
