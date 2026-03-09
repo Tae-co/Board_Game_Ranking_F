@@ -16,6 +16,17 @@ const Invite = () => {
   const qrRef = useRef(null);
   const qrInstanceRef = useRef(null);
 
+  const { data: roomInfo = { name: '', inviteCode: '' } } = useQuery({
+    queryKey: ['room', roomId],
+    queryFn: async () => {
+      const res = await api.get(`/rooms/${roomId}`);
+      return {
+        name: res.data.roomName || res.data.name,
+        inviteCode: res.data.inviteCode,
+      };
+    },
+  });
+
   useEffect(() => {
     if (!roomInfo.inviteCode || !qrRef.current) return;
 
@@ -43,17 +54,6 @@ const Invite = () => {
       document.head.appendChild(script);
     }
   }, [roomInfo.inviteCode]);
-
-  const { data: roomInfo = { name: '', inviteCode: '' } } = useQuery({
-    queryKey: ['room', roomId],
-    queryFn: async () => {
-      const res = await api.get(`/rooms/${roomId}`);
-      return {
-        name: res.data.roomName || res.data.name,
-        inviteCode: res.data.inviteCode,
-      };
-    },
-  });
 
   const { data: members = [], refetch: refetchMembers } = useQuery({
     queryKey: ['roomMembers', roomId],
