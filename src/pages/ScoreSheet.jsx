@@ -9,7 +9,7 @@ import api from '../api/axios';
 const SCORE_SCHEMAS = {
   // 7 Wonders
   7: {
-    name: "7 Wonders",
+    name: "7WONDERS",
     type: "flat",
     categories: [
       { key: "military",  label: "군사",     icon: "⚔️",  color: "#dc2626" },
@@ -24,7 +24,7 @@ const SCORE_SCHEMAS = {
 
   // 캐스캐디아 - 섹션 구조
   8: {
-    name: "캐스캐디아",
+    name: "CASCADIA",
     type: "sectioned",
     sections: [
       {
@@ -71,7 +71,7 @@ const SCORE_SCHEMAS = {
 
   // Azul
   9: {
-    name: "Azul (아즐)",
+    name: "AZUL",
     type: "flat",
     categories: [
       { key: "wall",     label: "벽 타일", icon: "🔷", color: "#1d4ed8" },
