@@ -104,7 +104,7 @@ const Invite = () => {
   };
 
   return (
-    <div className="min-h-screen px-6 py-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
+    <div className="min-h-screen px-6 py-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: 'var(--th-bg)' }}>
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
@@ -112,13 +112,13 @@ const Invite = () => {
           <button
             onClick={() => navigate('/lobby')}
             className="mr-3 p-2 rounded-lg transition-colors"
-            style={{ color: '#D4853A' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+            style={{ color: 'var(--th-primary)' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--th-card)'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-xl" style={{ color: '#2C1F0E' }}>{roomInfo.name}</h1>
+          <h1 className="text-xl" style={{ color: 'var(--th-text)' }}>{roomInfo.name}</h1>
         </div>
         {isHost ? (
           <button
@@ -132,7 +132,7 @@ const Invite = () => {
           <button
             onClick={handleLeaveRoom}
             className="text-sm font-bold transition-colors"
-            style={{ color: '#8B7355' }}
+            style={{ color: 'var(--th-text-sub)' }}
           >
             {t('invite', 'leaveRoom')}
           </button>
@@ -140,30 +140,30 @@ const Invite = () => {
       </div>
 
       {/* Invite Code Card with QR */}
-      <div className="rounded-2xl p-6 mb-6 border shadow-sm text-center" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
-        <p className="text-sm mb-4" style={{ color: '#8B7355' }}>{t('invite', 'inviteCode')}</p>
+      <div className="rounded-2xl p-6 mb-6 border shadow-sm text-center" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
+        <p className="text-sm mb-4" style={{ color: 'var(--th-text-sub)' }}>{t('invite', 'inviteCode')}</p>
         <div className="flex justify-center mb-3">
           {!roomInfo.inviteCode ? (
             <div
               className="w-40 h-40 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: '#F0EBE3' }}
+              style={{ backgroundColor: 'var(--th-bg)' }}
             >
-              <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: '#E5D5C0', borderTopColor: 'transparent' }} />
+              <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin" style={{ borderColor: 'var(--th-border)', borderTopColor: 'transparent' }} />
             </div>
           ) : (
             <div ref={qrRef} className="rounded-xl overflow-hidden" style={{ width: 160, height: 160 }} />
           )}
         </div>
-        <div className="text-lg tracking-widest mb-4 font-mono" style={{ color: '#D4853A' }}>
+        <div className="text-lg tracking-widest mb-4 font-mono" style={{ color: 'var(--th-primary)' }}>
           {roomInfo.inviteCode}
         </div>
         <button
           onClick={handleCopyCode}
           className="flex items-center gap-2 mx-auto px-6 py-2 rounded-full transition-colors"
           style={{
-            backgroundColor: copied ? '#FFFFFF' : '#D4853A',
-            color: copied ? '#D4853A' : '#FFFFFF',
-            border: copied ? '1px solid #D4853A' : 'none',
+            backgroundColor: copied ? 'var(--th-card)' : 'var(--th-primary)',
+            color: copied ? 'var(--th-primary)' : '#FFFFFF',
+            border: copied ? '1px solid var(--th-primary)' : 'none',
           }}
         >
           {copied ? (
@@ -175,8 +175,8 @@ const Invite = () => {
       </div>
 
       {/* Members List */}
-      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
-        <h2 className="text-lg mb-4" style={{ color: '#2C1F0E' }}>{t('invite', 'members')} ({members.length})</h2>
+      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
+        <h2 className="text-lg mb-4" style={{ color: 'var(--th-text)' }}>{t('invite', 'members')} ({members.length})</h2>
         <div className="space-y-3">
           {members.map((member) => {
             const isMe = member.memberId === userId;
@@ -184,21 +184,21 @@ const Invite = () => {
               <div key={member.memberId} className="flex items-center gap-3">
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                  style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
                 >
                   {member.nickname[0]}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <p style={{ color: '#2C1F0E' }}>{member.nickname}</p>
+                    <p style={{ color: 'var(--th-text)' }}>{member.nickname}</p>
                     {isMe && (
-                      <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: '#FFF8F0', color: '#8B7355', border: '1px solid #E5D5C0' }}>{t('invite', 'me')}</span>
+                      <span className="text-xs px-1.5 py-0.5 rounded" style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-text-sub)', border: '1px solid var(--th-border)' }}>{t('invite', 'me')}</span>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   {member.isHost && (
-                    <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}>
+                    <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}>
                       {t('invite', 'host')}
                     </span>
                   )}
@@ -223,7 +223,7 @@ const Invite = () => {
         <button
           onClick={() => navigate(`/games/${roomId}`)}
           className="w-full py-4 rounded-full transition-opacity"
-          style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+          style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
           onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
           onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
         >
@@ -232,9 +232,9 @@ const Invite = () => {
         <button
           onClick={() => navigate(`/ranking/${roomId}`)}
           className="w-full py-4 rounded-full border transition-colors"
-          style={{ backgroundColor: '#FFFFFF', color: '#D4853A', borderColor: '#D4853A' }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#D4853A'; e.currentTarget.style.color = '#FFFFFF'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = '#FFFFFF'; e.currentTarget.style.color = '#D4853A'; }}
+          style={{ backgroundColor: 'var(--th-card)', color: 'var(--th-primary)', borderColor: 'var(--th-primary)' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--th-primary)'; e.currentTarget.style.color = '#FFFFFF'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--th-card)'; e.currentTarget.style.color = 'var(--th-primary)'; }}
         >
           {t('invite', 'viewRanking')}
         </button>

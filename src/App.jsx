@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { setAccessToken } from './api/axios';
 import { LanguageProvider } from './i18n/LanguageContext';
+import { ThemeProvider } from './theme/ThemeContext';
 
 import Login from './pages/Login';
 import Lobby from './pages/Lobby';
@@ -44,6 +45,7 @@ function App() {
   }, []);
 
   return (
+    <ThemeProvider>
     <LanguageProvider>
     <BrowserRouter>
       <div className="min-h-screen">
@@ -72,6 +74,7 @@ function App() {
       </div>
     </BrowserRouter>
     </LanguageProvider>
+    </ThemeProvider>
   );
 }
 

@@ -84,13 +84,13 @@ const MatchForm = () => {
 
   if (!gameId || players.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ backgroundColor: '#FFF8F0' }}>
+      <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ backgroundColor: 'var(--th-bg)' }}>
         <div className="text-5xl mb-4">😅</div>
-        <p className="mb-6" style={{ color: '#8B7355' }}>{t('matchForm', 'wrongAccess')}</p>
+        <p className="mb-6" style={{ color: 'var(--th-text-sub)' }}>{t('matchForm', 'wrongAccess')}</p>
         <button
           onClick={() => navigate(-1)}
           className="px-8 py-3 rounded-full"
-          style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+          style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
         >
           {t('matchForm', 'goBack')}
         </button>
@@ -103,29 +103,29 @@ const MatchForm = () => {
   const rankEmojis = ['🥇', '🥈', '🥉'];
 
   return (
-    <div className="min-h-screen pb-24" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
+    <div className="min-h-screen pb-24" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: 'var(--th-bg)' }}>
 
       {/* Header */}
-      <div className="px-6 py-6 flex items-center sticky top-0 z-10" style={{ backgroundColor: '#FFF8F0' }}>
+      <div className="px-6 py-6 flex items-center sticky top-0 z-10" style={{ backgroundColor: 'var(--th-bg)' }}>
         <button
           onClick={() => navigate(-1)}
           className="mr-3 p-2 rounded-lg transition-colors"
-          style={{ color: '#D4853A' }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+          style={{ color: 'var(--th-primary)' }}
+          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--th-card)'}
           onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-xl" style={{ color: '#2C1F0E' }}>{t('matchForm', 'title')}</h1>
+        <h1 className="text-xl" style={{ color: 'var(--th-text)' }}>{t('matchForm', 'title')}</h1>
       </div>
 
       {/* Info Banner */}
       <div className="px-6 mb-6">
-        <div className="rounded-xl p-4 border flex gap-3" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
-          <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#D4853A' }} />
+        <div className="rounded-xl p-4 border flex gap-3" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
+          <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--th-primary)' }} />
           <div>
-            <p className="text-sm mb-1" style={{ color: '#2C1F0E' }}>{t('matchForm', 'infoTitle')}</p>
-            <p className="text-xs" style={{ color: '#8B7355' }}>{t('matchForm', 'infoDesc')}</p>
+            <p className="text-sm mb-1" style={{ color: 'var(--th-text)' }}>{t('matchForm', 'infoTitle')}</p>
+            <p className="text-xs" style={{ color: 'var(--th-text-sub)' }}>{t('matchForm', 'infoDesc')}</p>
           </div>
         </div>
       </div>
@@ -142,26 +142,26 @@ const MatchForm = () => {
                 key={player.memberId}
                 className="rounded-xl p-4 border flex items-center gap-3"
                 style={{
-                  backgroundColor: '#FFFFFF',
-                  borderColor: hasScore ? '#D4853A' : '#E5D5C0',
+                  backgroundColor: 'var(--th-card)',
+                  borderColor: hasScore ? 'var(--th-primary)' : 'var(--th-border)',
                 }}
               >
                 <div className="text-2xl w-8 text-center flex-shrink-0">
                   {placement && placement <= 3
                     ? rankEmojis[placement - 1]
                     : placement
-                      ? <span className="text-sm font-bold" style={{ color: '#8B7355' }}>{placement}{t('matchForm', 'rank')}</span>
-                      : <span style={{ color: '#E5D5C0' }}>—</span>
+                      ? <span className="text-sm font-bold" style={{ color: 'var(--th-text-sub)' }}>{placement}{t('matchForm', 'rank')}</span>
+                      : <span style={{ color: 'var(--th-border)' }}>—</span>
                   }
                 </div>
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                  style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
                 >
                   {player.nickname[0]}
                 </div>
                 <div className="flex-1">
-                  <p style={{ color: '#2C1F0E' }}>{player.nickname}</p>
+                  <p style={{ color: 'var(--th-text)' }}>{player.nickname}</p>
                 </div>
                 <input
                   type="number"
@@ -170,12 +170,12 @@ const MatchForm = () => {
                   placeholder={t('matchForm', 'scorePlaceholder')}
                   className="w-24 px-3 py-2 rounded-lg border text-center focus:outline-none"
                   style={{
-                    backgroundColor: '#FFF8F0',
-                    borderColor: hasScore ? '#D4853A' : '#E5D5C0',
-                    color: '#2C1F0E',
+                    backgroundColor: 'var(--th-bg)',
+                    borderColor: hasScore ? 'var(--th-primary)' : 'var(--th-border)',
+                    color: 'var(--th-text)',
                   }}
-                  onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                  onBlur={(e) => e.target.style.borderColor = hasScore ? '#D4853A' : '#E5D5C0'}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                  onBlur={(e) => e.target.style.borderColor = hasScore ? 'var(--th-primary)' : 'var(--th-border)'}
                 />
               </div>
             );
@@ -184,12 +184,12 @@ const MatchForm = () => {
       </div>
 
       {/* Bottom Fixed Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6" style={{ backgroundColor: '#FFF8F0', maxWidth: '375px', margin: '0 auto' }}>
+      <div className="fixed bottom-0 left-0 right-0 p-6" style={{ backgroundColor: 'var(--th-bg)', maxWidth: '375px', margin: '0 auto' }}>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || !allFilled}
           className="w-full py-4 rounded-full transition-opacity disabled:opacity-50"
-          style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+          style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
           onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
           onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
         >

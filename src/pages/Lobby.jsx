@@ -61,21 +61,21 @@ const Lobby = () => {
   };
 
   return (
-    <div className="min-h-screen px-6 py-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
+    <div className="min-h-screen px-6 py-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: 'var(--th-bg)' }}>
 
       {/* Profile Card */}
-      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
+      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
         <div className="flex items-center justify-between mb-3">
           <div>
-            <p className="text-sm mb-1" style={{ color: '#8B7355' }}>{t('lobby', 'greeting')}</p>
-            <p className="text-xl" style={{ color: '#2C1F0E' }}>{nickname}{t('lobby', 'greetingSuffix')}</p>
+            <p className="text-sm mb-1" style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'greeting')}</p>
+            <p className="text-xl" style={{ color: 'var(--th-text)' }}>{nickname}{t('lobby', 'greetingSuffix')}</p>
           </div>
           <div className="flex items-center gap-2">
             {isAdmin && (
               <button
                 onClick={() => navigate('/admin')}
                 className="px-3 py-1.5 rounded-full text-xs font-bold"
-                style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
               >
                 {t('lobby', 'manageGames')}
               </button>
@@ -83,9 +83,9 @@ const Lobby = () => {
             <button
               onClick={() => navigate('/profile')}
               className="px-4 py-2 rounded-full text-sm transition-colors"
-              style={{ backgroundColor: '#FFF8F0', color: '#D4853A', border: '1px solid #E5D5C0' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#E5D5C0'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFF8F0'}
+              style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-primary)', border: '1px solid var(--th-border)' }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--th-border)'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--th-bg)'}
             >
               {t('lobby', 'profile')}
             </button>
@@ -94,9 +94,9 @@ const Lobby = () => {
         <button
           onClick={handleLogout}
           className="flex items-center gap-1 text-sm transition-colors"
-          style={{ color: '#8B7355' }}
-          onMouseEnter={(e) => e.currentTarget.style.color = '#D4853A'}
-          onMouseLeave={(e) => e.currentTarget.style.color = '#8B7355'}
+          style={{ color: 'var(--th-text-sub)' }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--th-primary)'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--th-text-sub)'}
         >
           <LogOut className="w-4 h-4" />
           {t('common', 'logout')}
@@ -104,8 +104,8 @@ const Lobby = () => {
       </div>
 
       {/* Create/Join Room Card */}
-      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
-        <h2 className="text-lg mb-4" style={{ color: '#2C1F0E' }}>{t('lobby', 'createGroup')}</h2>
+      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
+        <h2 className="text-lg mb-4" style={{ color: 'var(--th-text)' }}>{t('lobby', 'createGroup')}</h2>
         <div className="space-y-3">
           <input
             type="text"
@@ -114,22 +114,22 @@ const Lobby = () => {
             onKeyDown={(e) => e.key === 'Enter' && handleCreateRoom()}
             placeholder={t('lobby', 'roomNamePlaceholder')}
             className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none transition-all"
-            style={{ backgroundColor: '#FFF8F0', borderColor: '#E5D5C0', color: '#2C1F0E' }}
-            onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-            onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+            style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+            onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
           />
           <button
             onClick={handleCreateRoom}
             disabled={!newRoomName.trim()}
             className="w-full py-2 rounded-full text-sm transition-opacity disabled:opacity-50"
-            style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+            style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
           >
             {t('lobby', 'createRoom')}
           </button>
           <button
             onClick={() => { setShowJoin(!showJoin); setJoinCode(''); }}
             className="w-full text-sm transition-colors"
-            style={{ color: '#8B7355' }}
+            style={{ color: 'var(--th-text-sub)' }}
           >
             {showJoin ? '▲ 닫기' : `▼ ${t('lobby', 'joinWithCode')}`}
           </button>
@@ -144,15 +144,15 @@ const Lobby = () => {
                 autoFocus
                 maxLength={8}
                 className="flex-1 px-3 py-2 rounded-lg border text-sm focus:outline-none transition-all font-mono tracking-widest uppercase"
-                style={{ backgroundColor: '#FFF8F0', borderColor: '#E5D5C0', color: '#2C1F0E' }}
-                onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
               />
               <button
                 onClick={handleJoinRoom}
                 disabled={isJoining || !joinCode.trim()}
                 className="px-4 py-2 rounded-full text-sm transition-opacity disabled:opacity-50"
-                style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
               >
                 {isJoining ? t('lobby', 'joining') : t('lobby', 'join')}
               </button>
@@ -163,11 +163,11 @@ const Lobby = () => {
 
       {/* Room List */}
       <div>
-        <h2 className="text-lg mb-4" style={{ color: '#2C1F0E' }}>{t('lobby', 'myGroups')}</h2>
+        <h2 className="text-lg mb-4" style={{ color: 'var(--th-text)' }}>{t('lobby', 'myGroups')}</h2>
         {rooms.length === 0 ? (
-          <div className="rounded-2xl p-8 border-2 border-dashed text-center" style={{ borderColor: '#E5D5C0' }}>
-            <p style={{ color: '#8B7355' }}>{t('lobby', 'noGroups')}</p>
-            <p className="text-sm mt-2" style={{ color: '#8B7355' }}>{t('lobby', 'noGroupsDesc')}</p>
+          <div className="rounded-2xl p-8 border-2 border-dashed text-center" style={{ borderColor: 'var(--th-border)' }}>
+            <p style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'noGroups')}</p>
+            <p className="text-sm mt-2" style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'noGroupsDesc')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -176,12 +176,12 @@ const Lobby = () => {
                 key={room.roomId}
                 onClick={() => navigate(`/invite/${room.roomId}`)}
                 className="w-full rounded-2xl p-5 border shadow-sm flex items-center justify-between transition-all hover:scale-[1.02]"
-                style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}
+                style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}
               >
                 <div className="text-left">
-                  <p style={{ color: '#2C1F0E' }}>{room.roomName || room.name}</p>
+                  <p style={{ color: 'var(--th-text)' }}>{room.roomName || room.name}</p>
                 </div>
-                <ChevronRight className="w-5 h-5" style={{ color: '#D4853A' }} />
+                <ChevronRight className="w-5 h-5" style={{ color: 'var(--th-primary)' }} />
               </button>
             ))}
           </div>

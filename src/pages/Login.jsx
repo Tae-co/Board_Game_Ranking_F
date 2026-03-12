@@ -114,38 +114,38 @@ const Login = () => {
   };
 
   const nicknameHint = () => {
-    if (nicknameStatus === 'checking') return { text: t('login', 'nicknameChecking'), color: '#8B7355' };
+    if (nicknameStatus === 'checking') return { text: t('login', 'nicknameChecking'), color: 'var(--th-text-sub)' };
     if (nicknameStatus === 'ok') return { text: t('login', 'nicknameAvailable'), color: '#16a34a' };
     if (nicknameStatus === 'taken') return { text: t('login', 'nicknameTaken'), color: '#dc2626' };
     return null;
   };
 
-  const inputStyle = { backgroundColor: '#FFF8F0', borderColor: '#E5D5C0', color: '#2C1F0E' };
+  const inputStyle = { backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' };
   const inputClass = 'w-full px-4 py-3 rounded-lg border focus:outline-none transition-all';
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
-      style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
+      style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: 'var(--th-bg)' }}>
 
       {/* Logo */}
       <div className="text-center mb-12">
         <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#D4853A' }}>
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'var(--th-primary)' }}>
             <Dices className="w-10 h-10" style={{ color: '#FFFFFF' }} />
           </div>
         </div>
-        <h1 className="text-3xl mb-2" style={{ color: '#2C1F0E' }}>{t('login', 'title')}</h1>
-        <p className="text-sm" style={{ color: '#8B7355' }}>{t('login', 'subtitle')}</p>
+        <h1 className="text-3xl mb-2" style={{ color: 'var(--th-text)' }}>{t('login', 'title')}</h1>
+        <p className="text-sm" style={{ color: 'var(--th-text-sub)' }}>{t('login', 'subtitle')}</p>
       </div>
 
       {/* Card */}
-      <div className="w-full rounded-2xl p-6 border shadow-lg overflow-hidden" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
+      <div className="w-full rounded-2xl p-6 border shadow-lg overflow-hidden" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
 
         {/* Step 1 */}
         {step === 1 && (
           <div className="space-y-4">
             <div>
-              <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>{t('login', 'phone')}</label>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>{t('login', 'phone')}</label>
               <input
                 type="tel"
                 value={phone}
@@ -155,8 +155,8 @@ const Login = () => {
                 maxLength={11}
                 className={inputClass}
                 style={inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
               />
             </div>
             {error && <p className="text-sm" style={{ color: '#dc2626' }}>{error}</p>}
@@ -164,16 +164,16 @@ const Login = () => {
               onClick={handleCheckPhone}
               disabled={isLoading || phone.length < 10}
               className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+              style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
             >
               {isLoading ? t('login', 'checking') : t('login', 'next')}
             </button>
 
             {/* 소셜 로그인 구분선 */}
             <div className="flex items-center gap-3 my-2">
-              <div className="flex-1 h-px" style={{ backgroundColor: '#E5D5C0' }} />
-              <span className="text-xs" style={{ color: '#8B7355' }}>또는</span>
-              <div className="flex-1 h-px" style={{ backgroundColor: '#E5D5C0' }} />
+              <div className="flex-1 h-px" style={{ backgroundColor: 'var(--th-border)' }} />
+              <span className="text-xs" style={{ color: 'var(--th-text-sub)' }}>또는</span>
+              <div className="flex-1 h-px" style={{ backgroundColor: 'var(--th-border)' }} />
             </div>
 
             {/* 카카오 로그인 */}
@@ -194,7 +194,7 @@ const Login = () => {
             <button
               onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`; }}
               className="w-full py-3 rounded-full flex items-center justify-center gap-2 font-medium border transition-opacity"
-              style={{ backgroundColor: '#FFFFFF', color: '#2C1F0E', borderColor: '#E5D5C0' }}
+              style={{ backgroundColor: 'var(--th-card)', color: 'var(--th-text)', borderColor: 'var(--th-border)' }}
               onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
               onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
             >
@@ -213,8 +213,8 @@ const Login = () => {
         {step === 2 && isExisting && (
           <div className="space-y-4">
             <div>
-              <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>{t('login', 'passwordLabel')}</label>
-              <p className="text-sm mb-3" style={{ color: '#8B7355' }}>{phone}</p>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>{t('login', 'passwordLabel')}</label>
+              <p className="text-sm mb-3" style={{ color: 'var(--th-text-sub)' }}>{phone}</p>
               <input
                 type="password"
                 value={password}
@@ -224,8 +224,8 @@ const Login = () => {
                 autoFocus
                 className={inputClass}
                 style={inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
               />
             </div>
             {error && <p className="text-sm" style={{ color: '#dc2626' }}>{error}</p>}
@@ -233,14 +233,14 @@ const Login = () => {
               onClick={handleExistingLogin}
               disabled={isLoading}
               className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+              style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
             >
               {isLoading ? t('login', 'loggingIn') : t('login', 'login')}
             </button>
             <button
               onClick={() => { setStep(1); setPassword(''); setError(''); }}
               className="w-full py-2 text-sm transition-colors"
-              style={{ color: '#8B7355' }}
+              style={{ color: 'var(--th-text-sub)' }}
             >
               {t('login', 'backToPhone')}
             </button>
@@ -251,8 +251,8 @@ const Login = () => {
         {step === 2 && !isExisting && (
           <div className="space-y-4">
             <div>
-              <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>{t('login', 'otpLabel')}</label>
-              <p className="text-sm mb-4" style={{ color: '#8B7355' }}>{phone}{t('login', 'otpDesc')}</p>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>{t('login', 'otpLabel')}</label>
+              <p className="text-sm mb-4" style={{ color: 'var(--th-text-sub)' }}>{phone}{t('login', 'otpDesc')}</p>
               <div className="flex justify-center">
                 <InputOTP maxLength={6} value={otp} onChange={setOtp}>
                   <InputOTPGroup className="gap-1">
@@ -273,14 +273,14 @@ const Login = () => {
               onClick={handleVerifyOtp}
               disabled={isLoading || otp.length < 6}
               className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+              style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
             >
               {isLoading ? t('login', 'checking') : t('login', 'verifyOtp')}
             </button>
             <button
               onClick={() => { setStep(1); setOtp(''); setError(''); }}
               className="w-full py-2 text-sm transition-colors"
-              style={{ color: '#8B7355' }}
+              style={{ color: 'var(--th-text-sub)' }}
             >
               {t('login', 'backToPhone')}
             </button>
@@ -291,8 +291,8 @@ const Login = () => {
         {step === 3 && (
           <div className="space-y-4">
             <div>
-              <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>{t('login', 'nicknameLabel')}</label>
-              <p className="text-sm mb-4" style={{ color: '#8B7355' }}>{t('login', 'nicknameDesc')}</p>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>{t('login', 'nicknameLabel')}</label>
+              <p className="text-sm mb-4" style={{ color: 'var(--th-text-sub)' }}>{t('login', 'nicknameDesc')}</p>
               <input
                 type="text"
                 value={nickname}
@@ -303,7 +303,7 @@ const Login = () => {
                 className={inputClass}
                 style={{
                   ...inputStyle,
-                  borderColor: nicknameStatus === 'ok' ? '#16a34a' : nicknameStatus === 'taken' ? '#dc2626' : '#E5D5C0',
+                  borderColor: nicknameStatus === 'ok' ? '#16a34a' : nicknameStatus === 'taken' ? '#dc2626' : 'var(--th-border)',
                 }}
               />
               {nicknameHint() && (
@@ -318,15 +318,15 @@ const Login = () => {
               placeholder={t('login', 'passwordPlaceholder')}
               className={inputClass}
               style={inputStyle}
-              onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-              onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
             />
             {error && <p className="text-sm" style={{ color: '#dc2626' }}>{error}</p>}
             <button
               onClick={handleRegister}
               disabled={isLoading || nicknameStatus === 'taken' || nicknameStatus === 'checking'}
               className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+              style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
             >
               {isLoading ? t('login', 'starting') : t('login', 'start')}
             </button>
@@ -338,9 +338,9 @@ const Login = () => {
       <button
         onClick={() => navigate('/admin-login')}
         className="mt-6 text-sm transition-colors"
-        style={{ color: '#8B7355' }}
-        onMouseEnter={(e) => e.currentTarget.style.color = '#D4853A'}
-        onMouseLeave={(e) => e.currentTarget.style.color = '#8B7355'}
+        style={{ color: 'var(--th-text-sub)' }}
+        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--th-primary)'}
+        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--th-text-sub)'}
       >
         {t('login', 'adminLogin')}
       </button>
