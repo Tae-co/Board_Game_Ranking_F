@@ -291,12 +291,15 @@ const ScoreSheet = () => {
   const boardGameId = Number(boardGameIdStr);
   const navigate = useNavigate();
   const location = useLocation();
-  const { players = [], roomId } = location.state || {};
+  const { players = [], roomId, gameName = '' } = location.state || {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scienceModal, setScienceModal] = useState(null);
 
-  const currentSchema = SCORE_SCHEMAS[boardGameId];
+  // DB ID가 스키마 키와 다를 수 있으므로 게임 이름으로 우선 조회, 없으면 ID로 fallback
+  const currentSchema = Object.values(SCORE_SCHEMAS).find(s =>
+    gameName && (gameName.toLowerCase().includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(gameName.toLowerCase()))
+  ) ?? SCORE_SCHEMAS[boardGameId];
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);

@@ -58,7 +58,7 @@ const GameSelect = () => {
     if (selectedPlayers.size < 2) { alert(t('gameSelect', 'minPlayersError')); return; }
     if (scoreSheetGameIds.has(selectedGame.id)) {
       navigate(`/score-sheet/${selectedGame.id}`, {
-        state: { roomId, players: members.filter(m => selectedPlayers.has(m.memberId)) },
+        state: { roomId, gameName: selectedGame.name, players: members.filter(m => selectedPlayers.has(m.memberId)) },
       });
     } else {
       navigate(`/match-form/${roomId}`, { state: { gameId: selectedGame.id, players: [...selectedPlayers] } });
