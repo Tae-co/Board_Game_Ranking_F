@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Check } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -48,10 +48,21 @@ const GameSelect = () => {
     setSelectedPlayers(newSelected);
   };
 
+  const scoreSheetGameIds = useMemo(() => {
+    const names = ['7 Wonders', '캐스캐디아', 'Azul'];
+    return new Set(gamesRaw.filter(g => names.some(n => g.name.includes(n))).map(g => g.id));
+  }, [gamesRaw]);
+
   const handleStartGame = () => {
     if (!selectedGame) { alert(t('gameSelect', 'noGameError')); return; }
     if (selectedPlayers.size < 2) { alert(t('gameSelect', 'minPlayersError')); return; }
-    navigate(`/match-form/${roomId}`, { state: { gameId: selectedGame.id, players: [...selectedPlayers] } });
+    if (scoreSheetGameIds.has(selectedGame.id)) {
+      navigate(`/score-sheet/${selectedGame.id}`, {
+        state: { roomId, players: members.filter(m => selectedPlayers.has(m.memberId)) },
+      });
+    } else {
+      navigate(`/match-form/${roomId}`, { state: { gameId: selectedGame.id, players: [...selectedPlayers] } });
+    }
   };
 
   return (

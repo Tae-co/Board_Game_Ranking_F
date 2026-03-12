@@ -10,6 +10,7 @@ import Lobby from './pages/Lobby';
 import Invite from './pages/Invite';
 import GameSelect from './pages/GameSelect';
 import MatchForm from './pages/MatchForm';
+import ScoreSheet from './pages/ScoreSheet';
 import Ranking from './pages/Ranking';
 import Profile from './pages/Profile';
 import AdminLogin from './pages/AdminLogin';
@@ -59,6 +60,7 @@ function App() {
           <Route path="/invite/:roomId" element={<PrivateRoute><Invite /></PrivateRoute>} />
           <Route path="/games/:roomId" element={<PrivateRoute><GameSelect /></PrivateRoute>} />
           <Route path="/match-form/:roomId" element={<PrivateRoute><MatchForm /></PrivateRoute>} />
+          <Route path="/score-sheet/:boardGameId" element={<PrivateRoute><ScoreSheet /></PrivateRoute>} />
           <Route path="/ranking/:roomId" element={<PrivateRoute><Ranking /></PrivateRoute>} />
 
           {/* OAuth2 콜백 */}
