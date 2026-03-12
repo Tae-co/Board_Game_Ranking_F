@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Check } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
@@ -48,10 +48,8 @@ const GameSelect = () => {
     setSelectedPlayers(newSelected);
   };
 
-  const scoreSheetGameIds = useMemo(() => {
-    const names = ['7 Wonders', '캐스캐디아', 'Azul'];
-    return new Set(gamesRaw.filter(g => names.some(n => g.name.includes(n))).map(g => g.id));
-  }, [gamesRaw]);
+  const SCORE_SHEET_GAME_IDS = [2, 3, 4];
+  const scoreSheetGameIds = new Set(SCORE_SHEET_GAME_IDS);
 
   const handleStartGame = () => {
     if (!selectedGame) { alert(t('gameSelect', 'noGameError')); return; }
@@ -118,7 +116,7 @@ const GameSelect = () => {
               >
                 <div className="h-32 flex items-center justify-center overflow-hidden" style={{ backgroundColor: 'var(--th-bg)' }}>
                   {game.imageUrl ? (
-                    <img src={game.imageUrl} alt={game.name} className="w-full h-full object-cover" />
+                    <img src={game.imageUrl?.replace('http://', 'https://')} alt={game.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-4xl">🎲</div>
                   )}
@@ -144,7 +142,7 @@ const GameSelect = () => {
           <div className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-primary)' }}>
             <div className="flex items-center gap-3">
               {selectedGame.imageUrl ? (
-                <img src={selectedGame.imageUrl} alt={selectedGame.name} className="w-9 h-9 rounded-lg object-cover" />
+                <img src={selectedGame.imageUrl?.replace('http://', 'https://')} alt={selectedGame.name} className="w-9 h-9 rounded-lg object-cover" />
               ) : (
                 <div className="text-3xl">🎲</div>
               )}

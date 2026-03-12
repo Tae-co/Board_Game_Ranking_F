@@ -8,7 +8,7 @@ import api from '../api/axios';
 // =============================================
 const SCORE_SCHEMAS = {
   // 7 Wonders
-  7: {
+  2: {
     name: "7WONDERS",
     type: "flat",
     categories: [
@@ -23,7 +23,7 @@ const SCORE_SCHEMAS = {
   },
 
   // 캐스캐디아 - 섹션 구조
-  8: {
+  3: {
     name: "CASCADIA",
     type: "sectioned",
     sections: [
@@ -70,7 +70,7 @@ const SCORE_SCHEMAS = {
   },
 
   // Azul
-  9: {
+  4: {
     name: "AZUL",
     type: "flat",
     categories: [
