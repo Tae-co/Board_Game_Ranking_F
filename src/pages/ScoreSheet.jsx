@@ -372,7 +372,7 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
           return (
             <td key={p.memberId} style={{ padding: "12px 6px", textAlign: "center" }}>
               <div style={{ fontWeight: 900, fontSize: 20, color: canWin ? "var(--th-primary)" : "#F5E6D0" }}>{total}</div>
-              {canWin && <div style={{ fontSize: 10, color: "var(--th-primary)", fontWeight: 700, marginTop: 2 }}>🏆 승리 가능</div>}
+              {canWin && <div style={{ fontSize: 10, color: "var(--th-primary)", fontWeight: 700, marginTop: 2 }}>🏆 {t('scoreSheet', 'canWin')}</div>}
             </td>
           );
         })}

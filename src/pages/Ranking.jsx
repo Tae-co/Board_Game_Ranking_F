@@ -205,7 +205,7 @@ const Ranking = () => {
         <div className="flex rounded-full p-1" style={{ backgroundColor: 'var(--th-card)', border: '1px solid var(--th-border)' }}>
           {[
             { key: 'group', label: t('ranking', 'groupTab') },
-            { key: 'matches', label: '매치기록' },
+            { key: 'matches', label: t('ranking', 'matchesTab') },
           ].map(tab => (
             <button
               key={tab.key}
@@ -260,8 +260,8 @@ const Ranking = () => {
           matches.length === 0 ? (
             <div className="rounded-2xl p-10 border-2 border-dashed text-center" style={{ borderColor: 'var(--th-border)' }}>
               <div className="text-5xl mb-4">🎲</div>
-              <p style={{ color: 'var(--th-text)' }}>매치 기록이 없습니다</p>
-              <p className="text-sm mt-2" style={{ color: 'var(--th-text-sub)' }}>게임을 플레이하면 기록이 쌓여요</p>
+              <p style={{ color: 'var(--th-text)' }}>{t('ranking', 'noMatches')}</p>
+              <p className="text-sm mt-2" style={{ color: 'var(--th-text-sub)' }}>{t('ranking', 'noMatchesDesc')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -493,7 +493,7 @@ const Ranking = () => {
           onClick={(e) => { if (e.target === e.currentTarget) setEditModal(null); }}
         >
           <div className="rounded-2xl p-6 w-full" style={{ backgroundColor: 'var(--th-card)', maxWidth: '340px' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--th-text)' }}>매치 수정</h3>
+            <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--th-text)' }}>{t('ranking', 'editMatch')}</h3>
             <div className="space-y-3 mb-6">
               {editModal.participants.map((p) => {
                 const total = editModal.participants.length;

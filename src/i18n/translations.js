@@ -149,6 +149,7 @@ const translations = {
       saveFailed: '저장에 실패했습니다.',
       wrongAccess: '잘못된 접근입니다',
       goBack: '돌아가기',
+      canWin: '승리 가능',
     },
 
     // 랭킹
@@ -165,6 +166,10 @@ const translations = {
       noRecordDesc: '게임을 먼저 플레이해보세요',
       tierSystem: '티어 시스템',
       backToLobby: '대기실로 돌아가기',
+      matchesTab: '매치기록',
+      noMatches: '매치 기록이 없습니다',
+      noMatchesDesc: '게임을 플레이하면 기록이 쌓여요',
+      editMatch: '매치 수정',
       editRating: '초기 LP 설정',
       editRatingDesc: '첫 게임 전에만 수정 가능합니다.',
       hasMatchRecord: '매치 기록이 있어 수정 불가',
@@ -391,6 +396,7 @@ const translations = {
       saveFailed: 'Failed to save.',
       wrongAccess: 'Invalid access',
       goBack: 'Go Back',
+      canWin: 'Win Possible',
     },
 
     // Ranking
@@ -407,6 +413,10 @@ const translations = {
       noRecordDesc: 'Play a game first',
       tierSystem: 'Tier System',
       backToLobby: 'Back to Lobby',
+      matchesTab: 'Match History',
+      noMatches: 'No match records',
+      noMatchesDesc: 'Records will appear after playing',
+      editMatch: 'Edit Match',
       editRating: 'Set Initial LP',
       editRatingDesc: 'Can only be set before the first game.',
       hasMatchRecord: 'Cannot edit: has match records',
