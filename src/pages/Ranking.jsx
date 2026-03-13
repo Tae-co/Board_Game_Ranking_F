@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Trophy, Crown } from 'lucide-react';
 import { motion } from 'motion/react';
@@ -61,8 +61,15 @@ const Ranking = () => {
 
   const [activeTab, setActiveTab] = useState('group');
   const [editModal, setEditModal] = useState(null);
+  const [showChanges, setShowChanges] = useState(!!matchResult);
   const myNickname = localStorage.getItem('nickname');
   const myUserId = Number(localStorage.getItem('userId'));
+
+  useEffect(() => {
+    if (!matchResult) return;
+    const timer = setTimeout(() => setShowChanges(false), 4000);
+    return () => clearTimeout(timer);
+  }, []);
 
   const ratingChangeMap = matchResult
     ? Object.fromEntries(matchResult.map(r => [r.memberId, r.ratingChange]))
@@ -346,26 +353,24 @@ const Ranking = () => {
                   </div>
 
                   {/* W / L / WR */}
-                  <div className="flex items-center gap-1 flex-shrink-0" style={{ color: 'var(--th-text-sub)', fontSize: '10px' }}>
+                  <div className="flex items-center gap-1 flex-shrink-0 self-center" style={{ color: 'var(--th-text-sub)', fontSize: '10px' }}>
                     <span>W<span className="font-bold ml-0.5" style={{ color: 'var(--th-text)' }}>{rank.winCount}</span></span>
                     <span>L<span className="font-bold ml-0.5" style={{ color: 'var(--th-text)' }}>{rank.loseCount}</span></span>
                     <span>WR<span className="font-bold ml-0.5" style={{ color: winRate >= 60 ? 'var(--th-primary)' : 'var(--th-text)' }}>{winRate}%</span></span>
                   </div>
 
-                  {/* LP */}
-                  <div className="text-right flex-shrink-0" style={{ minWidth: '36px' }}>
+                  {/* 점수 */}
+                  <div className="flex-shrink-0 relative text-right" style={{ minWidth: '36px' }}>
                     <p
-                      className="text-sm font-bold leading-tight"
-                      style={{ background: 'linear-gradient(135deg, var(--th-primary), var(--th-primary-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                      className="text-sm font-bold"
+                      style={{ background: 'linear-gradient(135deg, var(--th-primary), var(--th-primary-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text', lineHeight: 1.2 }}
                     >
                       {Math.round(rank.rating)}
                     </p>
-                    {change !== undefined ? (
-                      <p className="font-bold leading-tight" style={{ color: change > 0 ? '#16a34a' : '#dc2626', fontSize: '10px' }}>
+                    {showChanges && change !== undefined && (
+                      <p className="font-bold" style={{ color: change > 0 ? '#16a34a' : '#dc2626', fontSize: '10px', lineHeight: 1.2 }}>
                         {change > 0 ? '+' : ''}{Math.round(change)}
                       </p>
-                    ) : (
-                      <p style={{ color: 'var(--th-text-sub)', fontSize: '10px' }}>&nbsp;</p>
                     )}
                   </div>
                 </motion.div>
