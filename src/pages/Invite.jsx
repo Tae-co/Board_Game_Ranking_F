@@ -25,6 +25,7 @@ const Invite = () => {
         inviteCode: res.data.inviteCode,
       };
     },
+    staleTime: 1000 * 60 * 10,
   });
 
   useEffect(() => {
@@ -61,6 +62,7 @@ const Invite = () => {
       const res = await api.get(`/rooms/${roomId}/members`);
       return res.data || [];
     },
+    staleTime: 1000 * 60 * 2,
   });
 
   const isHost = members.find(m => m.memberId === userId)?.isHost ?? false;

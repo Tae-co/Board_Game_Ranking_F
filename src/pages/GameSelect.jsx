@@ -18,6 +18,7 @@ const GameSelect = () => {
       const res = await api.get(`/rooms/${roomId}`);
       return res.data;
     },
+    staleTime: 1000 * 60 * 10,
   });
 
   const { data: games = [] } = useQuery({
@@ -26,6 +27,7 @@ const GameSelect = () => {
       const res = await api.get('/games');
       return res.data || [];
     },
+    staleTime: 1000 * 60 * 30,
   });
 
   const { data: members = [] } = useQuery({
@@ -34,6 +36,7 @@ const GameSelect = () => {
       const res = await api.get(`/rooms/${roomId}/members`);
       return res.data || [];
     },
+    staleTime: 1000 * 60 * 2,
   });
 
   const currentGame = games.find(g => g.id === room?.boardGameId);

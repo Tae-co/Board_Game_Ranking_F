@@ -24,6 +24,7 @@ const Lobby = () => {
       const res = await api.get(`/rooms/my/${userId}`);
       return res.data || [];
     },
+    staleTime: 1000 * 60 * 2,
   });
 
   const { data: games = [] } = useQuery({
@@ -33,6 +34,7 @@ const Lobby = () => {
       return res.data || [];
     },
     enabled: mode === 'create',
+    staleTime: 1000 * 60 * 30,
   });
 
   const handleCreateRoom = async () => {

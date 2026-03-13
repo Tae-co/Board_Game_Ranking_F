@@ -84,6 +84,7 @@ const Ranking = () => {
       const res = await api.get(`/rooms/${roomId}/members`);
       return res.data || [];
     },
+    staleTime: 1000 * 60 * 2,
   });
 
   const isHost = roomMembers.find(m => m.memberId === myUserId)?.isHost ?? false;
@@ -105,6 +106,7 @@ const Ranking = () => {
       return res.data || [];
     },
     enabled: activeTab === 'matches',
+    staleTime: 1000 * 60 * 1,
   });
 
   const getWinRate = (winCount, loseCount) => {
