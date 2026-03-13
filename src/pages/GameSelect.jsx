@@ -26,7 +26,6 @@ const GameSelect = () => {
       const res = await api.get('/games');
       return res.data || [];
     },
-    enabled: !!room?.boardGameId,
   });
 
   const { data: members = [] } = useQuery({
