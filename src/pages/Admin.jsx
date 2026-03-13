@@ -304,7 +304,7 @@ const Admin = () => {
                     {(imagePreview || form.imageUrl) && (
                       <div className="relative w-20 h-20">
                         <img
-                          src={imagePreview || `${import.meta.env.VITE_API_URL}${form.imageUrl}`}
+                          src={imagePreview || form.imageUrl}
                           alt="preview"
                           className="w-full h-full object-cover rounded-xl border"
                           style={{ borderColor: '#E5D5C0' }}
@@ -357,7 +357,7 @@ const Admin = () => {
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
                         {game.imageUrl ? (
-                          <img src={`${import.meta.env.VITE_API_URL}${game.imageUrl}`} alt={game.name} className="w-full h-full object-cover" />
+                          <img src={game.imageUrl} alt={game.name} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xl" style={{ backgroundColor: '#FFF8F0' }}>🎲</div>
                         )}
