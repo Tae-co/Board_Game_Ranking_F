@@ -165,6 +165,13 @@ const translations = {
       noRecordDesc: '게임을 먼저 플레이해보세요',
       tierSystem: '티어 시스템',
       backToLobby: '대기실로 돌아가기',
+      editRating: '초기 LP 설정',
+      editRatingDesc: '첫 게임 전에만 수정 가능합니다.',
+      hasMatchRecord: '매치 기록이 있어 수정 불가',
+      notPlayed: '미플레이',
+      save: '저장',
+      saving: '저장 중...',
+      editRatingFailed: 'LP 설정에 실패했습니다.',
     },
 
     // 프로필
@@ -400,6 +407,13 @@ const translations = {
       noRecordDesc: 'Play a game first',
       tierSystem: 'Tier System',
       backToLobby: 'Back to Lobby',
+      editRating: 'Set Initial LP',
+      editRatingDesc: 'Can only be set before the first game.',
+      hasMatchRecord: 'Cannot edit: has match records',
+      notPlayed: 'Not played',
+      save: 'Save',
+      saving: 'Saving...',
+      editRatingFailed: 'Failed to set LP.',
     },
 
     // Profile

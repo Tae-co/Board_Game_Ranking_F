@@ -62,6 +62,9 @@ const Ranking = () => {
   const [activeTab, setActiveTab] = useState('group');
   const [editModal, setEditModal] = useState(null);
   const [showChanges, setShowChanges] = useState(!!matchResult);
+  const [ratingEditModal, setRatingEditModal] = useState(null); // { memberId, nickname, currentRating }
+  const [ratingEditValue, setRatingEditValue] = useState('');
+  const [isRatingEditSaving, setIsRatingEditSaving] = useState(false);
   const myNickname = localStorage.getItem('nickname');
   const myUserId = Number(localStorage.getItem('userId'));
 
@@ -116,6 +119,25 @@ const Ranking = () => {
     if (points >= TIERS.gold.minPoints) return TIERS.gold;
     if (points >= TIERS.silver.minPoints) return TIERS.silver;
     return TIERS.bronze;
+  };
+
+  const handleUpdateRating = async () => {
+    if (!ratingEditModal) return;
+    const val = Number(ratingEditValue);
+    if (isNaN(val) || val < 0) return;
+    setIsRatingEditSaving(true);
+    try {
+      await api.put(`/rooms/${roomId}/members/${ratingEditModal.memberId}/rating`, {
+        requesterId: myUserId,
+        rating: val,
+      });
+      queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
+      setRatingEditModal(null);
+    } catch {
+      alert(t('ranking', 'editRatingFailed'));
+    } finally {
+      setIsRatingEditSaving(false);
+    }
   };
 
   const handleUpdateMatch = async () => {
@@ -349,6 +371,11 @@ const Ranking = () => {
                           ME
                         </motion.span>
                       )}
+                      {rank.rank === null && (
+                        <span className="text-xs px-1.5 py-0.5 rounded ml-1" style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-text-sub)', border: '1px solid var(--th-border)' }}>
+                          {t('ranking', 'notPlayed')}
+                        </span>
+                      )}
                     </div>
                   </div>
 
@@ -358,6 +385,30 @@ const Ranking = () => {
                     <span>L<span className="font-bold ml-0.5" style={{ color: 'var(--th-text)' }}>{rank.loseCount}</span></span>
                     <span>WR<span className="font-bold ml-0.5" style={{ color: winRate >= 60 ? 'var(--th-primary)' : 'var(--th-text)' }}>{winRate}%</span></span>
                   </div>
+
+                  {/* 편집 버튼 (방장만) */}
+                  {isHost && (
+                    <div className="relative flex-shrink-0">
+                      {rank.playCount === 0 ? (
+                        <button
+                          onClick={() => { setRatingEditModal({ memberId: rank.memberId, nickname: rank.nickname, currentRating: rank.rating }); setRatingEditValue(String(Math.round(rank.rating))); }}
+                          className="text-xs px-1 py-0.5 rounded"
+                          style={{ color: 'var(--th-primary)', cursor: 'pointer', fontSize: '14px' }}
+                          title={t('ranking', 'editRating')}
+                        >
+                          ✏️
+                        </button>
+                      ) : (
+                        <span
+                          className="text-xs px-1 py-0.5 rounded"
+                          style={{ color: 'var(--th-text-sub)', cursor: 'not-allowed', fontSize: '14px', opacity: 0.4 }}
+                          title={t('ranking', 'hasMatchRecord')}
+                        >
+                          ✏️
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   {/* 점수 */}
                   <div className="flex-shrink-0 relative text-right" style={{ minWidth: '36px' }}>
@@ -401,6 +452,43 @@ const Ranking = () => {
           게임 시작
         </motion.button>
       </div>
+
+      {/* LP 수정 모달 */}
+      {ratingEditModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+          <div className="rounded-2xl p-6 mx-4 w-full" style={{ maxWidth: '320px', backgroundColor: 'var(--th-card)', border: '1px solid var(--th-border)' }}>
+            <h3 className="text-base font-bold mb-1" style={{ color: 'var(--th-text)' }}>{t('ranking', 'editRating')}</h3>
+            <p className="text-sm mb-1" style={{ color: 'var(--th-primary)' }}>{ratingEditModal.nickname}</p>
+            <p className="text-xs mb-4" style={{ color: 'var(--th-text-sub)' }}>{t('ranking', 'editRatingDesc')}</p>
+            <input
+              type="number"
+              value={ratingEditValue}
+              onChange={(e) => setRatingEditValue(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border text-center text-lg font-bold focus:outline-none mb-4"
+              style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={() => setRatingEditModal(null)}
+                className="flex-1 py-2.5 rounded-full text-sm font-bold"
+                style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-text-sub)', border: '1px solid var(--th-border)' }}
+              >
+                {t('common', 'cancel')}
+              </button>
+              <button
+                onClick={handleUpdateRating}
+                disabled={isRatingEditSaving}
+                className="flex-1 py-2.5 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
+                style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
+              >
+                {isRatingEditSaving ? t('ranking', 'saving') : t('ranking', 'save')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Edit Match Modal */}
       {editModal && (
