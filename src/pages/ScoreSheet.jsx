@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import api from '../api/axios';
+import { useLanguage } from '../i18n/LanguageContext';
 
 // =============================================
 // 게임별 점수 스키마 정의
@@ -92,6 +93,7 @@ const getAllCategories = (schema) => {
 // 7Wonders 과학 자동 계산 모달
 // =============================================
 const ScienceModal = ({ onConfirm, onClose }) => {
+  const { t } = useLanguage();
   const [gear, setGear] = useState(0);
   const [compass, setCompass] = useState(0);
   const [tablet, setTablet] = useState(0);
@@ -104,8 +106,8 @@ const ScienceModal = ({ onConfirm, onClose }) => {
   return (
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
       <div style={{ background: "#fff", borderRadius: 20, padding: 28, width: 300, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-        <h3 style={{ margin: "0 0 4px", color: "#1C1208", fontSize: 18, fontWeight: 800 }}>🟢 과학 점수 계산</h3>
-        <p style={{ margin: "0 0 20px", color: "#8B7355", fontSize: 12 }}>심볼 개수 입력 → 자동 계산</p>
+        <h3 style={{ margin: "0 0 4px", color: "#1C1208", fontSize: 18, fontWeight: 800 }}>{`🟢 ${t('scoreSheet', 'scienceTitle')}`}</h3>
+        <p style={{ margin: "0 0 20px", color: "#8B7355", fontSize: 12 }}>{t('scoreSheet', 'scienceDesc')}</p>
         {[
           { label: "⚙️ 기어", val: gear, set: setGear },
           { label: "🧭 컴퍼스", val: compass, set: setCompass },
@@ -122,11 +124,11 @@ const ScienceModal = ({ onConfirm, onClose }) => {
         ))}
         <div style={{ background: "var(--th-bg)", borderRadius: 12, padding: "12px 16px", margin: "16px 0", border: "2px solid var(--th-primary)", textAlign: "center" }}>
           <div style={{ fontSize: 11, color: "#8B7355", marginBottom: 4 }}>{gear}² + {compass}² + {tablet}² + {Math.min(gear, compass, tablet)} × 7</div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: "var(--th-primary)" }}>{score}점</div>
+          <div style={{ fontSize: 28, fontWeight: 900, color: "var(--th-primary)" }}>{`${score}${t('scoreSheet', 'pts')}`}</div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "2px solid #E5D5C0", background: "#fff", color: "#8B7355", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>취소</button>
-          <button onClick={() => onConfirm(score)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "var(--th-primary)", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>적용</button>
+          <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "2px solid #E5D5C0", background: "#fff", color: "#8B7355", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>{t('common', 'cancel')}</button>
+          <button onClick={() => onConfirm(score)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "var(--th-primary)", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>{t('scoreSheet', 'apply')}</button>
         </div>
       </div>
     </div>
@@ -172,9 +174,9 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
 // =============================================
 // 합계 행
 // =============================================
-const TotalRow = ({ players, totals, winnerId }) => (
+const TotalRow = ({ players, totals, winnerId, t }) => (
   <tr style={{ background: "#2C1F0E" }}>
-    <td style={{ padding: "12px 14px", fontWeight: 900, color: "var(--th-primary)", fontSize: 14 }}>Σ 합계</td>
+    <td style={{ padding: "12px 14px", fontWeight: 900, color: "var(--th-primary)", fontSize: 14 }}>{t('scoreSheet', 'total')}</td>
     {players.map(p => (
       <td key={p.memberId} style={{ padding: "12px 6px", textAlign: "center" }}>
         <div style={{ fontWeight: 900, fontSize: 20, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0" }}>{totals[p.memberId]}</div>
@@ -186,11 +188,11 @@ const TotalRow = ({ players, totals, winnerId }) => (
 // =============================================
 // Flat 테이블 (7Wonders, Azul)
 // =============================================
-const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, setScienceModal }) => (
+const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, setScienceModal, t }) => (
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 320 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "12px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#A08060", width: 110 }}>카테고리</th>
+        <th style={{ padding: "12px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#A08060", width: 110 }}>{t('scoreSheet', 'category')}</th>
         {players.map(p => (
           <th key={p.memberId} style={{ padding: "12px 8px", textAlign: "center", fontSize: 13, fontWeight: 800, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
             {p.memberId === winnerId ? "👑 " : ""}{p.nickname}
@@ -204,7 +206,7 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
           <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)", whiteSpace: "nowrap" }}>
             <span style={{ marginRight: 6 }}>{cat.icon}</span>
             <span style={{ color: cat.color }}>{cat.label}</span>
-            {cat.negative && <span style={{ fontSize: 10, color: "#ef4444", marginLeft: 4 }}>(감점)</span>}
+            {cat.negative && <span style={{ fontSize: 10, color: "#ef4444", marginLeft: 4 }}>({t('scoreSheet', 'negative')})</span>}
           </td>
           {players.map(p => (
             <td key={p.memberId} style={{ padding: "6px 6px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
@@ -213,7 +215,7 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
           ))}
         </tr>
       ))}
-      <TotalRow players={players} totals={totals} winnerId={winnerId} />
+      <TotalRow players={players} totals={totals} winnerId={winnerId} t={t} />
     </tbody>
   </table>
 );
@@ -221,11 +223,11 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
 // =============================================
 // Sectioned 테이블 (캐스캐디아)
 // =============================================
-const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChange }) => (
+const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChange, t }) => (
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 320 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "12px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#A08060", width: 120 }}>카테고리</th>
+        <th style={{ padding: "12px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#A08060", width: 120 }}>{t('scoreSheet', 'category')}</th>
         {players.map(p => (
           <th key={p.memberId} style={{ padding: "12px 8px", textAlign: "center", fontSize: 13, fontWeight: 800, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
             {p.memberId === winnerId ? "👑 " : ""}{p.nickname}
@@ -267,7 +269,7 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
             ))}
             <tr key={`st-${section.key}`} style={{ background: section.bgColor }}>
               <td style={{ padding: "7px 14px 7px 24px", fontSize: 12, fontWeight: 800, color: section.color, borderBottom: `2px solid ${section.color}` }}>
-                소계
+                {t('scoreSheet', 'subtotal')}
               </td>
               {players.map(p => (
                 <td key={p.memberId} style={{ padding: "7px 6px", textAlign: "center", fontWeight: 800, fontSize: 15, color: section.color, borderBottom: `2px solid ${section.color}` }}>
@@ -278,7 +280,7 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
           </>
         );
       })}
-      <TotalRow players={players} totals={totals} winnerId={winnerId} />
+      <TotalRow players={players} totals={totals} winnerId={winnerId} t={t} />
     </tbody>
   </table>
 );
@@ -291,6 +293,7 @@ const ScoreSheet = () => {
   const boardGameId = Number(boardGameIdStr);
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
   const { players = [], roomId, gameName = '' } = location.state || {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -363,7 +366,7 @@ const ScoreSheet = () => {
       });
       navigate(`/ranking/${roomId}`, { state: { matchResult: res.data }, replace: true });
     } catch (err) {
-      alert('저장에 실패했습니다.');
+      alert(t('scoreSheet', 'saveFailed'));
       console.error(err);
     } finally {
       setIsSubmitting(false);
@@ -374,12 +377,12 @@ const ScoreSheet = () => {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>😅</div>
-        <p style={{ color: "var(--th-text-sub)", marginBottom: 24 }}>잘못된 접근입니다</p>
+        <p style={{ color: "var(--th-text-sub)", marginBottom: 24 }}>{t('scoreSheet', 'wrongAccess')}</p>
         <button
           onClick={() => navigate(-1)}
           style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}
         >
-          돌아가기
+          {t('scoreSheet', 'goBack')}
         </button>
       </div>
     );
@@ -399,8 +402,8 @@ const ScoreSheet = () => {
           <ArrowLeft size={24} />
         </button>
         <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: "var(--th-text)" }}>{currentSchema.name} 점수판</h2>
-          <p style={{ margin: 0, fontSize: 12, color: "var(--th-text-sub)" }}>각 칸에 점수를 입력하세요</p>
+          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: "var(--th-text)" }}>{`${currentSchema.name} ${t('scoreSheet', 'scoreBoard')}`}</h2>
+          <p style={{ margin: 0, fontSize: 12, color: "var(--th-text-sub)" }}>{t('scoreSheet', 'enterScores')}</p>
         </div>
       </div>
 
@@ -408,9 +411,9 @@ const ScoreSheet = () => {
       <div style={{ margin: "0 16px", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
         <div style={{ overflowX: "auto" }}>
           {currentSchema.type === "sectioned" ? (
-            <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} />
+            <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} t={t} />
           ) : (
-            <FlatTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} setScienceModal={setScienceModal} />
+            <FlatTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} setScienceModal={setScienceModal} t={t} />
           )}
         </div>
       </div>
@@ -420,8 +423,8 @@ const ScoreSheet = () => {
         <div style={{ margin: "16px 16px 0", background: "var(--th-primary)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}>
           <span style={{ fontSize: 28 }}>👑</span>
           <div>
-            <div style={{ fontWeight: 900, fontSize: 18, color: "#fff" }}>{winnerNickname} 승리!</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{totals[winnerId]}점으로 1위</div>
+            <div style={{ fontWeight: 900, fontSize: 18, color: "#fff" }}>{`${winnerNickname} ${t('scoreSheet', 'victory')}`}</div>
+            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{`${totals[winnerId]}${t('scoreSheet', 'firstPlace')}`}</div>
           </div>
         </div>
       )}
@@ -437,7 +440,7 @@ const ScoreSheet = () => {
             color: "#fff", fontSize: 14, fontWeight: 900, cursor: isSubmitting ? "not-allowed" : "pointer",
           }}
         >
-          {isSubmitting ? '저장 중...' : '랭킹에 반영하기 →'}
+          {isSubmitting ? t('scoreSheet', 'saving') : t('scoreSheet', 'submit')}
         </button>
       </div>
 

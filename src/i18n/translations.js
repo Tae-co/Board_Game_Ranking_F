@@ -62,7 +62,7 @@ const translations = {
       createRoom: '방 만들기',
       joinWithCode: '코드로 입장',
       inviteCodePlaceholder: '초대 코드',
-      join: '입장',
+      join: '입장하기',
       joining: '...',
       myGroups: '내 그룹',
       noGroups: '참여 중인 그룹이 없습니다',
@@ -72,6 +72,10 @@ const translations = {
       roomNameRequired: '방 이름을 입력해주세요!',
       codeRequired: '초대 코드를 입력해주세요!',
       logoutConfirm: '로그아웃 하시겠습니까?',
+      gameRequired: '게임을 선택해주세요.',
+      groupNamePlaceholder: '그룹 이름',
+      selectGame: '게임 선택',
+      creating: '생성 중...',
     },
 
     // 방 상세 (초대)
@@ -108,6 +112,7 @@ const translations = {
       startPlaceholder: '게임과 플레이어를 선택해주세요',
       minPlayersError: '게임은 최소 2명 이상 선택해야 합니다!',
       noGameError: '보드게임을 먼저 선택해주세요!',
+      currentGame: '이번 게임',
     },
 
     // 결과 입력
@@ -123,6 +128,27 @@ const translations = {
       goBack: '뒤로 가기',
       emptyScoreError: '모든 플레이어의 길이 점수를 입력해주세요!',
       saveFailed: '결과 저장에 실패했습니다.',
+    },
+
+    // 점수판
+    scoreSheet: {
+      scoreBoard: '점수판',
+      enterScores: '각 칸에 점수를 입력하세요',
+      victory: '승리!',
+      firstPlace: '점으로 1위',
+      category: '카테고리',
+      subtotal: '소계',
+      total: 'Σ 합계',
+      negative: '감점',
+      scienceTitle: '과학 점수 계산',
+      scienceDesc: '심볼 개수 입력 → 자동 계산',
+      pts: '점',
+      apply: '적용',
+      submit: '랭킹에 반영하기 →',
+      saving: '저장 중...',
+      saveFailed: '저장에 실패했습니다.',
+      wrongAccess: '잘못된 접근입니다',
+      goBack: '돌아가기',
     },
 
     // 랭킹
@@ -281,6 +307,10 @@ const translations = {
       roomNameRequired: 'Please enter a room name!',
       codeRequired: 'Please enter an invite code!',
       logoutConfirm: 'Are you sure you want to logout?',
+      gameRequired: 'Please select a game!',
+      groupNamePlaceholder: 'Group name',
+      selectGame: 'Select Game',
+      creating: 'Creating...',
     },
 
     // Invite / Room Detail
@@ -317,6 +347,7 @@ const translations = {
       startPlaceholder: 'Select a game and players',
       minPlayersError: 'Please select at least 2 players!',
       noGameError: 'Please select a game first!',
+      currentGame: 'Current Game',
     },
 
     // Match Form
@@ -332,6 +363,27 @@ const translations = {
       goBack: 'Go Back',
       emptyScoreError: 'Please enter scores for all players!',
       saveFailed: 'Failed to save results.',
+    },
+
+    // Score Sheet
+    scoreSheet: {
+      scoreBoard: 'Score Sheet',
+      enterScores: 'Enter scores in each cell',
+      victory: 'Wins!',
+      firstPlace: 'pts, 1st place',
+      category: 'Category',
+      subtotal: 'Subtotal',
+      total: 'Σ Total',
+      negative: 'Penalty',
+      scienceTitle: 'Science Score Calculator',
+      scienceDesc: 'Enter symbol count → auto calculate',
+      pts: 'pts',
+      apply: 'Apply',
+      submit: 'Apply to Ranking →',
+      saving: 'Saving...',
+      saveFailed: 'Failed to save.',
+      wrongAccess: 'Invalid access',
+      goBack: 'Go Back',
     },
 
     // Ranking

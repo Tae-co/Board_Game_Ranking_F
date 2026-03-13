@@ -37,7 +37,7 @@ const Lobby = () => {
 
   const handleCreateRoom = async () => {
     if (!newRoomName.trim()) { alert(t('lobby', 'roomNameRequired')); return; }
-    if (!selectedGameId) { alert('게임을 선택해주세요.'); return; }
+    if (!selectedGameId) { alert(t('lobby', 'gameRequired')); return; }
     setIsSubmitting(true);
     try {
       const res = await api.post('/rooms', {
@@ -136,7 +136,7 @@ const Lobby = () => {
           }}
         >
           <Plus className="w-4 h-4" />
-          새 그룹 만들기
+          {t('lobby', 'createGroup')}
         </button>
         <button
           onClick={() => { setMode(mode === 'join' ? null : 'join'); setJoinCode(''); }}
@@ -148,20 +148,20 @@ const Lobby = () => {
           }}
         >
           <Hash className="w-4 h-4" />
-          코드로 입장
+          {t('lobby', 'joinWithCode')}
         </button>
       </div>
 
       {/* Create Room Panel */}
       {mode === 'create' && (
         <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-          <h2 className="text-base font-bold mb-4" style={{ color: 'var(--th-text)' }}>새 그룹 만들기</h2>
+          <h2 className="text-base font-bold mb-4" style={{ color: 'var(--th-text)' }}>{t('lobby', 'createGroup')}</h2>
           <div className="space-y-4">
             <input
               type="text"
               value={newRoomName}
               onChange={(e) => setNewRoomName(e.target.value)}
-              placeholder="그룹 이름"
+              placeholder={t('lobby', 'groupNamePlaceholder')}
               autoFocus
               className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none"
               style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
@@ -169,7 +169,7 @@ const Lobby = () => {
               onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
             />
             <div>
-              <p className="text-xs mb-2" style={{ color: 'var(--th-text-sub)' }}>게임 선택</p>
+              <p className="text-xs mb-2" style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'selectGame')}</p>
               <div className="grid grid-cols-3 gap-2">
                 {games.map((game) => (
                   <button
@@ -205,7 +205,7 @@ const Lobby = () => {
               className="w-full py-2.5 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
               style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
             >
-              {isSubmitting ? '생성 중...' : '그룹 만들기'}
+              {isSubmitting ? t('lobby', 'creating') : t('lobby', 'createRoom')}
             </button>
           </div>
         </div>
@@ -214,8 +214,8 @@ const Lobby = () => {
       {/* Join Room Panel */}
       {mode === 'join' && (
         <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-          <h2 className="text-base font-bold mb-4" style={{ color: 'var(--th-text)' }}>코드로 입장</h2>
-          <div className="flex gap-2">
+          <h2 className="text-base font-bold mb-4" style={{ color: 'var(--th-text)' }}>{t('lobby', 'joinWithCode')}</h2>
+          <div className="space-y-3">
             <input
               type="text"
               value={joinCode}
@@ -224,7 +224,7 @@ const Lobby = () => {
               placeholder={t('lobby', 'inviteCodePlaceholder')}
               autoFocus
               maxLength={8}
-              className="flex-1 px-3 py-2 rounded-lg border text-sm focus:outline-none font-mono tracking-widest uppercase"
+              className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none font-mono tracking-widest uppercase"
               style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
               onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
               onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
@@ -232,7 +232,7 @@ const Lobby = () => {
             <button
               onClick={handleJoinRoom}
               disabled={isSubmitting || !joinCode.trim()}
-              className="px-4 py-2 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
+              className="w-full py-3 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
               style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
             >
               {isSubmitting ? '...' : t('lobby', 'join')}

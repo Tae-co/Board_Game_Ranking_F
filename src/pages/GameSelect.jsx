@@ -81,7 +81,7 @@ const GameSelect = () => {
 
       {/* Current Game Info */}
       <div className="px-6 mb-6">
-        <p className="text-sm mb-3" style={{ color: 'var(--th-text-sub)' }}>이번 게임</p>
+        <p className="text-sm mb-3" style={{ color: 'var(--th-text-sub)' }}>{t('gameSelect', 'currentGame')}</p>
         <div className="rounded-xl border flex items-center gap-4 p-4" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-primary)' }}>
           {currentGame?.imageUrl ? (
             <img src={currentGame.imageUrl} alt={currentGame.name} className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
