@@ -176,20 +176,6 @@ const Login = () => {
               <div className="flex-1 h-px" style={{ backgroundColor: 'var(--th-border)' }} />
             </div>
 
-            {/* 카카오 로그인 */}
-            <button
-              onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao`; }}
-              className="w-full py-3 rounded-full flex items-center justify-center gap-2 font-medium transition-opacity"
-              style={{ backgroundColor: '#FEE500', color: '#191919' }}
-              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-            >
-              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-                <path d="M9 1.5C4.858 1.5 1.5 4.134 1.5 7.378c0 2.1 1.393 3.944 3.493 4.99l-.888 3.31a.187.187 0 0 0 .287.2l3.78-2.506A8.64 8.64 0 0 0 9 13.256c4.142 0 7.5-2.634 7.5-5.878S13.142 1.5 9 1.5Z" fill="#191919"/>
-              </svg>
-              카카오로 시작하기
-            </button>
-
             {/* 구글 로그인 */}
             <button
               onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`; }}
