@@ -376,10 +376,10 @@ const Ranking = () => {
       </div>
 
       {/* Bottom Buttons */}
-      <div className="px-6 mt-6 space-y-3">
+      <div className="px-6 mt-4 space-y-2">
         <motion.button
           onClick={() => navigate(`/invite/${roomId}`)}
-          className="w-full py-3 rounded-full font-bold border-2"
+          className="w-full py-2 rounded-full text-sm font-bold border-2"
           style={{ backgroundColor: 'transparent', color: 'var(--th-primary)', borderColor: 'var(--th-primary)' }}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -388,7 +388,7 @@ const Ranking = () => {
         </motion.button>
         <motion.button
           onClick={() => navigate(`/games/${roomId}`)}
-          className="w-full py-3 rounded-full font-bold"
+          className="w-full py-2 rounded-full text-sm font-bold"
           style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
           whileHover={{ scale: 1.02, boxShadow: '0 8px 16px rgba(var(--th-primary-rgb), 0.3)' }}
           whileTap={{ scale: 0.98 }}
