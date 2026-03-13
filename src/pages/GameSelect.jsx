@@ -48,7 +48,7 @@ const GameSelect = () => {
     setSelectedPlayers(newSelected);
   };
 
-  const SCORE_SHEET_GAME_IDS = new Set([2, 3, 4]);
+  const SCORE_SHEET_GAME_IDS = new Set([1, 2, 3, 4]);
 
   const handleStartGame = () => {
     if (selectedPlayers.size < 2) { alert(t('gameSelect', 'minPlayersError')); return; }

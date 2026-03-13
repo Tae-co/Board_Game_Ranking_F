@@ -8,6 +8,19 @@ import { useLanguage } from '../i18n/LanguageContext';
 // 게임별 점수 스키마 정의
 // =============================================
 const SCORE_SCHEMAS = {
+  // 카탄 (board_game_id = 1)
+  1: {
+    name: "CATAN",
+    type: "catan",
+    categories: [
+      { key: "settlement", label: "정착지", icon: "🏘️", color: "#92400e", multiplier: 1 },
+      { key: "cities",     label: "도시",   icon: "🏙️", color: "#1d4ed8", multiplier: 2 },
+      { key: "longest_road", label: "최장 도로", icon: "🛤️", color: "#15803d", type: "exclusive_check", bonus: 2 },
+      { key: "largest_army", label: "최대 군대", icon: "⚔️", color: "#dc2626", type: "exclusive_check", bonus: 2 },
+      { key: "vp_cards",   label: "승점 카드", icon: "🃏", color: "#7c3aed", multiplier: 1 },
+    ],
+  },
+
   // 7 Wonders
   2: {
     name: "7WONDERS",
@@ -85,8 +98,8 @@ const SCORE_SCHEMAS = {
 };
 
 const getAllCategories = (schema) => {
-  if (schema.type === "flat") return schema.categories;
-  return schema.sections.flatMap(s => s.categories);
+  if (schema.type === "sectioned") return schema.sections.flatMap(s => s.categories);
+  return schema.categories || [];
 };
 
 // =============================================
@@ -286,6 +299,89 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
 );
 
 // =============================================
+// 카탄 전용 테이블
+// =============================================
+const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatanCheck, t }) => (
+  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 320 }}>
+    <thead>
+      <tr style={{ background: "#2C1F0E" }}>
+        <th style={{ padding: "12px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#A08060", width: 110 }}>{t('scoreSheet', 'category')}</th>
+        {players.map(p => {
+          const total = totals[p.memberId] ?? 0;
+          const canWin = total >= 10;
+          return (
+            <th key={p.memberId} style={{ padding: "12px 8px", textAlign: "center", fontSize: 13, fontWeight: 800, color: canWin ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
+              {canWin ? "👑 " : ""}{p.nickname}
+            </th>
+          );
+        })}
+      </tr>
+    </thead>
+    <tbody>
+      {schema.categories.map((cat, idx) => (
+        <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)" }}>
+          <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)", whiteSpace: "nowrap" }}>
+            <span style={{ marginRight: 6 }}>{cat.icon}</span>
+            <span style={{ color: cat.color }}>{cat.label}</span>
+            {cat.type === "exclusive_check"
+              ? <span style={{ fontSize: 10, color: cat.color, marginLeft: 4 }}>+{cat.bonus}점</span>
+              : <span style={{ fontSize: 10, color: "#A08060", marginLeft: 4 }}>×{cat.multiplier}</span>
+            }
+          </td>
+          {players.map(p => (
+            <td key={p.memberId} style={{ padding: "6px 6px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
+              {cat.type === "exclusive_check" ? (
+                <button
+                  onClick={() => handleCatanCheck(cat.key, p.memberId)}
+                  style={{
+                    width: 52, height: 36, borderRadius: 8, cursor: "pointer",
+                    border: `2px solid ${scores[cat.key]?.[p.memberId] ? cat.color : "#E5D5C0"}`,
+                    background: scores[cat.key]?.[p.memberId] ? cat.color + "22" : "var(--th-bg)",
+                    color: scores[cat.key]?.[p.memberId] ? cat.color : "#A08060",
+                    fontWeight: 900, fontSize: 16,
+                  }}
+                >
+                  {scores[cat.key]?.[p.memberId] ? "✓" : "—"}
+                </button>
+              ) : (
+                <input
+                  type="number"
+                  value={scores[cat.key]?.[p.memberId] ?? ""}
+                  onChange={e => handleChange(cat.key, p.memberId, e.target.value)}
+                  style={{
+                    width: 52, height: 36, textAlign: "center",
+                    borderRadius: 8, border: "2px solid #E5D5C0",
+                    background: "var(--th-bg)", fontSize: 15, fontWeight: 700,
+                    color: "var(--th-text)", outline: "none",
+                  }}
+                  onFocus={e => e.target.style.borderColor = cat.color}
+                  onBlur={e => e.target.style.borderColor = "#E5D5C0"}
+                  placeholder="0"
+                />
+              )}
+            </td>
+          ))}
+        </tr>
+      ))}
+      {/* 합계 행 */}
+      <tr style={{ background: "#2C1F0E" }}>
+        <td style={{ padding: "12px 14px", fontWeight: 900, color: "var(--th-primary)", fontSize: 14 }}>{t('scoreSheet', 'total')}</td>
+        {players.map(p => {
+          const total = totals[p.memberId] ?? 0;
+          const canWin = total >= 10;
+          return (
+            <td key={p.memberId} style={{ padding: "12px 6px", textAlign: "center" }}>
+              <div style={{ fontWeight: 900, fontSize: 20, color: canWin ? "var(--th-primary)" : "#F5E6D0" }}>{total}</div>
+              {canWin && <div style={{ fontSize: 10, color: "var(--th-primary)", fontWeight: 700, marginTop: 2 }}>🏆 승리 가능</div>}
+            </td>
+          );
+        })}
+      </tr>
+    </tbody>
+  </table>
+);
+
+// =============================================
 // 메인 컴포넌트
 // =============================================
 const ScoreSheet = () => {
@@ -309,9 +405,18 @@ const ScoreSheet = () => {
     const init = {};
     cats.forEach(cat => {
       init[cat.key] = {};
-      playerList.forEach(p => { init[cat.key][p.memberId] = ""; });
+      playerList.forEach(p => { init[cat.key][p.memberId] = cat.type === 'exclusive_check' ? false : ""; });
     });
     return init;
+  };
+
+  const handleCatanCheck = (catKey, memberId) => {
+    setScores(prev => {
+      const wasChecked = prev[catKey]?.[memberId];
+      const newChecks = {};
+      players.forEach(p => { newChecks[p.memberId] = p.memberId === memberId ? !wasChecked : false; });
+      return { ...prev, [catKey]: newChecks };
+    });
   };
 
   const [scores, setScores] = useState(() =>
@@ -327,13 +432,21 @@ const ScoreSheet = () => {
   const totals = useMemo(() => {
     const t = {};
     players.forEach(p => {
-      t[p.memberId] = allCategories.reduce((sum, cat) => {
-        const v = Number(scores[cat.key]?.[p.memberId]) || 0;
-        return cat.negative ? sum - Math.abs(v) : sum + v;
-      }, 0);
+      if (currentSchema?.type === 'catan') {
+        t[p.memberId] = currentSchema.categories.reduce((sum, cat) => {
+          const v = scores[cat.key]?.[p.memberId];
+          if (cat.type === 'exclusive_check') return sum + (v ? cat.bonus : 0);
+          return sum + (Number(v) || 0) * (cat.multiplier || 1);
+        }, 0);
+      } else {
+        t[p.memberId] = allCategories.reduce((sum, cat) => {
+          const v = Number(scores[cat.key]?.[p.memberId]) || 0;
+          return cat.negative ? sum - Math.abs(v) : sum + v;
+        }, 0);
+      }
     });
     return t;
-  }, [scores, players, allCategories]);
+  }, [scores, players, allCategories, currentSchema]);
 
   const winnerId = useMemo(() =>
     players.reduce((a, b) => (totals[a.memberId] ?? 0) >= (totals[b.memberId] ?? 0) ? a : b, players[0])?.memberId
@@ -410,7 +523,9 @@ const ScoreSheet = () => {
       {/* 테이블 */}
       <div style={{ margin: "0 16px", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
         <div style={{ overflowX: "auto" }}>
-          {currentSchema.type === "sectioned" ? (
+          {currentSchema.type === "catan" ? (
+            <CatanTable schema={currentSchema} players={players} scores={scores} totals={totals} handleChange={handleChange} handleCatanCheck={handleCatanCheck} t={t} />
+          ) : currentSchema.type === "sectioned" ? (
             <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} t={t} />
           ) : (
             <FlatTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} setScienceModal={setScienceModal} t={t} />
