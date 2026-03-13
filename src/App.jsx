@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import AdminLogin from './pages/AdminLogin';
 import Admin from './pages/Admin';
 import OAuthCallback from './pages/OAuthCallback';
+import JoinByQR from './pages/JoinByQR';
 
 import './App.css';
 
@@ -62,6 +63,9 @@ function App() {
           <Route path="/match-form/:roomId" element={<PrivateRoute><MatchForm /></PrivateRoute>} />
           <Route path="/score-sheet/:boardGameId" element={<PrivateRoute><ScoreSheet /></PrivateRoute>} />
           <Route path="/ranking/:roomId" element={<PrivateRoute><Ranking /></PrivateRoute>} />
+
+          {/* QR 코드 초대 링크 */}
+          <Route path="/join" element={<JoinByQR />} />
 
           {/* OAuth2 콜백 */}
           <Route path="/oauth-callback" element={<OAuthCallback />} />

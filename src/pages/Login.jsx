@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Dices } from 'lucide-react';
 import api, { setAccessToken } from '../api/axios';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '../components/ui/input-otp';
@@ -7,6 +7,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useLanguage();
   const [step, setStep] = useState(1);
   const [phone, setPhone] = useState('');
@@ -26,7 +27,8 @@ const Login = () => {
     localStorage.setItem('nickname', data.nickname);
     localStorage.setItem('role', data.role);
     if (phone) localStorage.setItem('phone', phone);
-    navigate('/lobby');
+    const redirect = location.state?.redirectAfterLogin;
+    navigate(redirect || '/lobby');
   };
 
   const handleCheckPhone = async () => {

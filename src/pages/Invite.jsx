@@ -33,11 +33,11 @@ const Invite = () => {
     const loadQR = () => {
       if (qrInstanceRef.current) {
         qrInstanceRef.current.clear();
-        qrInstanceRef.current.makeCode(roomInfo.inviteCode);
+        qrInstanceRef.current.makeCode(`https://boardup.pages.dev/join?code=${roomInfo.inviteCode}`);
         return;
       }
       qrInstanceRef.current = new window.QRCode(qrRef.current, {
-        text: roomInfo.inviteCode,
+        text: `https://boardup.pages.dev/join?code=${roomInfo.inviteCode}`,
         width: 160,
         height: 160,
         colorDark: '#2C1F0E',
