@@ -365,7 +365,7 @@ const Ranking = () => {
                         {change > 0 ? '+' : ''}{Math.round(change)}
                       </p>
                     ) : (
-                      <p style={{ color: 'var(--th-text-sub)', fontSize: '10px' }}>LP</p>
+                      <p style={{ color: 'var(--th-text-sub)', fontSize: '10px' }}>&nbsp;</p>
                     )}
                   </div>
                 </motion.div>
