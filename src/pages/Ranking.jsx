@@ -67,7 +67,7 @@ const Ranking = () => {
 
   useEffect(() => {
     if (!matchResult) return;
-    const timer = setTimeout(() => setShowChanges(false), 4000);
+    const timer = setTimeout(() => setShowChanges(false), 30000);
     return () => clearTimeout(timer);
   }, []);
 
