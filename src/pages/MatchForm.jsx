@@ -73,7 +73,7 @@ const MatchForm = () => {
       });
       queryClient.invalidateQueries({ queryKey: ['rankings'] });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      navigate(`/ranking/${roomId}`, { state: { matchResult: res.data } });
+      navigate(`/ranking/${roomId}`, { state: { matchResult: res.data }, replace: true });
     } catch (err) {
       alert(t('matchForm', 'saveFailed'));
       console.error(err);

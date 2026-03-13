@@ -133,7 +133,7 @@ const GameSelect = () => {
         <button
           onClick={handleStartGame}
           disabled={selectedPlayers.size < 2}
-          className="w-full py-4 rounded-full transition-opacity disabled:opacity-50"
+          className="w-full py-2 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
           style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
         >
           {selectedPlayers.size > 0

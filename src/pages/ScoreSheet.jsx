@@ -361,7 +361,7 @@ const ScoreSheet = () => {
         roomId,
         participants: players.map(p => ({ memberId: p.memberId, placement: placements[p.memberId] })),
       });
-      navigate(`/ranking/${roomId}`, { state: { matchResult: res.data } });
+      navigate(`/ranking/${roomId}`, { state: { matchResult: res.data }, replace: true });
     } catch (err) {
       alert('저장에 실패했습니다.');
       console.error(err);
@@ -432,9 +432,9 @@ const ScoreSheet = () => {
           onClick={handleSubmit}
           disabled={isSubmitting}
           style={{
-            width: "100%", padding: "16px 0", borderRadius: 50, border: "none",
+            width: "100%", padding: "10px 0", borderRadius: 50, border: "none",
             background: isSubmitting ? "var(--th-border)" : "var(--th-primary)",
-            color: "#fff", fontSize: 16, fontWeight: 900, cursor: isSubmitting ? "not-allowed" : "pointer",
+            color: "#fff", fontSize: 14, fontWeight: 900, cursor: isSubmitting ? "not-allowed" : "pointer",
           }}
         >
           {isSubmitting ? '저장 중...' : '랭킹에 반영하기 →'}

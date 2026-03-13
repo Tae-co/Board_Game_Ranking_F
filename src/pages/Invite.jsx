@@ -222,7 +222,7 @@ const Invite = () => {
       <div className="space-y-3">
         <button
           onClick={() => navigate(`/games/${roomId}`)}
-          className="w-full py-4 rounded-full transition-opacity"
+          className="w-full py-2 rounded-full text-sm font-bold transition-opacity"
           style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
           onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
           onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
