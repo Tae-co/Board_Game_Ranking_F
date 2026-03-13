@@ -229,15 +229,6 @@ const Invite = () => {
         >
           {t('invite', 'startGame')}
         </button>
-        <button
-          onClick={() => navigate(`/ranking/${roomId}`)}
-          className="w-full py-4 rounded-full border transition-colors"
-          style={{ backgroundColor: 'var(--th-card)', color: 'var(--th-primary)', borderColor: 'var(--th-primary)' }}
-          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--th-primary)'; e.currentTarget.style.color = '#FFFFFF'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'var(--th-card)'; e.currentTarget.style.color = 'var(--th-primary)'; }}
-        >
-          {t('invite', 'viewRanking')}
-        </button>
       </div>
     </div>
   );

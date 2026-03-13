@@ -18,20 +18,20 @@ const RankBadge = ({ index }) => {
   const rankStyle = getRankStyle(index);
   return (
     <motion.div
-      className="w-12 h-12 rounded-full flex items-center justify-center font-bold relative flex-shrink-0"
+      className="w-8 h-8 rounded-full flex items-center justify-center font-bold relative flex-shrink-0"
       style={{
         background: index < 3
           ? `linear-gradient(135deg, ${rankStyle.bgColor}, ${rankStyle.color}80)`
           : 'var(--th-border)',
         color: index < 3 ? '#FFFFFF' : 'var(--th-text)',
-        boxShadow: index < 3 ? `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40` : 'none',
-        fontSize: '16px',
+        boxShadow: index < 3 ? `0 4px 12px ${rankStyle.color}60` : 'none',
+        fontSize: '13px',
       }}
       animate={index < 3 ? {
         boxShadow: [
-          `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40`,
-          `0 6px 20px ${rankStyle.color}80, 0 0 30px ${rankStyle.color}60`,
-          `0 4px 12px ${rankStyle.color}60, 0 0 20px ${rankStyle.color}40`,
+          `0 4px 12px ${rankStyle.color}60`,
+          `0 6px 20px ${rankStyle.color}80`,
+          `0 4px 12px ${rankStyle.color}60`,
         ],
       } : {}}
       transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
@@ -39,7 +39,7 @@ const RankBadge = ({ index }) => {
       {index + 1}
       {index === 0 && (
         <div className="absolute -top-1 -right-1" style={{ filter: 'drop-shadow(0 2px 4px rgba(255, 215, 0, 0.5))' }}>
-          <Crown className="w-4 h-4" style={{ color: '#FFD700', fill: '#FFD700' }} />
+          <Crown className="w-3 h-3" style={{ color: '#FFD700', fill: '#FFD700' }} />
         </div>
       )}
     </motion.div>
@@ -79,15 +79,12 @@ const Ranking = () => {
   const isHost = roomMembers.find(m => m.memberId === myUserId)?.isHost ?? false;
 
   const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
-    queryKey: ['rankings', roomId, activeTab],
+    queryKey: ['rankings', roomId],
     queryFn: async () => {
-      const endpoint = activeTab === 'global'
-        ? '/rankings/global'
-        : `/rooms/${roomId}/rankings?boardGameId=1`;
-      const res = await api.get(endpoint);
+      const res = await api.get(`/rooms/${roomId}/rankings`);
       return res.data || [];
     },
-    enabled: activeTab !== 'matches',
+    enabled: activeTab === 'group',
     staleTime: 1000 * 60 * 3,
   });
 
@@ -162,7 +159,7 @@ const Ranking = () => {
       {/* Header */}
       <div className="px-6 py-6 flex items-center sticky top-0 z-10" style={{ backgroundColor: 'var(--th-bg)' }}>
         <button
-          onClick={() => navigate(`/invite/${roomId}`)}
+          onClick={() => navigate(-1)}
           className="mr-3 p-2 rounded-lg transition-colors"
           style={{ color: 'var(--th-primary)' }}
           onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--th-card)'}
@@ -179,7 +176,6 @@ const Ranking = () => {
         <div className="flex rounded-full p-1" style={{ backgroundColor: 'var(--th-card)', border: '1px solid var(--th-border)' }}>
           {[
             { key: 'group', label: t('ranking', 'groupTab') },
-            { key: 'global', label: t('ranking', 'globalTab') },
             { key: 'matches', label: '매치기록' },
           ].map(tab => (
             <button
@@ -232,7 +228,6 @@ const Ranking = () => {
             <p style={{ color: 'var(--th-text-sub)' }}>{t('common', 'loading')}</p>
           </div>
         ) : activeTab === 'matches' ? (
-          /* Match History */
           matches.length === 0 ? (
             <div className="rounded-2xl p-10 border-2 border-dashed text-center" style={{ borderColor: 'var(--th-border)' }}>
               <div className="text-5xl mb-4">🎲</div>
@@ -305,8 +300,8 @@ const Ranking = () => {
             <p className="text-lg" style={{ color: 'var(--th-text)' }}>{t('ranking', 'noRecord')}</p>
             <p className="text-sm mt-2" style={{ color: 'var(--th-text-sub)' }}>{t('ranking', 'noRecordDesc')}</p>
           </div>
-        ) : activeTab === 'group' ? (
-          <div className="space-y-3">
+        ) : (
+          <div className="space-y-2">
             {rankings.map((rank, index) => {
               const isMe = rank.nickname === myNickname;
               const tier = getTier(Math.round(rank.rating));
@@ -316,139 +311,62 @@ const Ranking = () => {
               return (
                 <motion.div
                   key={rank.memberId}
-                  className="rounded-xl p-4 border"
+                  className="rounded-xl px-3 py-2.5 border flex items-center gap-1.5"
                   style={{
                     backgroundColor: 'var(--th-card)',
                     borderColor: isMe ? 'var(--th-primary)' : 'var(--th-border)',
                     borderWidth: isMe ? '2px' : '1px',
                     boxShadow: isMe ? '0 4px 12px rgba(var(--th-primary-rgb), 0.2)' : '0 2px 8px rgba(0,0,0,0.05)',
                   }}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', transition: { duration: 0.2 } }}
+                  transition={{ delay: index * 0.07 }}
                 >
-                  <div className="flex items-center gap-3 mb-3">
-                    <RankBadge index={index} />
-                    <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0"
-                      style={{ background: 'linear-gradient(135deg, var(--th-primary), var(--th-primary-dark))', color: '#FFFFFF', boxShadow: '0 4px 8px rgba(var(--th-primary-rgb), 0.3)' }}
-                    >
-                      {rank.nickname[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-semibold truncate" style={{ color: 'var(--th-text)' }}>{rank.nickname}</p>
-                        {isMe && (
-                          <motion.span
-                            className="px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0"
-                            style={{ background: 'linear-gradient(135deg, var(--th-primary), var(--th-primary-light))', color: '#FFFFFF' }}
-                            animate={{ scale: [1, 1.08, 1] }}
-                            transition={{ duration: 1.5, repeat: Infinity }}
-                          >
-                            MY
-                          </motion.span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <TierBadge tier={tier} size="sm" />
-                        <span className="text-xs font-semibold" style={{ color: tier.color }}>{tier.name}</span>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <div className="flex items-center justify-end gap-1">
-                        <motion.p
-                          className="text-2xl font-bold"
-                          style={{ background: 'linear-gradient(135deg, var(--th-primary), var(--th-primary-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
-                          animate={{ scale: [1, 1.05, 1] }}
-                          transition={{ duration: 2, repeat: Infinity }}
-                        >
-                          {Math.round(rank.rating)}
-                        </motion.p>
-                        {change !== undefined && (
-                          <span className="text-xs font-bold" style={{ color: change > 0 ? '#16a34a' : '#dc2626' }}>
-                            {change > 0 ? '+' : ''}{Math.round(change)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs" style={{ color: 'var(--th-text-sub)' }}>LP</p>
-                    </div>
-                  </div>
-                  <div className="flex pt-3" style={{ borderTop: '1px solid var(--th-border)' }}>
-                    <div className="flex-1 text-center">
-                      <p className="text-xs mb-0.5" style={{ color: 'var(--th-text-sub)' }}>{t('ranking', 'wins')}</p>
-                      <p className="text-sm font-bold" style={{ color: 'var(--th-text)' }}>{rank.winCount}</p>
-                    </div>
-                    <div className="flex-1 text-center" style={{ borderLeft: '1px solid var(--th-border)', borderRight: '1px solid var(--th-border)' }}>
-                      <p className="text-xs mb-0.5" style={{ color: 'var(--th-text-sub)' }}>{t('ranking', 'losses')}</p>
-                      <p className="text-sm font-bold" style={{ color: 'var(--th-text)' }}>{rank.loseCount}</p>
-                    </div>
-                    <div className="flex-1 text-center">
-                      <p className="text-xs mb-0.5" style={{ color: 'var(--th-text-sub)' }}>{t('ranking', 'winRate')}</p>
-                      <p className="text-sm font-bold" style={{ color: winRate >= 60 ? 'var(--th-primary)' : winRate >= 50 ? 'var(--th-text-sub)' : '#999' }}>{winRate}%</p>
-                    </div>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {rankings.map((rank, index) => {
-              const isMe = rank.nickname === myNickname;
-              const tier = getTier(Math.round(rank.rating));
-
-              return (
-                <motion.div
-                  key={rank.memberId}
-                  className="rounded-xl p-4 border flex items-center gap-3"
-                  style={{
-                    backgroundColor: 'var(--th-card)',
-                    borderColor: isMe ? 'var(--th-primary)' : 'var(--th-border)',
-                    borderWidth: isMe ? '2px' : '1px',
-                    boxShadow: isMe ? '0 4px 12px rgba(var(--th-primary-rgb), 0.2)' : '0 2px 8px rgba(0,0,0,0.05)',
-                  }}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  whileHover={{ scale: 1.02, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', transition: { duration: 0.2 } }}
-                >
+                  {/* 순위 뱃지 */}
                   <RankBadge index={index} />
-                  <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center font-semibold text-lg flex-shrink-0"
-                    style={{ background: 'linear-gradient(135deg, var(--th-primary), var(--th-primary-dark))', color: '#FFFFFF', boxShadow: '0 4px 8px rgba(var(--th-primary-rgb), 0.3)' }}
-                  >
-                    {rank.nickname[0]}
-                  </div>
+
+                  {/* 티어 뱃지 */}
+                  <TierBadge tier={tier} size="sm" />
+
+                  {/* 닉네임 */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <p className="font-semibold truncate" style={{ color: 'var(--th-text)' }}>{rank.nickname}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm font-semibold truncate" style={{ color: 'var(--th-text)' }}>{rank.nickname}</p>
                       {isMe && (
                         <motion.span
-                          className="px-2 py-0.5 rounded-full text-xs font-bold flex-shrink-0"
-                          style={{ background: 'linear-gradient(135deg, var(--th-primary), var(--th-primary-light))', color: '#FFFFFF' }}
+                          className="px-1.5 py-0.5 rounded-full text-xs font-bold flex-shrink-0"
+                          style={{ background: 'linear-gradient(135deg, var(--th-primary), var(--th-primary-light))', color: '#FFFFFF', fontSize: '10px' }}
                           animate={{ scale: [1, 1.08, 1] }}
                           transition={{ duration: 1.5, repeat: Infinity }}
                         >
-                          MY
+                          ME
                         </motion.span>
                       )}
                     </div>
-                    <div className="flex items-center gap-2">
-                      <TierBadge tier={tier} size="sm" />
-                      <span className="text-xs font-semibold" style={{ color: tier.color }}>{tier.name}</span>
-                    </div>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <motion.p
-                      className="text-2xl font-bold"
+
+                  {/* W / L / WR */}
+                  <div className="flex items-center gap-1 flex-shrink-0" style={{ color: 'var(--th-text-sub)', fontSize: '10px' }}>
+                    <span>W<span className="font-bold ml-0.5" style={{ color: 'var(--th-text)' }}>{rank.winCount}</span></span>
+                    <span>L<span className="font-bold ml-0.5" style={{ color: 'var(--th-text)' }}>{rank.loseCount}</span></span>
+                    <span>WR<span className="font-bold ml-0.5" style={{ color: winRate >= 60 ? 'var(--th-primary)' : 'var(--th-text)' }}>{winRate}%</span></span>
+                  </div>
+
+                  {/* LP */}
+                  <div className="text-right flex-shrink-0" style={{ minWidth: '36px' }}>
+                    <p
+                      className="text-sm font-bold leading-tight"
                       style={{ background: 'linear-gradient(135deg, var(--th-primary), var(--th-primary-light))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
-                      animate={{ scale: [1, 1.05, 1] }}
-                      transition={{ duration: 2, repeat: Infinity }}
                     >
                       {Math.round(rank.rating)}
-                    </motion.p>
-                    <p className="text-xs" style={{ color: 'var(--th-text-sub)' }}>LP</p>
+                    </p>
+                    {change !== undefined ? (
+                      <p className="font-bold leading-tight" style={{ color: change > 0 ? '#16a34a' : '#dc2626', fontSize: '10px' }}>
+                        {change > 0 ? '+' : ''}{Math.round(change)}
+                      </p>
+                    ) : (
+                      <p style={{ color: 'var(--th-text-sub)', fontSize: '10px' }}>LP</p>
+                    )}
                   </div>
                 </motion.div>
               );
@@ -457,50 +375,25 @@ const Ranking = () => {
         )}
       </div>
 
-      {/* Tier Legend (ranking tabs only) */}
-      {activeTab !== 'matches' && (
-        <div className="px-6 mt-8">
-          <motion.div
-            className="rounded-xl p-5 border"
-            style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-          >
-            <h3 className="text-sm font-bold mb-4" style={{ color: 'var(--th-text)' }}>{t('ranking', 'tierSystem')}</h3>
-            <div className="space-y-4">
-              {Object.values(TIERS).reverse().map((tier, index) => (
-                <motion.div
-                  key={tier.name}
-                  className="flex items-center gap-3"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
-                >
-                  <TierBadge tier={tier} size="md" />
-                  <div>
-                    <p className="font-bold" style={{ color: tier.color }}>{tier.name}</p>
-                    <p className="text-xs" style={{ color: 'var(--th-text-sub)' }}>
-                      {tier.minPoints} ~ {tier.maxPoints === 9999 ? '∞' : tier.maxPoints} LP
-                    </p>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* Back to Lobby */}
-      <div className="px-6 mt-6">
+      {/* Bottom Buttons */}
+      <div className="px-6 mt-6 space-y-3">
         <motion.button
-          onClick={() => navigate('/lobby')}
-          className="w-full py-4 rounded-full border-2 font-bold"
-          style={{ backgroundColor: 'var(--th-card)', color: 'var(--th-primary)', borderColor: 'var(--th-primary)' }}
-          whileHover={{ scale: 1.02, backgroundColor: 'var(--th-primary)', color: '#FFFFFF', boxShadow: '0 8px 16px rgba(var(--th-primary-rgb), 0.3)' }}
+          onClick={() => navigate(`/invite/${roomId}`)}
+          className="w-full py-3 rounded-full font-bold border-2"
+          style={{ backgroundColor: 'transparent', color: 'var(--th-primary)', borderColor: 'var(--th-primary)' }}
+          whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          {t('ranking', 'backToLobby')}
+          게임 로비
+        </motion.button>
+        <motion.button
+          onClick={() => navigate(`/games/${roomId}`)}
+          className="w-full py-3 rounded-full font-bold"
+          style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
+          whileHover={{ scale: 1.02, boxShadow: '0 8px 16px rgba(var(--th-primary-rgb), 0.3)' }}
+          whileTap={{ scale: 0.98 }}
+        >
+          게임 시작
         </motion.button>
       </div>
 
