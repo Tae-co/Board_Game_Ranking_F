@@ -116,7 +116,7 @@ const GameSelect = () => {
               >
                 <div className="h-32 flex items-center justify-center overflow-hidden" style={{ backgroundColor: 'var(--th-bg)' }}>
                   {game.imageUrl ? (
-                    <img src={game.imageUrl?.replace('http://', 'https://')} alt={game.name} className="w-full h-full object-cover" />
+                    <img src={`${import.meta.env.VITE_API_URL}${game.imageUrl}`} alt={game.name} className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-4xl">🎲</div>
                   )}
@@ -142,7 +142,7 @@ const GameSelect = () => {
           <div className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-primary)' }}>
             <div className="flex items-center gap-3">
               {selectedGame.imageUrl ? (
-                <img src={selectedGame.imageUrl?.replace('http://', 'https://')} alt={selectedGame.name} className="w-9 h-9 rounded-lg object-cover" />
+                <img src={`${import.meta.env.VITE_API_URL}${selectedGame.imageUrl}`} alt={selectedGame.name} className="w-9 h-9 rounded-lg object-cover" />
               ) : (
                 <div className="text-3xl">🎲</div>
               )}
