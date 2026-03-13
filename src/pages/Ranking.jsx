@@ -371,11 +371,6 @@ const Ranking = () => {
                           ME
                         </motion.span>
                       )}
-                      {rank.rank === null && (
-                        <span className="text-xs px-1.5 py-0.5 rounded ml-1" style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-text-sub)', border: '1px solid var(--th-border)' }}>
-                          {t('ranking', 'notPlayed')}
-                        </span>
-                      )}
                     </div>
                   </div>
 
