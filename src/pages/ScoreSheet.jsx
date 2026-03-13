@@ -388,7 +388,7 @@ const ScoreSheet = () => {
   const winnerNickname = players.find(p => p.memberId === winnerId)?.nickname;
 
   return (
-    <div style={{ fontFamily: "'Pretendard', sans-serif", background: "var(--th-bg)", minHeight: "100vh", paddingBottom: 100 }}>
+    <div style={{ fontFamily: "'Pretendard', sans-serif", background: "var(--th-bg)", minHeight: "100vh", paddingBottom: 100, maxWidth: '375px', margin: '0 auto' }}>
 
       {/* Header */}
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--th-bg)", padding: "20px 16px 12px", display: "flex", alignItems: "center", gap: 8 }}>
