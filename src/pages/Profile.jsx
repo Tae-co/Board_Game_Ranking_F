@@ -27,6 +27,15 @@ const Profile = () => {
     },
   });
 
+  const { data: stats } = useQuery({
+    queryKey: ['memberStats', userId],
+    queryFn: async () => {
+      const res = await api.get(`/members/${userId}/stats`);
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
   const currentNickname = profileData?.nickname || localStorage.getItem('nickname') || '';
 
   const [nickname, setNickname] = useState('');
@@ -143,6 +152,45 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Play Stats Card */}
+      {stats && (
+        <div className="rounded-2xl p-6 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
+          <h2 className="text-lg mb-4" style={{ color: 'var(--th-text)' }}>🎲 {t('profile', 'myStats')}</h2>
+          {stats.totalPlay === 0 ? (
+            <p className="text-sm text-center py-2" style={{ color: 'var(--th-text-sub)' }}>{t('profile', 'noStats')}</p>
+          ) : (
+            <>
+              <div className="flex gap-2 mb-4">
+                {[
+                  { label: t('profile', 'totalGames'), value: stats.totalPlay },
+                  { label: t('profile', 'statsWins'),  value: stats.totalWin },
+                  { label: t('profile', 'statsLosses'), value: stats.totalLose },
+                  { label: t('profile', 'statsWinRate'), value: `${Math.round((stats.totalWin / stats.totalPlay) * 100)}%` },
+                ].map(item => (
+                  <div key={item.label} className="flex-1 rounded-xl p-2 text-center" style={{ backgroundColor: 'var(--th-bg)', border: '1px solid var(--th-border)' }}>
+                    <div className="text-base font-bold" style={{ color: 'var(--th-primary)' }}>{item.value}</div>
+                    <div className="text-xs" style={{ color: 'var(--th-text-sub)' }}>{item.label}</div>
+                  </div>
+                ))}
+              </div>
+              {stats.games.map(game => {
+                const wr = Math.round((game.winCount / game.playCount) * 100);
+                return (
+                  <div key={game.gameName} className="flex items-center justify-between rounded-xl px-4 py-3 mb-2"
+                    style={{ backgroundColor: 'var(--th-bg)', border: '1px solid var(--th-border)' }}>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--th-text)' }}>{game.gameName}</span>
+                    <span className="text-xs" style={{ color: 'var(--th-text-sub)' }}>
+                      {game.playCount}전 {game.winCount}승 {game.loseCount}패
+                      <span className="ml-2 font-bold" style={{ color: 'var(--th-primary)' }}>{wr}%</span>
+                    </span>
+                  </div>
+                );
+              })}
+            </>
+          )}
+        </div>
+      )}
 
       {/* Theme Settings Card */}
       <div className="rounded-2xl p-6 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Trophy, Crown } from 'lucide-react';
+import { ArrowLeft, Trophy, Crown, Share2 } from 'lucide-react';
+import html2canvas from 'html2canvas';
 import { motion } from 'motion/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TierBadge, TIERS } from '../components/TierBadge';
@@ -60,8 +61,10 @@ const Ranking = () => {
   const matchResult = location.state?.matchResult || null;
 
   const [activeTab, setActiveTab] = useState('group');
-  const [editModal, setEditModal] = useState(null);
   const [showChanges, setShowChanges] = useState(!!matchResult);
+  const [shareSheet, setShareSheet] = useState(false);
+  const rankingCardRef = useRef(null);
+  const matchCardRef = useRef(null);
   const [ratingEditModal, setRatingEditModal] = useState(null); // { memberId, nickname, currentRating }
   const [ratingEditValue, setRatingEditValue] = useState('');
   const [isRatingEditSaving, setIsRatingEditSaving] = useState(false);
@@ -142,33 +145,45 @@ const Ranking = () => {
     }
   };
 
-  const handleUpdateMatch = async () => {
-    const placements = editModal.participants.map(p => p.placement);
-    const uniquePlacements = new Set(placements);
-    if (uniquePlacements.size !== placements.length) {
-      alert('순위가 중복되었습니다. 모든 참여자의 순위를 다르게 설정해주세요.');
-      return;
-    }
-    const isUnchanged = editModal.participants.every(p => p.placement === p.originalPlacement);
-    if (isUnchanged) {
-      alert('변경된 순위가 없습니다.');
-      return;
-    }
-    try {
-      await api.put(`/matches/${editModal.matchId}`, {
-        boardGameId: editModal.boardGameId,
+  const handleShare = async (type) => {
+    setShareSheet(false);
+    const target = type === 'ranking' ? rankingCardRef.current : matchCardRef.current;
+    if (!target) return;
+    const canvas = await html2canvas(target, { scale: 2, useCORS: true });
+    canvas.toBlob(async (blob) => {
+      const file = new File([blob], 'boardup-share.png', { type: 'image/png' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: 'BoardUp 랭킹' });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'boardup-share.png'; a.click();
+        URL.revokeObjectURL(url);
+      }
+    });
+  };
+
+  const handleEditMatch = (match) => {
+    const savedScores = {};
+    match.participants.forEach(p => {
+      if (!p.scoresJson) return;
+      try {
+        const parsed = JSON.parse(p.scoresJson);
+        Object.entries(parsed).forEach(([catKey, val]) => {
+          if (!savedScores[catKey]) savedScores[catKey] = {};
+          savedScores[catKey][p.memberId] = val;
+        });
+      } catch {}
+    });
+    navigate(`/score-sheet/${match.boardGameId}`, {
+      state: {
         roomId: Number(roomId),
-        participants: editModal.participants.map(p => ({
-          memberId: p.memberId,
-          placement: p.placement,
-        })),
-      });
-      setEditModal(null);
-      refetchMatches();
-      queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
-    } catch {
-      alert('수정에 실패했습니다.');
-    }
+        gameName: match.gameName,
+        players: match.participants.map(p => ({ memberId: p.memberId, nickname: p.nickname })),
+        editMatchId: match.matchId,
+        savedScores: Object.keys(savedScores).length > 0 ? savedScores : null,
+      },
+    });
   };
 
   const handleDeleteMatch = async (matchId) => {
@@ -199,7 +214,10 @@ const Ranking = () => {
           <ArrowLeft className="w-6 h-6" />
         </button>
         <Trophy className="w-6 h-6 mr-2" style={{ color: 'var(--th-primary)' }} />
-        <h1 className="text-xl" style={{ color: 'var(--th-text)' }}>{t('ranking', 'title')}</h1>
+        <h1 className="text-xl flex-1" style={{ color: 'var(--th-text)' }}>{t('ranking', 'title')}</h1>
+        <button onClick={() => setShareSheet(true)} className="p-2 rounded-lg" style={{ color: 'var(--th-primary)' }}>
+          <Share2 className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Tab Toggle */}
@@ -226,7 +244,7 @@ const Ranking = () => {
 
       {/* Match Result Banner */}
       {matchResult && activeTab === 'group' && (
-        <div className="px-6 mb-4">
+        <div className="px-6 mb-4" ref={matchCardRef}>
           <div className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-primary)' }}>
             <p className="text-xs font-bold mb-3" style={{ color: 'var(--th-primary)' }}>🎮 {t('ranking', 'matchResult')}</p>
             <div className="flex flex-wrap gap-2">
@@ -281,7 +299,7 @@ const Ranking = () => {
                     {isHost && (
                       <div className="flex gap-2">
                         <button
-                          onClick={() => setEditModal({ matchId: match.matchId, boardGameId: match.boardGameId, participants: match.participants.map(p => ({ ...p, originalPlacement: p.placement })) })}
+                          onClick={() => handleEditMatch(match)}
                           className="px-3 py-1 rounded-full text-xs"
                           style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-primary)', border: '1px solid var(--th-primary)' }}
                         >
@@ -332,7 +350,7 @@ const Ranking = () => {
             <p className="text-sm mt-2" style={{ color: 'var(--th-text-sub)' }}>{t('ranking', 'noRecordDesc')}</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-2" ref={rankingCardRef}>
             {rankings.map((rank, index) => {
               const isMe = rank.nickname === myNickname;
               const tier = getTier(Math.round(rank.rating));
@@ -487,58 +505,39 @@ const Ranking = () => {
         </div>
       )}
 
-      {/* Edit Match Modal */}
-      {editModal && (
+      {/* Share Bottom Sheet */}
+      {shareSheet && (
         <div
-          className="fixed inset-0 flex items-center justify-center z-50 p-6"
-          style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}
-          onClick={(e) => { if (e.target === e.currentTarget) setEditModal(null); }}
+          className="fixed inset-0 z-50 flex items-end"
+          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
+          onClick={() => setShareSheet(false)}
         >
-          <div className="rounded-2xl p-6 w-full" style={{ backgroundColor: 'var(--th-card)', maxWidth: '340px' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--th-text)' }}>{t('ranking', 'editMatch')}</h3>
-            <div className="space-y-3 mb-6">
-              {editModal.participants.map((p) => {
-                const total = editModal.participants.length;
-                return (
-                  <div key={p.memberId} className="flex items-center justify-between">
-                    <span className="text-sm" style={{ color: 'var(--th-text)' }}>{p.nickname}</span>
-                    <select
-                      value={p.placement}
-                      onChange={(e) => setEditModal(prev => ({
-                        ...prev,
-                        participants: prev.participants.map(pp =>
-                          pp.memberId === p.memberId
-                            ? { ...pp, placement: Number(e.target.value) }
-                            : pp
-                        ),
-                      }))}
-                      className="rounded-xl border text-sm px-2 py-1.5 focus:outline-none"
-                      style={{ borderColor: 'var(--th-border)', backgroundColor: 'var(--th-bg)', color: 'var(--th-text)', minWidth: '72px' }}
-                    >
-                      {Array.from({ length: total }, (_, i) => i + 1).map(rank => (
-                        <option key={rank} value={rank}>{rank}위</option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setEditModal(null)}
-                className="flex-1 py-2 rounded-full text-sm border"
-                style={{ borderColor: 'var(--th-border)', color: 'var(--th-text-sub)', backgroundColor: 'var(--th-card)' }}
-              >
-                취소
-              </button>
-              <button
-                onClick={handleUpdateMatch}
-                className="flex-1 py-2 rounded-full text-sm"
-                style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-              >
-                저장
-              </button>
-            </div>
+          <div
+            className="w-full rounded-t-2xl p-6 space-y-3"
+            style={{ backgroundColor: 'var(--th-card)', maxWidth: 375, margin: '0 auto' }}
+            onClick={e => e.stopPropagation()}
+          >
+            <p className="text-center text-sm font-bold mb-4" style={{ color: 'var(--th-text-sub)' }}>
+              {t('ranking', 'shareTitle')}
+            </p>
+            <button
+              onClick={() => handleShare('ranking')}
+              className="w-full py-3 rounded-xl text-sm font-bold"
+              style={{ backgroundColor: 'var(--th-primary)', color: '#fff' }}
+            >
+              {t('ranking', 'shareRanking')}
+            </button>
+            <button
+              onClick={() => handleShare('match')}
+              disabled={!matchResult}
+              className="w-full py-3 rounded-xl text-sm font-bold disabled:opacity-40"
+              style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-text)', border: '1px solid var(--th-border)' }}
+            >
+              {t('ranking', 'shareMatch')}
+            </button>
+            <button onClick={() => setShareSheet(false)} className="w-full py-3 text-sm" style={{ color: 'var(--th-text-sub)' }}>
+              {t('common', 'cancel')}
+            </button>
           </div>
         </div>
       )}

@@ -389,7 +389,7 @@ const ScoreSheet = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
-  const { players = [], roomId, gameName = '' } = location.state || {};
+  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null } = location.state || {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scienceModal, setScienceModal] = useState(null);
@@ -418,9 +418,11 @@ const ScoreSheet = () => {
     });
   };
 
-  const [scores, setScores] = useState(() =>
-    currentSchema ? initScores(currentSchema, players) : {}
-  );
+  const [scores, setScores] = useState(() => {
+    if (!currentSchema) return {};
+    if (savedScores) return savedScores;
+    return initScores(currentSchema, players);
+  });
 
   const allCategories = currentSchema ? getAllCategories(currentSchema) : [];
 
@@ -469,13 +471,19 @@ const ScoreSheet = () => {
 
   const handleSubmit = async () => {
     const placements = calcPlacements();
+    const allCats = getAllCategories(currentSchema);
+    const participants = players.map(p => ({
+      memberId: p.memberId,
+      placement: placements[p.memberId],
+      scoresJson: JSON.stringify(
+        Object.fromEntries(allCats.map(cat => [cat.key, scores[cat.key]?.[p.memberId]]))
+      ),
+    }));
     try {
       setIsSubmitting(true);
-      const res = await api.post('/matches', {
-        boardGameId,
-        roomId,
-        participants: players.map(p => ({ memberId: p.memberId, placement: placements[p.memberId] })),
-      });
+      const res = editMatchId
+        ? await api.put(`/matches/${editMatchId}`, { boardGameId, roomId, participants })
+        : await api.post('/matches', { boardGameId, roomId, participants });
       navigate(`/ranking/${roomId}`, { state: { matchResult: res.data }, replace: true });
     } catch (err) {
       alert(t('scoreSheet', 'saveFailed'));
@@ -554,7 +562,7 @@ const ScoreSheet = () => {
             color: "#fff", fontSize: 14, fontWeight: 900, cursor: isSubmitting ? "not-allowed" : "pointer",
           }}
         >
-          {isSubmitting ? t('scoreSheet', 'saving') : t('scoreSheet', 'submit')}
+          {isSubmitting ? t('scoreSheet', 'saving') : editMatchId ? t('scoreSheet', 'submitEdit') : t('scoreSheet', 'submit')}
         </button>
       </div>
 

@@ -150,6 +150,7 @@ const translations = {
       wrongAccess: '잘못된 접근입니다',
       goBack: '돌아가기',
       canWin: '승리 가능',
+      submitEdit: '수정 반영하기 →',
     },
 
     // 랭킹
@@ -177,6 +178,9 @@ const translations = {
       save: '저장',
       saving: '저장 중...',
       editRatingFailed: 'LP 설정에 실패했습니다.',
+      shareTitle: '공유하기',
+      shareRanking: '📊 현재 그룹 랭킹 공유',
+      shareMatch: '🎮 오늘 매치 결과 공유',
     },
 
     // 프로필
@@ -209,6 +213,12 @@ const translations = {
       nicknameTaken: '✕ 이미 사용 중인 닉네임이에요',
       nicknameChecking: '확인 중...',
       nicknameIsSame: '현재 닉네임이에요',
+      myStats: '나의 플레이 통계',
+      noStats: '아직 게임 기록이 없어요',
+      totalGames: '총 게임',
+      statsWins: '승',
+      statsLosses: '패',
+      statsWinRate: '승률',
     },
 
     // 관리자
@@ -397,6 +407,7 @@ const translations = {
       wrongAccess: 'Invalid access',
       goBack: 'Go Back',
       canWin: 'Win Possible',
+      submitEdit: 'Update Ranking →',
     },
 
     // Ranking
@@ -424,6 +435,9 @@ const translations = {
       save: 'Save',
       saving: 'Saving...',
       editRatingFailed: 'Failed to set LP.',
+      shareTitle: 'Share',
+      shareRanking: '📊 Share Group Ranking',
+      shareMatch: '🎮 Share Match Result',
     },
 
     // Profile
@@ -456,6 +470,12 @@ const translations = {
       nicknameTaken: '✕ Nickname already taken',
       nicknameChecking: 'Checking...',
       nicknameIsSame: 'This is your current nickname',
+      myStats: 'My Play Stats',
+      noStats: 'No game records yet',
+      totalGames: 'Played',
+      statsWins: 'Wins',
+      statsLosses: 'Losses',
+      statsWinRate: 'Win Rate',
     },
 
     // Admin
