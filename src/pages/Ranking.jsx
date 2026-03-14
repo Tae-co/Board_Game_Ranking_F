@@ -178,7 +178,7 @@ const Ranking = () => {
         const sign = p.ratingChange >= 0 ? '+' : '';
         return `${medal} ${p.nickname}  ${sign}${Math.round(p.ratingChange)}LP`;
       });
-    shareText(`🎮 방금 매치 결과 - ${match.gameName}\n\n${lines.join('\n')}`);
+    shareText(`🎮 오늘의 매치 결과 - ${match.gameName}\n\n${lines.join('\n')}`);
   };
 
   const handleEditMatch = (match) => {

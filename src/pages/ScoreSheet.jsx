@@ -327,8 +327,7 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
       {schema.categories.map((cat, idx) => (
         <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)" }}>
           <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
-            <span style={{ marginRight: 3 }}>{cat.icon}</span>
-            <span style={{ color: cat.color }}>{cat.label}</span>
+            <span>{cat.icon}</span>
           </td>
           {players.map(p => (
             <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
