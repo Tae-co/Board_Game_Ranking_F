@@ -311,7 +311,7 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 80 }}>{t('scoreSheet', 'category')}</th>
+        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 9, fontWeight: 700, color: "#A08060", width: 80, whiteSpace: "nowrap" }}>{t('scoreSheet', 'category')}</th>
         {players.map(p => {
           const total = totals[p.memberId] ?? 0;
           const canWin = total >= 10;
