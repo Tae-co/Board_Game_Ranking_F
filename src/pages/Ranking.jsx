@@ -1,7 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Trophy, Crown, Share2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import { motion } from 'motion/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TierBadge, TIERS } from '../components/TierBadge';
@@ -62,9 +61,6 @@ const Ranking = () => {
 
   const [activeTab, setActiveTab] = useState('group');
   const [showChanges, setShowChanges] = useState(!!matchResult);
-  const [shareSheet, setShareSheet] = useState(false);
-  const rankingCardRef = useRef(null);
-  const matchCardRef = useRef(null);
   const [ratingEditModal, setRatingEditModal] = useState(null); // { memberId, nickname, currentRating }
   const [ratingEditValue, setRatingEditValue] = useState('');
   const [isRatingEditSaving, setIsRatingEditSaving] = useState(false);
@@ -80,6 +76,15 @@ const Ranking = () => {
   const ratingChangeMap = matchResult
     ? Object.fromEntries(matchResult.map(r => [r.memberId, r.ratingChange]))
     : {};
+
+  const { data: room } = useQuery({
+    queryKey: ['room', roomId],
+    queryFn: async () => {
+      const res = await api.get(`/rooms/${roomId}`);
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 10,
+  });
 
   const { data: roomMembers = [] } = useQuery({
     queryKey: ['roomMembers', roomId],
@@ -145,22 +150,35 @@ const Ranking = () => {
     }
   };
 
-  const handleShare = async (type) => {
-    setShareSheet(false);
-    const target = type === 'ranking' ? rankingCardRef.current : matchCardRef.current;
-    if (!target) return;
-    const canvas = await html2canvas(target, { scale: 2, useCORS: true });
-    canvas.toBlob(async (blob) => {
-      const file = new File([blob], 'boardup-share.png', { type: 'image/png' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: 'BoardUp 랭킹' });
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'boardup-share.png'; a.click();
-        URL.revokeObjectURL(url);
-      }
+  const shareText = (text) => {
+    if (navigator.share) {
+      navigator.share({ text }).catch(() => {});
+    } else {
+      navigator.clipboard?.writeText(text);
+    }
+  };
+
+  const handleShareRanking = () => {
+    const roomName = room?.roomName ?? '';
+    const lines = rankings.slice(0, 5).map((r, i) => {
+      const medal = ['🥇', '🥈', '🥉'][i] ?? `${i + 1}위`;
+      const rate = r.winCount + r.loseCount > 0
+        ? Math.round(r.winCount / (r.winCount + r.loseCount) * 100)
+        : 0;
+      return `${medal} ${r.nickname}  ${Math.round(r.rating)}LP  W${r.winCount} L${r.loseCount}  ${rate}%`;
     });
+    shareText(`🏆 ${roomName} 그룹 랭킹\n\n${lines.join('\n')}\n\n🎲 boardup.pages.dev`);
+  };
+
+  const handleShareMatch = (match) => {
+    const lines = [...match.participants]
+      .sort((a, b) => a.placement - b.placement)
+      .map((p, i) => {
+        const medal = ['🥇', '🥈', '🥉'][i] ?? `${i + 1}위`;
+        const sign = p.ratingChange >= 0 ? '+' : '';
+        return `${medal} ${p.nickname}  ${sign}${Math.round(p.ratingChange)}LP`;
+      });
+    shareText(`🎮 방금 매치 결과 - ${match.gameName}\n\n${lines.join('\n')}`);
   };
 
   const handleEditMatch = (match) => {
@@ -215,7 +233,7 @@ const Ranking = () => {
         </button>
         <Trophy className="w-6 h-6 mr-2" style={{ color: 'var(--th-primary)' }} />
         <h1 className="text-xl flex-1" style={{ color: 'var(--th-text)' }}>{t('ranking', 'title')}</h1>
-        <button onClick={() => setShareSheet(true)} className="p-2 rounded-lg" style={{ color: 'var(--th-primary)' }}>
+        <button onClick={handleShareRanking} className="p-2 rounded-lg" style={{ color: 'var(--th-primary)' }}>
           <Share2 className="w-5 h-5" />
         </button>
       </div>
@@ -244,7 +262,7 @@ const Ranking = () => {
 
       {/* Match Result Banner */}
       {matchResult && activeTab === 'group' && (
-        <div className="px-6 mb-4" ref={matchCardRef}>
+        <div className="px-6 mb-4">
           <div className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-primary)' }}>
             <p className="text-xs font-bold mb-3" style={{ color: 'var(--th-primary)' }}>🎮 {t('ranking', 'matchResult')}</p>
             <div className="flex flex-wrap gap-2">
@@ -296,24 +314,33 @@ const Ranking = () => {
                       <p className="text-xs" style={{ color: 'var(--th-text-sub)' }}>{match.gameName}</p>
                       <p className="text-sm font-semibold" style={{ color: 'var(--th-text)' }}>{formatDate(match.playedAt)}</p>
                     </div>
-                    {isHost && (
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleEditMatch(match)}
-                          className="px-3 py-1 rounded-full text-xs"
-                          style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-primary)', border: '1px solid var(--th-primary)' }}
-                        >
-                          수정
-                        </button>
-                        <button
-                          onClick={() => handleDeleteMatch(match.matchId)}
-                          className="px-3 py-1 rounded-full text-xs"
-                          style={{ backgroundColor: 'var(--th-bg)', color: '#dc2626', border: '1px solid #dc2626' }}
-                        >
-                          삭제
-                        </button>
-                      </div>
-                    )}
+                    <div className="flex gap-2">
+                      {isHost && (
+                        <>
+                          <button
+                            onClick={() => handleEditMatch(match)}
+                            className="px-3 py-1 rounded-full text-xs"
+                            style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-primary)', border: '1px solid var(--th-primary)' }}
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => handleDeleteMatch(match.matchId)}
+                            className="px-3 py-1 rounded-full text-xs"
+                            style={{ backgroundColor: 'var(--th-bg)', color: '#dc2626', border: '1px solid #dc2626' }}
+                          >
+                            삭제
+                          </button>
+                        </>
+                      )}
+                      <button
+                        onClick={() => handleShareMatch(match)}
+                        className="p-1 rounded-full"
+                        style={{ color: 'var(--th-text-sub)' }}
+                      >
+                        <Share2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                   <div className="space-y-1.5">
                     {match.participants.map((p) => (
@@ -350,7 +377,7 @@ const Ranking = () => {
             <p className="text-sm mt-2" style={{ color: 'var(--th-text-sub)' }}>{t('ranking', 'noRecordDesc')}</p>
           </div>
         ) : (
-          <div className="space-y-2" ref={rankingCardRef}>
+          <div className="space-y-2">
             {rankings.map((rank, index) => {
               const isMe = rank.nickname === myNickname;
               const tier = getTier(Math.round(rank.rating));
@@ -505,42 +532,6 @@ const Ranking = () => {
         </div>
       )}
 
-      {/* Share Bottom Sheet */}
-      {shareSheet && (
-        <div
-          className="fixed inset-0 z-50 flex items-end"
-          style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}
-          onClick={() => setShareSheet(false)}
-        >
-          <div
-            className="w-full rounded-t-2xl p-6 space-y-3"
-            style={{ backgroundColor: 'var(--th-card)', maxWidth: 375, margin: '0 auto' }}
-            onClick={e => e.stopPropagation()}
-          >
-            <p className="text-center text-sm font-bold mb-4" style={{ color: 'var(--th-text-sub)' }}>
-              {t('ranking', 'shareTitle')}
-            </p>
-            <button
-              onClick={() => handleShare('ranking')}
-              className="w-full py-3 rounded-xl text-sm font-bold"
-              style={{ backgroundColor: 'var(--th-primary)', color: '#fff' }}
-            >
-              {t('ranking', 'shareRanking')}
-            </button>
-            <button
-              onClick={() => handleShare('match')}
-              disabled={!matchResult}
-              className="w-full py-3 rounded-xl text-sm font-bold disabled:opacity-40"
-              style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-text)', border: '1px solid var(--th-border)' }}
-            >
-              {t('ranking', 'shareMatch')}
-            </button>
-            <button onClick={() => setShareSheet(false)} className="w-full py-3 text-sm" style={{ color: 'var(--th-text-sub)' }}>
-              {t('common', 'cancel')}
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -55,6 +55,7 @@ const GameSelect = () => {
 
   const handleStartGame = () => {
     if (selectedPlayers.size < 2) { alert(t('gameSelect', 'minPlayersError')); return; }
+    if (currentGame && selectedPlayers.size > currentGame.maxPlayers) { alert(`최대 ${currentGame.maxPlayers}명까지 참여 가능합니다.`); return; }
     const gameId = room?.boardGameId;
     if (SCORE_SHEET_GAME_IDS.has(gameId)) {
       navigate(`/score-sheet/${gameId}`, {
@@ -133,9 +134,14 @@ const GameSelect = () => {
 
       {/* Bottom Button */}
       <div className="fixed bottom-0 left-0 right-0 p-6" style={{ backgroundColor: 'var(--th-bg)', maxWidth: '375px', margin: '0 auto' }}>
+        {currentGame && selectedPlayers.size > currentGame.maxPlayers && (
+          <p className="text-center text-xs mb-2" style={{ color: '#dc2626' }}>
+            최대 {currentGame.maxPlayers}명까지 참여 가능합니다.
+          </p>
+        )}
         <button
           onClick={handleStartGame}
-          disabled={selectedPlayers.size < 2}
+          disabled={selectedPlayers.size < 2 || (currentGame && selectedPlayers.size > currentGame.maxPlayers)}
           className="w-full py-2 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
           style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
         >

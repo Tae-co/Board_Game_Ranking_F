@@ -301,6 +301,12 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
 // =============================================
 // 카탄 전용 테이블
 // =============================================
+const CATAN_LIMITS = {
+  settlement: { min: 0, max: 5 },
+  cities:     { min: 0, max: 4 },
+  vp_cards:   { min: 0, max: 5 },
+};
+
 const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatanCheck, t }) => (
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
@@ -323,9 +329,6 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
           <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
             <span style={{ marginRight: 3 }}>{cat.icon}</span>
             <span style={{ color: cat.color }}>{cat.label}</span>
-            {cat.type === "exclusive_check" && (
-              <span style={{ fontSize: 9, color: cat.color, marginLeft: 3 }}>+{cat.bonus}점</span>
-            )}
           </td>
           {players.map(p => (
             <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
@@ -342,22 +345,25 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
                 >
                   {scores[cat.key]?.[p.memberId] ? "✓" : "—"}
                 </button>
-              ) : (
-                <input
-                  type="number"
-                  value={scores[cat.key]?.[p.memberId] ?? ""}
-                  onChange={e => handleChange(cat.key, p.memberId, e.target.value)}
-                  style={{
-                    width: 40, height: 32, textAlign: "center",
-                    borderRadius: 8, border: "2px solid #E5D5C0",
-                    background: "var(--th-bg)", fontSize: 13, fontWeight: 700,
-                    color: "var(--th-text)", outline: "none",
-                  }}
-                  onFocus={e => e.target.style.borderColor = cat.color}
-                  onBlur={e => e.target.style.borderColor = "#E5D5C0"}
-                  placeholder="0"
-                />
-              )}
+              ) : (() => {
+                const limits = CATAN_LIMITS[cat.key];
+                const value = Number(scores[cat.key]?.[p.memberId] ?? 0);
+                return (
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
+                    <button
+                      onClick={() => handleChange(cat.key, p.memberId, Math.max(limits.min, value - 1))}
+                      disabled={value <= limits.min}
+                      style={{ width: 22, height: 22, borderRadius: 6, border: `1.5px solid ${value <= limits.min ? "#E5D5C0" : cat.color}`, background: "var(--th-bg)", color: value <= limits.min ? "#E5D5C0" : cat.color, fontWeight: 900, fontSize: 14, cursor: value <= limits.min ? "not-allowed" : "pointer", opacity: value <= limits.min ? 0.4 : 1, lineHeight: 1, padding: 0 }}
+                    >−</button>
+                    <span style={{ width: 16, textAlign: "center", fontWeight: 700, fontSize: 12, color: "var(--th-text)" }}>{value}</span>
+                    <button
+                      onClick={() => handleChange(cat.key, p.memberId, Math.min(limits.max, value + 1))}
+                      disabled={value >= limits.max}
+                      style={{ width: 22, height: 22, borderRadius: 6, border: `1.5px solid ${value >= limits.max ? "#E5D5C0" : cat.color}`, background: value >= limits.max ? "var(--th-bg)" : cat.color, color: value >= limits.max ? "#E5D5C0" : "#fff", fontWeight: 900, fontSize: 14, cursor: value >= limits.max ? "not-allowed" : "pointer", opacity: value >= limits.max ? 0.4 : 1, lineHeight: 1, padding: 0 }}
+                    >+</button>
+                  </div>
+                );
+              })()}
             </td>
           ))}
         </tr>
