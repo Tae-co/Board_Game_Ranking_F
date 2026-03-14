@@ -155,11 +155,11 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
   if (cat.special === "science_7wonders") {
     return (
       <button onClick={() => onOpenScience(memberId)} style={{
-        width: 52, height: 36, borderRadius: 8,
+        width: 40, height: 32, borderRadius: 8,
         border: `2px solid ${value ? "#16a34a" : "#E5D5C0"}`,
         background: value ? "#f0fdf4" : "var(--th-bg)",
         color: value ? "#16a34a" : "#A08060",
-        fontWeight: 800, fontSize: 14, cursor: "pointer"
+        fontWeight: 800, fontSize: 12, cursor: "pointer"
       }}>
         {value || "🧪"}
       </button>
@@ -171,9 +171,9 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
       value={value ?? ""}
       onChange={e => onChange(cat.key, memberId, e.target.value)}
       style={{
-        width: 52, height: 36, textAlign: "center",
+        width: 40, height: 32, textAlign: "center",
         borderRadius: 8, border: "2px solid #E5D5C0",
-        background: "var(--th-bg)", fontSize: 15, fontWeight: 700,
+        background: "var(--th-bg)", fontSize: 13, fontWeight: 700,
         color: cat.negative ? "#ef4444" : "var(--th-text)",
         outline: "none",
       }}
@@ -189,10 +189,10 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
 // =============================================
 const TotalRow = ({ players, totals, winnerId, t }) => (
   <tr style={{ background: "#2C1F0E" }}>
-    <td style={{ padding: "12px 14px", fontWeight: 900, color: "var(--th-primary)", fontSize: 14 }}>{t('scoreSheet', 'total')}</td>
+    <td style={{ padding: "10px 8px", fontWeight: 900, color: "var(--th-primary)", fontSize: 13 }}>{t('scoreSheet', 'total')}</td>
     {players.map(p => (
-      <td key={p.memberId} style={{ padding: "12px 6px", textAlign: "center" }}>
-        <div style={{ fontWeight: 900, fontSize: 20, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0" }}>{totals[p.memberId]}</div>
+      <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center" }}>
+        <div style={{ fontWeight: 900, fontSize: 18, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0" }}>{totals[p.memberId]}</div>
       </td>
     ))}
   </tr>
@@ -202,12 +202,12 @@ const TotalRow = ({ players, totals, winnerId, t }) => (
 // Flat 테이블 (7Wonders, Azul)
 // =============================================
 const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, setScienceModal, t }) => (
-  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 320 }}>
+  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "12px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#A08060", width: 110 }}>{t('scoreSheet', 'category')}</th>
+        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 80 }}>{t('scoreSheet', 'category')}</th>
         {players.map(p => (
-          <th key={p.memberId} style={{ padding: "12px 8px", textAlign: "center", fontSize: 13, fontWeight: 800, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
+          <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0", minWidth: 52 }}>
             {p.memberId === winnerId ? "👑 " : ""}{p.nickname}
           </th>
         ))}
@@ -216,13 +216,13 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
     <tbody>
       {schema.categories.map((cat, idx) => (
         <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)" }}>
-          <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)", whiteSpace: "nowrap" }}>
-            <span style={{ marginRight: 6 }}>{cat.icon}</span>
+          <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
+            <span style={{ marginRight: 3 }}>{cat.icon}</span>
             <span style={{ color: cat.color }}>{cat.label}</span>
-            {cat.negative && <span style={{ fontSize: 10, color: "#ef4444", marginLeft: 4 }}>({t('scoreSheet', 'negative')})</span>}
+            {cat.negative && <span style={{ fontSize: 9, color: "#ef4444", marginLeft: 2 }}>({t('scoreSheet', 'negative')})</span>}
           </td>
           {players.map(p => (
-            <td key={p.memberId} style={{ padding: "6px 6px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
+            <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
               <ScoreCell cat={cat} memberId={p.memberId} value={scores[cat.key]?.[p.memberId]} onChange={handleChange} onOpenScience={(id) => setScienceModal({ memberId: id })} />
             </td>
           ))}
@@ -237,12 +237,12 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
 // Sectioned 테이블 (캐스캐디아)
 // =============================================
 const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChange, t }) => (
-  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 320 }}>
+  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "12px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#A08060", width: 120 }}>{t('scoreSheet', 'category')}</th>
+        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 80 }}>{t('scoreSheet', 'category')}</th>
         {players.map(p => (
-          <th key={p.memberId} style={{ padding: "12px 8px", textAlign: "center", fontSize: 13, fontWeight: 800, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
+          <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0", minWidth: 52 }}>
             {p.memberId === winnerId ? "👑 " : ""}{p.nickname}
           </th>
         ))}
@@ -259,7 +259,7 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
           <>
             <tr key={`sh-${section.key}`}>
               <td colSpan={players.length + 1} style={{
-                padding: "9px 14px", fontSize: 12, fontWeight: 900,
+                padding: "7px 8px", fontSize: 11, fontWeight: 900,
                 color: section.color, background: section.bgColor,
                 borderTop: `3px solid ${section.color}`,
                 letterSpacing: "0.05em"
@@ -269,23 +269,23 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
             </tr>
             {section.categories.map((cat, idx) => (
               <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : section.bgColor + "55" }}>
-                <td style={{ padding: "9px 14px 9px 24px", fontSize: 13, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)", whiteSpace: "nowrap" }}>
-                  <span style={{ marginRight: 6 }}>{cat.icon}</span>
+                <td style={{ padding: "7px 4px 7px 16px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
+                  <span style={{ marginRight: 3 }}>{cat.icon}</span>
                   <span style={{ color: cat.color }}>{cat.label}</span>
                 </td>
                 {players.map(p => (
-                  <td key={p.memberId} style={{ padding: "6px 6px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
+                  <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
                     <ScoreCell cat={cat} memberId={p.memberId} value={scores[cat.key]?.[p.memberId]} onChange={handleChange} onOpenScience={() => {}} />
                   </td>
                 ))}
               </tr>
             ))}
             <tr key={`st-${section.key}`} style={{ background: section.bgColor }}>
-              <td style={{ padding: "7px 14px 7px 24px", fontSize: 12, fontWeight: 800, color: section.color, borderBottom: `2px solid ${section.color}` }}>
+              <td style={{ padding: "6px 8px 6px 16px", fontSize: 11, fontWeight: 800, color: section.color, borderBottom: `2px solid ${section.color}` }}>
                 {t('scoreSheet', 'subtotal')}
               </td>
               {players.map(p => (
-                <td key={p.memberId} style={{ padding: "7px 6px", textAlign: "center", fontWeight: 800, fontSize: 15, color: section.color, borderBottom: `2px solid ${section.color}` }}>
+                <td key={p.memberId} style={{ padding: "6px 4px", textAlign: "center", fontWeight: 800, fontSize: 13, color: section.color, borderBottom: `2px solid ${section.color}` }}>
                   {sectionTotals[p.memberId]}
                 </td>
               ))}
@@ -302,15 +302,15 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
 // 카탄 전용 테이블
 // =============================================
 const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatanCheck, t }) => (
-  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 320 }}>
+  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "12px 14px", textAlign: "left", fontSize: 12, fontWeight: 700, color: "#A08060", width: 110 }}>{t('scoreSheet', 'category')}</th>
+        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 80 }}>{t('scoreSheet', 'category')}</th>
         {players.map(p => {
           const total = totals[p.memberId] ?? 0;
           const canWin = total >= 10;
           return (
-            <th key={p.memberId} style={{ padding: "12px 8px", textAlign: "center", fontSize: 13, fontWeight: 800, color: canWin ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
+            <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: canWin ? "var(--th-primary)" : "#F5E6D0", minWidth: 52 }}>
               {canWin ? "👑 " : ""}{p.nickname}
             </th>
           );
@@ -320,25 +320,24 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
     <tbody>
       {schema.categories.map((cat, idx) => (
         <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)" }}>
-          <td style={{ padding: "10px 14px", fontSize: 13, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)", whiteSpace: "nowrap" }}>
-            <span style={{ marginRight: 6 }}>{cat.icon}</span>
+          <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
+            <span style={{ marginRight: 3 }}>{cat.icon}</span>
             <span style={{ color: cat.color }}>{cat.label}</span>
-            {cat.type === "exclusive_check"
-              ? <span style={{ fontSize: 10, color: cat.color, marginLeft: 4 }}>+{cat.bonus}점</span>
-              : <span style={{ fontSize: 10, color: "#A08060", marginLeft: 4 }}>×{cat.multiplier}</span>
-            }
+            {cat.type === "exclusive_check" && (
+              <span style={{ fontSize: 9, color: cat.color, marginLeft: 3 }}>+{cat.bonus}점</span>
+            )}
           </td>
           {players.map(p => (
-            <td key={p.memberId} style={{ padding: "6px 6px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
+            <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
               {cat.type === "exclusive_check" ? (
                 <button
                   onClick={() => handleCatanCheck(cat.key, p.memberId)}
                   style={{
-                    width: 52, height: 36, borderRadius: 8, cursor: "pointer",
+                    width: 40, height: 32, borderRadius: 8, cursor: "pointer",
                     border: `2px solid ${scores[cat.key]?.[p.memberId] ? cat.color : "#E5D5C0"}`,
                     background: scores[cat.key]?.[p.memberId] ? cat.color + "22" : "var(--th-bg)",
                     color: scores[cat.key]?.[p.memberId] ? cat.color : "#A08060",
-                    fontWeight: 900, fontSize: 16,
+                    fontWeight: 900, fontSize: 14,
                   }}
                 >
                   {scores[cat.key]?.[p.memberId] ? "✓" : "—"}
@@ -349,9 +348,9 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
                   value={scores[cat.key]?.[p.memberId] ?? ""}
                   onChange={e => handleChange(cat.key, p.memberId, e.target.value)}
                   style={{
-                    width: 52, height: 36, textAlign: "center",
+                    width: 40, height: 32, textAlign: "center",
                     borderRadius: 8, border: "2px solid #E5D5C0",
-                    background: "var(--th-bg)", fontSize: 15, fontWeight: 700,
+                    background: "var(--th-bg)", fontSize: 13, fontWeight: 700,
                     color: "var(--th-text)", outline: "none",
                   }}
                   onFocus={e => e.target.style.borderColor = cat.color}
@@ -365,14 +364,14 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
       ))}
       {/* 합계 행 */}
       <tr style={{ background: "#2C1F0E" }}>
-        <td style={{ padding: "12px 14px", fontWeight: 900, color: "var(--th-primary)", fontSize: 14 }}>{t('scoreSheet', 'total')}</td>
+        <td style={{ padding: "10px 8px", fontWeight: 900, color: "var(--th-primary)", fontSize: 13 }}>{t('scoreSheet', 'total')}</td>
         {players.map(p => {
           const total = totals[p.memberId] ?? 0;
           const canWin = total >= 10;
           return (
-            <td key={p.memberId} style={{ padding: "12px 6px", textAlign: "center" }}>
-              <div style={{ fontWeight: 900, fontSize: 20, color: canWin ? "var(--th-primary)" : "#F5E6D0" }}>{total}</div>
-              {canWin && <div style={{ fontSize: 10, color: "var(--th-primary)", fontWeight: 700, marginTop: 2 }}>🏆 {t('scoreSheet', 'canWin')}</div>}
+            <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center" }}>
+              <div style={{ fontWeight: 900, fontSize: 18, color: canWin ? "var(--th-primary)" : "#F5E6D0" }}>{total}</div>
+              {canWin && <div style={{ fontSize: 9, color: "var(--th-primary)", fontWeight: 700, marginTop: 2 }}>🏆 {t('scoreSheet', 'canWin')}</div>}
             </td>
           );
         })}
