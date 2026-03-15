@@ -181,6 +181,29 @@ const Ranking = () => {
     shareText(`🎮 오늘의 매치 결과 - ${match.gameName}\n\n${lines.join('\n')}`);
   };
 
+  const handleViewMatch = (match) => {
+    const savedScores = {};
+    match.participants.forEach(p => {
+      if (!p.scoresJson) return;
+      try {
+        const parsed = JSON.parse(p.scoresJson);
+        Object.entries(parsed).forEach(([catKey, val]) => {
+          if (!savedScores[catKey]) savedScores[catKey] = {};
+          savedScores[catKey][p.memberId] = val;
+        });
+      } catch {}
+    });
+    navigate(`/score-sheet/${match.boardGameId}`, {
+      state: {
+        roomId: Number(roomId),
+        gameName: match.gameName,
+        players: match.participants.map(p => ({ memberId: p.memberId, nickname: p.nickname })),
+        savedScores: Object.keys(savedScores).length > 0 ? savedScores : null,
+        readOnly: true,
+      },
+    });
+  };
+
   const handleEditMatch = (match) => {
     const savedScores = {};
     match.participants.forEach(p => {
@@ -315,7 +338,7 @@ const Ranking = () => {
                       <p className="text-sm font-semibold" style={{ color: 'var(--th-text)' }}>{formatDate(match.playedAt)}</p>
                     </div>
                     <div className="flex gap-2">
-                      {isHost && (
+                      {isHost ? (
                         <>
                           <button
                             onClick={() => handleEditMatch(match)}
@@ -332,6 +355,14 @@ const Ranking = () => {
                             삭제
                           </button>
                         </>
+                      ) : (
+                        <button
+                          onClick={() => handleViewMatch(match)}
+                          className="px-3 py-1 rounded-full text-xs"
+                          style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-text-sub)', border: '1px solid var(--th-border)' }}
+                        >
+                          상세
+                        </button>
                       )}
                       <button
                         onClick={() => handleShareMatch(match)}

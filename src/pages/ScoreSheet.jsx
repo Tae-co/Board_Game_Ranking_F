@@ -159,7 +159,7 @@ const ScienceModal = ({ onConfirm, onClose }) => {
 // =============================================
 // 점수 입력 셀 (player = memberId)
 // =============================================
-const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
+const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = false }) => {
   const divRef = useRef(null);
   const touchStartY = useRef(null);
   const [active, setActive] = useState(false);
@@ -167,6 +167,7 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
   useEffect(() => { stateRef.current = { value, onChange, cat, memberId }; });
 
   useEffect(() => {
+    if (readOnly) return;
     const el = divRef.current;
     if (!el) return;
     const onTouchStart = (e) => {
@@ -196,16 +197,16 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
       el.removeEventListener('touchend', onTouchEnd);
       el.removeEventListener('touchmove', onTouchMove);
     };
-  }, []);
+  }, [readOnly]);
 
   if (cat.special === "science_7wonders") {
     return (
-      <button onClick={() => onOpenScience(memberId)} style={{
+      <button onClick={readOnly ? undefined : () => onOpenScience(memberId)} style={{
         width: 52, height: 44, borderRadius: 8,
         border: `2px solid ${value ? "#16a34a" : "#E5D5C0"}`,
         background: value ? "#f0fdf4" : "var(--th-bg)",
         color: value ? "#16a34a" : "#A08060",
-        fontWeight: 800, fontSize: 13, cursor: "pointer"
+        fontWeight: 800, fontSize: 13, cursor: readOnly ? "default" : "pointer"
       }}>
         {value || "🧪"}
       </button>
@@ -215,7 +216,7 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
   return (
     <div
       ref={divRef}
-      onWheel={(e) => {
+      onWheel={readOnly ? undefined : (e) => {
         e.preventDefault();
         const delta = e.deltaY < 0 ? 1 : -1;
         const min = cat.allowNegative ? -50 : 0;
@@ -230,7 +231,7 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
         boxShadow: active ? `0 0 0 2px ${cat.color}44` : "none",
         background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
         color: (cat.negative && value > 0) || (cat.allowNegative && value < 0) ? "#ef4444" : (value > 0 ? "var(--th-text)" : "#A08060"),
-        userSelect: "none", cursor: "ns-resize", margin: "0 auto",
+        userSelect: "none", cursor: readOnly ? "default" : "ns-resize", margin: "0 auto",
         transition: "border-color 0.15s, box-shadow 0.15s",
       }}
     >
@@ -256,7 +257,7 @@ const TotalRow = ({ players, totals, winnerId, t }) => (
 // =============================================
 // Flat 테이블 (7Wonders, Azul)
 // =============================================
-const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, setScienceModal, t, lang }) => (
+const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, setScienceModal, t, lang, readOnly }) => (
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
@@ -278,7 +279,7 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
           </td>
           {players.map(p => (
             <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
-              <ScoreCell cat={cat} memberId={p.memberId} value={scores[cat.key]?.[p.memberId]} onChange={handleChange} onOpenScience={(id) => setScienceModal({ memberId: id })} />
+              <ScoreCell cat={cat} memberId={p.memberId} value={scores[cat.key]?.[p.memberId]} onChange={handleChange} onOpenScience={(id) => setScienceModal({ memberId: id })} readOnly={readOnly} />
             </td>
           ))}
         </tr>
@@ -291,7 +292,7 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
 // =============================================
 // Sectioned 테이블 (캐스캐디아)
 // =============================================
-const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChange, t, lang }) => (
+const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChange, t, lang, readOnly }) => (
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
@@ -330,7 +331,7 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
                 </td>
                 {players.map(p => (
                   <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
-                    <ScoreCell cat={cat} memberId={p.memberId} value={scores[cat.key]?.[p.memberId]} onChange={handleChange} onOpenScience={() => {}} />
+                    <ScoreCell cat={cat} memberId={p.memberId} value={scores[cat.key]?.[p.memberId]} onChange={handleChange} onOpenScience={() => {}} readOnly={readOnly} />
                   </td>
                 ))}
               </tr>
@@ -607,7 +608,7 @@ const ScoreSheet = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, lang } = useLanguage();
-  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null } = location.state || {};
+  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false } = location.state || {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scienceModal, setScienceModal] = useState(null);
@@ -773,9 +774,9 @@ const ScoreSheet = () => {
           ) : currentSchema.type === "duel" ? (
             <DuelTable schema={currentSchema} players={players} duelWinCondition={duelWinCondition} setDuelWinCondition={setDuelWinCondition} duelWinnerId={duelWinnerId} setDuelWinnerId={setDuelWinnerId} duelFellowshipId={duelFellowshipId} setDuelFellowshipId={setDuelFellowshipId} t={t} lang={lang} />
           ) : currentSchema.type === "sectioned" ? (
-            <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} t={t} lang={lang} />
+            <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} t={t} lang={lang} readOnly={readOnly} />
           ) : (
-            <FlatTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} setScienceModal={setScienceModal} t={t} lang={lang} />
+            <FlatTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} setScienceModal={setScienceModal} t={t} lang={lang} readOnly={readOnly} />
           )}
         </div>
       </div>
@@ -813,19 +814,21 @@ const ScoreSheet = () => {
       )}
 
       {/* Bottom Fixed Button */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: 16, background: "var(--th-bg)", maxWidth: 375, margin: "0 auto" }}>
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting}
-          style={{
-            width: "100%", padding: "10px 0", borderRadius: 50, border: "none",
-            background: isSubmitting ? "var(--th-border)" : "var(--th-primary)",
-            color: "#fff", fontSize: 14, fontWeight: 900, cursor: isSubmitting ? "not-allowed" : "pointer",
-          }}
-        >
-          {isSubmitting ? t('scoreSheet', 'saving') : editMatchId ? t('scoreSheet', 'submitEdit') : t('scoreSheet', 'submit')}
-        </button>
-      </div>
+      {!readOnly && (
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: 16, background: "var(--th-bg)", maxWidth: 375, margin: "0 auto" }}>
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting}
+            style={{
+              width: "100%", padding: "10px 0", borderRadius: 50, border: "none",
+              background: isSubmitting ? "var(--th-border)" : "var(--th-primary)",
+              color: "#fff", fontSize: 14, fontWeight: 900, cursor: isSubmitting ? "not-allowed" : "pointer",
+            }}
+          >
+            {isSubmitting ? t('scoreSheet', 'saving') : editMatchId ? t('scoreSheet', 'submitEdit') : t('scoreSheet', 'submit')}
+          </button>
+        </div>
+      )}
 
       {/* 과학 모달 */}
       {scienceModal && (
