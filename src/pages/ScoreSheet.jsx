@@ -26,7 +26,7 @@ const SCORE_SCHEMAS = {
     name: "7WONDERS",
     type: "flat",
     categories: [
-      { key: "military",  label: "군사",     labelEn: "Military",   icon: "⚔️",  color: "#dc2626", negative: true },
+      { key: "military",  label: "군사",     labelEn: "Military",   icon: "⚔️",  color: "#dc2626", allowNegative: true },
       { key: "treasury",  label: "금화",     labelEn: "Treasury",   icon: "💰",  color: "#ca8a04" },
       { key: "wonder",    label: "불가사의", labelEn: "Wonder",     icon: "🏛️",  color: "#78716c" },
       { key: "civilian",  label: "시민",     labelEn: "Civilian",   icon: "🟦",  color: "#2563eb" },
@@ -181,7 +181,8 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
         e.preventDefault();
         const { value: v, onChange: oc, cat: c, memberId: mid } = stateRef.current;
         const delta = diff > 0 ? 1 : -1;
-        const next = Math.min(50, Math.max(0, (Number(v) || 0) + delta));
+        const min = c.allowNegative ? -50 : 0;
+        const next = Math.min(50, Math.max(min, (Number(v) || 0) + delta));
         if (next !== Number(v)) if (navigator.vibrate) navigator.vibrate(10);
         oc(c.key, mid, next);
         touchStartY.current = e.touches[0].clientY;
@@ -217,7 +218,8 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
       onWheel={(e) => {
         e.preventDefault();
         const delta = e.deltaY < 0 ? 1 : -1;
-        const next = Math.min(50, Math.max(0, (Number(value) || 0) + delta));
+        const min = cat.allowNegative ? -50 : 0;
+        const next = Math.min(50, Math.max(min, (Number(value) || 0) + delta));
         if (next !== Number(value)) if (navigator.vibrate) navigator.vibrate(10);
         onChange(cat.key, memberId, next);
       }}
@@ -227,7 +229,7 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
         border: `2px solid ${active ? cat.color : "#E5D5C0"}`,
         boxShadow: active ? `0 0 0 2px ${cat.color}44` : "none",
         background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
-        color: cat.negative ? "#ef4444" : (value > 0 ? "var(--th-text)" : "#A08060"),
+        color: (cat.negative && value > 0) || (cat.allowNegative && value < 0) ? "#ef4444" : (value > 0 ? "var(--th-text)" : "#A08060"),
         userSelect: "none", cursor: "ns-resize", margin: "0 auto",
         transition: "border-color 0.15s, box-shadow 0.15s",
       }}
@@ -272,7 +274,7 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
           <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
             <span style={{ marginRight: 3 }}>{cat.icon}</span>
             <span style={{ color: cat.color }}>{cl(cat, lang)}</span>
-            {cat.negative && <span style={{ fontSize: 9, color: "#ef4444", marginLeft: 2 }}>({t('scoreSheet', 'negative')})</span>}
+            {cat.negative && !cat.allowNegative && <span style={{ fontSize: 9, color: "#ef4444", marginLeft: 2 }}>({t('scoreSheet', 'negative')})</span>}
           </td>
           {players.map(p => (
             <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
@@ -661,7 +663,7 @@ const ScoreSheet = () => {
       } else {
         t[p.memberId] = allCategories.reduce((sum, cat) => {
           const v = Number(scores[cat.key]?.[p.memberId]) || 0;
-          return cat.negative ? sum - Math.abs(v) : sum + v;
+          return cat.negative && !cat.allowNegative ? sum - Math.abs(v) : sum + v;
         }, 0);
       }
     });
