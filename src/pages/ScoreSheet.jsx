@@ -160,13 +160,13 @@ const ScienceModal = ({ onConfirm, onClose }) => {
 // 점수 입력 셀 (player = memberId)
 // =============================================
 const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
-  const inputRef = useRef(null);
+  const divRef = useRef(null);
   const touchStartY = useRef(null);
   const stateRef = useRef({ value, onChange, cat, memberId });
   useEffect(() => { stateRef.current = { value, onChange, cat, memberId }; });
 
   useEffect(() => {
-    const el = inputRef.current;
+    const el = divRef.current;
     if (!el) return;
     const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
     const onTouchMove = (e) => {
@@ -203,31 +203,23 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
   }
 
   return (
-    <input
-      ref={inputRef}
-      type="number"
-      min="0"
-      value={value ?? ""}
-      onChange={e => {
-        const v = Number(e.target.value);
-        onChange(cat.key, memberId, isNaN(v) ? 0 : Math.max(0, v));
-      }}
+    <div
+      ref={divRef}
       onWheel={(e) => {
         e.preventDefault();
         const delta = e.deltaY < 0 ? 1 : -1;
         onChange(cat.key, memberId, Math.min(50, Math.max(0, (Number(value) || 0) + delta)));
       }}
       style={{
-        width: 52, height: 44, textAlign: "center",
+        width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
         borderRadius: 8, border: "2px solid #E5D5C0",
         background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
-        color: cat.negative ? "#ef4444" : "var(--th-text)",
-        outline: "none",
+        color: cat.negative ? "#ef4444" : (value > 0 ? "var(--th-text)" : "#A08060"),
+        userSelect: "none", cursor: "ns-resize",
       }}
-      onFocus={e => e.target.style.borderColor = cat.color}
-      onBlur={e => e.target.style.borderColor = "#E5D5C0"}
-      placeholder="0"
-    />
+    >
+      {value || 0}
+    </div>
   );
 };
 
