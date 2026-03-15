@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import api from '../api/axios';
@@ -160,6 +160,34 @@ const ScienceModal = ({ onConfirm, onClose }) => {
 // 점수 입력 셀 (player = memberId)
 // =============================================
 const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
+  const inputRef = useRef(null);
+  const touchStartY = useRef(null);
+  const stateRef = useRef({ value, onChange, cat, memberId });
+  useEffect(() => { stateRef.current = { value, onChange, cat, memberId }; });
+
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+    const onTouchMove = (e) => {
+      if (touchStartY.current === null) return;
+      const diff = touchStartY.current - e.touches[0].clientY;
+      if (Math.abs(diff) > 8) {
+        e.preventDefault();
+        const { value: v, onChange: oc, cat: c, memberId: mid } = stateRef.current;
+        const delta = diff > 0 ? 1 : -1;
+        oc(c.key, mid, Math.min(50, Math.max(0, (Number(v) || 0) + delta)));
+        touchStartY.current = e.touches[0].clientY;
+      }
+    };
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+    };
+  }, []);
+
   if (cat.special === "science_7wonders") {
     return (
       <button onClick={() => onOpenScience(memberId)} style={{
@@ -174,16 +202,9 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
     );
   }
 
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY < 0 ? 1 : -1;
-    const current = Number(value) || 0;
-    const next = Math.min(50, Math.max(0, current + delta));
-    onChange(cat.key, memberId, next);
-  };
-
   return (
     <input
+      ref={inputRef}
       type="number"
       min="0"
       value={value ?? ""}
@@ -191,7 +212,11 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
         const v = Number(e.target.value);
         onChange(cat.key, memberId, isNaN(v) ? 0 : Math.max(0, v));
       }}
-      onWheel={handleWheel}
+      onWheel={(e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 1 : -1;
+        onChange(cat.key, memberId, Math.min(50, Math.max(0, (Number(value) || 0) + delta)));
+      }}
       style={{
         width: 52, height: 44, textAlign: "center",
         borderRadius: 8, border: "2px solid #E5D5C0",
@@ -321,6 +346,61 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
 );
 
 // =============================================
+// 카탄 스크롤 셀 (터치 + 휠 지원)
+// =============================================
+const CatanScrollCell = ({ catKey, playerId, value, limits, color, handleChange }) => {
+  const divRef = useRef(null);
+  const touchStartY = useRef(null);
+  const stateRef = useRef({ value, handleChange, catKey, playerId, limits });
+  useEffect(() => { stateRef.current = { value, handleChange, catKey, playerId, limits }; });
+
+  useEffect(() => {
+    const el = divRef.current;
+    if (!el) return;
+    const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+    const onTouchMove = (e) => {
+      if (touchStartY.current === null) return;
+      const diff = touchStartY.current - e.touches[0].clientY;
+      if (Math.abs(diff) > 8) {
+        e.preventDefault();
+        const { value: v, handleChange: hc, catKey: ck, playerId: pid, limits: lim } = stateRef.current;
+        const delta = diff > 0 ? 1 : -1;
+        hc(ck, pid, Math.min(lim.max, Math.max(lim.min, Number(v) + delta)));
+        touchStartY.current = e.touches[0].clientY;
+      }
+    };
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+    };
+  }, []);
+
+  const atMin = value <= limits.min;
+  const atMax = value >= limits.max;
+  return (
+    <div
+      ref={divRef}
+      onWheel={(e) => {
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 1 : -1;
+        handleChange(catKey, playerId, Math.min(limits.max, Math.max(limits.min, value + delta)));
+      }}
+      style={{ display: "flex", alignItems: "center", justifyContent: "center", userSelect: "none", cursor: "ns-resize" }}
+    >
+      <span style={{
+        width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
+        fontWeight: 800, fontSize: 15,
+        color: atMax ? color : atMin ? "#A08060" : "var(--th-text)",
+        borderRadius: 8, border: `2px solid ${value > 0 ? color : "#E5D5C0"}`,
+        background: "var(--th-bg)",
+      }}>{value}</span>
+    </div>
+  );
+};
+
+// =============================================
 // 카탄 전용 테이블
 // =============================================
 const CATAN_LIMITS = {
@@ -369,24 +449,15 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
               ) : (() => {
                 const limits = CATAN_LIMITS[cat.key];
                 const value = Number(scores[cat.key]?.[p.memberId] ?? 0);
-                const atMin = value <= limits.min;
-                const atMax = value >= limits.max;
                 return (
-                  <div
-                    onWheel={(e) => {
-                      e.preventDefault();
-                      const delta = e.deltaY < 0 ? 1 : -1;
-                      handleChange(cat.key, p.memberId, Math.min(limits.max, Math.max(limits.min, value + delta)));
-                    }}
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0, userSelect: "none", cursor: "ns-resize" }}
-                  >
-                    <span style={{
-                      width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
-                      fontWeight: 800, fontSize: 15, color: atMax ? cat.color : atMin ? "#A08060" : "var(--th-text)",
-                      borderRadius: 8, border: `2px solid ${value > 0 ? cat.color : "#E5D5C0"}`,
-                      background: "var(--th-bg)",
-                    }}>{value}</span>
-                  </div>
+                  <CatanScrollCell
+                    catKey={cat.key}
+                    playerId={p.memberId}
+                    value={value}
+                    limits={limits}
+                    color={cat.color}
+                    handleChange={handleChange}
+                  />
                 );
               })()}
             </td>
