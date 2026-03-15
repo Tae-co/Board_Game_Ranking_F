@@ -162,6 +162,11 @@ const translations = {
       selectWinner: '승자 선택',
       duelWins: '승리!',
       winnerRequired: '승자를 선택해주세요.',
+      teamAssignment: '팀 배정',
+      fellowshipTeam: '펠로우십',
+      sauronTeam: '사우론',
+      whoWon: '누가 이겼나요?',
+      howWin: '어떻게 이겼나요?',
     },
 
     // 랭킹
@@ -430,6 +435,11 @@ const translations = {
       selectWinner: 'Select Winner',
       duelWins: 'Wins!',
       winnerRequired: 'Please select a winner.',
+      teamAssignment: 'Team Assignment',
+      fellowshipTeam: 'Fellowship',
+      sauronTeam: 'Sauron',
+      whoWon: 'Who won?',
+      howWin: 'How did they win?',
     },
 
     // Ranking
