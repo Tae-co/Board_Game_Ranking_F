@@ -162,13 +162,18 @@ const ScienceModal = ({ onConfirm, onClose }) => {
 const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
   const divRef = useRef(null);
   const touchStartY = useRef(null);
+  const [active, setActive] = useState(false);
   const stateRef = useRef({ value, onChange, cat, memberId });
   useEffect(() => { stateRef.current = { value, onChange, cat, memberId }; });
 
   useEffect(() => {
     const el = divRef.current;
     if (!el) return;
-    const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+    const onTouchStart = (e) => {
+      touchStartY.current = e.touches[0].clientY;
+      setActive(true);
+    };
+    const onTouchEnd = () => setActive(false);
     const onTouchMove = (e) => {
       if (touchStartY.current === null) return;
       const diff = touchStartY.current - e.touches[0].clientY;
@@ -176,14 +181,18 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
         e.preventDefault();
         const { value: v, onChange: oc, cat: c, memberId: mid } = stateRef.current;
         const delta = diff > 0 ? 1 : -1;
-        oc(c.key, mid, Math.min(50, Math.max(0, (Number(v) || 0) + delta)));
+        const next = Math.min(50, Math.max(0, (Number(v) || 0) + delta));
+        if (next !== Number(v)) if (navigator.vibrate) navigator.vibrate(10);
+        oc(c.key, mid, next);
         touchStartY.current = e.touches[0].clientY;
       }
     };
     el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
     el.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => {
       el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend', onTouchEnd);
       el.removeEventListener('touchmove', onTouchMove);
     };
   }, []);
@@ -208,14 +217,19 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
       onWheel={(e) => {
         e.preventDefault();
         const delta = e.deltaY < 0 ? 1 : -1;
-        onChange(cat.key, memberId, Math.min(50, Math.max(0, (Number(value) || 0) + delta)));
+        const next = Math.min(50, Math.max(0, (Number(value) || 0) + delta));
+        if (next !== Number(value)) if (navigator.vibrate) navigator.vibrate(10);
+        onChange(cat.key, memberId, next);
       }}
       style={{
         width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
-        borderRadius: 8, border: "2px solid #E5D5C0",
+        borderRadius: 8,
+        border: `2px solid ${active ? cat.color : "#E5D5C0"}`,
+        boxShadow: active ? `0 0 0 2px ${cat.color}44` : "none",
         background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
         color: cat.negative ? "#ef4444" : (value > 0 ? "var(--th-text)" : "#A08060"),
         userSelect: "none", cursor: "ns-resize", margin: "0 auto",
+        transition: "border-color 0.15s, box-shadow 0.15s",
       }}
     >
       {value || 0}
@@ -343,13 +357,18 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
 const CatanScrollCell = ({ catKey, playerId, value, limits, color, handleChange }) => {
   const divRef = useRef(null);
   const touchStartY = useRef(null);
+  const [active, setActive] = useState(false);
   const stateRef = useRef({ value, handleChange, catKey, playerId, limits });
   useEffect(() => { stateRef.current = { value, handleChange, catKey, playerId, limits }; });
 
   useEffect(() => {
     const el = divRef.current;
     if (!el) return;
-    const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; };
+    const onTouchStart = (e) => {
+      touchStartY.current = e.touches[0].clientY;
+      setActive(true);
+    };
+    const onTouchEnd = () => setActive(false);
     const onTouchMove = (e) => {
       if (touchStartY.current === null) return;
       const diff = touchStartY.current - e.touches[0].clientY;
@@ -357,14 +376,18 @@ const CatanScrollCell = ({ catKey, playerId, value, limits, color, handleChange 
         e.preventDefault();
         const { value: v, handleChange: hc, catKey: ck, playerId: pid, limits: lim } = stateRef.current;
         const delta = diff > 0 ? 1 : -1;
-        hc(ck, pid, Math.min(lim.max, Math.max(lim.min, Number(v) + delta)));
+        const next = Math.min(lim.max, Math.max(lim.min, Number(v) + delta));
+        if (next !== Number(v)) if (navigator.vibrate) navigator.vibrate(10);
+        hc(ck, pid, next);
         touchStartY.current = e.touches[0].clientY;
       }
     };
     el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
     el.addEventListener('touchmove', onTouchMove, { passive: false });
     return () => {
       el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchend', onTouchEnd);
       el.removeEventListener('touchmove', onTouchMove);
     };
   }, []);
@@ -377,7 +400,9 @@ const CatanScrollCell = ({ catKey, playerId, value, limits, color, handleChange 
       onWheel={(e) => {
         e.preventDefault();
         const delta = e.deltaY < 0 ? 1 : -1;
-        handleChange(catKey, playerId, Math.min(limits.max, Math.max(limits.min, value + delta)));
+        const next = Math.min(limits.max, Math.max(limits.min, value + delta));
+        if (next !== value) if (navigator.vibrate) navigator.vibrate(10);
+        handleChange(catKey, playerId, next);
       }}
       style={{ display: "flex", alignItems: "center", justifyContent: "center", userSelect: "none", cursor: "ns-resize" }}
     >
@@ -385,8 +410,11 @@ const CatanScrollCell = ({ catKey, playerId, value, limits, color, handleChange 
         width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
         fontWeight: 800, fontSize: 15,
         color: atMax ? color : atMin ? "#A08060" : "var(--th-text)",
-        borderRadius: 8, border: `2px solid ${value > 0 ? color : "#E5D5C0"}`,
+        borderRadius: 8,
+        border: `2px solid ${active ? color : (value > 0 ? color : "#E5D5C0")}`,
+        boxShadow: active ? `0 0 0 2px ${color}44` : "none",
         background: "var(--th-bg)",
+        transition: "border-color 0.15s, box-shadow 0.15s",
       }}>{value}</span>
     </div>
   );
