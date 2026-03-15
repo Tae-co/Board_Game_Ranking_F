@@ -125,7 +125,7 @@ const translations = {
     matchForm: {
       title: '결과 입력',
       infoTitle: '점수 입력 방법',
-      infoDesc: '각 플레이어의 가장 긴 길 점수를 입력하세요. 높은 점수가 1등입니다.',
+      infoDesc: '각 플레이어의 점수를 입력하세요. 높은 점수가 1등입니다.',
       scorePlaceholder: '점수',
       saveResult: '결과 저장하기',
       saving: '저장 중...',
