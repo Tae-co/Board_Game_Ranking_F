@@ -178,15 +178,19 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
     e.preventDefault();
     const delta = e.deltaY < 0 ? 1 : -1;
     const current = Number(value) || 0;
-    const next = cat.negative ? current + delta : Math.max(0, current + delta);
+    const next = Math.min(50, Math.max(0, current + delta));
     onChange(cat.key, memberId, next);
   };
 
   return (
     <input
       type="number"
+      min="0"
       value={value ?? ""}
-      onChange={e => onChange(cat.key, memberId, e.target.value)}
+      onChange={e => {
+        const v = Number(e.target.value);
+        onChange(cat.key, memberId, isNaN(v) ? 0 : Math.max(0, v));
+      }}
       onWheel={handleWheel}
       style={{
         width: 52, height: 44, textAlign: "center",
@@ -334,7 +338,7 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
           const total = totals[p.memberId] ?? 0;
           const canWin = total >= 10;
           return (
-            <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: canWin ? "var(--th-primary)" : "#F5E6D0", minWidth: 52 }}>
+            <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: canWin ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
               {canWin ? "👑 " : ""}{p.nickname}
             </th>
           );
@@ -365,19 +369,23 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
               ) : (() => {
                 const limits = CATAN_LIMITS[cat.key];
                 const value = Number(scores[cat.key]?.[p.memberId] ?? 0);
+                const atMin = value <= limits.min;
+                const atMax = value >= limits.max;
                 return (
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 2 }}>
-                    <button
-                      onClick={() => handleChange(cat.key, p.memberId, Math.max(limits.min, value - 1))}
-                      disabled={value <= limits.min}
-                      style={{ width: 22, height: 22, borderRadius: 6, border: `1.5px solid ${value <= limits.min ? "#E5D5C0" : cat.color}`, background: "var(--th-bg)", color: value <= limits.min ? "#E5D5C0" : cat.color, fontWeight: 900, fontSize: 14, cursor: value <= limits.min ? "not-allowed" : "pointer", opacity: value <= limits.min ? 0.4 : 1, lineHeight: 1, padding: 0 }}
-                    >−</button>
-                    <span style={{ width: 16, textAlign: "center", fontWeight: 700, fontSize: 12, color: "var(--th-text)" }}>{value}</span>
-                    <button
-                      onClick={() => handleChange(cat.key, p.memberId, Math.min(limits.max, value + 1))}
-                      disabled={value >= limits.max}
-                      style={{ width: 22, height: 22, borderRadius: 6, border: `1.5px solid ${value >= limits.max ? "#E5D5C0" : cat.color}`, background: value >= limits.max ? "var(--th-bg)" : cat.color, color: value >= limits.max ? "#E5D5C0" : "#fff", fontWeight: 900, fontSize: 14, cursor: value >= limits.max ? "not-allowed" : "pointer", opacity: value >= limits.max ? 0.4 : 1, lineHeight: 1, padding: 0 }}
-                    >+</button>
+                  <div
+                    onWheel={(e) => {
+                      e.preventDefault();
+                      const delta = e.deltaY < 0 ? 1 : -1;
+                      handleChange(cat.key, p.memberId, Math.min(limits.max, Math.max(limits.min, value + delta)));
+                    }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0, userSelect: "none", cursor: "ns-resize" }}
+                  >
+                    <span style={{
+                      width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
+                      fontWeight: 800, fontSize: 15, color: atMax ? cat.color : atMin ? "#A08060" : "var(--th-text)",
+                      borderRadius: 8, border: `2px solid ${value > 0 ? cat.color : "#E5D5C0"}`,
+                      background: "var(--th-bg)",
+                    }}>{value}</span>
                   </div>
                 );
               })()}
