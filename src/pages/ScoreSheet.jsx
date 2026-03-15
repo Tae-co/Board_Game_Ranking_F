@@ -211,7 +211,7 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
         onChange(cat.key, memberId, Math.min(50, Math.max(0, (Number(value) || 0) + delta)));
       }}
       style={{
-        width: "100%", height: 44, display: "flex", alignItems: "center", justifyContent: "center",
+        width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
         borderRadius: 8, border: "2px solid #E5D5C0",
         background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
         color: cat.negative ? "#ef4444" : (value > 0 ? "var(--th-text)" : "#A08060"),
@@ -241,7 +241,7 @@ const TotalRow = ({ players, totals, winnerId, t }) => (
 // Flat 테이블 (7Wonders, Azul)
 // =============================================
 const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, setScienceModal, t, lang }) => (
-  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280, tableLayout: "fixed" }}>
+  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
         <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 80 }}>{t('scoreSheet', 'category')}</th>
@@ -276,7 +276,7 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
 // Sectioned 테이블 (캐스캐디아)
 // =============================================
 const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChange, t, lang }) => (
-  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280, tableLayout: "fixed" }}>
+  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
         <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 80 }}>{t('scoreSheet', 'category')}</th>
@@ -382,7 +382,7 @@ const CatanScrollCell = ({ catKey, playerId, value, limits, color, handleChange 
       style={{ display: "flex", alignItems: "center", justifyContent: "center", userSelect: "none", cursor: "ns-resize" }}
     >
       <span style={{
-        width: "100%", height: 44, display: "flex", alignItems: "center", justifyContent: "center",
+        width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
         fontWeight: 800, fontSize: 15,
         color: atMax ? color : atMin ? "#A08060" : "var(--th-text)",
         borderRadius: 8, border: `2px solid ${value > 0 ? color : "#E5D5C0"}`,
@@ -402,7 +402,7 @@ const CATAN_LIMITS = {
 };
 
 const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatanCheck, t }) => (
-  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280, tableLayout: "fixed" }}>
+  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
         <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 9, fontWeight: 700, color: "#A08060", width: 80, whiteSpace: "nowrap" }}>{t('scoreSheet', 'category')}</th>
