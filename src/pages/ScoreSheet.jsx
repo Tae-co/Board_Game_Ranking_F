@@ -325,17 +325,17 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
     </thead>
     <tbody>
       {schema.categories.map((cat, idx) => (
-        <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)" }}>
+        <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)", height: 44 }}>
           <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
             <span>{cat.icon}</span>
           </td>
           {players.map(p => (
-            <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
+            <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)", height: 44 }}>
               {cat.type === "exclusive_check" ? (
                 <button
                   onClick={() => handleCatanCheck(cat.key, p.memberId)}
                   style={{
-                    width: 40, height: 32, borderRadius: 8, cursor: "pointer",
+                    width: 40, height: 36, borderRadius: 8, cursor: "pointer",
                     border: `2px solid ${scores[cat.key]?.[p.memberId] ? cat.color : "#E5D5C0"}`,
                     background: scores[cat.key]?.[p.memberId] ? cat.color + "22" : "var(--th-bg)",
                     color: scores[cat.key]?.[p.memberId] ? cat.color : "#A08060",
