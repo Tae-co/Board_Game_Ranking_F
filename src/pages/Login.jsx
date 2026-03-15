@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Dices } from 'lucide-react';
 import api, { setAccessToken } from '../api/axios';
@@ -20,6 +20,36 @@ const Login = () => {
   const [nicknameStatus, setNicknameStatus] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (window.Kakao && !window.Kakao.isInitialized()) {
+      window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+    }
+  }, []);
+
+  const handleKakaoLogin = () => {
+    if (!window.Kakao?.isInitialized()) {
+      setError('카카오 SDK 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+      return;
+    }
+    window.Kakao.Auth.login({
+      success: async (authObj) => {
+        setIsLoading(true);
+        setError('');
+        try {
+          const res = await api.post('/auth/kakao', { kakaoAccessToken: authObj.access_token });
+          saveLoginData(res.data);
+        } catch {
+          setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      fail: () => {
+        setError('카카오 로그인이 취소되었습니다.');
+      },
+    });
+  };
 
   const saveLoginData = (data) => {
     setAccessToken(data.accessToken);
@@ -193,6 +223,21 @@ const Login = () => {
                 <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
               </svg>
               구글로 시작하기
+            </button>
+
+            {/* 카카오 로그인 */}
+            <button
+              onClick={handleKakaoLogin}
+              disabled={isLoading}
+              className="w-full py-3 rounded-full flex items-center justify-center gap-2 font-medium transition-opacity disabled:opacity-50"
+              style={{ backgroundColor: '#FEE500', color: '#191919', border: 'none' }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.85'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path fillRule="evenodd" clipRule="evenodd" d="M9 1C4.582 1 1 3.896 1 7.455c0 2.282 1.518 4.283 3.808 5.42L3.93 16.1a.3.3 0 0 0 .437.326L8.49 13.88c.167.012.336.018.51.018 4.418 0 8-2.896 8-6.454C17 3.896 13.418 1 9 1Z" fill="#191919"/>
+              </svg>
+              카카오로 시작하기
             </button>
           </div>
         )}
