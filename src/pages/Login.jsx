@@ -22,8 +22,13 @@ const Login = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (window.Kakao && !window.Kakao.isInitialized()) {
-      window.Kakao.init(import.meta.env.VITE_KAKAO_APP_KEY);
+    try {
+      const key = import.meta.env.VITE_KAKAO_APP_KEY;
+      if (window.Kakao && key && !window.Kakao.isInitialized()) {
+        window.Kakao.init(key);
+      }
+    } catch (e) {
+      console.warn('Kakao SDK init 실패:', e);
     }
   }, []);
 

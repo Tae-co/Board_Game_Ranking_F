@@ -95,10 +95,28 @@ const SCORE_SCHEMAS = {
       { key: "negative", label: "감점",    icon: "❌", color: "#6b7280", negative: true },
     ],
   },
+
+  // Duel for Middle-earth (board_game_id = 5, 실제 DB id와 다를 경우 이름으로 자동 매칭됨)
+  6: {
+    name: "DUEL FOR MIDDLE-EARTH",
+    type: "duel",
+    trackCategories: [
+      { key: "ring_quest", label: "반지 원정", icon: "💍", color: "#6366f1", max: 15 },
+      { key: "alliance",   label: "동맹 종족", icon: "🌿", color: "#16a34a", max: 6  },
+      { key: "territory",  label: "점령 지역", icon: "🗺️", color: "#dc2626", max: 7  },
+    ],
+    winConditions: [
+      { key: "ring_quest", label: "반지 원정 달성",       icon: "💍" },
+      { key: "alliance",   label: "동맹 6종족 달성",      icon: "🌿" },
+      { key: "territory",  label: "7지역 전부 점령",      icon: "🗺️" },
+      { key: "majority",   label: "지역 다수 (챕터3 종료)", icon: "⚔️" },
+    ],
+  },
 };
 
 const getAllCategories = (schema) => {
   if (schema.type === "sectioned") return schema.sections.flatMap(s => s.categories);
+  if (schema.type === "duel") return schema.trackCategories || [];
   return schema.categories || [];
 };
 
@@ -386,6 +404,112 @@ const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatan
 );
 
 // =============================================
+// Duel for Middle-earth 전용 테이블
+// =============================================
+const DUEL_LIMITS = {
+  ring_quest: { min: 0, max: 15 },
+  alliance:   { min: 0, max: 6 },
+  territory:  { min: 0, max: 7 },
+};
+
+const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, setDuelWinCondition, duelWinnerId, setDuelWinnerId }) => {
+  const p1 = players[0];
+  const p2 = players[1];
+  return (
+    <div style={{ padding: 16 }}>
+      {/* 진행도 트래커 */}
+      <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 20 }}>
+        <thead>
+          <tr style={{ background: "#2C1F0E" }}>
+            <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 90 }}>진행도</th>
+            {[p1, p2].map(p => (
+              <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: duelWinnerId === p.memberId ? "var(--th-primary)" : "#F5E6D0", minWidth: 90 }}>
+                {duelWinnerId === p.memberId ? "👑 " : ""}{p.nickname}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {schema.trackCategories.map((cat, idx) => (
+            <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)", height: 52 }}>
+              <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
+                <span>{cat.icon}</span>
+                <span style={{ color: cat.color, marginLeft: 4, fontSize: 10 }}>{cat.label}</span>
+              </td>
+              {[p1, p2].map(p => {
+                const value = Number(scores[cat.key]?.[p.memberId] ?? 0);
+                const limits = DUEL_LIMITS[cat.key];
+                return (
+                  <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)", height: 52 }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                      <button
+                        onClick={() => handleChange(cat.key, p.memberId, Math.max(limits.min, value - 1))}
+                        disabled={value <= limits.min}
+                        style={{ width: 26, height: 26, borderRadius: 6, border: `1.5px solid ${value <= limits.min ? "#E5D5C0" : cat.color}`, background: "var(--th-bg)", color: value <= limits.min ? "#E5D5C0" : cat.color, fontWeight: 900, fontSize: 15, cursor: value <= limits.min ? "not-allowed" : "pointer", opacity: value <= limits.min ? 0.4 : 1, lineHeight: 1, padding: 0 }}
+                      >−</button>
+                      <span style={{ width: 24, textAlign: "center", fontWeight: 700, fontSize: 14, color: "var(--th-text)" }}>{value}</span>
+                      <button
+                        onClick={() => handleChange(cat.key, p.memberId, Math.min(limits.max, value + 1))}
+                        disabled={value >= limits.max}
+                        style={{ width: 26, height: 26, borderRadius: 6, border: `1.5px solid ${value >= limits.max ? "#E5D5C0" : cat.color}`, background: value >= limits.max ? "var(--th-bg)" : cat.color, color: value >= limits.max ? "#E5D5C0" : "#fff", fontWeight: 900, fontSize: 15, cursor: value >= limits.max ? "not-allowed" : "pointer", opacity: value >= limits.max ? 0.4 : 1, lineHeight: 1, padding: 0 }}
+                      >+</button>
+                    </div>
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      {/* 승리 조건 선택 */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ fontSize: 12, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 8 }}>승리 조건</div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+          {schema.winConditions.map(wc => (
+            <button
+              key={wc.key}
+              onClick={() => setDuelWinCondition(duelWinCondition === wc.key ? null : wc.key)}
+              style={{
+                padding: "7px 12px", borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: "pointer",
+                border: `2px solid ${duelWinCondition === wc.key ? "var(--th-primary)" : "var(--th-border)"}`,
+                background: duelWinCondition === wc.key ? "var(--th-primary)" : "var(--th-card)",
+                color: duelWinCondition === wc.key ? "#fff" : "var(--th-text)",
+              }}
+            >
+              {wc.icon} {wc.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 승자 선택 */}
+      <div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 8 }}>승자 선택</div>
+        <div style={{ display: "flex", gap: 10 }}>
+          {[p1, p2].map(p => (
+            <button
+              key={p.memberId}
+              onClick={() => setDuelWinnerId(duelWinnerId === p.memberId ? null : p.memberId)}
+              style={{
+                flex: 1, padding: "14px 8px", borderRadius: 14, fontSize: 13, fontWeight: 800, cursor: "pointer",
+                border: `2px solid ${duelWinnerId === p.memberId ? "var(--th-primary)" : "var(--th-border)"}`,
+                background: duelWinnerId === p.memberId ? "var(--th-primary)" : "var(--th-card)",
+                color: duelWinnerId === p.memberId ? "#fff" : "var(--th-text)",
+              }}
+            >
+              {duelWinnerId === p.memberId ? "👑 " : ""}{p.nickname}
+              <br/>
+              <span style={{ fontSize: 11, fontWeight: 600, opacity: 0.8 }}>승리!</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =============================================
 // 메인 컴포넌트
 // =============================================
 const ScoreSheet = () => {
@@ -398,6 +522,8 @@ const ScoreSheet = () => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scienceModal, setScienceModal] = useState(null);
+  const [duelWinnerId, setDuelWinnerId] = useState(null);
+  const [duelWinCondition, setDuelWinCondition] = useState(null);
 
   // DB ID가 스키마 키와 다를 수 있으므로 게임 이름으로 우선 조회, 없으면 ID로 fallback
   const currentSchema = Object.values(SCORE_SCHEMAS).find(s =>
@@ -475,15 +601,32 @@ const ScoreSheet = () => {
   };
 
   const handleSubmit = async () => {
-    const placements = calcPlacements();
-    const allCats = getAllCategories(currentSchema);
-    const participants = players.map(p => ({
-      memberId: p.memberId,
-      placement: placements[p.memberId],
-      scoresJson: JSON.stringify(
-        Object.fromEntries(allCats.map(cat => [cat.key, scores[cat.key]?.[p.memberId]]))
-      ),
-    }));
+    let participants;
+    if (currentSchema.type === "duel") {
+      if (!duelWinnerId) { alert("승자를 선택해주세요."); return; }
+      const loserId = players.find(p => p.memberId !== duelWinnerId)?.memberId;
+      const allCats = getAllCategories(currentSchema);
+      participants = players.map(p => ({
+        memberId: p.memberId,
+        placement: p.memberId === duelWinnerId ? 1 : 2,
+        scoresJson: JSON.stringify({
+          ...Object.fromEntries(allCats.map(cat => [cat.key, scores[cat.key]?.[p.memberId] ?? 0])),
+          win_condition: duelWinCondition,
+          won: p.memberId === duelWinnerId,
+        }),
+      }));
+      void loserId;
+    } else {
+      const placements = calcPlacements();
+      const allCats = getAllCategories(currentSchema);
+      participants = players.map(p => ({
+        memberId: p.memberId,
+        placement: placements[p.memberId],
+        scoresJson: JSON.stringify(
+          Object.fromEntries(allCats.map(cat => [cat.key, scores[cat.key]?.[p.memberId]]))
+        ),
+      }));
+    }
     try {
       setIsSubmitting(true);
       const res = editMatchId
@@ -537,6 +680,8 @@ const ScoreSheet = () => {
         <div style={{ overflowX: "auto" }}>
           {currentSchema.type === "catan" ? (
             <CatanTable schema={currentSchema} players={players} scores={scores} totals={totals} handleChange={handleChange} handleCatanCheck={handleCatanCheck} t={t} />
+          ) : currentSchema.type === "duel" ? (
+            <DuelTable schema={currentSchema} players={players} scores={scores} handleChange={handleChange} duelWinCondition={duelWinCondition} setDuelWinCondition={setDuelWinCondition} duelWinnerId={duelWinnerId} setDuelWinnerId={setDuelWinnerId} />
           ) : currentSchema.type === "sectioned" ? (
             <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} t={t} />
           ) : (
@@ -546,14 +691,26 @@ const ScoreSheet = () => {
       </div>
 
       {/* 우승자 배너 */}
-      {Object.values(totals).some(v => v > 0) && (
-        <div style={{ margin: "16px 16px 0", background: "var(--th-primary)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}>
-          <span style={{ fontSize: 28 }}>👑</span>
-          <div>
-            <div style={{ fontWeight: 900, fontSize: 18, color: "#fff" }}>{`${winnerNickname} ${t('scoreSheet', 'victory')}`}</div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{`${totals[winnerId]}${t('scoreSheet', 'firstPlace')}`}</div>
+      {currentSchema.type === "duel" ? (
+        duelWinnerId && (
+          <div style={{ margin: "16px 16px 0", background: "var(--th-primary)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}>
+            <span style={{ fontSize: 28 }}>👑</span>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 18, color: "#fff" }}>{`${players.find(p => p.memberId === duelWinnerId)?.nickname} 승리!`}</div>
+              {duelWinCondition && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{currentSchema.winConditions.find(w => w.key === duelWinCondition)?.label}</div>}
+            </div>
           </div>
-        </div>
+        )
+      ) : (
+        Object.values(totals).some(v => v > 0) && (
+          <div style={{ margin: "16px 16px 0", background: "var(--th-primary)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}>
+            <span style={{ fontSize: 28 }}>👑</span>
+            <div>
+              <div style={{ fontWeight: 900, fontSize: 18, color: "#fff" }}>{`${winnerNickname} ${t('scoreSheet', 'victory')}`}</div>
+              <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{`${totals[winnerId]}${t('scoreSheet', 'firstPlace')}`}</div>
+            </div>
+          </div>
+        )
       )}
 
       {/* Bottom Fixed Button */}

@@ -21,9 +21,11 @@ const Lobby = () => {
   const { data: rooms = [] } = useQuery({
     queryKey: ['rooms', userId],
     queryFn: async () => {
+      if (!userId || userId === 'null') return [];
       const res = await api.get(`/rooms/my/${userId}`);
       return res.data || [];
     },
+    enabled: !!userId && userId !== 'null',
     staleTime: 1000 * 60 * 2,
   });
 
