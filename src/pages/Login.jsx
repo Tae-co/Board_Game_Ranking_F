@@ -34,7 +34,7 @@ const Login = () => {
 
   const handleKakaoLogin = () => {
     if (!window.Kakao?.isInitialized()) {
-      setError('카카오 SDK 로딩 중입니다. 잠시 후 다시 시도해주세요.');
+      setError(t('login', 'kakaoLoading'));
       return;
     }
     window.Kakao.Auth.login({
@@ -45,13 +45,13 @@ const Login = () => {
           const res = await api.post('/auth/kakao', { kakaoAccessToken: authObj.access_token });
           saveLoginData(res.data);
         } catch {
-          setError('카카오 로그인에 실패했습니다. 다시 시도해주세요.');
+          setError(t('login', 'kakaoFailed'));
         } finally {
           setIsLoading(false);
         }
       },
       fail: () => {
-        setError('카카오 로그인이 취소되었습니다.');
+        setError(t('login', 'kakaoCanceled'));
       },
     });
   };
@@ -209,7 +209,7 @@ const Login = () => {
             {/* 소셜 로그인 구분선 */}
             <div className="flex items-center gap-3 my-2">
               <div className="flex-1 h-px" style={{ backgroundColor: 'var(--th-border)' }} />
-              <span className="text-xs" style={{ color: 'var(--th-text-sub)' }}>또는</span>
+              <span className="text-xs" style={{ color: 'var(--th-text-sub)' }}>{t('login', 'or')}</span>
               <div className="flex-1 h-px" style={{ backgroundColor: 'var(--th-border)' }} />
             </div>
 
@@ -227,7 +227,7 @@ const Login = () => {
                 <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/>
                 <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58Z" fill="#EA4335"/>
               </svg>
-              구글로 시작하기
+              {t('login', 'googleLogin')}
             </button>
 
             {/* 카카오 로그인 */}
@@ -242,7 +242,7 @@ const Login = () => {
               <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
                 <path fillRule="evenodd" clipRule="evenodd" d="M9 1C4.582 1 1 3.896 1 7.455c0 2.282 1.518 4.283 3.808 5.42L3.93 16.1a.3.3 0 0 0 .437.326L8.49 13.88c.167.012.336.018.51.018 4.418 0 8-2.896 8-6.454C17 3.896 13.418 1 9 1Z" fill="#191919"/>
               </svg>
-              카카오로 시작하기
+              {t('login', 'kakaoLogin')}
             </button>
           </div>
         )}

@@ -49,6 +49,12 @@ const translations = {
       nicknameAvailable: '✓ 사용 가능한 닉네임이에요',
       nicknameTaken: '✕ 이미 사용 중인 닉네임이에요',
       nicknameChecking: '확인 중...',
+      or: '또는',
+      googleLogin: '구글로 시작하기',
+      kakaoLogin: '카카오로 시작하기',
+      kakaoLoading: '카카오 SDK 로딩 중입니다. 잠시 후 다시 시도해주세요.',
+      kakaoFailed: '카카오 로그인에 실패했습니다. 다시 시도해주세요.',
+      kakaoCanceled: '카카오 로그인이 취소되었습니다.',
     },
 
     // 로비
@@ -151,6 +157,11 @@ const translations = {
       goBack: '돌아가기',
       canWin: '승리 가능',
       submitEdit: '수정 반영하기 →',
+      progress: '진행도',
+      winCondition: '승리 조건',
+      selectWinner: '승자 선택',
+      duelWins: '승리!',
+      winnerRequired: '승자를 선택해주세요.',
     },
 
     // 랭킹
@@ -275,7 +286,7 @@ const translations = {
       title: 'Board Game',
       subtitle: 'Ranking System',
       phone: 'Phone Number',
-      phonePlaceholder: '전화번호 로그인 미작동 중',
+      phonePlaceholder: 'Phone login not available',
       next: 'Next',
       checking: 'Checking...',
       password: 'Password',
@@ -306,6 +317,12 @@ const translations = {
       nicknameAvailable: '✓ Nickname available',
       nicknameTaken: '✕ Nickname already taken',
       nicknameChecking: 'Checking...',
+      or: 'or',
+      googleLogin: 'Continue with Google',
+      kakaoLogin: 'Continue with Kakao',
+      kakaoLoading: 'Kakao SDK loading. Please try again.',
+      kakaoFailed: 'Kakao login failed. Please try again.',
+      kakaoCanceled: 'Kakao login canceled.',
     },
 
     // Lobby
@@ -408,6 +425,11 @@ const translations = {
       goBack: 'Go Back',
       canWin: 'Win Possible',
       submitEdit: 'Update Ranking →',
+      progress: 'Progress',
+      winCondition: 'Win Condition',
+      selectWinner: 'Select Winner',
+      duelWins: 'Wins!',
+      winnerRequired: 'Please select a winner.',
     },
 
     // Ranking

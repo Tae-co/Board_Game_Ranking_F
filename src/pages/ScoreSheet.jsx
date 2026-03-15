@@ -412,7 +412,7 @@ const DUEL_LIMITS = {
   territory:  { min: 0, max: 7 },
 };
 
-const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, setDuelWinCondition, duelWinnerId, setDuelWinnerId }) => {
+const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, setDuelWinCondition, duelWinnerId, setDuelWinnerId, t }) => {
   const p1 = players[0];
   const p2 = players[1];
   return (
@@ -421,7 +421,7 @@ const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, se
       <table style={{ width: "100%", borderCollapse: "collapse", marginBottom: 20 }}>
         <thead>
           <tr style={{ background: "#2C1F0E" }}>
-            <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 90 }}>진행도</th>
+            <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 90 }}>{t('scoreSheet', 'progress')}</th>
             {[p1, p2].map(p => (
               <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: duelWinnerId === p.memberId ? "var(--th-primary)" : "#F5E6D0", minWidth: 90 }}>
                 {duelWinnerId === p.memberId ? "👑 " : ""}{p.nickname}
@@ -464,7 +464,7 @@ const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, se
 
       {/* 승리 조건 선택 */}
       <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 12, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 8 }}>승리 조건</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 8 }}>{t('scoreSheet', 'winCondition')}</div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
           {schema.winConditions.map(wc => (
             <button
@@ -485,7 +485,7 @@ const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, se
 
       {/* 승자 선택 */}
       <div>
-        <div style={{ fontSize: 12, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 8 }}>승자 선택</div>
+        <div style={{ fontSize: 12, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 8 }}>{t('scoreSheet', 'selectWinner')}</div>
         <div style={{ display: "flex", gap: 10 }}>
           {[p1, p2].map(p => (
             <button
@@ -500,7 +500,7 @@ const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, se
             >
               {duelWinnerId === p.memberId ? "👑 " : ""}{p.nickname}
               <br/>
-              <span style={{ fontSize: 11, fontWeight: 600, opacity: 0.8 }}>승리!</span>
+              <span style={{ fontSize: 11, fontWeight: 600, opacity: 0.8 }}>{t('scoreSheet', 'duelWins')}</span>
             </button>
           ))}
         </div>
@@ -603,7 +603,7 @@ const ScoreSheet = () => {
   const handleSubmit = async () => {
     let participants;
     if (currentSchema.type === "duel") {
-      if (!duelWinnerId) { alert("승자를 선택해주세요."); return; }
+      if (!duelWinnerId) { alert(t('scoreSheet', 'winnerRequired')); return; }
       const loserId = players.find(p => p.memberId !== duelWinnerId)?.memberId;
       const allCats = getAllCategories(currentSchema);
       participants = players.map(p => ({
@@ -681,7 +681,7 @@ const ScoreSheet = () => {
           {currentSchema.type === "catan" ? (
             <CatanTable schema={currentSchema} players={players} scores={scores} totals={totals} handleChange={handleChange} handleCatanCheck={handleCatanCheck} t={t} />
           ) : currentSchema.type === "duel" ? (
-            <DuelTable schema={currentSchema} players={players} scores={scores} handleChange={handleChange} duelWinCondition={duelWinCondition} setDuelWinCondition={setDuelWinCondition} duelWinnerId={duelWinnerId} setDuelWinnerId={setDuelWinnerId} />
+            <DuelTable schema={currentSchema} players={players} scores={scores} handleChange={handleChange} duelWinCondition={duelWinCondition} setDuelWinCondition={setDuelWinCondition} duelWinnerId={duelWinnerId} setDuelWinnerId={setDuelWinnerId} t={t} />
           ) : currentSchema.type === "sectioned" ? (
             <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} t={t} />
           ) : (
