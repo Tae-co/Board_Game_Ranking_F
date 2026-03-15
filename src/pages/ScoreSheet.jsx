@@ -215,7 +215,7 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience }) => {
         borderRadius: 8, border: "2px solid #E5D5C0",
         background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
         color: cat.negative ? "#ef4444" : (value > 0 ? "var(--th-text)" : "#A08060"),
-        userSelect: "none", cursor: "ns-resize",
+        userSelect: "none", cursor: "ns-resize", margin: "0 auto",
       }}
     >
       {value || 0}
