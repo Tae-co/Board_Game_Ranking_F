@@ -13,11 +13,11 @@ const SCORE_SCHEMAS = {
     name: "CATAN",
     type: "catan",
     categories: [
-      { key: "settlement", label: "정착지", icon: "🏘️", color: "#92400e", multiplier: 1 },
-      { key: "cities",     label: "도시",   icon: "🏙️", color: "#1d4ed8", multiplier: 2 },
-      { key: "longest_road", label: "최장 도로", icon: "🛤️", color: "#15803d", type: "exclusive_check", bonus: 2 },
-      { key: "largest_army", label: "최대 군대", icon: "⚔️", color: "#dc2626", type: "exclusive_check", bonus: 2 },
-      { key: "vp_cards",   label: "승점 카드", icon: "🃏", color: "#7c3aed", multiplier: 1 },
+      { key: "settlement",   label: "정착지",   labelEn: "Settlements",    icon: "🏘️", color: "#92400e", multiplier: 1 },
+      { key: "cities",       label: "도시",     labelEn: "Cities",         icon: "🏙️", color: "#1d4ed8", multiplier: 2 },
+      { key: "longest_road", label: "최장 도로", labelEn: "Longest Road",  icon: "🛤️", color: "#15803d", type: "exclusive_check", bonus: 2 },
+      { key: "largest_army", label: "최대 군대", labelEn: "Largest Army",  icon: "⚔️", color: "#dc2626", type: "exclusive_check", bonus: 2 },
+      { key: "vp_cards",     label: "승점 카드", labelEn: "Victory Cards", icon: "🃏", color: "#7c3aed", multiplier: 1 },
     ],
   },
 
@@ -26,13 +26,13 @@ const SCORE_SCHEMAS = {
     name: "7WONDERS",
     type: "flat",
     categories: [
-      { key: "military",  label: "군사",     icon: "⚔️",  color: "#dc2626" },
-      { key: "treasury",  label: "금화",     icon: "💰",  color: "#ca8a04" },
-      { key: "wonder",    label: "불가사의", icon: "🏛️",  color: "#78716c" },
-      { key: "civilian",  label: "시민",     icon: "🟦",  color: "#2563eb" },
-      { key: "commerce",  label: "상업",     icon: "🟡",  color: "#d97706" },
-      { key: "guild",     label: "길드",     icon: "🟣",  color: "#7c3aed" },
-      { key: "science",   label: "과학",     icon: "🟢",  color: "#16a34a", special: "science_7wonders" },
+      { key: "military",  label: "군사",     labelEn: "Military",   icon: "⚔️",  color: "#dc2626" },
+      { key: "treasury",  label: "금화",     labelEn: "Treasury",   icon: "💰",  color: "#ca8a04" },
+      { key: "wonder",    label: "불가사의", labelEn: "Wonder",     icon: "🏛️",  color: "#78716c" },
+      { key: "civilian",  label: "시민",     labelEn: "Civilian",   icon: "🟦",  color: "#2563eb" },
+      { key: "commerce",  label: "상업",     labelEn: "Commerce",   icon: "🟡",  color: "#d97706" },
+      { key: "guild",     label: "길드",     labelEn: "Guild",      icon: "🟣",  color: "#7c3aed" },
+      { key: "science",   label: "과학",     labelEn: "Science",    icon: "🟢",  color: "#16a34a", special: "science_7wonders" },
     ],
   },
 
@@ -43,41 +43,35 @@ const SCORE_SCHEMAS = {
     sections: [
       {
         key: "animal",
-        label: "동물 점수",
-        icon: "🐾",
-        color: "#065f46",
-        bgColor: "#f0fdf4",
+        label: "동물 점수", labelEn: "Animal Score",
+        icon: "🐾", color: "#065f46", bgColor: "#f0fdf4",
         categories: [
-          { key: "bear",   label: "곰",   icon: "🐻", color: "#92400e" },
-          { key: "elk",    label: "엘크", icon: "🦌", color: "#065f46" },
-          { key: "salmon", label: "연어", icon: "🐟", color: "#0369a1" },
-          { key: "hawk",   label: "매",   icon: "🦅", color: "#1e40af" },
-          { key: "fox",    label: "여우", icon: "🦊", color: "#c2410c" },
+          { key: "bear",   label: "곰",   labelEn: "Bear",   icon: "🐻", color: "#92400e" },
+          { key: "elk",    label: "엘크", labelEn: "Elk",    icon: "🦌", color: "#065f46" },
+          { key: "salmon", label: "연어", labelEn: "Salmon", icon: "🐟", color: "#0369a1" },
+          { key: "hawk",   label: "매",   labelEn: "Hawk",   icon: "🦅", color: "#1e40af" },
+          { key: "fox",    label: "여우", labelEn: "Fox",    icon: "🦊", color: "#c2410c" },
         ],
       },
       {
         key: "habitat",
-        label: "지형 점수",
-        icon: "🗺️",
-        color: "#6d28d9",
-        bgColor: "#faf5ff",
+        label: "지형 점수", labelEn: "Habitat Score",
+        icon: "🗺️", color: "#6d28d9", bgColor: "#faf5ff",
         categories: [
-          { key: "forest",   label: "숲",  icon: "🌲", color: "#15803d" },
-          { key: "mountain", label: "산",  icon: "⛰️", color: "#78716c" },
-          { key: "river",    label: "강",  icon: "🌊", color: "#0284c7" },
-          { key: "prairie",  label: "초원",icon: "🌾", color: "#65a30d" },
-          { key: "wetland",  label: "습지",icon: "🌿", color: "#0f766e" },
+          { key: "forest",   label: "숲",  labelEn: "Forest",   icon: "🌲", color: "#15803d" },
+          { key: "mountain", label: "산",  labelEn: "Mountain", icon: "⛰️", color: "#78716c" },
+          { key: "river",    label: "강",  labelEn: "River",    icon: "🌊", color: "#0284c7" },
+          { key: "prairie",  label: "초원",labelEn: "Prairie",  icon: "🌾", color: "#65a30d" },
+          { key: "wetland",  label: "습지",labelEn: "Wetland",  icon: "🌿", color: "#0f766e" },
         ],
       },
       {
         key: "bonus",
-        label: "보너스",
-        icon: "⭐",
-        color: "#b45309",
-        bgColor: "#fffbeb",
+        label: "보너스", labelEn: "Bonus",
+        icon: "⭐", color: "#b45309", bgColor: "#fffbeb",
         categories: [
-          { key: "nature",   label: "자연 토큰", icon: "🍃", color: "#15803d" },
-          { key: "pinecone", label: "솔방울",    icon: "🌰", color: "#92400e" },
+          { key: "nature",   label: "자연 토큰", labelEn: "Nature Token", icon: "🍃", color: "#15803d" },
+          { key: "pinecone", label: "솔방울",    labelEn: "Pinecone",     icon: "🌰", color: "#92400e" },
         ],
       },
     ],
@@ -88,28 +82,28 @@ const SCORE_SCHEMAS = {
     name: "AZUL",
     type: "flat",
     categories: [
-      { key: "wall",     label: "벽 타일", icon: "🔷", color: "#1d4ed8" },
-      { key: "row",      label: "완성 행", icon: "➡️", color: "#0f766e" },
-      { key: "col",      label: "완성 열", icon: "⬇️", color: "#7c3aed" },
-      { key: "color",    label: "같은 색", icon: "🎨", color: "#b91c1c" },
-      { key: "negative", label: "감점",    icon: "❌", color: "#6b7280", negative: true },
+      { key: "wall",     label: "벽 타일", labelEn: "Wall Tiles",      icon: "🔷", color: "#1d4ed8" },
+      { key: "row",      label: "완성 행", labelEn: "Completed Row",   icon: "➡️", color: "#0f766e" },
+      { key: "col",      label: "완성 열", labelEn: "Completed Column",icon: "⬇️", color: "#7c3aed" },
+      { key: "color",    label: "같은 색", labelEn: "Same Color",      icon: "🎨", color: "#b91c1c" },
+      { key: "negative", label: "감점",    labelEn: "Penalty",         icon: "❌", color: "#6b7280", negative: true },
     ],
   },
 
-  // Duel for Middle-earth (board_game_id = 5, 실제 DB id와 다를 경우 이름으로 자동 매칭됨)
+  // Duel for Middle-earth (board_game_id = 6, 실제 DB id와 다를 경우 이름으로 자동 매칭됨)
   6: {
     name: "DUEL FOR MIDDLE-EARTH",
     type: "duel",
     trackCategories: [
-      { key: "ring_quest", label: "반지 원정", icon: "💍", color: "#6366f1", max: 15 },
-      { key: "alliance",   label: "동맹 종족", icon: "🌿", color: "#16a34a", max: 6  },
-      { key: "territory",  label: "점령 지역", icon: "🗺️", color: "#dc2626", max: 7  },
+      { key: "ring_quest", label: "반지 원정", labelEn: "Ring Quest", icon: "💍", color: "#6366f1", max: 15 },
+      { key: "alliance",   label: "동맹 종족", labelEn: "Alliance",   icon: "🌿", color: "#16a34a", max: 6  },
+      { key: "territory",  label: "점령 지역", labelEn: "Territory",  icon: "🗺️", color: "#dc2626", max: 7  },
     ],
     winConditions: [
-      { key: "ring_quest", label: "반지 원정 달성",       icon: "💍" },
-      { key: "alliance",   label: "동맹 6종족 달성",      icon: "🌿" },
-      { key: "territory",  label: "7지역 전부 점령",      icon: "🗺️" },
-      { key: "majority",   label: "지역 다수 (챕터3 종료)", icon: "⚔️" },
+      { key: "ring_quest", label: "반지 원정 달성",        labelEn: "Ring Quest Achieved",    icon: "💍" },
+      { key: "alliance",   label: "동맹 6종족 달성",       labelEn: "Alliance (6 Races)",     icon: "🌿" },
+      { key: "territory",  label: "7지역 전부 점령",       labelEn: "All 7 Territories",      icon: "🗺️" },
+      { key: "majority",   label: "지역 다수 (챕터3 종료)", labelEn: "Regional Majority (Ch.3)",icon: "⚔️" },
     ],
   },
 };
@@ -119,6 +113,8 @@ const getAllCategories = (schema) => {
   if (schema.type === "duel") return schema.trackCategories || [];
   return schema.categories || [];
 };
+
+const cl = (item, lang) => (lang === 'en' && item.labelEn) ? item.labelEn : item.label;
 
 // =============================================
 // 7Wonders 과학 자동 계산 모달
@@ -219,7 +215,7 @@ const TotalRow = ({ players, totals, winnerId, t }) => (
 // =============================================
 // Flat 테이블 (7Wonders, Azul)
 // =============================================
-const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, setScienceModal, t }) => (
+const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, setScienceModal, t, lang }) => (
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
@@ -236,7 +232,7 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
         <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)" }}>
           <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
             <span style={{ marginRight: 3 }}>{cat.icon}</span>
-            <span style={{ color: cat.color }}>{cat.label}</span>
+            <span style={{ color: cat.color }}>{cl(cat, lang)}</span>
             {cat.negative && <span style={{ fontSize: 9, color: "#ef4444", marginLeft: 2 }}>({t('scoreSheet', 'negative')})</span>}
           </td>
           {players.map(p => (
@@ -254,7 +250,7 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
 // =============================================
 // Sectioned 테이블 (캐스캐디아)
 // =============================================
-const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChange, t }) => (
+const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChange, t, lang }) => (
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
@@ -282,14 +278,14 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
                 borderTop: `3px solid ${section.color}`,
                 letterSpacing: "0.05em"
               }}>
-                {section.icon} {section.label}
+                {section.icon} {cl(section, lang)}
               </td>
             </tr>
             {section.categories.map((cat, idx) => (
               <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : section.bgColor + "55" }}>
                 <td style={{ padding: "7px 4px 7px 16px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
                   <span style={{ marginRight: 3 }}>{cat.icon}</span>
-                  <span style={{ color: cat.color }}>{cat.label}</span>
+                  <span style={{ color: cat.color }}>{cl(cat, lang)}</span>
                 </td>
                 {players.map(p => (
                   <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
@@ -412,7 +408,7 @@ const DUEL_LIMITS = {
   territory:  { min: 0, max: 7 },
 };
 
-const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, setDuelWinCondition, duelWinnerId, setDuelWinnerId, t }) => {
+const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, setDuelWinCondition, duelWinnerId, setDuelWinnerId, t, lang }) => {
   const p1 = players[0];
   const p2 = players[1];
   return (
@@ -434,7 +430,7 @@ const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, se
             <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)", height: 52 }}>
               <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
                 <span>{cat.icon}</span>
-                <span style={{ color: cat.color, marginLeft: 4, fontSize: 10 }}>{cat.label}</span>
+                <span style={{ color: cat.color, marginLeft: 4, fontSize: 10 }}>{cl(cat, lang)}</span>
               </td>
               {[p1, p2].map(p => {
                 const value = Number(scores[cat.key]?.[p.memberId] ?? 0);
@@ -477,7 +473,7 @@ const DuelTable = ({ schema, players, scores, handleChange, duelWinCondition, se
                 color: duelWinCondition === wc.key ? "#fff" : "var(--th-text)",
               }}
             >
-              {wc.icon} {wc.label}
+              {wc.icon} {cl(wc, lang)}
             </button>
           ))}
         </div>
@@ -517,7 +513,7 @@ const ScoreSheet = () => {
   const boardGameId = Number(boardGameIdStr);
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null } = location.state || {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -681,11 +677,11 @@ const ScoreSheet = () => {
           {currentSchema.type === "catan" ? (
             <CatanTable schema={currentSchema} players={players} scores={scores} totals={totals} handleChange={handleChange} handleCatanCheck={handleCatanCheck} t={t} />
           ) : currentSchema.type === "duel" ? (
-            <DuelTable schema={currentSchema} players={players} scores={scores} handleChange={handleChange} duelWinCondition={duelWinCondition} setDuelWinCondition={setDuelWinCondition} duelWinnerId={duelWinnerId} setDuelWinnerId={setDuelWinnerId} t={t} />
+            <DuelTable schema={currentSchema} players={players} scores={scores} handleChange={handleChange} duelWinCondition={duelWinCondition} setDuelWinCondition={setDuelWinCondition} duelWinnerId={duelWinnerId} setDuelWinnerId={setDuelWinnerId} t={t} lang={lang} />
           ) : currentSchema.type === "sectioned" ? (
-            <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} t={t} />
+            <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} t={t} lang={lang} />
           ) : (
-            <FlatTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} setScienceModal={setScienceModal} t={t} />
+            <FlatTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} setScienceModal={setScienceModal} t={t} lang={lang} />
           )}
         </div>
       </div>
@@ -696,8 +692,8 @@ const ScoreSheet = () => {
           <div style={{ margin: "16px 16px 0", background: "var(--th-primary)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}>
             <span style={{ fontSize: 28 }}>👑</span>
             <div>
-              <div style={{ fontWeight: 900, fontSize: 18, color: "#fff" }}>{`${players.find(p => p.memberId === duelWinnerId)?.nickname} 승리!`}</div>
-              {duelWinCondition && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{currentSchema.winConditions.find(w => w.key === duelWinCondition)?.label}</div>}
+              <div style={{ fontWeight: 900, fontSize: 18, color: "#fff" }}>{`${players.find(p => p.memberId === duelWinnerId)?.nickname} ${t('scoreSheet', 'duelWins')}`}</div>
+              {duelWinCondition && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.8)" }}>{cl(currentSchema.winConditions.find(w => w.key === duelWinCondition), lang)}</div>}
             </div>
           </div>
         )
