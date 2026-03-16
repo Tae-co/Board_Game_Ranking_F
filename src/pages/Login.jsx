@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Dices } from 'lucide-react';
 import api, { setAccessToken } from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -56,9 +55,20 @@ const Login = () => {
       {/* Logo */}
       <div className="text-center mb-12">
         <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'var(--th-primary)' }}>
-            <Dices className="w-10 h-10" style={{ color: '#FFFFFF' }} />
-          </div>
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" width="80" height="80">
+            <rect x="0" y="0" width="240" height="240" rx="52" fill="#C97A2E"/>
+            <g transform="translate(130, 52) rotate(20)">
+              <rect x="0" y="0" width="86" height="86" rx="16" fill="#C97A2E" stroke="#fff" strokeWidth="7"/>
+              <circle cx="22" cy="22" r="8" fill="#fff"/>
+              <circle cx="64" cy="64" r="8" fill="#fff"/>
+            </g>
+            <g transform="translate(32, 102)">
+              <rect x="0" y="0" width="96" height="96" rx="18" fill="#fff"/>
+              <circle cx="26" cy="26" r="8.5" fill="#C97A2E"/>
+              <circle cx="48" cy="48" r="8.5" fill="#C97A2E"/>
+              <circle cx="70" cy="70" r="8.5" fill="#C97A2E"/>
+            </g>
+          </svg>
         </div>
         <h1 className="text-3xl mb-2" style={{ color: 'var(--th-text)' }}>{t('login', 'title')}</h1>
         <p className="text-sm" style={{ color: 'var(--th-text-sub)' }}>{t('login', 'subtitle')}</p>
