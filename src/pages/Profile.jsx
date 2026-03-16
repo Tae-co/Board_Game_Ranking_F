@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Globe, Palette } from 'lucide-react';
+import { ArrowLeft, Globe, Palette } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -41,12 +41,6 @@ const Profile = () => {
   const [nickname, setNickname] = useState('');
   const [nicknameStatus, setNicknameStatus] = useState(null);
   const [isNicknameSaving, setIsNicknameSaving] = useState(false);
-
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [pwError, setPwError] = useState('');
-  const [isPwLoading, setIsPwLoading] = useState(false);
 
   const checkNickname = async (value) => {
     if (!value.trim() || value.length < 2) { setNicknameStatus(null); return; }
@@ -97,22 +91,6 @@ const Profile = () => {
     && nickname.trim() !== currentNickname
     && nicknameStatus !== 'taken'
     && nicknameStatus !== 'checking';
-
-  const handleChangePassword = async () => {
-    if (newPassword.length < 6) { setPwError(t('profile', 'passwordMinError')); return; }
-    if (newPassword !== confirmPassword) { setPwError(t('profile', 'passwordMismatch')); return; }
-    setPwError('');
-    setIsPwLoading(true);
-    try {
-      await api.put('/auth/change-password', { currentPassword, newPassword });
-      alert(t('profile', 'passwordSaved'));
-      navigate('/lobby');
-    } catch (e) {
-      setPwError(e.response?.data?.message || t('profile', 'passwordMismatch'));
-    } finally {
-      setIsPwLoading(false);
-    }
-  };
 
   const inputStyle = {
     backgroundColor: 'var(--th-bg)',
@@ -290,66 +268,6 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Password Change Card */}
-      <div className="rounded-2xl p-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-        <h2 className="text-lg mb-4 flex items-center gap-2" style={{ color: 'var(--th-text)' }}>
-          <User className="w-5 h-5" style={{ color: 'var(--th-primary)' }} />
-          {t('profile', 'changePassword')}
-        </h2>
-        <div className="space-y-4">
-          <div>
-            <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>{t('profile', 'currentPassword')}</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => { setCurrentPassword(e.target.value); setPwError(''); }}
-              placeholder={t('profile', 'currentPasswordPlaceholder')}
-              className="w-full px-4 py-3 rounded-lg border focus:outline-none"
-              style={inputStyle}
-              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-            />
-          </div>
-          <div>
-            <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>{t('profile', 'newPassword')}</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => { setNewPassword(e.target.value); setPwError(''); }}
-              placeholder={t('profile', 'newPasswordPlaceholder')}
-              className="w-full px-4 py-3 rounded-lg border focus:outline-none"
-              style={inputStyle}
-              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-            />
-          </div>
-          <div>
-            <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>{t('profile', 'confirmPassword')}</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => { setConfirmPassword(e.target.value); setPwError(''); }}
-              onKeyDown={(e) => e.key === 'Enter' && handleChangePassword()}
-              placeholder={t('profile', 'confirmPasswordPlaceholder')}
-              className="w-full px-4 py-3 rounded-lg border focus:outline-none"
-              style={inputStyle}
-              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-            />
-          </div>
-          {pwError && <p className="text-sm" style={{ color: '#dc2626' }}>{pwError}</p>}
-          <button
-            onClick={handleChangePassword}
-            disabled={isPwLoading || !currentPassword || !newPassword || !confirmPassword}
-            className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-            style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            {isPwLoading ? t('profile', 'savingPassword') : t('profile', 'savePassword')}
-          </button>
-        </div>
-      </div>
     </div>
   );
 };

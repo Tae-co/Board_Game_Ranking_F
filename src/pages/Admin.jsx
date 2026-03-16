@@ -22,13 +22,6 @@ const Admin = () => {
   const [members, setMembers] = useState([]);
   const [isMembersLoading, setIsMembersLoading] = useState(false);
 
-  // 비밀번호 변경 상태
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [pwError, setPwError] = useState('');
-  const [isPwLoading, setIsPwLoading] = useState(false);
-
   const fetchGames = async () => {
     try {
       const res = await api.get('/admin/games');
@@ -133,24 +126,6 @@ const Admin = () => {
     setImageFile(null);
     setImagePreview('');
     setShowForm(false);
-  };
-
-  const handleChangePassword = async () => {
-    if (newPassword.length < 6) { setPwError(t('profile', 'passwordMinError')); return; }
-    if (newPassword !== confirmPassword) { setPwError(t('profile', 'passwordMismatch')); return; }
-    setPwError('');
-    setIsPwLoading(true);
-    try {
-      await api.put('/auth/change-password', { currentPassword, newPassword });
-      alert(t('profile', 'passwordSaved'));
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (e) {
-      setPwError(e.response?.data?.message || t('profile', 'passwordMismatch'));
-    } finally {
-      setIsPwLoading(false);
-    }
   };
 
   const handleLogout = () => {
@@ -433,65 +408,6 @@ const Admin = () => {
           </div>
         )}
 
-        {/* 설정 탭 */}
-        {activeTab === 'settings' && (
-          <div className="rounded-2xl p-6 border shadow-sm" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
-            <h2 className="text-lg mb-4" style={{ color: '#2C1F0E' }}>{t('admin', 'adminPassword')}</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>{t('admin', 'currentPassword')}</label>
-                <input
-                  type="password"
-                  value={currentPassword}
-                  onChange={(e) => { setCurrentPassword(e.target.value); setPwError(''); }}
-                  placeholder={t('admin', 'currentPassword')}
-                  className="w-full px-4 py-3 rounded-lg border focus:outline-none"
-                  style={inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                  onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>{t('admin', 'newPassword')}</label>
-                <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => { setNewPassword(e.target.value); setPwError(''); }}
-                  placeholder={t('admin', 'newPassword')}
-                  className="w-full px-4 py-3 rounded-lg border focus:outline-none"
-                  style={inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                  onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
-                />
-              </div>
-              <div>
-                <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>{t('admin', 'confirmPassword')}</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => { setConfirmPassword(e.target.value); setPwError(''); }}
-                  onKeyDown={(e) => e.key === 'Enter' && handleChangePassword()}
-                  placeholder={t('admin', 'confirmPassword')}
-                  className="w-full px-4 py-3 rounded-lg border focus:outline-none"
-                  style={inputStyle}
-                  onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                  onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
-                />
-              </div>
-              {pwError && <p className="text-sm" style={{ color: '#dc2626' }}>{pwError}</p>}
-              <button
-                onClick={handleChangePassword}
-                disabled={isPwLoading || !currentPassword || !newPassword || !confirmPassword}
-                className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-                style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
-                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-              >
-                {isPwLoading ? t('admin', 'changingPassword') : t('admin', 'changePassword')}
-              </button>
-            </div>
-          </div>
-        )}
 
       </div>
     </div>
