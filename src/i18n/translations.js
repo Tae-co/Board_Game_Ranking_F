@@ -15,8 +15,8 @@ const translations = {
 
     // 로그인
     login: {
-      title: '보드게임',
-      subtitle: '랭킹 시스템',
+      title: 'BoardUp',
+      subtitle: '친구들과 보드게임 랭킹을 기록해보세요',
       phone: '전화번호',
       phonePlaceholder: '전화번호 로그인 미작동 중',
       next: '다음',
