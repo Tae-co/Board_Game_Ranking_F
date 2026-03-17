@@ -1,607 +1,12 @@
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
+import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
+import { getAllCategories, cl } from '../scoreSheets/shared/scoreUtils';
+import { ScienceModal } from '../scoreSheets/shared/ScoreCell';
 
-// =============================================
-// 게임별 점수 스키마 정의
-// =============================================
-const SCORE_SCHEMAS = {
-  // 카탄 (board_game_id = 1)
-  1: {
-    name: "CATAN",
-    type: "catan",
-    categories: [
-      { key: "settlement",   label: "정착지",   labelEn: "Settlements",    icon: "🏘️", color: "#92400e", multiplier: 1 },
-      { key: "cities",       label: "도시",     labelEn: "Cities",         icon: "🏙️", color: "#1d4ed8", multiplier: 2 },
-      { key: "longest_road", label: "최장 도로", labelEn: "Longest Road",  icon: "🛤️", color: "#15803d", type: "exclusive_check", bonus: 2 },
-      { key: "largest_army", label: "최대 군대", labelEn: "Largest Army",  icon: "⚔️", color: "#dc2626", type: "exclusive_check", bonus: 2 },
-      { key: "vp_cards",     label: "승점 카드", labelEn: "Victory Cards", icon: "🃏", color: "#7c3aed", multiplier: 1 },
-    ],
-  },
-
-  // 7 Wonders
-  2: {
-    name: "7WONDERS",
-    type: "flat",
-    categories: [
-      { key: "military",  label: "군사",     labelEn: "Military",   icon: "⚔️",  color: "#dc2626", allowNegative: true },
-      { key: "treasury",  label: "금화",     labelEn: "Treasury",   icon: "💰",  color: "#ca8a04" },
-      { key: "wonder",    label: "불가사의", labelEn: "Wonder",     icon: "🏛️",  color: "#78716c" },
-      { key: "civilian",  label: "시민",     labelEn: "Civilian",   icon: "🟦",  color: "#2563eb" },
-      { key: "commerce",  label: "상업",     labelEn: "Commerce",   icon: "🟡",  color: "#d97706" },
-      { key: "guild",     label: "길드",     labelEn: "Guild",      icon: "🟣",  color: "#7c3aed" },
-      { key: "science",   label: "과학",     labelEn: "Science",    icon: "🟢",  color: "#16a34a", special: "science_7wonders" },
-    ],
-  },
-
-  // 캐스캐디아 - 섹션 구조
-  3: {
-    name: "CASCADIA",
-    type: "sectioned",
-    sections: [
-      {
-        key: "animal",
-        label: "동물 점수", labelEn: "Animal Score",
-        icon: "🐾", color: "#065f46", bgColor: "#f0fdf4",
-        categories: [
-          { key: "bear",   label: "곰",   labelEn: "Bear",   icon: "🐻", color: "#92400e" },
-          { key: "elk",    label: "엘크", labelEn: "Elk",    icon: "🦌", color: "#065f46" },
-          { key: "salmon", label: "연어", labelEn: "Salmon", icon: "🐟", color: "#0369a1" },
-          { key: "hawk",   label: "매",   labelEn: "Hawk",   icon: "🦅", color: "#1e40af" },
-          { key: "fox",    label: "여우", labelEn: "Fox",    icon: "🦊", color: "#c2410c" },
-        ],
-      },
-      {
-        key: "habitat",
-        label: "지형 점수", labelEn: "Habitat Score",
-        icon: "🗺️", color: "#6d28d9", bgColor: "#faf5ff",
-        categories: [
-          { key: "forest",   label: "숲",  labelEn: "Forest",   icon: "🌲", color: "#15803d" },
-          { key: "mountain", label: "산",  labelEn: "Mountain", icon: "⛰️", color: "#78716c" },
-          { key: "river",    label: "강",  labelEn: "River",    icon: "🌊", color: "#0284c7" },
-          { key: "prairie",  label: "초원",labelEn: "Prairie",  icon: "🌾", color: "#65a30d" },
-          { key: "wetland",  label: "습지",labelEn: "Wetland",  icon: "🌿", color: "#0f766e" },
-        ],
-      },
-      {
-        key: "bonus",
-        label: "보너스", labelEn: "Bonus",
-        icon: "⭐", color: "#b45309", bgColor: "#fffbeb",
-        categories: [
-          { key: "nature",   label: "자연 토큰", labelEn: "Nature Token", icon: "🍃", color: "#15803d" },
-          { key: "pinecone", label: "솔방울",    labelEn: "Pinecone",     icon: "🌰", color: "#92400e" },
-        ],
-      },
-    ],
-  },
-
-  // Azul
-  4: {
-    name: "AZUL",
-    type: "flat",
-    categories: [
-      { key: "wall",     label: "벽 타일", labelEn: "Wall Tiles",      icon: "🔷", color: "#1d4ed8" },
-      { key: "row",      label: "완성 행", labelEn: "Completed Row",   icon: "➡️", color: "#0f766e" },
-      { key: "col",      label: "완성 열", labelEn: "Completed Column",icon: "⬇️", color: "#7c3aed" },
-      { key: "color",    label: "같은 색", labelEn: "Same Color",      icon: "🎨", color: "#b91c1c" },
-      { key: "negative", label: "감점",    labelEn: "Penalty",         icon: "❌", color: "#6b7280", negative: true },
-    ],
-  },
-
-  // Duel for Middle-earth (board_game_id = 6, 실제 DB id와 다를 경우 이름으로 자동 매칭됨)
-  6: {
-    name: "DUEL FOR MIDDLE-EARTH",
-    type: "duel",
-    winConditions: [
-      { key: "support_races", label: "종족의 지지",  labelEn: "Support of the Races",   icon: "🌿" },
-      { key: "quest_ring",    label: "반지 원정",    labelEn: "Quest of the Ring",       icon: "💍" },
-      { key: "dominating",    label: "중간계 지배",  labelEn: "Dominating Middle-earth", icon: "👁️" },
-    ],
-  },
-};
-
-const getAllCategories = (schema) => {
-  if (schema.type === "sectioned") return schema.sections.flatMap(s => s.categories);
-  if (schema.type === "duel") return [];
-  return schema.categories || [];
-};
-
-const cl = (item, lang) => (lang === 'en' && item.labelEn) ? item.labelEn : item.label;
-
-// =============================================
-// 7Wonders 과학 자동 계산 모달
-// =============================================
-const ScienceModal = ({ onConfirm, onClose }) => {
-  const { t } = useLanguage();
-  const [gear, setGear] = useState(0);
-  const [compass, setCompass] = useState(0);
-  const [tablet, setTablet] = useState(0);
-
-  const score = useMemo(() => {
-    const sets = Math.min(gear, compass, tablet);
-    return gear * gear + compass * compass + tablet * tablet + sets * 7;
-  }, [gear, compass, tablet]);
-
-  return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 100 }}>
-      <div style={{ background: "#fff", borderRadius: 20, padding: 28, width: 300, boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
-        <h3 style={{ margin: "0 0 4px", color: "#1C1208", fontSize: 18, fontWeight: 800 }}>{`🟢 ${t('scoreSheet', 'scienceTitle')}`}</h3>
-        <p style={{ margin: "0 0 20px", color: "#8B7355", fontSize: 12 }}>{t('scoreSheet', 'scienceDesc')}</p>
-        {[
-          { label: "⚙️ 기어", val: gear, set: setGear },
-          { label: "🧭 컴퍼스", val: compass, set: setCompass },
-          { label: "📋 서판", val: tablet, set: setTablet },
-        ].map(({ label, val, set }) => (
-          <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-            <span style={{ fontWeight: 700, color: "#2C1F0E", fontSize: 14 }}>{label}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button onClick={() => set(Math.max(0, val - 1))} style={{ width: 32, height: 32, borderRadius: 8, border: "2px solid #E5D5C0", background: "var(--th-bg)", fontSize: 18, cursor: "pointer", fontWeight: 800, color: "var(--th-primary)" }}>−</button>
-              <span style={{ fontWeight: 900, fontSize: 20, color: "#2C1F0E", minWidth: 24, textAlign: "center" }}>{val}</span>
-              <button onClick={() => set(val + 1)} style={{ width: 32, height: 32, borderRadius: 8, border: "2px solid var(--th-primary)", background: "var(--th-primary)", fontSize: 18, cursor: "pointer", fontWeight: 800, color: "#fff" }}>+</button>
-            </div>
-          </div>
-        ))}
-        <div style={{ background: "var(--th-bg)", borderRadius: 12, padding: "12px 16px", margin: "16px 0", border: "2px solid var(--th-primary)", textAlign: "center" }}>
-          <div style={{ fontSize: 11, color: "#8B7355", marginBottom: 4 }}>{gear}² + {compass}² + {tablet}² + {Math.min(gear, compass, tablet)} × 7</div>
-          <div style={{ fontSize: 28, fontWeight: 900, color: "var(--th-primary)" }}>{`${score}${t('scoreSheet', 'pts')}`}</div>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "2px solid #E5D5C0", background: "#fff", color: "#8B7355", fontWeight: 700, cursor: "pointer", fontSize: 14 }}>{t('common', 'cancel')}</button>
-          <button onClick={() => onConfirm(score)} style={{ flex: 1, padding: "10px 0", borderRadius: 10, border: "none", background: "var(--th-primary)", color: "#fff", fontWeight: 800, cursor: "pointer", fontSize: 14 }}>{t('scoreSheet', 'apply')}</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// =============================================
-// 점수 입력 셀 (player = memberId)
-// =============================================
-const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = false }) => {
-  const divRef = useRef(null);
-  const touchStartY = useRef(null);
-  const [active, setActive] = useState(false);
-  const stateRef = useRef({ value, onChange, cat, memberId });
-  useEffect(() => { stateRef.current = { value, onChange, cat, memberId }; });
-
-  useEffect(() => {
-    if (readOnly) return;
-    const el = divRef.current;
-    if (!el) return;
-    const onTouchStart = (e) => {
-      touchStartY.current = e.touches[0].clientY;
-      setActive(true);
-    };
-    const onTouchEnd = () => setActive(false);
-    const onTouchMove = (e) => {
-      if (touchStartY.current === null) return;
-      const diff = touchStartY.current - e.touches[0].clientY;
-      if (Math.abs(diff) > 8) {
-        e.preventDefault();
-        const { value: v, onChange: oc, cat: c, memberId: mid } = stateRef.current;
-        const delta = diff > 0 ? 1 : -1;
-        const min = c.allowNegative ? -50 : 0;
-        const next = Math.min(50, Math.max(min, (Number(v) || 0) + delta));
-        if (next !== Number(v)) if (navigator.vibrate) navigator.vibrate(10);
-        oc(c.key, mid, next);
-        touchStartY.current = e.touches[0].clientY;
-      }
-    };
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchend', onTouchEnd);
-      el.removeEventListener('touchmove', onTouchMove);
-    };
-  }, [readOnly]);
-
-  if (cat.special === "science_7wonders") {
-    return (
-      <button onClick={readOnly ? undefined : () => onOpenScience(memberId)} style={{
-        width: 52, height: 44, borderRadius: 8,
-        border: `2px solid ${value ? "#16a34a" : "#E5D5C0"}`,
-        background: value ? "#f0fdf4" : "var(--th-bg)",
-        color: value ? "#16a34a" : "#A08060",
-        fontWeight: 800, fontSize: 13, cursor: readOnly ? "default" : "pointer"
-      }}>
-        {value || "🧪"}
-      </button>
-    );
-  }
-
-  return (
-    <div
-      ref={divRef}
-      onWheel={readOnly ? undefined : (e) => {
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 1 : -1;
-        const min = cat.allowNegative ? -50 : 0;
-        const next = Math.min(50, Math.max(min, (Number(value) || 0) + delta));
-        if (next !== Number(value)) if (navigator.vibrate) navigator.vibrate(10);
-        onChange(cat.key, memberId, next);
-      }}
-      style={{
-        width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
-        borderRadius: 8,
-        border: `2px solid ${active ? cat.color : "#E5D5C0"}`,
-        boxShadow: active ? `0 0 0 2px ${cat.color}44` : "none",
-        background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
-        color: (cat.negative && value > 0) || (cat.allowNegative && value < 0) ? "#ef4444" : (value > 0 ? "var(--th-text)" : "#A08060"),
-        userSelect: "none", cursor: readOnly ? "default" : "ns-resize", margin: "0 auto",
-        transition: "border-color 0.15s, box-shadow 0.15s",
-      }}
-    >
-      {value || 0}
-    </div>
-  );
-};
-
-// =============================================
-// 합계 행
-// =============================================
-const TotalRow = ({ players, totals, winnerId, t }) => (
-  <tr style={{ background: "#2C1F0E" }}>
-    <td style={{ padding: "10px 8px", fontWeight: 900, color: "var(--th-primary)", fontSize: 13 }}>{t('scoreSheet', 'total')}</td>
-    {players.map(p => (
-      <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center" }}>
-        <div style={{ fontWeight: 900, fontSize: 18, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0" }}>{totals[p.memberId]}</div>
-      </td>
-    ))}
-  </tr>
-);
-
-// =============================================
-// Flat 테이블 (7Wonders, Azul)
-// =============================================
-const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, setScienceModal, t, lang, readOnly }) => (
-  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
-    <thead>
-      <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 80 }}>{t('scoreSheet', 'category')}</th>
-        {players.map(p => (
-          <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
-            {p.memberId === winnerId ? "👑 " : ""}{p.nickname}
-          </th>
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      {schema.categories.map((cat, idx) => (
-        <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)" }}>
-          <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
-            <span style={{ marginRight: 3 }}>{cat.icon}</span>
-            <span style={{ color: cat.color }}>{cl(cat, lang)}</span>
-            {cat.negative && !cat.allowNegative && <span style={{ fontSize: 9, color: "#ef4444", marginLeft: 2 }}>({t('scoreSheet', 'negative')})</span>}
-          </td>
-          {players.map(p => (
-            <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
-              <ScoreCell cat={cat} memberId={p.memberId} value={scores[cat.key]?.[p.memberId]} onChange={handleChange} onOpenScience={(id) => setScienceModal({ memberId: id })} readOnly={readOnly} />
-            </td>
-          ))}
-        </tr>
-      ))}
-      <TotalRow players={players} totals={totals} winnerId={winnerId} t={t} />
-    </tbody>
-  </table>
-);
-
-// =============================================
-// Sectioned 테이블 (캐스캐디아)
-// =============================================
-const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChange, t, lang, readOnly }) => (
-  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
-    <thead>
-      <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 80 }}>{t('scoreSheet', 'category')}</th>
-        {players.map(p => (
-          <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
-            {p.memberId === winnerId ? "👑 " : ""}{p.nickname}
-          </th>
-        ))}
-      </tr>
-    </thead>
-    <tbody>
-      {schema.sections.map((section) => {
-        const sectionTotals = players.reduce((acc, p) => {
-          acc[p.memberId] = section.categories.reduce((s, c) => s + (Number(scores[c.key]?.[p.memberId]) || 0), 0);
-          return acc;
-        }, {});
-
-        return (
-          <>
-            <tr key={`sh-${section.key}`}>
-              <td colSpan={players.length + 1} style={{
-                padding: "7px 8px", fontSize: 11, fontWeight: 900,
-                color: section.color, background: section.bgColor,
-                borderTop: `3px solid ${section.color}`,
-                letterSpacing: "0.05em"
-              }}>
-                {section.icon} {cl(section, lang)}
-              </td>
-            </tr>
-            {section.categories.map((cat, idx) => (
-              <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : section.bgColor + "55" }}>
-                <td style={{ padding: "7px 4px 7px 16px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
-                  <span style={{ marginRight: 3 }}>{cat.icon}</span>
-                  <span style={{ color: cat.color }}>{cl(cat, lang)}</span>
-                </td>
-                {players.map(p => (
-                  <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)" }}>
-                    <ScoreCell cat={cat} memberId={p.memberId} value={scores[cat.key]?.[p.memberId]} onChange={handleChange} onOpenScience={() => {}} readOnly={readOnly} />
-                  </td>
-                ))}
-              </tr>
-            ))}
-            <tr key={`st-${section.key}`} style={{ background: section.bgColor }}>
-              <td style={{ padding: "6px 8px 6px 16px", fontSize: 11, fontWeight: 800, color: section.color, borderBottom: `2px solid ${section.color}` }}>
-                {t('scoreSheet', 'subtotal')}
-              </td>
-              {players.map(p => (
-                <td key={p.memberId} style={{ padding: "6px 4px", textAlign: "center", fontWeight: 800, fontSize: 13, color: section.color, borderBottom: `2px solid ${section.color}` }}>
-                  {sectionTotals[p.memberId]}
-                </td>
-              ))}
-            </tr>
-          </>
-        );
-      })}
-      <TotalRow players={players} totals={totals} winnerId={winnerId} t={t} />
-    </tbody>
-  </table>
-);
-
-// =============================================
-// 카탄 스크롤 셀 (터치 + 휠 지원)
-// =============================================
-const CatanScrollCell = ({ catKey, playerId, value, limits, color, handleChange }) => {
-  const divRef = useRef(null);
-  const touchStartY = useRef(null);
-  const [active, setActive] = useState(false);
-  const stateRef = useRef({ value, handleChange, catKey, playerId, limits });
-  useEffect(() => { stateRef.current = { value, handleChange, catKey, playerId, limits }; });
-
-  useEffect(() => {
-    const el = divRef.current;
-    if (!el) return;
-    const onTouchStart = (e) => {
-      touchStartY.current = e.touches[0].clientY;
-      setActive(true);
-    };
-    const onTouchEnd = () => setActive(false);
-    const onTouchMove = (e) => {
-      if (touchStartY.current === null) return;
-      const diff = touchStartY.current - e.touches[0].clientY;
-      if (Math.abs(diff) > 8) {
-        e.preventDefault();
-        const { value: v, handleChange: hc, catKey: ck, playerId: pid, limits: lim } = stateRef.current;
-        const delta = diff > 0 ? 1 : -1;
-        const next = Math.min(lim.max, Math.max(lim.min, Number(v) + delta));
-        if (next !== Number(v)) if (navigator.vibrate) navigator.vibrate(10);
-        hc(ck, pid, next);
-        touchStartY.current = e.touches[0].clientY;
-      }
-    };
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchend', onTouchEnd);
-      el.removeEventListener('touchmove', onTouchMove);
-    };
-  }, []);
-
-  const atMin = value <= limits.min;
-  const atMax = value >= limits.max;
-  return (
-    <div
-      ref={divRef}
-      onWheel={(e) => {
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 1 : -1;
-        const next = Math.min(limits.max, Math.max(limits.min, value + delta));
-        if (next !== value) if (navigator.vibrate) navigator.vibrate(10);
-        handleChange(catKey, playerId, next);
-      }}
-      style={{ display: "flex", alignItems: "center", justifyContent: "center", userSelect: "none", cursor: "ns-resize" }}
-    >
-      <span style={{
-        width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
-        fontWeight: 800, fontSize: 15,
-        color: atMax ? color : atMin ? "#A08060" : "var(--th-text)",
-        borderRadius: 8,
-        border: `2px solid ${active ? color : (value > 0 ? color : "#E5D5C0")}`,
-        boxShadow: active ? `0 0 0 2px ${color}44` : "none",
-        background: "var(--th-bg)",
-        transition: "border-color 0.15s, box-shadow 0.15s",
-      }}>{value}</span>
-    </div>
-  );
-};
-
-// =============================================
-// 카탄 전용 테이블
-// =============================================
-const CATAN_LIMITS = {
-  settlement: { min: 0, max: 5 },
-  cities:     { min: 0, max: 4 },
-  vp_cards:   { min: 0, max: 5 },
-};
-
-const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatanCheck, t }) => (
-  <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
-    <thead>
-      <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 9, fontWeight: 700, color: "#A08060", width: 80, whiteSpace: "nowrap" }}>{t('scoreSheet', 'category')}</th>
-        {players.map(p => {
-          const total = totals[p.memberId] ?? 0;
-          const canWin = total >= 10;
-          return (
-            <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: canWin ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
-              {canWin ? "👑 " : ""}{p.nickname}
-            </th>
-          );
-        })}
-      </tr>
-    </thead>
-    <tbody>
-      {schema.categories.map((cat, idx) => (
-        <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)", height: 44 }}>
-          <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
-            <span>{cat.icon}</span>
-          </td>
-          {players.map(p => (
-            <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)", height: 44 }}>
-              {cat.type === "exclusive_check" ? (
-                <button
-                  onClick={() => handleCatanCheck(cat.key, p.memberId)}
-                  style={{
-                    width: 40, height: 36, borderRadius: 8, cursor: "pointer",
-                    border: `2px solid ${scores[cat.key]?.[p.memberId] ? cat.color : "#E5D5C0"}`,
-                    background: scores[cat.key]?.[p.memberId] ? cat.color + "22" : "var(--th-bg)",
-                    color: scores[cat.key]?.[p.memberId] ? cat.color : "#A08060",
-                    fontWeight: 900, fontSize: 14,
-                  }}
-                >
-                  {scores[cat.key]?.[p.memberId] ? "✓" : "—"}
-                </button>
-              ) : (() => {
-                const limits = CATAN_LIMITS[cat.key];
-                const value = Number(scores[cat.key]?.[p.memberId] ?? 0);
-                return (
-                  <CatanScrollCell
-                    catKey={cat.key}
-                    playerId={p.memberId}
-                    value={value}
-                    limits={limits}
-                    color={cat.color}
-                    handleChange={handleChange}
-                  />
-                );
-              })()}
-            </td>
-          ))}
-        </tr>
-      ))}
-      {/* 합계 행 */}
-      <tr style={{ background: "#2C1F0E" }}>
-        <td style={{ padding: "10px 8px", fontWeight: 900, color: "var(--th-primary)", fontSize: 13 }}>{t('scoreSheet', 'total')}</td>
-        {players.map(p => {
-          const total = totals[p.memberId] ?? 0;
-          const canWin = total >= 10;
-          return (
-            <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center" }}>
-              <div style={{ fontWeight: 900, fontSize: 18, color: canWin ? "var(--th-primary)" : "#F5E6D0" }}>{total}</div>
-              {canWin && <div style={{ fontSize: 9, color: "var(--th-primary)", fontWeight: 700, marginTop: 2 }}>🏆 {t('scoreSheet', 'canWin')}</div>}
-            </td>
-          );
-        })}
-      </tr>
-    </tbody>
-  </table>
-);
-
-// =============================================
-// Duel for Middle-earth 전용 테이블
-// =============================================
-const DuelTable = ({ schema, players, duelWinCondition, setDuelWinCondition, duelWinnerId, setDuelWinnerId, duelFellowshipId, setDuelFellowshipId, t, lang }) => {
-  const fellowshipPlayer = players.find(p => p.memberId === duelFellowshipId) || players[0];
-  const sauronPlayer = players.find(p => p.memberId !== duelFellowshipId) || players[1];
-
-  const swapTeams = () => {
-    setDuelFellowshipId(sauronPlayer.memberId);
-    if (duelWinnerId === fellowshipPlayer.memberId) setDuelWinnerId(sauronPlayer.memberId);
-    else if (duelWinnerId === sauronPlayer.memberId) setDuelWinnerId(fellowshipPlayer.memberId);
-  };
-
-  return (
-    <div style={{ padding: 20 }}>
-      {/* 팀 배정 */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>{t('scoreSheet', 'teamAssignment')}</div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <div style={{ flex: 1, borderRadius: 14, border: "2px solid #16a34a", background: "#f0fdf4", padding: "14px 10px", textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 4 }}>🌿</div>
-            <div style={{ fontSize: 13, fontWeight: 900, color: "#16a34a", marginBottom: 8 }}>{t('scoreSheet', 'fellowshipTeam')}</div>
-            <button
-              onClick={swapTeams}
-              style={{ padding: "5px 12px", borderRadius: 20, border: "1.5px solid #16a34a", background: "#fff", color: "#16a34a", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
-            >
-              {fellowshipPlayer.nickname} ⇄
-            </button>
-          </div>
-          <div style={{ flex: 1, borderRadius: 14, border: "2px solid #b91c1c", background: "#fef2f2", padding: "14px 10px", textAlign: "center" }}>
-            <div style={{ fontSize: 22, marginBottom: 4 }}>👁️</div>
-            <div style={{ fontSize: 13, fontWeight: 900, color: "#b91c1c", marginBottom: 8 }}>{t('scoreSheet', 'sauronTeam')}</div>
-            <div style={{ padding: "5px 12px", fontSize: 12, fontWeight: 700, color: "#b91c1c" }}>{sauronPlayer.nickname}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* 누가 이겼나요? */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>{t('scoreSheet', 'whoWon')}</div>
-        <div style={{ display: "flex", gap: 10 }}>
-          <button
-            onClick={() => setDuelWinnerId(duelWinnerId === fellowshipPlayer.memberId ? null : fellowshipPlayer.memberId)}
-            style={{
-              flex: 1, padding: "18px 8px", borderRadius: 14, cursor: "pointer", textAlign: "center",
-              border: `2px solid ${duelWinnerId === fellowshipPlayer.memberId ? "#16a34a" : "var(--th-border)"}`,
-              background: duelWinnerId === fellowshipPlayer.memberId ? "#16a34a" : "var(--th-card)",
-              color: duelWinnerId === fellowshipPlayer.memberId ? "#fff" : "var(--th-text)",
-            }}
-          >
-            <div style={{ fontSize: 22 }}>🌿</div>
-            <div style={{ fontSize: 13, fontWeight: 900, marginTop: 6 }}>{t('scoreSheet', 'fellowshipTeam')}</div>
-            <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.75, marginTop: 3 }}>{fellowshipPlayer.nickname}</div>
-          </button>
-          <button
-            onClick={() => setDuelWinnerId(duelWinnerId === sauronPlayer.memberId ? null : sauronPlayer.memberId)}
-            style={{
-              flex: 1, padding: "18px 8px", borderRadius: 14, cursor: "pointer", textAlign: "center",
-              border: `2px solid ${duelWinnerId === sauronPlayer.memberId ? "#b91c1c" : "var(--th-border)"}`,
-              background: duelWinnerId === sauronPlayer.memberId ? "#b91c1c" : "var(--th-card)",
-              color: duelWinnerId === sauronPlayer.memberId ? "#fff" : "var(--th-text)",
-            }}
-          >
-            <div style={{ fontSize: 22 }}>👁️</div>
-            <div style={{ fontSize: 13, fontWeight: 900, marginTop: 6 }}>{t('scoreSheet', 'sauronTeam')}</div>
-            <div style={{ fontSize: 11, fontWeight: 600, opacity: 0.75, marginTop: 3 }}>{sauronPlayer.nickname}</div>
-          </button>
-        </div>
-      </div>
-
-      {/* 어떻게 이겼나요? */}
-      <div>
-        <div style={{ fontSize: 11, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>{t('scoreSheet', 'howWin')}</div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {schema.winConditions.map(wc => (
-            <button
-              key={wc.key}
-              onClick={() => setDuelWinCondition(duelWinCondition === wc.key ? null : wc.key)}
-              style={{
-                padding: "12px 16px", borderRadius: 12, fontSize: 13, fontWeight: 700, cursor: "pointer", textAlign: "left",
-                border: `2px solid ${duelWinCondition === wc.key ? "var(--th-primary)" : "var(--th-border)"}`,
-                background: duelWinCondition === wc.key ? "var(--th-primary)" : "var(--th-card)",
-                color: duelWinCondition === wc.key ? "#fff" : "var(--th-text)",
-              }}
-            >
-              {wc.icon} {cl(wc, lang)}
-            </button>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// =============================================
-// 메인 컴포넌트
-// =============================================
 const ScoreSheet = () => {
   const { boardGameId: boardGameIdStr } = useParams();
   const boardGameId = Number(boardGameIdStr);
@@ -616,7 +21,6 @@ const ScoreSheet = () => {
   const [duelWinCondition, setDuelWinCondition] = useState(null);
   const [duelFellowshipId, setDuelFellowshipId] = useState(() => players[0]?.memberId ?? null);
 
-  // DB ID가 스키마 키와 다를 수 있으므로 게임 이름으로 우선 조회, 없으면 ID로 fallback
   const currentSchema = Object.values(SCORE_SCHEMAS).find(s =>
     gameName && (gameName.toLowerCase().includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(gameName.toLowerCase()))
   ) ?? SCORE_SCHEMAS[boardGameId];
@@ -695,7 +99,6 @@ const ScoreSheet = () => {
     let participants;
     if (currentSchema.type === "duel") {
       if (!duelWinnerId) { alert(t('scoreSheet', 'winnerRequired')); return; }
-      const loserId = players.find(p => p.memberId !== duelWinnerId)?.memberId;
       const allCats = getAllCategories(currentSchema);
       participants = players.map(p => ({
         memberId: p.memberId,
@@ -706,7 +109,6 @@ const ScoreSheet = () => {
           won: p.memberId === duelWinnerId,
         }),
       }));
-      void loserId;
     } else {
       const placements = calcPlacements();
       const allCats = getAllCategories(currentSchema);
@@ -737,16 +139,14 @@ const ScoreSheet = () => {
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>😅</div>
         <p style={{ color: "var(--th-text-sub)", marginBottom: 24 }}>{t('scoreSheet', 'wrongAccess')}</p>
-        <button
-          onClick={() => navigate(-1)}
-          style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}
-        >
+        <button onClick={() => navigate(-1)} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
           {t('scoreSheet', 'goBack')}
         </button>
       </div>
     );
   }
 
+  const { TableComponent } = currentSchema;
   const winnerNickname = players.find(p => p.memberId === winnerId)?.nickname;
 
   return (
@@ -754,10 +154,7 @@ const ScoreSheet = () => {
 
       {/* Header */}
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--th-bg)", padding: "20px 16px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-        <button
-          onClick={() => navigate(-1)}
-          style={{ padding: 8, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: "var(--th-primary)" }}
-        >
+        <button onClick={() => navigate(-1)} style={{ padding: 8, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: "var(--th-primary)" }}>
           <ArrowLeft size={24} />
         </button>
         <div>
@@ -769,15 +166,25 @@ const ScoreSheet = () => {
       {/* 테이블 */}
       <div style={{ margin: "0 16px", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
         <div style={{ overflowX: "auto" }}>
-          {currentSchema.type === "catan" ? (
-            <CatanTable schema={currentSchema} players={players} scores={scores} totals={totals} handleChange={handleChange} handleCatanCheck={handleCatanCheck} t={t} />
-          ) : currentSchema.type === "duel" ? (
-            <DuelTable schema={currentSchema} players={players} duelWinCondition={duelWinCondition} setDuelWinCondition={setDuelWinCondition} duelWinnerId={duelWinnerId} setDuelWinnerId={setDuelWinnerId} duelFellowshipId={duelFellowshipId} setDuelFellowshipId={setDuelFellowshipId} t={t} lang={lang} />
-          ) : currentSchema.type === "sectioned" ? (
-            <SectionedTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} t={t} lang={lang} readOnly={readOnly} />
-          ) : (
-            <FlatTable schema={currentSchema} players={players} scores={scores} totals={totals} winnerId={winnerId} handleChange={handleChange} setScienceModal={setScienceModal} t={t} lang={lang} readOnly={readOnly} />
-          )}
+          <TableComponent
+            schema={currentSchema}
+            players={players}
+            scores={scores}
+            totals={totals}
+            winnerId={winnerId}
+            handleChange={handleChange}
+            handleCatanCheck={handleCatanCheck}
+            setScienceModal={setScienceModal}
+            duelWinCondition={duelWinCondition}
+            setDuelWinCondition={setDuelWinCondition}
+            duelWinnerId={duelWinnerId}
+            setDuelWinnerId={setDuelWinnerId}
+            duelFellowshipId={duelFellowshipId}
+            setDuelFellowshipId={setDuelFellowshipId}
+            t={t}
+            lang={lang}
+            readOnly={readOnly}
+          />
         </div>
       </div>
 
