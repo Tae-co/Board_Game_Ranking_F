@@ -1,8 +1,8 @@
-import { catanSchema, CatanTable } from './catan';
+import { catanSchema, CatanTable } from './catan.jsx';
 import { sevenWondersSchema } from './sevenWonders';
 import { azulSchema } from './azul';
 import { cascadiaSchema } from './cascadia';
-import { duelSchema, DuelTable } from './duel';
+import { duelSchema, DuelTable } from './duel.jsx';
 import FlatTable from '../tables/FlatTable';
 import SectionedTable from '../tables/SectionedTable';
 
