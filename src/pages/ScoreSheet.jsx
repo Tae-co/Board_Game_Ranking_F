@@ -6,6 +6,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
 import { getAllCategories, cl } from '../scoreSheets/shared/scoreUtils';
 import { ScienceModal } from '../scoreSheets/shared/ScoreCell';
+import RankInputTable from '../scoreSheets/components/RankInputTable';
 
 const ScoreSheet = () => {
   const { boardGameId: boardGameIdStr } = useParams();
@@ -20,6 +21,13 @@ const ScoreSheet = () => {
   const [duelWinnerId, setDuelWinnerId] = useState(null);
   const [duelWinCondition, setDuelWinCondition] = useState(null);
   const [duelFellowshipId, setDuelFellowshipId] = useState(() => players[0]?.memberId ?? null);
+
+  // 순위 직접 입력 모드 (supportsRankMode: true 게임에서만 사용)
+  const [rankMode, setRankMode] = useState(false);
+  const [rankInputs, setRankInputs] = useState({});
+
+  // 라운드 기반 게임(UNO, 루미큐브)의 totals를 테이블에서 받아옴
+  const [roundTotals, setRoundTotals] = useState({});
 
   const currentSchema = Object.values(SCORE_SCHEMAS).find(s =>
     gameName && (gameName.toLowerCase().includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(gameName.toLowerCase()))
@@ -56,7 +64,12 @@ const ScoreSheet = () => {
     setScores(prev => ({ ...prev, [catKey]: { ...prev[catKey], [memberId]: value } }));
   };
 
+  const isRoundBased = currentSchema?.type === 'uno' || currentSchema?.type === 'rummikub';
+  const lowestWins = !!currentSchema?.lowestWins;
+
   const totals = useMemo(() => {
+    // 라운드 기반 게임은 테이블 컴포넌트에서 받은 roundTotals 사용
+    if (isRoundBased) return roundTotals;
     const t = {};
     players.forEach(p => {
       if (currentSchema?.type === 'catan') {
@@ -73,15 +86,22 @@ const ScoreSheet = () => {
       }
     });
     return t;
-  }, [scores, players, allCategories, currentSchema]);
+  }, [scores, players, allCategories, currentSchema, isRoundBased, roundTotals]);
 
-  const winnerId = useMemo(() =>
-    players.reduce((a, b) => (totals[a.memberId] ?? 0) >= (totals[b.memberId] ?? 0) ? a : b, players[0])?.memberId
-  , [totals, players]);
+  // lowestWins(루미큐브)는 낮은 점수가 1위
+  const winnerId = useMemo(() => {
+    if (!players.length) return null;
+    return players.reduce((a, b) => {
+      const sa = totals[a.memberId] ?? 0;
+      const sb = totals[b.memberId] ?? 0;
+      return lowestWins ? (sa <= sb ? a : b) : (sa >= sb ? a : b);
+    }, players[0])?.memberId;
+  }, [totals, players, lowestWins]);
 
   const calcPlacements = () => {
     const entries = players.map(p => ({ memberId: p.memberId, score: totals[p.memberId] }));
-    const sorted = [...entries].sort((a, b) => b.score - a.score);
+    // lowestWins: 낮은 점수가 1위
+    const sorted = [...entries].sort((a, b) => lowestWins ? a.score - b.score : b.score - a.score);
     const placements = {};
     let currentRank = 1;
     for (let i = 0; i < sorted.length; i++) {
@@ -108,6 +128,24 @@ const ScoreSheet = () => {
           win_condition: duelWinCondition,
           won: p.memberId === duelWinnerId,
         }),
+      }));
+    } else if (rankMode) {
+      // 순위 직접 입력 모드: rankInputs에서 placement 사용
+      const allFilled = players.every(p => rankInputs[p.memberId]);
+      if (!allFilled) { alert('모든 플레이어의 순위를 선택해주세요.'); return; }
+      participants = players.map(p => ({
+        memberId: p.memberId,
+        placement: rankInputs[p.memberId],
+        scoresJson: null,
+      }));
+    } else if (isRoundBased) {
+      // 라운드 기반: roundTotals로 placement 계산, 전체 게임 데이터 scoresJson 전달
+      const placements = calcPlacements();
+      const roundData = scores["_data"]?.["all"] || null;
+      participants = players.map(p => ({
+        memberId: p.memberId,
+        placement: placements[p.memberId],
+        scoresJson: roundData,
       }));
     } else {
       const placements = calcPlacements();
@@ -163,29 +201,65 @@ const ScoreSheet = () => {
         </div>
       </div>
 
+      {/* 순위 입력 모드 토글 (supportsRankMode 게임만) */}
+      {currentSchema.supportsRankMode && !readOnly && (
+        <div style={{ margin: "0 16px 12px", display: "flex", borderRadius: 12, overflow: "hidden", border: "1px solid var(--th-border)" }}>
+          <button
+            onClick={() => { setRankMode(false); setRankInputs({}); }}
+            style={{
+              flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
+              background: !rankMode ? "var(--th-primary)" : "var(--th-card)",
+              color: !rankMode ? "#fff" : "var(--th-text-sub)",
+            }}
+          >
+            점수 입력
+          </button>
+          <button
+            onClick={() => setRankMode(true)}
+            style={{
+              flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
+              background: rankMode ? "var(--th-primary)" : "var(--th-card)",
+              color: rankMode ? "#fff" : "var(--th-text-sub)",
+            }}
+          >
+            순위 입력
+          </button>
+        </div>
+      )}
+
       {/* 테이블 */}
       <div style={{ margin: "0 16px", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
-        <div style={{ overflowX: "auto" }}>
-          <TableComponent
-            schema={currentSchema}
+        {rankMode ? (
+          <RankInputTable
             players={players}
-            scores={scores}
-            totals={totals}
-            winnerId={winnerId}
-            handleChange={handleChange}
-            handleCatanCheck={handleCatanCheck}
-            setScienceModal={setScienceModal}
-            duelWinCondition={duelWinCondition}
-            setDuelWinCondition={setDuelWinCondition}
-            duelWinnerId={duelWinnerId}
-            setDuelWinnerId={setDuelWinnerId}
-            duelFellowshipId={duelFellowshipId}
-            setDuelFellowshipId={setDuelFellowshipId}
-            t={t}
-            lang={lang}
+            rankInputs={rankInputs}
+            onChange={(memberId, placement) => setRankInputs(prev => ({ ...prev, [memberId]: placement }))}
             readOnly={readOnly}
           />
-        </div>
+        ) : (
+          <div style={{ overflowX: "auto" }}>
+            <TableComponent
+              schema={currentSchema}
+              players={players}
+              scores={scores}
+              totals={totals}
+              winnerId={winnerId}
+              handleChange={handleChange}
+              handleCatanCheck={handleCatanCheck}
+              setScienceModal={setScienceModal}
+              duelWinCondition={duelWinCondition}
+              setDuelWinCondition={setDuelWinCondition}
+              duelWinnerId={duelWinnerId}
+              setDuelWinnerId={setDuelWinnerId}
+              duelFellowshipId={duelFellowshipId}
+              setDuelFellowshipId={setDuelFellowshipId}
+              onTotalsChange={setRoundTotals}
+              t={t}
+              lang={lang}
+              readOnly={readOnly}
+            />
+          </div>
+        )}
       </div>
 
       {/* 우승자 배너 */}
