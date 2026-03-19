@@ -14,6 +14,8 @@ const Lobby = () => {
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [joinCode, setJoinCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gamePage, setGamePage] = useState(0);
+  const GAMES_PER_PAGE = 6;
   const nickname = localStorage.getItem('nickname') || '플레이어';
   const userId = localStorage.getItem('userId');
   const isAdmin = localStorage.getItem('role') === 'ADMIN';
@@ -175,7 +177,7 @@ const Lobby = () => {
             <div>
               <p className="text-xs mb-2" style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'selectGame')}</p>
               <div className="grid grid-cols-3 gap-2">
-                {games.map((game) => (
+                {games.slice(gamePage * GAMES_PER_PAGE, (gamePage + 1) * GAMES_PER_PAGE).map((game) => (
                   <button
                     key={game.id}
                     onClick={() => setSelectedGameId(game.id)}
@@ -202,6 +204,24 @@ const Lobby = () => {
                   </button>
                 ))}
               </div>
+              {games.length > GAMES_PER_PAGE && (
+                <div className="flex justify-center gap-2 mt-2">
+                  {Array.from({ length: Math.ceil(games.length / GAMES_PER_PAGE) }).map((_, i) => (
+                    <button
+                      key={i}
+                      onClick={() => setGamePage(i)}
+                      className="w-7 h-7 rounded-full text-xs font-bold transition-all"
+                      style={{
+                        backgroundColor: gamePage === i ? 'var(--th-primary)' : 'var(--th-bg)',
+                        color: gamePage === i ? '#FFFFFF' : 'var(--th-text-sub)',
+                        border: '1px solid var(--th-border)',
+                      }}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
             <button
               onClick={handleCreateRoom}
