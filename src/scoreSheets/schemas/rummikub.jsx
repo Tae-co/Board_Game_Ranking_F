@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 export const rummikubSchema = {
-  name: "루미큐브",
+  name: "Rummikub",
   type: "rummikub",
   supportsRankMode: true,
   lowestWins: true, // 낮은 점수가 유리
