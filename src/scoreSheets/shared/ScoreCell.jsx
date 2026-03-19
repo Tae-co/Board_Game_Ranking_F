@@ -67,13 +67,24 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = f
         touchStartY.current = e.touches[0].clientY;
       }
     };
+    const onWheel = (e) => {
+      e.preventDefault();
+      const { value: v, onChange: oc, cat: c, memberId: mid } = stateRef.current;
+      const delta = e.deltaY < 0 ? 1 : -1;
+      const min = c.allowNegative ? -50 : 0;
+      const next = Math.min(50, Math.max(min, (Number(v) || 0) + delta));
+      if (next !== Number(v)) if (navigator.vibrate) navigator.vibrate(10);
+      oc(c.key, mid, next);
+    };
     el.addEventListener('touchstart', onTouchStart, { passive: true });
     el.addEventListener('touchend', onTouchEnd, { passive: true });
     el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       el.removeEventListener('touchstart', onTouchStart);
       el.removeEventListener('touchend', onTouchEnd);
       el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('wheel', onWheel);
     };
   }, [readOnly]);
 
@@ -94,14 +105,6 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = f
   return (
     <div
       ref={divRef}
-      onWheel={readOnly ? undefined : (e) => {
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 1 : -1;
-        const min = cat.allowNegative ? -50 : 0;
-        const next = Math.min(50, Math.max(min, (Number(value) || 0) + delta));
-        if (next !== Number(value)) if (navigator.vibrate) navigator.vibrate(10);
-        onChange(cat.key, memberId, next);
-      }}
       style={{
         width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
         borderRadius: 8,
