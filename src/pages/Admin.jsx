@@ -17,6 +17,8 @@ const Admin = () => {
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [gamePage, setGamePage] = useState(0);
+  const GAMES_PER_PAGE = 6;
 
   // 멤버 관리 상태
   const [members, setMembers] = useState([]);
@@ -322,49 +324,69 @@ const Admin = () => {
                 <p style={{ color: '#8B7355' }}>{t('admin', 'noGames')}</p>
               </div>
             ) : (
-              <div className="space-y-3">
-                {games.map((game) => (
-                  <div
-                    key={game.id}
-                    className="rounded-xl p-4 border"
-                    style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-                        {game.imageUrl ? (
-                          <img src={game.imageUrl} alt={game.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-xl" style={{ backgroundColor: '#FFF8F0' }}>🎲</div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate" style={{ color: '#2C1F0E' }}>{game.name}</p>
-                        <p className="text-sm" style={{ color: '#8B7355' }}>{game.minPlayers}~{game.maxPlayers}{t('admin', 'persons')}</p>
-                      </div>
-                      <div className="flex gap-2 flex-shrink-0">
-                        <button
-                          onClick={() => handleEdit(game)}
-                          className="p-2 rounded-lg transition-colors"
-                          style={{ color: '#D4853A' }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF8F0'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(game)}
-                          className="p-2 rounded-lg transition-colors"
-                          style={{ color: '#dc2626' }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF8F0'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+              <>
+                <div className="space-y-3">
+                  {games.slice(gamePage * GAMES_PER_PAGE, (gamePage + 1) * GAMES_PER_PAGE).map((game) => (
+                    <div
+                      key={game.id}
+                      className="rounded-xl p-4 border"
+                      style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
+                          {game.imageUrl ? (
+                            <img src={game.imageUrl} alt={game.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-xl" style={{ backgroundColor: '#FFF8F0' }}>🎲</div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate" style={{ color: '#2C1F0E' }}>{game.name}</p>
+                          <p className="text-sm" style={{ color: '#8B7355' }}>{game.minPlayers}~{game.maxPlayers}{t('admin', 'persons')}</p>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          <button
+                            onClick={() => handleEdit(game)}
+                            className="p-2 rounded-lg transition-colors"
+                            style={{ color: '#D4853A' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF8F0'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(game)}
+                            className="p-2 rounded-lg transition-colors"
+                            style={{ color: '#dc2626' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF8F0'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
                     </div>
+                  ))}
+                </div>
+                {games.length > GAMES_PER_PAGE && (
+                  <div className="flex justify-center gap-2 mt-4">
+                    {Array.from({ length: Math.ceil(games.length / GAMES_PER_PAGE) }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setGamePage(i)}
+                        className="w-7 h-7 rounded-full text-xs font-bold transition-all"
+                        style={{
+                          backgroundColor: gamePage === i ? '#D4853A' : '#FFFFFF',
+                          color: gamePage === i ? '#FFFFFF' : '#8B7355',
+                          border: '1px solid #E5D5C0',
+                        }}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </div>
         )}
