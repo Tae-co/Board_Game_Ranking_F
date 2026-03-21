@@ -47,3 +47,10 @@ input[type="number"]::-webkit-outer-spin-button {
 /* 스크롤바 */
 ::-webkit-scrollbar { width: 0; height: 0; }
 * { scrollbar-width: none; }
+
+/* 테마 적응형 ghost 버튼 */
+.btn-ghost {
+  background-color: var(--th-btn-ghost-bg, #FFFFFF);
+  border-color: var(--th-btn-ghost-border, #E5D5C0);
+  color: var(--th-btn-ghost-text, #8B7355);
+}

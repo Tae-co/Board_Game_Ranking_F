@@ -81,6 +81,7 @@ const translations = {
       gameRequired: '게임을 선택해주세요.',
       groupNamePlaceholder: '그룹 이름',
       selectGame: '게임 선택',
+      gameSearchPlaceholder: '보드게임 검색...',
       creating: '생성 중...',
     },
 
@@ -109,8 +110,9 @@ const translations = {
     gameSelect: {
       title: '게임 셋업',
       searchPlaceholder: '게임 검색',
-      selectGame: '게임 선택',
+      playerSearchPlaceholder: '플레이어 검색...',
       noResults: '검색 결과가 없어요',
+      selectGame: '게임 선택',
       persons: '명',
       selected: '✓ 선택됨',
       selectPlayers: '플레이어 선택',
@@ -354,6 +356,7 @@ const translations = {
       gameRequired: 'Please select a game!',
       groupNamePlaceholder: 'Group name',
       selectGame: 'Select Game',
+      gameSearchPlaceholder: 'Search board games...',
       creating: 'Creating...',
     },
 
@@ -382,8 +385,9 @@ const translations = {
     gameSelect: {
       title: 'Game Setup',
       searchPlaceholder: 'Search games',
-      selectGame: 'Select Game',
+      playerSearchPlaceholder: 'Search players...',
       noResults: 'No results found',
+      selectGame: 'Select Game',
       persons: ' players',
       selected: '✓ Selected',
       selectPlayers: 'Select Players',

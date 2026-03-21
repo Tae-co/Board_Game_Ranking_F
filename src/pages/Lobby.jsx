@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, LogOut, Plus, Hash } from 'lucide-react';
+import { ChevronRight, LogOut, Plus, Hash, Search } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -15,6 +15,7 @@ const Lobby = () => {
   const [joinCode, setJoinCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [gamePage, setGamePage] = useState(0);
+  const [gameSearch, setGameSearch] = useState('');
   const GAMES_PER_PAGE = 6;
   const nickname = localStorage.getItem('nickname') || '플레이어';
   const userId = localStorage.getItem('userId');
@@ -176,8 +177,24 @@ const Lobby = () => {
             />
             <div>
               <p className="text-xs mb-2" style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'selectGame')}</p>
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--th-text-sub)' }} />
+                <input
+                  type="text"
+                  value={gameSearch}
+                  onChange={(e) => { setGameSearch(e.target.value); setGamePage(0); }}
+                  placeholder={t('lobby', 'gameSearchPlaceholder')}
+                  className="w-full pl-9 pr-4 py-2 rounded-lg border text-sm focus:outline-none"
+                  style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                  onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+                />
+              </div>
               <div className="grid grid-cols-3 gap-2">
-                {games.slice(gamePage * GAMES_PER_PAGE, (gamePage + 1) * GAMES_PER_PAGE).map((game) => (
+                {(gameSearch
+                  ? games.filter(g => g.name.toLowerCase().includes(gameSearch.toLowerCase()))
+                  : games.slice(gamePage * GAMES_PER_PAGE, (gamePage + 1) * GAMES_PER_PAGE)
+                ).map((game) => (
                   <button
                     key={game.id}
                     onClick={() => setSelectedGameId(game.id)}
@@ -204,7 +221,7 @@ const Lobby = () => {
                   </button>
                 ))}
               </div>
-              {games.length > GAMES_PER_PAGE && (
+              {!gameSearch && games.length > GAMES_PER_PAGE && (
                 <div className="flex justify-center gap-2 mt-2">
                   {Array.from({ length: Math.ceil(games.length / GAMES_PER_PAGE) }).map((_, i) => (
                     <button

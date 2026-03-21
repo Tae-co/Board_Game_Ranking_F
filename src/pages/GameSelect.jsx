@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -12,6 +12,7 @@ const GameSelect = () => {
   const { t } = useLanguage();
 
   const [selectedPlayers, setSelectedPlayers] = useState(new Set());
+  const [playerSearch, setPlayerSearch] = useState('');
 
   const { data: room } = useQuery({
     queryKey: ['room', roomId],
@@ -110,8 +111,23 @@ const GameSelect = () => {
       {/* Player Selection */}
       <div className="px-6">
         <h2 className="text-sm mb-3" style={{ color: 'var(--th-text-sub)' }}>{t('gameSelect', 'selectPlayers')}</h2>
+        {members.length > 5 && (
+          <div className="relative mb-3">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--th-text-sub)' }} />
+            <input
+              type="text"
+              value={playerSearch}
+              onChange={(e) => setPlayerSearch(e.target.value)}
+              placeholder={t('gameSelect', 'playerSearchPlaceholder')}
+              className="w-full pl-9 pr-4 py-2 rounded-lg border text-sm focus:outline-none"
+              style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+            />
+          </div>
+        )}
         <div className="space-y-2">
-          {members.map((member) => (
+          {members.filter(m => m.nickname.toLowerCase().includes(playerSearch.toLowerCase())).map((member) => (
             <button
               key={member.memberId}
               onClick={() => togglePlayer(member.memberId)}
