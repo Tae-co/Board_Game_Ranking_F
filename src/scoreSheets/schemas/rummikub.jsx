@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 export const rummikubSchema = {
   name: "Rummikub",
@@ -34,6 +35,7 @@ const calcRoundScore = (round, players) => {
 const defaultRound = () => ({ winnerId: null, playerData: {} });
 
 export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly }) => {
+  const { t, lang } = useLanguage();
   const [rounds, setRounds] = useState([defaultRound()]);
 
   // 누적 합계 계산
@@ -97,7 +99,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
       {/* 안내 */}
       <div style={{ padding: "10px 16px", borderBottom: "1px solid var(--th-border)", backgroundColor: "var(--th-bg)" }}>
         <span style={{ fontSize: 12, color: "var(--th-text-sub)" }}>
-          🏆 낮은 점수가 유리 · 조커 잔여 −30 · 초기 오픈 실패 −30
+          {t('scoreSheet', 'rummikubHint')}
         </span>
       </div>
 
@@ -131,7 +133,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
             {/* 승자 선택 */}
             {!readOnly && (
               <div style={{ marginBottom: 10 }}>
-                <div style={{ fontSize: 11, color: "var(--th-text-sub)", marginBottom: 6 }}>이 라운드 승자</div>
+                <div style={{ fontSize: 11, color: "var(--th-text-sub)", marginBottom: 6 }}>{t('scoreSheet', 'roundWinner')}</div>
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
                   {players.map((p) => (
                     <button
@@ -199,7 +201,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
                           type="number"
                           min={0}
                           value={data.tiles ?? ""}
-                          placeholder="타일"
+                          placeholder={t('scoreSheet', 'tiles')}
                           disabled={!round.winnerId}
                           onChange={(e) => updatePlayerData(rIdx, p.memberId, "tiles", Math.max(0, Number(e.target.value) || 0))}
                           style={{
@@ -229,7 +231,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
                             />
                           </label>
                           <label style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, cursor: round.winnerId ? "pointer" : "default" }}>
-                            <span style={{ fontSize: 10, color: "var(--th-text-sub)" }}>미오픈</span>
+                            <span style={{ fontSize: 10, color: "var(--th-text-sub)" }}>{t('scoreSheet', 'failedOpen')}</span>
                             <input
                               type="checkbox"
                               checked={!!data.failedOpen}
@@ -260,7 +262,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
 
       {/* 누적 합계 */}
       <div style={{ background: "#2C1F0E", padding: "12px 16px" }}>
-        <div style={{ fontSize: 11, color: "#A08060", marginBottom: 8, fontWeight: 700 }}>누적 합계 (낮을수록 유리)</div>
+        <div style={{ fontSize: 11, color: "#A08060", marginBottom: 8, fontWeight: 700 }}>{t('scoreSheet', 'cumulativeTotal')}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {[...players]
             .sort((a, b) => (totals[a.memberId] ?? 0) - (totals[b.memberId] ?? 0))
@@ -279,7 +281,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
                   }}
                 >
                   <div style={{ fontSize: 10, color: isLeader ? "rgba(255,255,255,0.8)" : "#A08060", marginBottom: 2 }}>
-                    {i + 1}위 · {p.nickname}
+                    {lang === 'ko' ? `${i + 1}위` : `#${i + 1}`} · {p.nickname}
                   </div>
                   <div style={{ fontSize: 18, fontWeight: 900, color: isLeader ? "#fff" : "#F5E6D0" }}>
                     {totals[p.memberId] ?? 0}
@@ -307,7 +309,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
               cursor: "pointer",
             }}
           >
-            + 라운드 추가
+            {t('scoreSheet', 'addRound')}
           </button>
         </div>
       )}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLanguage } from "../../i18n/LanguageContext";
 
 export const unoSchema = {
   name: "UNO",
@@ -8,14 +9,11 @@ export const unoSchema = {
 };
 
 // 라운드별 점수 입력 테이블
-// - 플레이어 = 열, 라운드 = 행
-// - 라운드 승자가 획득한 점수 입력 (나머지는 0)
-// - 누적 합계가 목표 점수에 먼저 도달한 플레이어가 승자
 export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) => {
+  const { t } = useLanguage();
   const [rounds, setRounds] = useState([{}]);
   const [target, setTarget] = useState(500);
 
-  // 라운드별 누적 합계 계산
   const totals = {};
   players.forEach((p) => {
     totals[p.memberId] = rounds.reduce(
@@ -24,7 +22,6 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
     );
   });
 
-  // 부모에 totals 및 게임 데이터 전달
   useEffect(() => {
     onTotalsChange?.(totals);
     handleChange("_data", "all", JSON.stringify({ rounds, target }));
@@ -60,11 +57,11 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
         }}
       >
         <span style={{ fontSize: 12, color: "var(--th-text-sub)", flex: 1 }}>
-          목표 점수
+          {t('scoreSheet', 'targetScore')}
         </span>
         {readOnly ? (
           <span style={{ fontSize: 14, fontWeight: 700, color: "var(--th-primary)" }}>
-            {target}점
+            {target}{t('scoreSheet', 'pts')}
           </span>
         ) : (
           <input
@@ -85,7 +82,7 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
             }}
           />
         )}
-        <span style={{ fontSize: 12, color: "var(--th-text-sub)" }}>점</span>
+        <span style={{ fontSize: 12, color: "var(--th-text-sub)" }}>{t('scoreSheet', 'pts')}</span>
       </div>
 
       {/* 테이블 */}
@@ -94,7 +91,7 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
           <thead>
             <tr style={{ background: "#2C1F0E" }}>
               <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 48 }}>
-                라운드
+                {t('scoreSheet', 'round')}
               </th>
               {players.map((p) => {
                 const reached = totals[p.memberId] >= target;
@@ -159,17 +156,9 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
                     <button
                       onClick={() => removeRound(rIdx)}
                       style={{
-                        width: 24,
-                        height: 24,
-                        borderRadius: "50%",
-                        border: "none",
-                        background: "transparent",
-                        color: "var(--th-text-sub)",
-                        cursor: "pointer",
-                        fontSize: 14,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        width: 24, height: 24, borderRadius: "50%", border: "none",
+                        background: "transparent", color: "var(--th-text-sub)", cursor: "pointer",
+                        fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
                       }}
                     >
                       ×
@@ -182,24 +171,18 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
             {/* 합계 행 */}
             <tr style={{ background: "#2C1F0E", borderTop: "2px solid var(--th-primary)" }}>
               <td style={{ padding: "10px 8px", fontSize: 12, fontWeight: 700, color: "#A08060" }}>
-                합계
+                {t('scoreSheet', 'totalShort')}
               </td>
               {players.map((p) => {
                 const total = totals[p.memberId];
                 const reached = total >= target;
                 return (
                   <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center" }}>
-                    <span
-                      style={{
-                        fontSize: 16,
-                        fontWeight: 900,
-                        color: reached ? "var(--th-primary)" : "#F5E6D0",
-                      }}
-                    >
+                    <span style={{ fontSize: 16, fontWeight: 900, color: reached ? "var(--th-primary)" : "#F5E6D0" }}>
                       {total}
                     </span>
                     {reached && (
-                      <div style={{ fontSize: 10, color: "var(--th-primary)" }}>목표 달성!</div>
+                      <div style={{ fontSize: 10, color: "var(--th-primary)" }}>{t('scoreSheet', 'targetReached')}</div>
                     )}
                   </td>
                 );
@@ -216,18 +199,12 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
           <button
             onClick={addRound}
             style={{
-              width: "100%",
-              padding: "10px 0",
-              borderRadius: 10,
-              border: "2px dashed var(--th-border)",
-              background: "transparent",
-              color: "var(--th-text-sub)",
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: "pointer",
+              width: "100%", padding: "10px 0", borderRadius: 10,
+              border: "2px dashed var(--th-border)", background: "transparent",
+              color: "var(--th-text-sub)", fontSize: 13, fontWeight: 600, cursor: "pointer",
             }}
           >
-            + 라운드 추가
+            {t('scoreSheet', 'addRound')}
           </button>
         </div>
       )}

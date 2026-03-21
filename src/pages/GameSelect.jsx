@@ -57,7 +57,7 @@ const GameSelect = () => {
 
   const handleStartGame = () => {
     if (selectedPlayers.size < 2) { alert(t('gameSelect', 'minPlayersError')); return; }
-    if (currentGame && selectedPlayers.size > currentGame.maxPlayers) { alert(`최대 ${currentGame.maxPlayers}명까지 참여 가능합니다.`); return; }
+    if (currentGame && selectedPlayers.size > currentGame.maxPlayers) { alert(t('gameSelect', 'maxPlayersError').replace('{n}', currentGame.maxPlayers)); return; }
     const gameId = room?.boardGameId;
     const gameName = currentGame?.name || '';
     const hasScoreSheet = Object.values(SCORE_SCHEMAS).some(s =>
@@ -158,7 +158,7 @@ const GameSelect = () => {
       <div className="fixed bottom-0 left-0 right-0 p-6" style={{ backgroundColor: 'var(--th-bg)', maxWidth: '375px', margin: '0 auto' }}>
         {currentGame && selectedPlayers.size > currentGame.maxPlayers && (
           <p className="text-center text-xs mb-2" style={{ color: '#dc2626' }}>
-            최대 {currentGame.maxPlayers}명까지 참여 가능합니다.
+            {t('gameSelect', 'maxPlayersError').replace('{n}', currentGame.maxPlayers)}
           </p>
         )}
         <button

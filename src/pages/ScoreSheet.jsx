@@ -220,7 +220,7 @@ const ScoreSheet = () => {
               color: !rankMode ? "#fff" : "var(--th-text-sub)",
             }}
           >
-            점수 입력
+            {t('scoreSheet', 'scoreInput')}
           </button>
           <button
             onClick={() => setRankMode(true)}
@@ -230,7 +230,7 @@ const ScoreSheet = () => {
               color: rankMode ? "#fff" : "var(--th-text-sub)",
             }}
           >
-            순위 입력
+            {t('scoreSheet', 'rankInput')}
           </button>
         </div>
       )}

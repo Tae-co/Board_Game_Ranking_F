@@ -1,9 +1,17 @@
+import { useLanguage } from '../../i18n/LanguageContext';
+
+const ordinal = (n) => {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
+
 /**
  * RankInputTable - 재사용 가능한 순위 직접 입력 컴포넌트
  * supportsRankMode: true 인 게임 스키마에서 사용
- * Props: players, rankInputs, onChange, readOnly, t
  */
 const RankInputTable = ({ players, rankInputs, onChange, readOnly }) => {
+  const { t, lang } = useLanguage();
   const usedRanks = new Set(Object.values(rankInputs).filter(Boolean));
 
   return (
@@ -40,13 +48,14 @@ const RankInputTable = ({ players, rankInputs, onChange, readOnly }) => {
                 outline: "none",
               }}
             >
-              <option value="">순위 선택</option>
+              <option value="">{t('scoreSheet', 'selectRank')}</option>
               {players.map((_, i) => {
                 const rank = i + 1;
                 const isUsedByOther = usedRanks.has(rank) && rankInputs[player.memberId] !== rank;
+                const label = lang === 'ko' ? `${rank}등` : ordinal(rank);
                 return (
                   <option key={rank} value={rank} disabled={isUsedByOther}>
-                    {rank}등
+                    {label}
                   </option>
                 );
               })}
