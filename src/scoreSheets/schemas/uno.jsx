@@ -4,7 +4,7 @@ import { useLanguage } from "../../i18n/LanguageContext";
 export const unoSchema = {
   name: "UNO",
   type: "uno",
-  supportsRankMode: true,
+  supportsRankMode: false,
   defaultTarget: 500,
 };
 

@@ -4,7 +4,7 @@ import { useLanguage } from "../../i18n/LanguageContext";
 export const rummikubSchema = {
   name: "Rummikub",
   type: "rummikub",
-  supportsRankMode: true,
+  supportsRankMode: false,
   lowestWins: true, // 낮은 점수가 유리
 };
 
