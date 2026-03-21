@@ -169,6 +169,7 @@ const translations = {
       sauronTeam: '사우론',
       whoWon: '누가 이겼나요?',
       howWin: '어떻게 이겼나요?',
+      scrollHint: '숫자 칸을 누른 채 위아래로 스크롤하면 점수가 조절돼요',
     },
 
     // 랭킹
@@ -444,6 +445,7 @@ const translations = {
       sauronTeam: 'Sauron',
       whoWon: 'Who won?',
       howWin: 'How did they win?',
+      scrollHint: 'Press and scroll up/down on a score cell to adjust the value',
     },
 
     // Ranking

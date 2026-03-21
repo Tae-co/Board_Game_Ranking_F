@@ -201,6 +201,14 @@ const ScoreSheet = () => {
         </div>
       </div>
 
+      {/* 스크롤 힌트 */}
+      {!readOnly && (
+        <div style={{ margin: "0 16px 10px", padding: "8px 12px", borderRadius: 10, backgroundColor: "rgba(var(--th-primary-rgb), 0.08)", border: "1px solid rgba(var(--th-primary-rgb), 0.2)", display: "flex", alignItems: "center", gap: 8 }}>
+          <span style={{ fontSize: 14 }}>☝️</span>
+          <p style={{ margin: 0, fontSize: 11, color: "var(--th-text-sub)", lineHeight: 1.4 }}>{t('scoreSheet', 'scrollHint')}</p>
+        </div>
+      )}
+
       {/* 순위 입력 모드 토글 (supportsRankMode 게임만) */}
       {currentSchema.supportsRankMode && !readOnly && (
         <div style={{ margin: "0 16px 12px", display: "flex", borderRadius: 12, overflow: "hidden", border: "1px solid var(--th-border)" }}>
