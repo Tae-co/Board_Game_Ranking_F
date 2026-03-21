@@ -111,7 +111,7 @@ const GameSelect = () => {
       {/* Player Selection */}
       <div className="px-6">
         <h2 className="text-sm mb-3" style={{ color: 'var(--th-text-sub)' }}>{t('gameSelect', 'selectPlayers')}</h2>
-        {members.length > 5 && (
+        {members.length > 0 && (
           <div className="relative mb-3">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--th-text-sub)' }} />
             <input
