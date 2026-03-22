@@ -55,6 +55,7 @@ const translations = {
       kakaoLoading: '카카오 SDK 로딩 중입니다. 잠시 후 다시 시도해주세요.',
       kakaoFailed: '카카오 로그인에 실패했습니다. 다시 시도해주세요.',
       kakaoCanceled: '카카오 로그인이 취소되었습니다.',
+      webViewWarning: '앱 내 브라우저에서는 구글 로그인이 제한됩니다. Chrome 또는 Safari에서 boardup.pages.dev를 열어주세요.',
     },
 
     // 로비
@@ -348,6 +349,7 @@ const translations = {
       kakaoLoading: 'Kakao SDK loading. Please try again.',
       kakaoFailed: 'Kakao login failed. Please try again.',
       kakaoCanceled: 'Kakao login canceled.',
+      webViewWarning: 'Google login is restricted in in-app browsers. Please open boardup.pages.dev in Chrome or Safari.',
     },
 
     // Lobby

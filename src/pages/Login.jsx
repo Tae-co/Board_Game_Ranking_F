@@ -3,10 +3,14 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import api, { setAccessToken } from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 
+const isWebView = /FBAN|FBAV|Instagram|Twitter|Line|KAKAOTALK/i.test(navigator.userAgent) ||
+  (navigator.userAgent.includes('Android') && /wv\)/i.test(navigator.userAgent));
+
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
+  const googleAuthUrl = `${import.meta.env.VITE_API_URL}/auth/google`;
 
   useEffect(() => {
     try {
@@ -78,8 +82,13 @@ const Login = () => {
       <div className="w-full rounded-2xl p-6 border shadow-lg" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
         <div className="space-y-3">
           {/* 구글 로그인 */}
+          {isWebView && (
+            <div className="rounded-xl px-4 py-3 text-xs" style={{ backgroundColor: '#FFF3CD', color: '#856404', border: '1px solid #FFECB5', lineHeight: 1.6 }}>
+              ⚠️ {t('login', 'webViewWarning')}
+            </div>
+          )}
           <button
-            onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL}/auth/google`; }}
+            onClick={() => isWebView ? window.open(googleAuthUrl, '_blank') : (window.location.href = googleAuthUrl)}
             className="w-full py-3 rounded-full flex items-center justify-center gap-2 font-medium border transition-opacity"
             style={{ backgroundColor: 'var(--th-card)', color: 'var(--th-text)', borderColor: 'var(--th-border)' }}
             onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
