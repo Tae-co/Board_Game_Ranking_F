@@ -195,7 +195,7 @@ const Invite = () => {
             {copied ? (
               <><Check className="w-4 h-4" />{t('invite', 'copied')}</>
             ) : (
-              <><Copy className="w-4 h-4" />{t('invite', 'copyCode')}</>
+              <><Copy className="w-4 h-4" />{t('invite', 'Code')}</>
             )}
           </button>
           <button
@@ -210,7 +210,7 @@ const Invite = () => {
             {shared ? (
               <><Check className="w-4 h-4" />{t('invite', 'shared')}</>
             ) : (
-              <><Share2 className="w-4 h-4" />{t('invite', 'shareLink')}</>
+              <><Share2 className="w-4 h-4" />{t('invite', 'Link')}</>
             )}
           </button>
         </div>
