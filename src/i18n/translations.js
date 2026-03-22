@@ -104,6 +104,9 @@ const translations = {
       leaveFailed: '방 나가기에 실패했습니다.',
       deleteFailed: '방 삭제에 실패했습니다.',
       kickFailed: '강퇴에 실패했습니다.',
+      shareLink: '링크 공유',
+      shared: '공유됨!',
+      shareText: '에 초대합니다!',
     },
 
     // 게임 선택
@@ -394,6 +397,9 @@ const translations = {
       leaveFailed: 'Failed to leave room.',
       deleteFailed: 'Failed to delete room.',
       kickFailed: 'Failed to kick member.',
+      shareLink: 'Share Link',
+      shared: 'Shared!',
+      shareText: '— Join us!',
     },
 
     // Game Select

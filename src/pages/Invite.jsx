@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Copy, ArrowLeft, Check } from 'lucide-react';
+import { Copy, ArrowLeft, Check, Share2 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -13,6 +13,7 @@ const Invite = () => {
   const userId = Number(localStorage.getItem('userId'));
 
   const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
   const qrRef = useRef(null);
   const qrInstanceRef = useRef(null);
 
@@ -71,6 +72,28 @@ const Invite = () => {
     navigator.clipboard.writeText(roomInfo.inviteCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const shareUrl = `https://boardup.pages.dev/join?code=${roomInfo.inviteCode}`;
+
+  const handleShare = async () => {
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: roomInfo.name,
+          text: `${roomInfo.name} ${t('invite', 'shareText')}`,
+          url: shareUrl,
+        });
+        setShared(true);
+        setTimeout(() => setShared(false), 2000);
+      } catch {
+        // 사용자가 취소한 경우 무시
+      }
+    } else {
+      navigator.clipboard.writeText(shareUrl);
+      setShared(true);
+      setTimeout(() => setShared(false), 2000);
+    }
   };
 
   const handleLeaveRoom = async () => {
@@ -143,7 +166,7 @@ const Invite = () => {
 
       {/* Invite Code Card with QR */}
       <div className="rounded-2xl p-6 mb-6 border shadow-sm text-center" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-        <p className="text-sm mb-4" style={{ color: 'var(--th-text-sub)' }}>{t('invite', 'inviteCode')}</p>
+        <p className="text-base font-bold mb-4" style={{ color: 'var(--th-text)' }}>{roomInfo.name}</p>
         <div className="flex justify-center mb-3">
           {!roomInfo.inviteCode ? (
             <div
@@ -159,21 +182,38 @@ const Invite = () => {
         <div className="text-lg tracking-widest mb-4 font-mono" style={{ color: 'var(--th-primary)' }}>
           {roomInfo.inviteCode}
         </div>
-        <button
-          onClick={handleCopyCode}
-          className="flex items-center gap-2 mx-auto px-6 py-2 rounded-full transition-colors"
-          style={{
-            backgroundColor: copied ? 'var(--th-card)' : 'var(--th-primary)',
-            color: copied ? 'var(--th-primary)' : '#FFFFFF',
-            border: copied ? '1px solid var(--th-primary)' : 'none',
-          }}
-        >
-          {copied ? (
-            <><Check className="w-4 h-4" />{t('invite', 'copied')}</>
-          ) : (
-            <><Copy className="w-4 h-4" />{t('invite', 'copyCode')}</>
-          )}
-        </button>
+        <div className="flex gap-2 justify-center">
+          <button
+            onClick={handleCopyCode}
+            className="flex items-center gap-2 px-5 py-2 rounded-full transition-colors"
+            style={{
+              backgroundColor: copied ? 'var(--th-card)' : 'var(--th-primary)',
+              color: copied ? 'var(--th-primary)' : '#FFFFFF',
+              border: copied ? '1px solid var(--th-primary)' : 'none',
+            }}
+          >
+            {copied ? (
+              <><Check className="w-4 h-4" />{t('invite', 'copied')}</>
+            ) : (
+              <><Copy className="w-4 h-4" />{t('invite', 'copyCode')}</>
+            )}
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex items-center gap-2 px-5 py-2 rounded-full transition-colors"
+            style={{
+              backgroundColor: shared ? 'var(--th-card)' : 'var(--th-primary)',
+              color: shared ? 'var(--th-primary)' : '#FFFFFF',
+              border: shared ? '1px solid var(--th-primary)' : 'none',
+            }}
+          >
+            {shared ? (
+              <><Check className="w-4 h-4" />{t('invite', 'shared')}</>
+            ) : (
+              <><Share2 className="w-4 h-4" />{t('invite', 'shareLink')}</>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Members List */}
