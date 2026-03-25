@@ -14,6 +14,18 @@ const getRankStyle = (index) => {
   return { color: 'var(--th-text-sub)', bgColor: 'var(--th-border)' };
 };
 
+const { data: roomInfo = { name: '', inviteCode: '' } } = useQuery({
+    queryKey: ['room', roomId],
+    queryFn: async () => {
+      const res = await api.get(`/rooms/${roomId}`);
+      return {
+        name: res.data.roomName || res.data.name,
+        inviteCode: res.data.inviteCode,
+      };
+    },
+    staleTime: 1000 * 60 * 10,
+  });
+
 const RankBadge = ({ index }) => {
   const rankStyle = getRankStyle(index);
   return (
@@ -255,7 +267,7 @@ const Ranking = () => {
           <ArrowLeft className="w-6 h-6" />
         </button>
         <Trophy className="w-6 h-6 mr-2" style={{ color: 'var(--th-primary)' }} />
-        <h1 className="text-xl flex-1" style={{ color: 'var(--th-text)' }}>{t('ranking', 'title')}</h1>
+        <h1 className="text-xl flex-1" style={{ color: 'var(--th-text)' }}>{roomInfo.name}{t('ranking', 'title')}</h1>
         <button onClick={handleShareRanking} className="p-2 rounded-lg" style={{ color: 'var(--th-primary)' }}>
           <Share2 className="w-5 h-5" />
         </button>

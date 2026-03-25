@@ -84,6 +84,8 @@ const translations = {
       selectGame: '게임 선택',
       gameSearchPlaceholder: '보드게임 검색...',
       creating: '생성 중...',
+      groupLobby: '그룹 로비',
+      startGame: '게임 시작',
     },
 
     // 방 상세 (초대)
