@@ -220,6 +220,8 @@ const translations = {
       shareTitle: '공유하기',
       shareRanking: '📊 현재 그룹 랭킹 공유',
       shareMatch: '🎮 오늘 매치 결과 공유',
+      groupLobby: '그룹 로비',
+      startGame: '게임 시작',
     },
 
     // 프로필
@@ -514,6 +516,8 @@ const translations = {
       shareTitle: 'Share',
       shareRanking: '📊 Share Group Ranking',
       shareMatch: '🎮 Share Match Result',
+      groupLobby: 'Group Lobby',
+      startGame: 'Start Game',
     },
 
     // Profile

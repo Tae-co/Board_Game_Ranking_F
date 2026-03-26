@@ -27,6 +27,12 @@ const Invite = () => {
       };
     },
     staleTime: 1000 * 60 * 10,
+    initialData: () => {
+      const cachedRooms = queryClient.getQueryData(['rooms', String(userId)]);
+      const found = cachedRooms?.find(r => String(r.roomId) === String(roomId));
+      if (found) return { name: found.roomName, inviteCode: found.inviteCode };
+      return undefined;
+    },
   });
 
   useEffect(() => {

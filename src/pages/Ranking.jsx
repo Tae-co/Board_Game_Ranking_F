@@ -255,7 +255,9 @@ const Ranking = () => {
           <ArrowLeft className="w-6 h-6" />
         </button>
         <Trophy className="w-6 h-6 mr-2" style={{ color: 'var(--th-primary)' }} />
-        <h1 className="text-xl flex-1" style={{ color: 'var(--th-text)' }}>{t('ranking', 'title')}</h1>
+        <h1 className="text-xl flex-1" style={{ color: 'var(--th-text)' }}>
+          {room?.roomName ? `${room.roomName} ${t('ranking', 'title')}` : t('ranking', 'title')}
+        </h1>
         <button onClick={handleShareRanking} className="p-2 rounded-lg" style={{ color: 'var(--th-primary)' }}>
           <Share2 className="w-5 h-5" />
         </button>
@@ -513,7 +515,7 @@ const Ranking = () => {
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
         >
-          게임 로비
+          {t('ranking', 'groupLobby')}
         </motion.button>
         <motion.button
           onClick={() => navigate(`/games/${roomId}`)}
@@ -522,7 +524,7 @@ const Ranking = () => {
           whileHover={{ scale: 1.02, boxShadow: '0 8px 16px rgba(var(--th-primary-rgb), 0.3)' }}
           whileTap={{ scale: 0.98 }}
         >
-          게임 시작
+          {t('ranking', 'startGame')}
         </motion.button>
       </div>
 
