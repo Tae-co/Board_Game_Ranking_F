@@ -17,23 +17,21 @@ const Invite = () => {
   const qrRef = useRef(null);
   const qrInstanceRef = useRef(null);
 
-  const { data: roomInfo = { name: '', inviteCode: '' } } = useQuery({
+  const { data: roomInfo = {} } = useQuery({
     queryKey: ['room', roomId],
     queryFn: async () => {
       const res = await api.get(`/rooms/${roomId}`);
-      return {
-        name: res.data.roomName || res.data.name,
-        inviteCode: res.data.inviteCode,
-      };
+      return res.data;
     },
     staleTime: 1000 * 60 * 10,
     initialData: () => {
-      const cachedRooms = queryClient.getQueryData(['rooms', String(userId)]);
+      const cachedRooms = queryClient.getQueryData(['rooms', userId]);
       const found = cachedRooms?.find(r => String(r.roomId) === String(roomId));
-      if (found) return { name: found.roomName, inviteCode: found.inviteCode };
-      return undefined;
+      return found ?? undefined;
     },
   });
+
+  const roomName = roomInfo.roomName || roomName || '';
 
   useEffect(() => {
     if (!roomInfo.inviteCode || !qrRef.current) return;
@@ -86,8 +84,8 @@ const Invite = () => {
     if (navigator.share) {
       try {
         await navigator.share({
-          title: roomInfo.name,
-          text: `${roomInfo.name} ${t('invite', 'shareText')}`,
+          title: roomName,
+          text: `${roomName} ${t('invite', 'shareText')}`,
           url: shareUrl,
         });
         setShared(true);
@@ -149,7 +147,7 @@ const Invite = () => {
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="text-xl" style={{ color: 'var(--th-text)' }}>{roomInfo.name}</h1>
+          <h1 className="text-xl" style={{ color: 'var(--th-text)' }}>{roomName}</h1>
         </div>
         {isHost ? (
           <button
@@ -172,7 +170,7 @@ const Invite = () => {
 
       {/* Invite Code Card with QR */}
       <div className="rounded-2xl p-6 mb-6 border shadow-sm text-center" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-        <p className="text-base font-bold mb-4" style={{ color: 'var(--th-text)' }}>{roomInfo.name}</p>
+        <p className="text-base font-bold mb-4" style={{ color: 'var(--th-text)' }}>{roomName}</p>
         <div className="flex justify-center mb-3">
           {!roomInfo.inviteCode ? (
             <div

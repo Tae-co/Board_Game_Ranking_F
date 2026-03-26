@@ -255,7 +255,7 @@ const Ranking = () => {
           <ArrowLeft className="w-6 h-6" />
         </button>
         <Trophy className="w-6 h-6 mr-2" style={{ color: 'var(--th-primary)' }} />
-        <h1 className="text-xl flex-1" style={{ color: 'var(--th-text)' }}>
+        <h1 className="text-base font-semibold flex-1 truncate" style={{ color: 'var(--th-text)' }}>
           {room?.roomName ? `${room.roomName} ${t('ranking', 'title')}` : t('ranking', 'title')}
         </h1>
         <button onClick={handleShareRanking} className="p-2 rounded-lg" style={{ color: 'var(--th-primary)' }}>
