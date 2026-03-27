@@ -190,6 +190,7 @@ const translations = {
       rummikubHint: '🏆 낮은 점수가 유리 · 조커 잔여 −30 · 초기 오픈 실패 −30',
       selectRank: '순위 선택',
       tiles: '타일',
+      diceThroneHint: '❤️ HP 트래커 · 마지막 생존자가 1위 · 최종 순위는 순위 입력 탭에서 기록하세요',
     },
 
     // 랭킹
@@ -486,6 +487,7 @@ const translations = {
       rummikubHint: '🏆 Lower score wins · Joker remaining −30 · Failed open −30',
       selectRank: 'Select Rank',
       tiles: 'Tiles',
+      diceThroneHint: '❤️ HP Tracker · Last survivor wins · Record final ranks in the Rank tab',
     },
 
     // Ranking

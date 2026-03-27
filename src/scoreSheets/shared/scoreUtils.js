@@ -3,6 +3,8 @@ export const getAllCategories = (schema) => {
   if (schema.type === "duel") return [];
   if (schema.type === "uno") return [];
   if (schema.type === "rummikub") return [];
+  if (schema.type === "dicethrone") return [];
+  if (schema.type === "splendorduel") return [];
   return schema.categories || [];
 };
 

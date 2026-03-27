@@ -64,7 +64,7 @@ const ScoreSheet = () => {
     setScores(prev => ({ ...prev, [catKey]: { ...prev[catKey], [memberId]: value } }));
   };
 
-  const isRoundBased = currentSchema?.type === 'uno' || currentSchema?.type === 'rummikub';
+  const isRoundBased = currentSchema?.type === 'uno' || currentSchema?.type === 'rummikub' || currentSchema?.type === 'dicethrone';
   const lowestWins = !!currentSchema?.lowestWins;
 
   const totals = useMemo(() => {
@@ -117,7 +117,7 @@ const ScoreSheet = () => {
 
   const handleSubmit = async () => {
     let participants;
-    if (currentSchema.type === "duel") {
+    if (currentSchema.type === "duel" || currentSchema.type === "splendorduel") {
       if (!duelWinnerId) { alert(t('scoreSheet', 'winnerRequired')); return; }
       const allCats = getAllCategories(currentSchema);
       participants = players.map(p => ({
@@ -286,6 +286,20 @@ const ScoreSheet = () => {
                 <div style={{ fontWeight: 900, fontSize: 18, color: "#fff" }}>{`${teamName} ${t('scoreSheet', 'duelWins')}`}</div>
                 <div style={{ fontSize: 12, color: "rgba(255,255,255,0.85)" }}>{winnerNick}</div>
                 {duelWinCondition && <div style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", marginTop: 2 }}>{cl(currentSchema.winConditions.find(w => w.key === duelWinCondition), lang)}</div>}
+              </div>
+            </div>
+          );
+        })()
+      ) : currentSchema.type === "splendorduel" ? (
+        duelWinnerId && (() => {
+          const winnerNick = players.find(p => p.memberId === duelWinnerId)?.nickname;
+          const wc = currentSchema.winConditions.find(w => w.key === duelWinCondition);
+          return (
+            <div style={{ margin: "16px 16px 0", background: "var(--th-primary)", borderRadius: 14, padding: "14px 20px", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 8px 24px rgba(0,0,0,0.15)" }}>
+              <span style={{ fontSize: 28 }}>💎</span>
+              <div>
+                <div style={{ fontWeight: 900, fontSize: 18, color: "#fff" }}>{`${winnerNick} ${t('scoreSheet', 'duelWins')}`}</div>
+                {wc && <div style={{ fontSize: 12, color: "rgba(255,255,255,0.85)", marginTop: 2 }}>{wc.icon} {cl(wc, lang)}</div>}
               </div>
             </div>
           );
