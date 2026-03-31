@@ -35,7 +35,7 @@ const calcRoundScore = (round, players) => {
 const defaultRound = () => ({ winnerId: null, playerData: {} });
 
 export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly }) => {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const [rounds, setRounds] = useState([defaultRound()]);
 
   // 누적 합계 계산
@@ -264,9 +264,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
       <div style={{ background: "#2C1F0E", padding: "12px 16px" }}>
         <div style={{ fontSize: 11, color: "#A08060", marginBottom: 8, fontWeight: 700 }}>{t('scoreSheet', 'cumulativeTotal')}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[...players]
-            .sort((a, b) => (totals[a.memberId] ?? 0) - (totals[b.memberId] ?? 0))
-            .map((p, i) => {
+          {players.map((p) => {
               const isLeader = p.memberId === leaderId;
               return (
                 <div
@@ -281,7 +279,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
                   }}
                 >
                   <div style={{ fontSize: 10, color: isLeader ? "rgba(255,255,255,0.8)" : "#A08060", marginBottom: 2 }}>
-                    {lang === 'ko' ? `${i + 1}위` : `#${i + 1}`} · {p.nickname}
+                    {p.nickname}
                   </div>
                   <div style={{ fontSize: 18, fontWeight: 900, color: isLeader ? "#fff" : "#F5E6D0" }}>
                     {totals[p.memberId] ?? 0}

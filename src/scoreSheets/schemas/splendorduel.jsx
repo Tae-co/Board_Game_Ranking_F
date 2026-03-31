@@ -4,9 +4,9 @@ export const splendorDuelSchema = {
   name: "Splendor Duel",
   type: "splendorduel",
   winConditions: [
-    { key: "prestige",  label: "명성 20점",   labelEn: "20 Prestige Points", icon: "💎" },
-    { key: "crowns",    label: "왕관 10개",    labelEn: "10 Crowns",          icon: "👑" },
-    { key: "colors",    label: "6색 완성",     labelEn: "6 Color Mastery",    icon: "🌈" },
+    { key: "prestige",  label: "승점 20점",       labelEn: "20 Prestige Points",   icon: "💎" },
+    { key: "crowns",    label: "왕관 10개",        labelEn: "10 Crowns",            icon: "👑" },
+    { key: "oneColor",  label: "한 색깔 10점",     labelEn: "10 Points One Color",  icon: "🎨" },
   ],
 };
 
@@ -59,42 +59,46 @@ export const SplendorDuelTable = ({
         </div>
       </div>
 
-      {/* 승리 조건 선택 */}
+      {/* 승리 조건 선택 (드롭다운) */}
       <div>
         <div style={{ fontSize: 11, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
           {t('scoreSheet', 'howWin')}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {schema.winConditions.map(wc => {
-            const isSelected = duelWinCondition === wc.key;
-            return (
-              <button
-                key={wc.key}
-                onClick={() => setDuelWinCondition(isSelected ? null : wc.key)}
-                style={{
-                  padding: "14px 16px", borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: "pointer", textAlign: "left",
-                  border: `2px solid ${isSelected ? "var(--th-primary)" : "var(--th-border)"}`,
-                  background: isSelected ? "var(--th-primary)" : "var(--th-card)",
-                  color: isSelected ? "#fff" : "var(--th-text)",
-                  transition: "all 0.15s",
-                }}
-              >
-                <span style={{ marginRight: 8, fontSize: 16 }}>{wc.icon}</span>
-                {cl(wc, lang)}
-              </button>
-            );
-          })}
-        </div>
+        <select
+          value={duelWinCondition ?? ""}
+          onChange={e => setDuelWinCondition(e.target.value || null)}
+          style={{
+            width: "100%", padding: "12px 14px", borderRadius: 12, fontSize: 14, fontWeight: 600,
+            border: `2px solid ${duelWinCondition ? "var(--th-primary)" : "var(--th-border)"}`,
+            background: "var(--th-card)", color: duelWinCondition ? "var(--th-primary)" : "var(--th-text-sub)",
+            outline: "none", cursor: "pointer", appearance: "auto",
+          }}
+        >
+          <option value="">우승 조건 선택...</option>
+          {schema.winConditions.map(wc => (
+            <option key={wc.key} value={wc.key}>
+              {wc.icon} {cl(wc, lang)}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* 승리 조건 설명 */}
-      <div style={{ marginTop: 20, padding: "12px 14px", borderRadius: 12, background: "var(--th-bg)", border: "1px solid var(--th-border)" }}>
-        <div style={{ fontSize: 11, color: "var(--th-text-sub)", lineHeight: 1.6 }}>
-          <div>💎 명성 20점 — 발전 카드 점수 합계 20점 이상</div>
-          <div>👑 왕관 10개 — 보유 카드의 왕관 심볼 합계 10개</div>
-          <div>🌈 6색 완성 — 6가지 보석 색 각 1점 이상의 카드 보유</div>
-        </div>
-      </div>
+      {/* 선택된 조건 설명 */}
+      {duelWinCondition && (() => {
+        const wc = schema.winConditions.find(w => w.key === duelWinCondition);
+        const descs = {
+          prestige:  "발전 카드 승점 합계 20점 이상",
+          crowns:    "보유 카드의 왕관 심볼 합계 10개",
+          oneColor:  "같은 색깔 카드의 승점 합계 10점 이상",
+        };
+        return (
+          <div style={{ marginTop: 12, padding: "10px 14px", borderRadius: 10, background: "var(--th-bg)", border: "1px solid var(--th-border)" }}>
+            <div style={{ fontSize: 12, color: "var(--th-text-sub)" }}>
+              {wc?.icon} {descs[duelWinCondition]}
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

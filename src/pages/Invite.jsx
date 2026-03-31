@@ -31,7 +31,7 @@ const Invite = () => {
     },
   });
 
-  const roomName = roomInfo.roomName || roomName || '';
+  const roomName = roomInfo.roomName || '';
 
   useEffect(() => {
     if (!roomInfo.inviteCode || !qrRef.current) return;

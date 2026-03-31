@@ -8,8 +8,8 @@ const FlatTable = ({ schema, players, scores, totals, winnerId, handleChange, se
       <tr style={{ background: "#2C1F0E" }}>
         <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 80 }}>{t('scoreSheet', 'category')}</th>
         {players.map(p => (
-          <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: p.memberId === winnerId ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
-            {p.memberId === winnerId ? "👑 " : ""}{p.nickname}
+          <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: "#F5E6D0", minWidth: 64 }}>
+            {p.nickname}
           </th>
         ))}
       </tr>

@@ -93,9 +93,7 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
               <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 48 }}>
                 {t('scoreSheet', 'round')}
               </th>
-              {players.map((p) => {
-                const reached = totals[p.memberId] >= target;
-                return (
+              {players.map((p) => (
                   <th
                     key={p.memberId}
                     style={{
@@ -103,14 +101,13 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
                       textAlign: "center",
                       fontSize: 12,
                       fontWeight: 800,
-                      color: reached ? "var(--th-primary)" : "#F5E6D0",
+                      color: "#F5E6D0",
                       width: colW,
                     }}
                   >
-                    {reached ? "👑 " : ""}{p.nickname}
+                    {p.nickname}
                   </th>
-                );
-              })}
+              ))}
               {!readOnly && <th style={{ width: 28 }} />}
             </tr>
           </thead>

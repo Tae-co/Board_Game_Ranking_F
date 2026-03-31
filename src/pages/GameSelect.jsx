@@ -4,7 +4,6 @@ import { ArrowLeft, Check, Search } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
-import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
 
 const GameSelect = () => {
   const { roomId } = useParams();
@@ -53,24 +52,14 @@ const GameSelect = () => {
     setSelectedPlayers(newSelected);
   };
 
-  const SCORE_SHEET_GAME_IDS = new Set([1, 2, 3, 4, 6]);
-
   const handleStartGame = () => {
     if (selectedPlayers.size < 2) { alert(t('gameSelect', 'minPlayersError')); return; }
     if (currentGame && selectedPlayers.size > currentGame.maxPlayers) { alert(t('gameSelect', 'maxPlayersError').replace('{n}', currentGame.maxPlayers)); return; }
     const gameId = room?.boardGameId;
     const gameName = currentGame?.name || '';
-    const hasScoreSheet = Object.values(SCORE_SCHEMAS).some(s =>
-      gameName && (gameName.toLowerCase().includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(gameName.toLowerCase()))
-    ) || SCORE_SHEET_GAME_IDS.has(gameId);
-
-    if (hasScoreSheet) {
-      navigate(`/score-sheet/${gameId}`, {
-        state: { roomId, gameName, players: members.filter(m => selectedPlayers.has(m.memberId)) },
-      });
-    } else {
-      navigate(`/match-form/${roomId}`, { state: { gameId, players: [...selectedPlayers] } });
-    }
+    navigate(`/score-sheet/${gameId}`, {
+      state: { roomId, gameName, players: members.filter(m => selectedPlayers.has(m.memberId)) },
+    });
   };
 
   return (

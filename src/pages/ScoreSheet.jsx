@@ -22,8 +22,8 @@ const ScoreSheet = () => {
   const [duelWinCondition, setDuelWinCondition] = useState(null);
   const [duelFellowshipId, setDuelFellowshipId] = useState(() => players[0]?.memberId ?? null);
 
-  // 순위 직접 입력 모드 (supportsRankMode: true 게임에서만 사용)
-  const [rankMode, setRankMode] = useState(false);
+  // 순위 직접 입력 모드 (supportsRankMode: true 게임 또는 스키마 없는 게임)
+  const [rankMode, setRankMode] = useState(() => !currentSchema?.TableComponent);
   const [rankInputs, setRankInputs] = useState({});
 
   // 라운드 기반 게임(UNO, 루미큐브)의 totals를 테이블에서 받아옴
@@ -31,7 +31,7 @@ const ScoreSheet = () => {
 
   const currentSchema = Object.values(SCORE_SCHEMAS).find(s =>
     gameName && (gameName.toLowerCase().includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(gameName.toLowerCase()))
-  ) ?? SCORE_SCHEMAS[boardGameId];
+  ) ?? SCORE_SCHEMAS[boardGameId] ?? (players.length ? { name: gameName || '게임', type: 'generic' } : null);
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
@@ -117,7 +117,7 @@ const ScoreSheet = () => {
 
   const handleSubmit = async () => {
     let participants;
-    if (currentSchema.type === "duel" || currentSchema.type === "splendorduel") {
+    if (currentSchema?.type === "duel" || currentSchema?.type === "splendorduel") {
       if (!duelWinnerId) { alert(t('scoreSheet', 'winnerRequired')); return; }
       const allCats = getAllCategories(currentSchema);
       participants = players.map(p => ({
@@ -172,7 +172,7 @@ const ScoreSheet = () => {
     }
   };
 
-  if (!currentSchema || !players.length) {
+  if (!players.length) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>😅</div>
@@ -184,7 +184,7 @@ const ScoreSheet = () => {
     );
   }
 
-  const { TableComponent } = currentSchema;
+  const TableComponent = currentSchema?.TableComponent;
   const winnerNickname = players.find(p => p.memberId === winnerId)?.nickname;
 
   return (
@@ -210,7 +210,7 @@ const ScoreSheet = () => {
       )}
 
       {/* 순위 입력 모드 토글 (supportsRankMode 게임만) */}
-      {currentSchema.supportsRankMode && !readOnly && (
+      {currentSchema?.supportsRankMode && !readOnly && (
         <div style={{ margin: "0 16px 12px", display: "flex", borderRadius: 12, overflow: "hidden", border: "1px solid var(--th-border)" }}>
           <button
             onClick={() => { setRankMode(false); setRankInputs({}); }}
@@ -237,7 +237,7 @@ const ScoreSheet = () => {
 
       {/* 테이블 */}
       <div style={{ margin: "0 16px", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
-        {rankMode ? (
+        {(rankMode || !TableComponent) ? (
           <RankInputTable
             players={players}
             rankInputs={rankInputs}
@@ -271,7 +271,7 @@ const ScoreSheet = () => {
       </div>
 
       {/* 우승자 배너 */}
-      {currentSchema.type === "duel" ? (
+      {currentSchema?.type === "duel" ? (
         duelWinnerId && (() => {
           const fellowshipPlayer = players.find(p => p.memberId === duelFellowshipId) || players[0];
           const winnerIsFellowship = duelWinnerId === fellowshipPlayer.memberId;
@@ -290,7 +290,7 @@ const ScoreSheet = () => {
             </div>
           );
         })()
-      ) : currentSchema.type === "splendorduel" ? (
+      ) : currentSchema?.type === "splendorduel" ? (
         duelWinnerId && (() => {
           const winnerNick = players.find(p => p.memberId === duelWinnerId)?.nickname;
           const wc = currentSchema.winConditions.find(w => w.key === duelWinCondition);
