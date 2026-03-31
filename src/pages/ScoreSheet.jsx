@@ -23,7 +23,7 @@ const ScoreSheet = () => {
   const [duelFellowshipId, setDuelFellowshipId] = useState(() => players[0]?.memberId ?? null);
 
   // 순위 직접 입력 모드 (supportsRankMode: true 게임 또는 스키마 없는 게임)
-  const [rankMode, setRankMode] = useState(() => !currentSchema?.TableComponent);
+  const [rankMode, setRankMode] = useState(false);
   const [rankInputs, setRankInputs] = useState({});
 
   // 라운드 기반 게임(UNO, 루미큐브)의 totals를 테이블에서 받아옴
