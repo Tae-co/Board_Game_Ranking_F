@@ -1,7 +1,7 @@
 export const takenovoSchema = {
   name: "Takenoko",
   type: "flat",
-  supportsRankMode: true,
+  supportsRankMode: false,
   categories: [
     { key: "plot",     label: "논(플롯) 목표", labelEn: "Plot Objectives",     icon: "🗾", color: "#ca8a04" },
     { key: "gardener", label: "정원사 목표",    labelEn: "Gardener Objectives", icon: "👨‍🌾", color: "#16a34a" },

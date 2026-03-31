@@ -29,9 +29,9 @@ const ScoreSheet = () => {
   // 라운드 기반 게임(UNO, 루미큐브)의 totals를 테이블에서 받아옴
   const [roundTotals, setRoundTotals] = useState({});
 
-  const currentSchema = Object.values(SCORE_SCHEMAS).find(s =>
-    gameName && (gameName.toLowerCase().includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(gameName.toLowerCase()))
-  ) ?? SCORE_SCHEMAS[boardGameId] ?? (players.length ? { name: gameName || '게임', type: 'generic' } : null);
+  const currentSchema = SCORE_SCHEMAS[boardGameId] ?? (gameName && Object.values(SCORE_SCHEMAS).find(s =>
+    gameName.toLowerCase().includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(gameName.toLowerCase())
+  )) ?? (players.length ? { name: gameName || '게임', type: 'generic' } : null);
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
