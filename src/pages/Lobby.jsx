@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, LogOut, Plus, Hash, Search } from 'lucide-react';
+import { LogOut, Plus, Search, ChevronRight, User } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
+
+const ROOM_COLORS = ['#C0392B', '#8E44AD', '#2980B9', '#16A085', '#D35400', '#27AE60'];
 
 const Lobby = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const [mode, setMode] = useState(null); // null | 'create' | 'join'
+  const [mode, setMode] = useState(null);
   const [newRoomName, setNewRoomName] = useState('');
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [joinCode, setJoinCode] = useState('');
@@ -88,225 +90,273 @@ const Lobby = () => {
     }
   };
 
+  const V = (v) => `var(${v})`;
+
   return (
-    <div className="min-h-screen px-6 py-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: 'var(--th-bg)' }}>
+    <div className="min-h-screen pb-8" style={{ maxWidth: '430px', margin: '0 auto', backgroundColor: V('--th-bg') }}>
+      {/* Dot pattern */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 0,
+        backgroundImage: `radial-gradient(circle, var(--th-dot) 1px, transparent 1px)`,
+        backgroundSize: '24px 24px', pointerEvents: 'none',
+      }} />
 
-      {/* Profile Card */}
-      <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-        <div className="flex items-center justify-between mb-3">
-          <div>
-            <p className="text-sm mb-1" style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'greeting')}</p>
-            <p className="text-xl" style={{ color: 'var(--th-text)' }}>{nickname}{t('lobby', 'greetingSuffix')}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {isAdmin && (
-              <button
-                onClick={() => navigate('/admin')}
-                className="px-3 py-1.5 rounded-full text-xs font-bold"
-                style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-              >
-                {t('lobby', 'manageGames')}
-              </button>
-            )}
-            <button
-              onClick={() => navigate('/profile')}
-              className="px-4 py-2 rounded-full text-sm transition-colors"
-              style={{ backgroundColor: 'var(--th-bg)', color: 'var(--th-primary)', border: '1px solid var(--th-border)' }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--th-border)'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'var(--th-bg)'}
-            >
-              {t('lobby', 'profile')}
-            </button>
-          </div>
-        </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-1 text-sm transition-colors"
-          style={{ color: 'var(--th-text-sub)' }}
-          onMouseEnter={(e) => e.currentTarget.style.color = 'var(--th-primary)'}
-          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--th-text-sub)'}
-        >
-          <LogOut className="w-4 h-4" />
-          {t('common', 'logout')}
-        </button>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="flex gap-3 mb-4">
-        <button
-          onClick={() => { setMode(mode === 'create' ? null : 'create'); setSelectedGameId(null); setNewRoomName(''); }}
-          className="flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold transition-all"
-          style={{
-            backgroundColor: mode === 'create' ? 'var(--th-primary)' : 'var(--th-card)',
-            color: mode === 'create' ? '#FFFFFF' : 'var(--th-primary)',
-            border: '2px solid var(--th-primary)',
-          }}
-        >
-          <Plus className="w-4 h-4" />
-          {t('lobby', 'createGroup')}
-        </button>
-        <button
-          onClick={() => { setMode(mode === 'join' ? null : 'join'); setJoinCode(''); }}
-          className="flex-1 py-3 rounded-2xl flex items-center justify-center gap-2 text-sm font-bold transition-all"
-          style={{
-            backgroundColor: mode === 'join' ? 'var(--th-primary)' : 'var(--th-card)',
-            color: mode === 'join' ? '#FFFFFF' : 'var(--th-primary)',
-            border: '2px solid var(--th-primary)',
-          }}
-        >
-          <Hash className="w-4 h-4" />
-          {t('lobby', 'joinWithCode')}
-        </button>
-      </div>
-
-      {/* Create Room Panel */}
-      {mode === 'create' && (
-        <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-          <h2 className="text-base font-bold mb-4" style={{ color: 'var(--th-text)' }}>{t('lobby', 'createGroup')}</h2>
-          <div className="space-y-4">
-            <input
-              type="text"
-              value={newRoomName}
-              onChange={(e) => setNewRoomName(e.target.value)}
-              placeholder={t('lobby', 'groupNamePlaceholder')}
-              autoFocus
-              className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none"
-              style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-            />
+      <div style={{ position: 'relative', zIndex: 1, padding: '24px 20px' }}>
+        {/* Profile Card */}
+        <div style={{ borderRadius: '16px', padding: '20px', marginBottom: '20px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
             <div>
-              <p className="text-xs mb-2" style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'selectGame')}</p>
-              <div className="relative mb-2">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--th-text-sub)' }} />
-                <input
-                  type="text"
-                  value={gameSearch}
-                  onChange={(e) => { setGameSearch(e.target.value); setGamePage(0); }}
-                  placeholder={t('lobby', 'gameSearchPlaceholder')}
-                  className="w-full pl-9 pr-4 py-2 rounded-lg border text-sm focus:outline-none"
-                  style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
-                  onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-                  onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-                />
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {(gameSearch
-                  ? games.filter(g => g.name.toLowerCase().includes(gameSearch.toLowerCase()))
-                  : games.slice(gamePage * GAMES_PER_PAGE, (gamePage + 1) * GAMES_PER_PAGE)
-                ).map((game) => (
-                  <button
-                    key={game.id}
-                    onClick={() => setSelectedGameId(game.id)}
-                    className="rounded-xl overflow-hidden border-2 transition-all"
+              <p style={{ fontSize: '12px', color: V('--th-text-sub'), marginBottom: '4px' }}>{t('lobby', 'greeting')}</p>
+              <p style={{ fontSize: '20px', fontWeight: '600', color: V('--th-text') }}>{nickname}{t('lobby', 'greetingSuffix')}</p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {isAdmin && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', backgroundColor: V('--th-primary'), color: '#FFFFFF', border: 'none', cursor: 'pointer' }}
+                >
+                  {t('lobby', 'manageGames')}
+                </button>
+              )}
+              <button
+                onClick={() => navigate('/profile')}
+                style={{ padding: '8px 16px', borderRadius: '20px', fontSize: '13px', backgroundColor: V('--th-bg'), color: V('--th-primary'), border: `1px solid var(--th-border)`, cursor: 'pointer' }}
+              >
+                {t('lobby', 'profile')}
+              </button>
+            </div>
+          </div>
+          <button
+            onClick={handleLogout}
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+          >
+            <LogOut style={{ color: V('--th-text-sub'), width: '14px', height: '14px' }} />
+            <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{t('common', 'logout')}</span>
+          </button>
+        </div>
+
+        {/* Action Buttons */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
+          <button
+            onClick={() => { setMode(mode === 'create' ? null : 'create'); setSelectedGameId(null); setNewRoomName(''); }}
+            style={{
+              padding: '18px 12px', borderRadius: '16px',
+              backgroundColor: mode === 'create' ? V('--th-primary') : V('--th-card'),
+              border: `1px solid ${mode === 'create' ? 'var(--th-primary)' : 'var(--th-border)'}`,
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px',
+            }}
+          >
+            <Plus style={{ color: mode === 'create' ? '#FFFFFF' : V('--th-primary'), width: '20px', height: '20px' }} />
+            <span style={{ fontWeight: '700', fontSize: '14px', color: mode === 'create' ? '#FFFFFF' : V('--th-text') }}>
+              {t('lobby', 'createGroup')}
+            </span>
+          </button>
+          <button
+            onClick={() => { setMode(mode === 'join' ? null : 'join'); setJoinCode(''); }}
+            style={{
+              padding: '18px 12px', borderRadius: '16px',
+              backgroundColor: mode === 'join' ? V('--th-primary') : V('--th-card'),
+              border: `1px solid ${mode === 'join' ? 'var(--th-primary)' : 'var(--th-border)'}`,
+              cursor: 'pointer', transition: 'all 0.2s',
+              display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <User style={{ color: mode === 'join' ? '#FFFFFF' : V('--th-text-sub'), width: '20px', height: '20px' }} />
+              <User style={{ color: mode === 'join' ? '#FFFFFF' : V('--th-text-sub'), width: '20px', height: '20px', marginLeft: '-8px' }} />
+            </div>
+            <span style={{ fontWeight: '700', fontSize: '14px', color: mode === 'join' ? '#FFFFFF' : V('--th-text') }}>
+              {t('lobby', 'joinWithCode')}
+            </span>
+          </button>
+        </div>
+
+        {/* Create Room Panel */}
+        {mode === 'create' && (
+          <div style={{ borderRadius: '16px', padding: '20px', marginBottom: '20px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
+            <h2 style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text'), marginBottom: '16px' }}>
+              {t('lobby', 'createGroup')}
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                type="text"
+                value={newRoomName}
+                onChange={(e) => setNewRoomName(e.target.value)}
+                placeholder={t('lobby', 'groupNamePlaceholder')}
+                autoFocus
+                style={{
+                  width: '100%', padding: '10px 14px', borderRadius: '10px',
+                  backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
+                  color: V('--th-text'), fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+              />
+              <div>
+                <p style={{ fontSize: '12px', color: V('--th-text-sub'), marginBottom: '8px' }}>{t('lobby', 'selectGame')}</p>
+                <div style={{ position: 'relative', marginBottom: '8px' }}>
+                  <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: V('--th-text-sub') }} />
+                  <input
+                    type="text"
+                    value={gameSearch}
+                    onChange={(e) => { setGameSearch(e.target.value); setGamePage(0); }}
+                    placeholder={t('lobby', 'gameSearchPlaceholder')}
                     style={{
-                      borderColor: selectedGameId === game.id ? 'var(--th-primary)' : 'var(--th-border)',
-                      backgroundColor: 'var(--th-bg)',
+                      width: '100%', padding: '8px 12px 8px 34px', borderRadius: '10px',
+                      backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
+                      color: V('--th-text'), fontSize: '13px', outline: 'none', boxSizing: 'border-box',
                     }}
-                  >
-                    {game.imageUrl ? (
-                      <img src={game.imageUrl} alt={game.name} className="w-full aspect-square object-cover" />
-                    ) : (
-                      <div className="w-full aspect-square flex items-center justify-center text-2xl">🎲</div>
-                    )}
-                    <p
-                      className="text-xs py-1 truncate px-1"
-                      style={{
-                        color: selectedGameId === game.id ? 'var(--th-primary)' : 'var(--th-text)',
-                        fontWeight: selectedGameId === game.id ? 700 : 400,
-                      }}
-                    >
-                      {game.name}
-                    </p>
-                  </button>
-                ))}
-              </div>
-              {!gameSearch && games.length > GAMES_PER_PAGE && (
-                <div className="flex justify-center gap-2 mt-2">
-                  {Array.from({ length: Math.ceil(games.length / GAMES_PER_PAGE) }).map((_, i) => (
+                    onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+                  />
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                  {(gameSearch
+                    ? games.filter(g => g.name.toLowerCase().includes(gameSearch.toLowerCase()))
+                    : games.slice(gamePage * GAMES_PER_PAGE, (gamePage + 1) * GAMES_PER_PAGE)
+                  ).map((game) => (
                     <button
-                      key={i}
-                      onClick={() => setGamePage(i)}
-                      className="w-7 h-7 rounded-full text-xs font-bold transition-all"
+                      key={game.id}
+                      onClick={() => setSelectedGameId(game.id)}
                       style={{
-                        backgroundColor: gamePage === i ? 'var(--th-primary)' : 'var(--th-bg)',
-                        color: gamePage === i ? '#FFFFFF' : 'var(--th-text-sub)',
-                        border: '1px solid var(--th-border)',
+                        borderRadius: '10px', overflow: 'hidden',
+                        border: `2px solid ${selectedGameId === game.id ? 'var(--th-primary)' : 'var(--th-border)'}`,
+                        backgroundColor: V('--th-bg'), cursor: 'pointer',
                       }}
                     >
-                      {i + 1}
+                      {game.imageUrl ? (
+                        <img src={game.imageUrl} alt={game.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover' }} />
+                      ) : (
+                        <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🎲</div>
+                      )}
+                      <p style={{
+                        fontSize: '11px', padding: '4px', textAlign: 'center',
+                        color: selectedGameId === game.id ? V('--th-primary') : V('--th-text'),
+                        fontWeight: selectedGameId === game.id ? '700' : '400',
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      }}>
+                        {game.name}
+                      </p>
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
-            <button
-              onClick={handleCreateRoom}
-              disabled={isSubmitting || !newRoomName.trim() || !selectedGameId}
-              className="w-full py-2.5 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-            >
-              {isSubmitting ? t('lobby', 'creating') : t('lobby', 'createRoom')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Join Room Panel */}
-      {mode === 'join' && (
-        <div className="rounded-2xl p-5 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-          <h2 className="text-base font-bold mb-4" style={{ color: 'var(--th-text)' }}>{t('lobby', 'joinWithCode')}</h2>
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
-              placeholder={t('lobby', 'inviteCodePlaceholder')}
-              autoFocus
-              maxLength={8}
-              className="w-full px-3 py-2 rounded-lg border text-sm focus:outline-none font-mono tracking-widest uppercase"
-              style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-            />
-            <button
-              onClick={handleJoinRoom}
-              disabled={isSubmitting || !joinCode.trim()}
-              className="w-full py-3 rounded-full text-sm font-bold transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-            >
-              {isSubmitting ? '...' : t('lobby', 'join')}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Room List */}
-      <div className="mt-6">
-        <h2 className="text-lg mb-4" style={{ color: 'var(--th-text)' }}>{t('lobby', 'myGroups')}</h2>
-        {rooms.length === 0 ? (
-          <div className="rounded-2xl p-8 border-2 border-dashed text-center" style={{ borderColor: 'var(--th-border)' }}>
-            <p style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'noGroups')}</p>
-            <p className="text-sm mt-2" style={{ color: 'var(--th-text-sub)' }}>{t('lobby', 'noGroupsDesc')}</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {rooms.map((room) => (
+                {!gameSearch && games.length > GAMES_PER_PAGE && (
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
+                    {Array.from({ length: Math.ceil(games.length / GAMES_PER_PAGE) }).map((_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setGamePage(i)}
+                        style={{
+                          width: '28px', height: '28px', borderRadius: '50%', fontSize: '12px', fontWeight: '700',
+                          backgroundColor: gamePage === i ? V('--th-primary') : V('--th-bg'),
+                          color: gamePage === i ? '#FFFFFF' : V('--th-text-sub'),
+                          border: `1px solid var(--th-border)`, cursor: 'pointer',
+                        }}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
-                key={room.roomId}
-                onClick={() => navigate(`/ranking/${room.roomId}`)}
-                className="w-full rounded-2xl p-4 border shadow-sm flex items-center justify-between transition-all hover:scale-[1.02]"
-                style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}
+                onClick={handleCreateRoom}
+                disabled={isSubmitting || !newRoomName.trim() || !selectedGameId}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: '24px', fontSize: '14px', fontWeight: '700',
+                  backgroundColor: V('--th-primary'), color: '#FFFFFF', border: 'none', cursor: 'pointer',
+                  opacity: (isSubmitting || !newRoomName.trim() || !selectedGameId) ? 0.5 : 1,
+                }}
               >
-                <div className="text-left">
-                  <p className="font-semibold" style={{ color: 'var(--th-text)' }}>{room.roomName || room.name}</p>
-                </div>
-                <ChevronRight className="w-5 h-5" style={{ color: 'var(--th-primary)' }} />
+                {isSubmitting ? t('lobby', 'creating') : t('lobby', 'createRoom')}
               </button>
-            ))}
+            </div>
           </div>
         )}
+
+        {/* Join Room Panel */}
+        {mode === 'join' && (
+          <div style={{ borderRadius: '16px', padding: '20px', marginBottom: '20px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
+            <h2 style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text'), marginBottom: '16px' }}>
+              {t('lobby', 'joinWithCode')}
+            </h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <input
+                type="text"
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+                onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+                placeholder={t('lobby', 'inviteCodePlaceholder')}
+                autoFocus
+                maxLength={8}
+                style={{
+                  width: '100%', padding: '12px 16px', borderRadius: '10px', textAlign: 'center',
+                  backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
+                  color: V('--th-primary'), fontSize: '18px', fontFamily: 'monospace',
+                  letterSpacing: '0.3em', fontWeight: '700', outline: 'none', boxSizing: 'border-box',
+                }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+              />
+              <button
+                onClick={handleJoinRoom}
+                disabled={isSubmitting || !joinCode.trim()}
+                style={{
+                  width: '100%', padding: '12px', borderRadius: '24px', fontSize: '14px', fontWeight: '700',
+                  backgroundColor: V('--th-primary'), color: '#FFFFFF', border: 'none', cursor: 'pointer',
+                  opacity: (isSubmitting || !joinCode.trim()) ? 0.5 : 1,
+                }}
+              >
+                {isSubmitting ? '...' : t('lobby', 'join')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Room List */}
+        <div>
+          {rooms.length === 0 ? (
+            <div style={{ borderRadius: '16px', padding: '32px', border: `2px dashed var(--th-border)`, textAlign: 'center' }}>
+              <p style={{ color: V('--th-text-sub') }}>{t('lobby', 'noGroups')}</p>
+              <p style={{ fontSize: '13px', marginTop: '8px', color: V('--th-text-sub') }}>{t('lobby', 'noGroupsDesc')}</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {rooms.map((room, idx) => {
+                const color = ROOM_COLORS[idx % ROOM_COLORS.length];
+                return (
+                  <button
+                    key={room.roomId}
+                    onClick={() => navigate(`/ranking/${room.roomId}`)}
+                    style={{
+                      width: '100%', borderRadius: '16px', padding: '16px',
+                      backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+                      display: 'flex', alignItems: 'center', gap: '14px',
+                      cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--th-primary)'}
+                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--th-border)'}
+                  >
+                    <div style={{
+                      width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0,
+                      backgroundColor: color, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '20px',
+                    }}>
+                      🎲
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: '600', color: V('--th-text'), fontSize: '15px', marginBottom: '2px' }}>
+                        {room.roomName || room.name}
+                      </p>
+                    </div>
+                    <ChevronRight style={{ color: V('--th-primary'), width: '18px', height: '18px', flexShrink: 0 }} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

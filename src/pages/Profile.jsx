@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Globe, Palette } from 'lucide-react';
+import { ArrowLeft, Globe, Moon, Sun } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
-import { useTheme, THEMES } from '../theme/ThemeContext';
+import { useTheme } from '../theme/ThemeContext';
 
 const maskPhone = (phone) => {
   if (!phone) return '';
@@ -172,30 +172,32 @@ const Profile = () => {
 
       {/* Theme Settings Card */}
       <div className="rounded-2xl p-6 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-        <h2 className="text-lg mb-4 flex items-center gap-2" style={{ color: 'var(--th-text)' }}>
-          <Palette className="w-5 h-5" style={{ color: 'var(--th-primary)' }} />
-          테마
-        </h2>
-        <div className="grid grid-cols-4 gap-3">
-          {Object.entries(THEMES).map(([key, theme]) => (
-            <button
-              key={key}
-              onClick={() => setTheme(key)}
-              className="flex flex-col items-center gap-2"
-            >
-              <div
-                className="w-12 h-12 rounded-full border-4 transition-all"
-                style={{
-                  backgroundColor: theme.preview,
-                  borderColor: themeKey === key ? theme.preview : 'var(--th-border)',
-                  boxShadow: themeKey === key ? `0 0 0 2px var(--th-card), 0 0 0 4px ${theme.preview}` : 'none',
-                }}
-              />
-              <span className="text-xs" style={{ color: themeKey === key ? 'var(--th-primary)' : 'var(--th-text-sub)', fontWeight: themeKey === key ? 700 : 400 }}>
-                {theme.label}
-              </span>
-            </button>
-          ))}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {themeKey === 'ledger'
+              ? <Moon className="w-5 h-5" style={{ color: 'var(--th-primary)' }} />
+              : <Sun className="w-5 h-5" style={{ color: 'var(--th-primary)' }} />
+            }
+            <span className="text-base" style={{ color: 'var(--th-text)' }}>
+              {themeKey === 'ledger' ? '다크 모드' : '라이트 모드'}
+            </span>
+          </div>
+          {/* Toggle Switch */}
+          <button
+            onClick={() => setTheme(themeKey === 'ledger' ? 'default' : 'ledger')}
+            style={{
+              width: '52px', height: '28px', borderRadius: '14px', border: 'none',
+              cursor: 'pointer', padding: '3px', transition: 'background-color 0.3s',
+              backgroundColor: themeKey === 'ledger' ? 'var(--th-primary)' : 'var(--th-border)',
+              display: 'flex', alignItems: 'center',
+              justifyContent: themeKey === 'ledger' ? 'flex-end' : 'flex-start',
+            }}
+          >
+            <div style={{
+              width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#FFFFFF',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.2)', transition: 'all 0.3s',
+            }} />
+          </button>
         </div>
       </div>
 
