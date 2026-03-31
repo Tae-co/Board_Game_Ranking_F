@@ -191,6 +191,15 @@ const translations = {
       selectRank: '순위 선택',
       tiles: '타일',
       diceThroneHint: '❤️ HP 트래커 · 마지막 생존자가 1위 · 최종 순위는 순위 입력 탭에서 기록하세요',
+      diceThroneSetup: '게임 설정',
+      character: '캐릭터',
+      characterPlaceholder: '캐릭터 이름 입력',
+      initialHp: '초기 HP',
+      startGame: '게임 시작',
+      eliminated: '탈락',
+      danger: '⚠️ 위험',
+      hpRanking: '현재 HP 순위',
+      rankSuffix: '위',
     },
 
     // 랭킹
@@ -383,6 +392,8 @@ const translations = {
       selectGame: 'Select Game',
       gameSearchPlaceholder: 'Search board games...',
       creating: 'Creating...',
+      groupLobby: 'Group Lobby',
+      startGame: 'Start Game',
     },
 
     // Invite / Room Detail
@@ -488,6 +499,15 @@ const translations = {
       selectRank: 'Select Rank',
       tiles: 'Tiles',
       diceThroneHint: '❤️ HP Tracker · Last survivor wins · Record final ranks in the Rank tab',
+      diceThroneSetup: 'Game Setup',
+      character: 'Character',
+      characterPlaceholder: 'Enter character name',
+      initialHp: 'Initial HP',
+      startGame: 'Start Game',
+      eliminated: 'Eliminated',
+      danger: '⚠️ Danger',
+      hpRanking: 'Current HP Ranking',
+      rankSuffix: '',
     },
 
     // Ranking

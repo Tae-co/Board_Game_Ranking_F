@@ -77,7 +77,7 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
     return (
       <div style={{ padding: "16px" }}>
         <div style={{ fontSize: 13, fontWeight: 800, color: "var(--th-text-sub)", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-          게임 설정
+          {t('scoreSheet', 'diceThroneSetup')}
         </div>
         {players.map(p => (
           <div
@@ -101,12 +101,12 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
 
             {/* 캐릭터 */}
             <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 11, color: "var(--th-text-sub)", marginBottom: 4 }}>캐릭터</div>
+              <div style={{ fontSize: 11, color: "var(--th-text-sub)", marginBottom: 4 }}>{t('scoreSheet', 'character')}</div>
               <input
                 type="text"
                 value={setupChar[p.memberId] || ""}
                 onChange={e => setSetupChar(prev => ({ ...prev, [p.memberId]: e.target.value }))}
-                placeholder="캐릭터 이름 입력"
+                placeholder={t('scoreSheet', 'characterPlaceholder')}
                 style={{
                   width: "100%", padding: "8px 10px", borderRadius: 8, fontSize: 13,
                   border: "1px solid var(--th-border)", background: "var(--th-bg)",
@@ -117,7 +117,7 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
 
             {/* 초기 HP */}
             <div>
-              <div style={{ fontSize: 11, color: "var(--th-text-sub)", marginBottom: 6 }}>초기 HP</div>
+              <div style={{ fontSize: 11, color: "var(--th-text-sub)", marginBottom: 6 }}>{t('scoreSheet', 'initialHp')}</div>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <button
                   onClick={() => setSetupHp(prev => ({ ...prev, [p.memberId]: Math.max(1, (prev[p.memberId] ?? 50) - 1) }))}
@@ -153,7 +153,7 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
             background: "var(--th-primary)", color: "#fff", fontSize: 14, fontWeight: 900, cursor: "pointer",
           }}
         >
-          게임 시작
+          {t('scoreSheet', 'startGame')}
         </button>
       </div>
     );
@@ -209,11 +209,11 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
                   </div>
                   {isEliminated && (
                     <span style={{ fontSize: 11, fontWeight: 700, color: "#6b7280", padding: "2px 8px", borderRadius: 10, background: "var(--th-border)" }}>
-                      탈락
+                      {t('scoreSheet', 'eliminated')}
                     </span>
                   )}
                   {isLow && !isEliminated && (
-                    <span style={{ fontSize: 11, fontWeight: 700, color: "#dc2626" }}>⚠️ 위험</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#dc2626" }}>{t('scoreSheet', 'danger')}</span>
                   )}
                 </div>
                 <div style={{ fontWeight: 900, fontSize: 24, color: hpColor, minWidth: 44, textAlign: "right" }}>
@@ -258,7 +258,7 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
 
       {/* 현재 순위 요약 */}
       <div style={{ background: "#2C1F0E", padding: "12px 16px" }}>
-        <div style={{ fontSize: 11, color: "#A08060", marginBottom: 8, fontWeight: 700 }}>현재 HP 순위</div>
+        <div style={{ fontSize: 11, color: "#A08060", marginBottom: 8, fontWeight: 700 }}>{t('scoreSheet', 'hpRanking')}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {sorted.map((p, i) => {
             const hp = hpMap[p.memberId] ?? 50;
@@ -272,7 +272,7 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
                 }}
               >
                 <div style={{ fontSize: 10, color: isFirst ? "rgba(255,255,255,0.8)" : "#A08060", marginBottom: 2 }}>
-                  {i + 1}위 · {p.nickname}
+                  {i + 1}{t('scoreSheet', 'rankSuffix')} · {p.nickname}
                 </div>
                 <div style={{ fontSize: 18, fontWeight: 900, color: isFirst ? "#fff" : hp > 0 ? "#F5E6D0" : "#6b7280" }}>
                   {hp > 0 ? hp : "✗"}

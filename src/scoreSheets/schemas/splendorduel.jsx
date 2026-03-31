@@ -74,7 +74,7 @@ export const SplendorDuelTable = ({
             outline: "none", cursor: "pointer", appearance: "auto",
           }}
         >
-          <option value="">우승 조건 선택...</option>
+          <option value="">{lang === 'en' ? 'Select win condition...' : '우승 조건 선택...'}</option>
           {schema.winConditions.map(wc => (
             <option key={wc.key} value={wc.key}>
               {wc.icon} {cl(wc, lang)}
@@ -86,7 +86,11 @@ export const SplendorDuelTable = ({
       {/* 선택된 조건 설명 */}
       {duelWinCondition && (() => {
         const wc = schema.winConditions.find(w => w.key === duelWinCondition);
-        const descs = {
+        const descs = lang === 'en' ? {
+          prestige:  "Total prestige points from development cards ≥ 20",
+          crowns:    "Total crown symbols on owned cards = 10",
+          oneColor:  "Total prestige from one color of cards ≥ 10",
+        } : {
           prestige:  "발전 카드 승점 합계 20점 이상",
           crowns:    "보유 카드의 왕관 심볼 합계 10개",
           oneColor:  "같은 색깔 카드의 승점 합계 10점 이상",
