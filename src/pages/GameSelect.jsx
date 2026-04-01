@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, Search, SlidersHorizontal, Users } from 'lucide-react';
+import { ArrowLeft, Check, Search, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -109,18 +109,6 @@ const GameSelect = () => {
               onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
               onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
             />
-          </div>
-
-          {/* Filters hint */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '6px 14px', borderRadius: '20px',
-              border: `1px solid var(--th-border)`, backgroundColor: V('--th-card'),
-            }}>
-              <SlidersHorizontal style={{ color: V('--th-text-sub'), width: '13px', height: '13px' }} />
-              <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>Filters</span>
-            </div>
           </div>
 
           {/* Current game card + player selection */}
