@@ -87,6 +87,20 @@ const Profile = () => {
     return null;
   };
 
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.')) return;
+    try {
+      await api.delete(`/members/${userId}`);
+      localStorage.removeItem('userId');
+      localStorage.removeItem('nickname');
+      localStorage.removeItem('role');
+      localStorage.removeItem('phone');
+      navigate('/login');
+    } catch (err) {
+      alert(err?.response?.data || '탈퇴에 실패했습니다.');
+    }
+  };
+
   const canSaveNickname = nickname.trim().length >= 2
     && nickname.trim() !== currentNickname
     && nicknameStatus !== 'taken'
@@ -268,6 +282,21 @@ const Profile = () => {
             {isNicknameSaving ? t('profile', 'savingNickname') : t('profile', 'saveNickname')}
           </button>
         </div>
+      </div>
+
+      {/* 회원 탈퇴 */}
+      <div className="rounded-2xl p-6 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
+        <h2 className="text-base mb-1" style={{ color: '#dc2626' }}>회원 탈퇴</h2>
+        <p className="text-xs mb-4" style={{ color: 'var(--th-text-sub)' }}>
+          방장인 그룹이 있으면 탈퇴할 수 없습니다. 그룹을 먼저 삭제해주세요.
+        </p>
+        <button
+          onClick={handleDeleteAccount}
+          className="w-full py-3 rounded-full transition-opacity"
+          style={{ backgroundColor: 'transparent', color: '#dc2626', border: '1px solid #dc2626' }}
+        >
+          회원 탈퇴
+        </button>
       </div>
 
     </div>
