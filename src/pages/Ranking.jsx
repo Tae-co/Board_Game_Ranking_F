@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { Share2, ArrowLeft, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Share2, ArrowLeft, Trophy, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TierBadge, TIERS } from '../components/TierBadge';
@@ -23,7 +23,6 @@ const Ranking = () => {
   const matchResult = location.state?.matchResult || null;
 
   const [activeTab, setActiveTab] = useState('group');
-  const [showChanges, setShowChanges] = useState(!!matchResult);
   const [ratingEditModal, setRatingEditModal] = useState(null);
   const [ratingEditValue, setRatingEditValue] = useState('');
   const [isRatingEditSaving, setIsRatingEditSaving] = useState(false);
@@ -32,15 +31,6 @@ const Ranking = () => {
   const myNickname = localStorage.getItem('nickname');
   const myUserId = Number(localStorage.getItem('userId'));
 
-  useEffect(() => {
-    if (!matchResult) return;
-    const timer = setTimeout(() => setShowChanges(false), 30000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  const ratingChangeMap = matchResult
-    ? Object.fromEntries(matchResult.map(r => [r.memberId, r.ratingChange]))
-    : {};
 
   const { data: room } = useQuery({
     queryKey: ['room', roomId],
@@ -317,14 +307,13 @@ const Ranking = () => {
                   const index = page * PAGE_SIZE + idx;
                   const isMe = rank.nickname === myNickname;
                   const tier = getTier(Math.round(rank.rating));
-                  const change = ratingChangeMap[rank.memberId];
                   const rankNum = index + 1;
 
                   return (
                     <motion.div
                       key={rank.memberId}
                       style={{
-                        display: 'flex', alignItems: 'center', gap: '12px',
+                        display: 'flex', alignItems: 'center', gap: '10px',
                         padding: '12px 14px', borderRadius: '12px',
                         backgroundColor: isMe ? V('--th-bg-deep') : V('--th-card'),
                         border: `1px solid ${isMe ? 'var(--th-primary)' : 'var(--th-border)'}`,
@@ -333,36 +322,53 @@ const Ranking = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: idx * 0.04 }}
                     >
-                      <div style={{ width: '32px', flexShrink: 0, textAlign: 'center' }}>
-                        {rankNum <= 3 && page === 0 ? (
-                          <span style={{ fontSize: '18px' }}>
-                            {rankNum === 1 ? '🥇' : rankNum === 2 ? '🥈' : '🥉'}
-                          </span>
-                        ) : (
-                          <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '14px', color: V('--th-text-sub') }}>
-                            {String(rankNum).padStart(2, '0')}
-                          </span>
-                        )}
+                      {/* Rank number */}
+                      <div style={{
+                        width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        backgroundColor: rankNum === 1 && page === 0 ? '#FFD700' : rankNum === 2 && page === 0 ? '#C0C0C0' : rankNum === 3 && page === 0 ? '#CD7F32' : V('--th-primary'),
+                        color: rankNum <= 3 && page === 0 ? '#1a1a1a' : '#FFFFFF', fontSize: '12px', fontWeight: '700',
+                      }}>
+                        {rankNum}
                       </div>
 
+                      {/* Tier badge */}
+                      <TierBadge tier={tier} size="sm" />
+
+                      {/* Name + ME + W/L/WR */}
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '2px' }}>
                           <p style={{ fontSize: '14px', fontWeight: isMe ? '700' : '500', color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {rank.nickname}
                           </p>
                           {isMe && (
-                            <span style={{ fontSize: '9px', padding: '1px 6px', borderRadius: '8px', backgroundColor: V('--th-primary'), color: '#FFFFFF', fontWeight: '700', flexShrink: 0 }}>ME</span>
+                            <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '8px', backgroundColor: V('--th-primary'), color: '#FFFFFF', fontWeight: '700', flexShrink: 0 }}>ME</span>
                           )}
                         </div>
+                        <p style={{ fontSize: '10px', color: V('--th-text-sub'), whiteSpace: 'nowrap' }}>
+                          <span style={{ fontWeight: '700' }}>W</span>{rank.winCount ?? 0}{' '}
+                          <span style={{ fontWeight: '700' }}>L</span>{rank.loseCount ?? 0}{' '}
+                          <span style={{ fontWeight: '700' }}>WR</span>
+                          {(rank.winCount + rank.loseCount) > 0
+                            ? Math.round(rank.winCount / (rank.winCount + rank.loseCount) * 100)
+                            : 0}%
+                        </p>
                       </div>
 
-                      <TierBadge tier={tier} size="sm" />
-
-                      {showChanges && change !== undefined && (
-                        <span style={{ fontSize: '12px', fontWeight: '700', color: change > 0 ? '#16a34a' : '#dc2626', flexShrink: 0 }}>
-                          {change > 0 ? '+' : ''}{Math.round(change)}
-                        </span>
+                      {/* Host edit pencil */}
+                      {isHost && (
+                        <button
+                          onClick={() => { setRatingEditModal(rank); setRatingEditValue(String(Math.round(rank.rating))); }}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', flexShrink: 0 }}
+                        >
+                          <Pencil style={{ width: '14px', height: '14px', color: V('--th-text-sub') }} />
+                        </button>
                       )}
+
+                      {/* Rating */}
+                      <span style={{ fontSize: '15px', fontWeight: '700', color: V('--th-primary'), flexShrink: 0 }}>
+                        {Math.round(rank.rating)}
+                      </span>
                     </motion.div>
                   );
                 })}

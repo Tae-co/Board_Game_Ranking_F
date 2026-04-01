@@ -75,32 +75,32 @@ const AdminLogin = () => {
     }
   };
 
-  const inputStyle = { backgroundColor: '#FFF8F0', borderColor: '#E5D5C0', color: '#2C1F0E' };
   const inputClass = 'w-full px-4 py-3 rounded-lg border focus:outline-none transition-all';
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
-      style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
-
+    <div
+      className="min-h-screen flex flex-col items-center justify-center px-6 py-12"
+      style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: 'var(--th-bg)' }}
+    >
       {/* Logo */}
       <div className="text-center mb-10">
         <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ backgroundColor: '#D4853A' }}>
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center" style={{ backgroundColor: 'var(--th-primary)' }}>
             <ShieldCheck className="w-10 h-10" style={{ color: '#FFFFFF' }} />
           </div>
         </div>
-        <h1 className="text-3xl mb-2" style={{ color: '#2C1F0E' }}>관리자 로그인</h1>
-        <p className="text-sm" style={{ color: '#8B7355' }}>관리자 전용 페이지입니다</p>
+        <h1 className="text-3xl mb-2" style={{ color: 'var(--th-text)' }}>관리자 로그인</h1>
+        <p className="text-sm" style={{ color: 'var(--th-text-sub)' }}>관리자 전용 페이지입니다</p>
       </div>
 
       {/* 탭 */}
-      <div className="w-full flex rounded-xl overflow-hidden border mb-4" style={{ borderColor: '#E5D5C0' }}>
+      <div className="w-full flex rounded-xl overflow-hidden border mb-4" style={{ borderColor: 'var(--th-border)' }}>
         <button
           onClick={() => { setTab('admin'); setAdminError(''); }}
-          className="flex-1 py-2 text-sm font-700 transition-colors"
+          className="flex-1 py-2 text-sm transition-colors"
           style={{
-            background: tab === 'admin' ? '#D4853A' : '#FFF8F0',
-            color: tab === 'admin' ? '#fff' : '#8B7355',
+            background: tab === 'admin' ? 'var(--th-primary)' : 'var(--th-card)',
+            color: tab === 'admin' ? '#fff' : 'var(--th-text-sub)',
             fontWeight: 700,
           }}
         >
@@ -110,8 +110,8 @@ const AdminLogin = () => {
           onClick={() => { setTab('phone'); setPhoneError(''); setPhoneStep(1); setPhone(''); setPassword(''); }}
           className="flex-1 py-2 text-sm transition-colors"
           style={{
-            background: tab === 'phone' ? '#D4853A' : '#FFF8F0',
-            color: tab === 'phone' ? '#fff' : '#8B7355',
+            background: tab === 'phone' ? 'var(--th-primary)' : 'var(--th-card)',
+            color: tab === 'phone' ? '#fff' : 'var(--th-text-sub)',
             fontWeight: 700,
           }}
         >
@@ -120,13 +120,13 @@ const AdminLogin = () => {
       </div>
 
       {/* Card */}
-      <div className="w-full rounded-2xl p-6 border shadow-lg" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
+      <div className="w-full rounded-2xl p-6 border shadow-lg" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
 
         {/* 관리자 로그인 */}
         {tab === 'admin' && (
           <div className="space-y-4">
             <div>
-              <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>아이디</label>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>아이디</label>
               <input
                 type="text"
                 value={username}
@@ -135,13 +135,13 @@ const AdminLogin = () => {
                 placeholder="관리자 아이디"
                 autoFocus
                 className={inputClass}
-                style={inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
               />
             </div>
             <div>
-              <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>비밀번호</label>
+              <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>비밀번호</label>
               <input
                 type="password"
                 value={adminPassword}
@@ -149,9 +149,9 @@ const AdminLogin = () => {
                 onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
                 placeholder="비밀번호"
                 className={inputClass}
-                style={inputStyle}
-                onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
               />
             </div>
             {adminError && <p className="text-sm" style={{ color: '#dc2626' }}>{adminError}</p>}
@@ -159,7 +159,7 @@ const AdminLogin = () => {
               onClick={handleAdminLogin}
               disabled={adminLoading || !username.trim() || !adminPassword.trim()}
               className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+              style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
             >
               {adminLoading ? '로그인 중...' : '로그인'}
             </button>
@@ -172,7 +172,7 @@ const AdminLogin = () => {
             {phoneStep === 1 && (
               <>
                 <div>
-                  <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>전화번호</label>
+                  <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>전화번호</label>
                   <input
                     type="tel"
                     value={phone}
@@ -182,9 +182,9 @@ const AdminLogin = () => {
                     maxLength={11}
                     autoFocus
                     className={inputClass}
-                    style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                    onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                    style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
                   />
                 </div>
                 {phoneError && <p className="text-sm" style={{ color: '#dc2626' }}>{phoneError}</p>}
@@ -192,7 +192,7 @@ const AdminLogin = () => {
                   onClick={handleCheckPhone}
                   disabled={phoneLoading || phone.length < 10}
                   className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-                  style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                  style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
                 >
                   {phoneLoading ? '확인 중...' : '다음'}
                 </button>
@@ -202,8 +202,8 @@ const AdminLogin = () => {
             {phoneStep === 2 && (
               <>
                 <div>
-                  <label className="block mb-2 text-sm" style={{ color: '#8B7355' }}>비밀번호</label>
-                  <p className="text-sm mb-3" style={{ color: '#8B7355' }}>{phone}</p>
+                  <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>비밀번호</label>
+                  <p className="text-sm mb-3" style={{ color: 'var(--th-text-sub)' }}>{phone}</p>
                   <input
                     type="password"
                     value={password}
@@ -212,9 +212,9 @@ const AdminLogin = () => {
                     placeholder="비밀번호"
                     autoFocus
                     className={inputClass}
-                    style={inputStyle}
-                    onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                    onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                    style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
                   />
                 </div>
                 {phoneError && <p className="text-sm" style={{ color: '#dc2626' }}>{phoneError}</p>}
@@ -222,14 +222,14 @@ const AdminLogin = () => {
                   onClick={handlePhoneLogin}
                   disabled={phoneLoading}
                   className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-                  style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                  style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
                 >
                   {phoneLoading ? '로그인 중...' : '로그인'}
                 </button>
                 <button
                   onClick={() => { setPhoneStep(1); setPassword(''); setPhoneError(''); }}
                   className="w-full py-2 text-sm"
-                  style={{ color: '#8B7355' }}
+                  style={{ color: 'var(--th-text-sub)' }}
                 >
                   전화번호 다시 입력
                 </button>
@@ -243,9 +243,9 @@ const AdminLogin = () => {
       <button
         onClick={() => navigate('/login')}
         className="mt-6 text-sm transition-colors"
-        style={{ color: '#8B7355' }}
-        onMouseEnter={(e) => e.currentTarget.style.color = '#D4853A'}
-        onMouseLeave={(e) => e.currentTarget.style.color = '#8B7355'}
+        style={{ color: 'var(--th-text-sub)' }}
+        onMouseEnter={(e) => e.currentTarget.style.color = 'var(--th-primary)'}
+        onMouseLeave={(e) => e.currentTarget.style.color = 'var(--th-text-sub)'}
       >
         일반 로그인으로 돌아가기
       </button>

@@ -328,7 +328,7 @@ const Lobby = () => {
                 return (
                   <button
                     key={room.roomId}
-                    onClick={() => navigate(`/ranking/${room.roomId}`)}
+                    onClick={() => navigate(`/invite/${room.roomId}`)}
                     style={{
                       width: '100%', borderRadius: '16px', padding: '16px',
                       backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,

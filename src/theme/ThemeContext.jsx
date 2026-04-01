@@ -16,7 +16,7 @@ export const THEMES = {
       '--th-border':        '#DCDEFF',
       '--th-text':          '#0F172A',
       '--th-text-sub':      '#64748B',
-      '--th-dot':           'rgba(0, 37, 242, 0.08)',
+      '--th-dot':           'transparent',
       '--th-btn-ghost-bg':  '#FFFFFF',
       '--th-btn-ghost-border': '#DCDEFF',
       '--th-btn-ghost-text':   '#64748B',
