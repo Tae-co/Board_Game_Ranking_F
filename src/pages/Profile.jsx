@@ -288,7 +288,7 @@ const Profile = () => {
       <div className="rounded-2xl p-6 mb-6 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
         <h2 className="text-base mb-1" style={{ color: '#dc2626' }}>회원 탈퇴</h2>
         <p className="text-xs mb-4" style={{ color: 'var(--th-text-sub)' }}>
-          방장인 그룹이 있으면 탈퇴할 수 없습니다. 그룹을 먼저 삭제해주세요.
+          탈퇴 시 모든 게임 기록과 랭킹이 삭제됩니다. 방장인 그룹은 랭킹 1위 멤버에게 자동 위임됩니다.
         </p>
         <button
           onClick={handleDeleteAccount}
