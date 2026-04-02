@@ -26,6 +26,7 @@ const AdminLogin = () => {
     localStorage.setItem('userId', data.memberId);
     localStorage.setItem('nickname', data.nickname);
     localStorage.setItem('role', data.role);
+    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     navigate('/lobby');
   };
 

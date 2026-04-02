@@ -34,11 +34,12 @@ function App() {
     isAdmin() ? children : <Navigate to="/admin/login" replace />;
 
   useEffect(() => {
-    // 앱 시작 시 refresh 쿠키로 access token 복구
+    // 앱 시작 시 저장된 refresh token으로 access token 복구
+    const storedRefreshToken = localStorage.getItem('refreshToken');
+    if (!storedRefreshToken) return;
     axios.post(
       `${import.meta.env.VITE_API_URL}/auth/refresh`,
-      {},
-      { withCredentials: true }
+      { refreshToken: storedRefreshToken }
     ).then((res) => {
       setAccessToken(res.data.accessToken);
     }).catch(() => {

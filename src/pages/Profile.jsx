@@ -95,6 +95,7 @@ const Profile = () => {
       localStorage.removeItem('nickname');
       localStorage.removeItem('role');
       localStorage.removeItem('phone');
+      localStorage.removeItem('refreshToken');
       navigate('/login');
     } catch (err) {
       alert(err?.response?.data || '탈퇴에 실패했습니다.');

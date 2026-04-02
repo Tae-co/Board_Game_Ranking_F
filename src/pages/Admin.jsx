@@ -135,6 +135,7 @@ const Admin = () => {
     localStorage.removeItem('userId');
     localStorage.removeItem('nickname');
     localStorage.removeItem('role');
+    localStorage.removeItem('refreshToken');
     navigate('/admin-login');
   };
 

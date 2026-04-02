@@ -30,6 +30,7 @@ const Login = () => {
     localStorage.setItem('userId', data.memberId);
     localStorage.setItem('nickname', data.nickname);
     localStorage.setItem('role', data.role);
+    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
     const redirect = location.state?.redirectAfterLogin;
     navigate(redirect || '/lobby');
   };

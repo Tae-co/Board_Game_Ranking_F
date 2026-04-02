@@ -11,12 +11,14 @@ const OAuthCallback = () => {
     const userId = searchParams.get('userId');
     const nickname = searchParams.get('nickname');
     const role = searchParams.get('role');
+    const refreshToken = searchParams.get('refreshToken');
 
     if (token && userId) {
       setAccessToken(token);
       localStorage.setItem('userId', userId);
       localStorage.setItem('nickname', nickname || '');
       localStorage.setItem('role', role || 'USER');
+      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
       navigate('/lobby', { replace: true });
     } else {
       navigate('/login', { replace: true });
