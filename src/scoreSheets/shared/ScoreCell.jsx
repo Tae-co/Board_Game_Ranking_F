@@ -42,10 +42,31 @@ export const ScienceModal = ({ onConfirm, onClose }) => {
 
 const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = false }) => {
   const divRef = useRef(null);
+  const inputRef = useRef(null);
   const touchStartY = useRef(null);
   const [active, setActive] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [inputVal, setInputVal] = useState("");
   const stateRef = useRef({ value, onChange, cat, memberId });
   useEffect(() => { stateRef.current = { value, onChange, cat, memberId }; });
+
+  const commitEdit = () => {
+    const { onChange: oc, cat: c, memberId: mid } = stateRef.current;
+    const parsed = parseInt(inputVal, 10);
+    if (!isNaN(parsed)) {
+      const min = c.allowNegative ? -50 : 0;
+      const clamped = Math.min(50, Math.max(min, parsed));
+      oc(c.key, mid, clamped);
+    }
+    setEditing(false);
+  };
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editing]);
 
   useEffect(() => {
     if (readOnly) return;
@@ -102,9 +123,36 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = f
     );
   }
 
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        value={inputVal}
+        onChange={(e) => setInputVal(e.target.value)}
+        onBlur={commitEdit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commitEdit();
+          if (e.key === "Escape") setEditing(false);
+        }}
+        style={{
+          width: 52, height: 44, borderRadius: 8,
+          border: `2px solid ${cat.color}`,
+          boxShadow: `0 0 0 2px ${cat.color}44`,
+          background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
+          color: "var(--th-text)", textAlign: "center",
+          outline: "none", padding: 0,
+          MozAppearance: "textfield",
+          WebkitAppearance: "none",
+        }}
+      />
+    );
+  }
+
   return (
     <div
       ref={divRef}
+      onClick={readOnly ? undefined : () => { setInputVal(String(value || 0)); setEditing(true); }}
       style={{
         width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
         borderRadius: 8,
