@@ -200,6 +200,11 @@ const translations = {
       danger: '⚠️ 위험',
       hpRanking: '현재 HP 순위',
       rankSuffix: '위',
+      freeForAll: '개인전',
+      teamMode: '팀전',
+      teamLabel: '팀',
+      teamPrefix: '팀 ',
+      selectWinningTeam: '우승 팀 선택',
     },
 
     // 랭킹
@@ -508,6 +513,11 @@ const translations = {
       danger: '⚠️ Danger',
       hpRanking: 'Current HP Ranking',
       rankSuffix: '',
+      freeForAll: 'Free for All',
+      teamMode: 'Team Mode',
+      teamLabel: 'Team',
+      teamPrefix: 'Team ',
+      selectWinningTeam: 'Select Winning Team',
     },
 
     // Ranking
