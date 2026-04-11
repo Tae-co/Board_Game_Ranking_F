@@ -205,6 +205,13 @@ const translations = {
       teamLabel: '팀',
       teamPrefix: '팀 ',
       selectWinningTeam: '우승 팀 선택',
+      unmatchedSetup: '게임 설정',
+      unmatchedHint: '❤️ HP 트래커 · 마지막 생존자가 승리 · 최종 순위는 순위 입력 탭에서 기록하세요',
+      unmatchedHintTeam: '❤️ HP 트래커 · 상대 팀 HP를 모두 0으로 만들어야 승리 · 우승 팀을 아래에서 선택하세요',
+      hero: '영웅',
+      heroPlaceholder: '영웅 이름 입력',
+      mode1v1: '1 vs 1',
+      teamMode2v2: '2 vs 2 팀전',
     },
 
     // 랭킹
@@ -518,6 +525,13 @@ const translations = {
       teamLabel: 'Team',
       teamPrefix: 'Team ',
       selectWinningTeam: 'Select Winning Team',
+      unmatchedSetup: 'Game Setup',
+      unmatchedHint: '❤️ HP Tracker · Last survivor wins · Record final ranks in the Rank tab',
+      unmatchedHintTeam: '❤️ HP Tracker · Eliminate all opponents to win · Select the winning team below',
+      hero: 'Hero',
+      heroPlaceholder: 'Enter hero name',
+      mode1v1: '1 vs 1',
+      teamMode2v2: '2 vs 2 Team',
     },
 
     // Ranking
