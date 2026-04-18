@@ -41,10 +41,7 @@ export const ScienceModal = ({ onConfirm, onClose }) => {
 };
 
 const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = false }) => {
-  const divRef = useRef(null);
   const inputRef = useRef(null);
-  const touchStartY = useRef(null);
-  const [active, setActive] = useState(false);
   const [editing, setEditing] = useState(false);
   const [inputVal, setInputVal] = useState("");
   const stateRef = useRef({ value, onChange, cat, memberId });
@@ -68,47 +65,6 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = f
     }
   }, [editing]);
 
-  useEffect(() => {
-    if (readOnly) return;
-    const el = divRef.current;
-    if (!el) return;
-    const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; setActive(true); };
-    const onTouchEnd = () => setActive(false);
-    const onTouchMove = (e) => {
-      if (touchStartY.current === null) return;
-      const diff = touchStartY.current - e.touches[0].clientY;
-      if (Math.abs(diff) > 8) {
-        e.preventDefault();
-        const { value: v, onChange: oc, cat: c, memberId: mid } = stateRef.current;
-        const delta = diff > 0 ? 1 : -1;
-        const min = c.allowNegative ? -50 : 0;
-        const next = Math.min(50, Math.max(min, (Number(v) || 0) + delta));
-        if (next !== Number(v)) if (navigator.vibrate) navigator.vibrate(10);
-        oc(c.key, mid, next);
-        touchStartY.current = e.touches[0].clientY;
-      }
-    };
-    const onWheel = (e) => {
-      e.preventDefault();
-      const { value: v, onChange: oc, cat: c, memberId: mid } = stateRef.current;
-      const delta = e.deltaY < 0 ? 1 : -1;
-      const min = c.allowNegative ? -50 : 0;
-      const next = Math.min(50, Math.max(min, (Number(v) || 0) + delta));
-      if (next !== Number(v)) if (navigator.vibrate) navigator.vibrate(10);
-      oc(c.key, mid, next);
-    };
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
-    el.addEventListener('wheel', onWheel, { passive: false });
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchend', onTouchEnd);
-      el.removeEventListener('touchmove', onTouchMove);
-      el.removeEventListener('wheel', onWheel);
-    };
-  }, [readOnly]);
-
   if (cat.special === "science_7wonders") {
     return (
       <button onClick={readOnly ? undefined : () => onOpenScience(memberId)} style={{
@@ -127,12 +83,14 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = f
     return (
       <input
         ref={inputRef}
-        type="number"
+        type="text"
+        inputMode="numeric"
+        pattern={cat.allowNegative ? "[-0-9]*" : "[0-9]*"}
         value={inputVal}
         onChange={(e) => setInputVal(e.target.value)}
         onBlur={commitEdit}
         onKeyDown={(e) => {
-          if (e.key === "Enter") commitEdit();
+          if (e.key === "Enter") { e.target.blur(); }
           if (e.key === "Escape") setEditing(false);
         }}
         style={{
@@ -142,8 +100,6 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = f
           background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
           color: "var(--th-text)", textAlign: "center",
           outline: "none", padding: 0,
-          MozAppearance: "textfield",
-          WebkitAppearance: "none",
         }}
       />
     );
@@ -151,17 +107,15 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = f
 
   return (
     <div
-      ref={divRef}
       onClick={readOnly ? undefined : () => { setInputVal(String(value || 0)); setEditing(true); }}
       style={{
         width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
         borderRadius: 8,
-        border: `2px solid ${active ? cat.color : "#E5D5C0"}`,
-        boxShadow: active ? `0 0 0 2px ${cat.color}44` : "none",
+        border: `2px solid #E5D5C0`,
         background: "var(--th-bg)", fontSize: 15, fontWeight: 800,
         color: (cat.negative && value > 0) || (cat.allowNegative && value < 0) ? "#ef4444" : (value > 0 ? "var(--th-text)" : "#A08060"),
-        userSelect: "none", cursor: readOnly ? "default" : "ns-resize", margin: "0 auto",
-        transition: "border-color 0.15s, box-shadow 0.15s",
+        userSelect: "none", cursor: readOnly ? "default" : "pointer", margin: "0 auto",
+        transition: "border-color 0.15s",
       }}
     >
       {value || 0}
