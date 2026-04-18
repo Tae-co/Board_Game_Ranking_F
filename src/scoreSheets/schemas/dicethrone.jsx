@@ -205,9 +205,10 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
                   style={{ width: 36, height: 36, borderRadius: 8, border: "none", cursor: "pointer", background: "#fee2e2", color: "#dc2626", fontWeight: 800, fontSize: 16 }}
                 >−</button>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={setupHp[p.memberId] ?? 50}
-                  min={1} max={HP_MAX}
                   onChange={e => {
                     const v = Math.max(1, Math.min(HP_MAX, Number(e.target.value) || 1));
                     setSetupHp(prev => ({ ...prev, [p.memberId]: v }));

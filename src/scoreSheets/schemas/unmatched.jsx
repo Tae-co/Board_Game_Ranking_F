@@ -375,10 +375,10 @@ export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly
                   −
                 </button>
                 <input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={setupHp[p.memberId] ?? 16}
-                  min={1}
-                  max={HP_MAX}
                   onChange={(e) => {
                     const v = Math.max(
                       1,

@@ -198,8 +198,9 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
                         </span>
                       ) : (
                         <input
-                          type="number"
-                          min={0}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           value={data.tiles ?? ""}
                           placeholder={t('scoreSheet', 'tiles')}
                           disabled={!round.winnerId}

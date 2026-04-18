@@ -65,9 +65,10 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
           </span>
         ) : (
           <input
-            type="number"
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
             value={target}
-            min={1}
             onChange={(e) => setTarget(Math.max(1, Number(e.target.value) || 500))}
             style={{
               width: 72,
@@ -128,8 +129,9 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
                       </span>
                     ) : (
                       <input
-                        type="number"
-                        min={0}
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
                         value={round[p.memberId] ?? ""}
                         placeholder="0"
                         onChange={(e) => updateCell(rIdx, p.memberId, e.target.value)}
