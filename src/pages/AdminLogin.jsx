@@ -4,20 +4,11 @@ import { ShieldCheck } from 'lucide-react';
 import api, { setAccessToken } from '../api/axios';
 
 const AdminLogin = () => {
-  const [tab, setTab] = useState('admin'); // 'admin' | 'phone'
-
   // 관리자 로그인
   const [username, setUsername] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [adminError, setAdminError] = useState('');
   const [adminLoading, setAdminLoading] = useState(false);
-
-  // 전화번호 로그인
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [phoneStep, setPhoneStep] = useState(1); // 1: 전화번호, 2: 비밀번호
-  const [phoneError, setPhoneError] = useState('');
-  const [phoneLoading, setPhoneLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -44,38 +35,6 @@ const AdminLogin = () => {
     }
   };
 
-  const handleCheckPhone = async () => {
-    if (phone.length < 10) { setPhoneError('올바른 전화번호를 입력하세요.'); return; }
-    setPhoneError('');
-    setPhoneLoading(true);
-    try {
-      const res = await api.post('/auth/check-phone', { phoneNumber: phone });
-      if (res.data.exists) {
-        setPhoneStep(2);
-      } else {
-        setPhoneError('등록되지 않은 전화번호입니다.');
-      }
-    } catch {
-      setPhoneError('오류가 발생했습니다. 다시 시도해주세요.');
-    } finally {
-      setPhoneLoading(false);
-    }
-  };
-
-  const handlePhoneLogin = async () => {
-    if (!password) { setPhoneError('비밀번호를 입력하세요.'); return; }
-    setPhoneError('');
-    setPhoneLoading(true);
-    try {
-      const res = await api.post('/auth/login', { phoneNumber: phone, password });
-      saveLoginData(res.data);
-    } catch {
-      setPhoneError('비밀번호가 틀렸습니다.');
-    } finally {
-      setPhoneLoading(false);
-    }
-  };
-
   const inputClass = 'w-full px-4 py-3 rounded-lg border focus:outline-none transition-all';
 
   return (
@@ -94,150 +53,49 @@ const AdminLogin = () => {
         <p className="text-sm" style={{ color: 'var(--th-text-sub)' }}>관리자 전용 페이지입니다</p>
       </div>
 
-      {/* 탭 */}
-      <div className="w-full flex rounded-xl overflow-hidden border mb-4" style={{ borderColor: 'var(--th-border)' }}>
-        <button
-          onClick={() => { setTab('admin'); setAdminError(''); }}
-          className="flex-1 py-2 text-sm transition-colors"
-          style={{
-            background: tab === 'admin' ? 'var(--th-primary)' : 'var(--th-card)',
-            color: tab === 'admin' ? '#fff' : 'var(--th-text-sub)',
-            fontWeight: 700,
-          }}
-        >
-          관리자
-        </button>
-        <button
-          onClick={() => { setTab('phone'); setPhoneError(''); setPhoneStep(1); setPhone(''); setPassword(''); }}
-          className="flex-1 py-2 text-sm transition-colors"
-          style={{
-            background: tab === 'phone' ? 'var(--th-primary)' : 'var(--th-card)',
-            color: tab === 'phone' ? '#fff' : 'var(--th-text-sub)',
-            fontWeight: 700,
-          }}
-        >
-          테스트 계정
-        </button>
-      </div>
-
       {/* Card */}
       <div className="w-full rounded-2xl p-6 border shadow-lg" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-
         {/* 관리자 로그인 */}
-        {tab === 'admin' && (
-          <div className="space-y-4">
-            <div>
-              <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>아이디</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => { setUsername(e.target.value); setAdminError(''); }}
-                onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
-                placeholder="관리자 아이디"
-                autoFocus
-                className={inputClass}
-                style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-              />
-            </div>
-            <div>
-              <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>비밀번호</label>
-              <input
-                type="password"
-                value={adminPassword}
-                onChange={(e) => { setAdminPassword(e.target.value); setAdminError(''); }}
-                onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
-                placeholder="비밀번호"
-                className={inputClass}
-                style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-              />
-            </div>
-            {adminError && <p className="text-sm" style={{ color: '#dc2626' }}>{adminError}</p>}
-            <button
-              onClick={handleAdminLogin}
-              disabled={adminLoading || !username.trim() || !adminPassword.trim()}
-              className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-              style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-            >
-              {adminLoading ? '로그인 중...' : '로그인'}
-            </button>
+        <div className="space-y-4">
+          <div>
+            <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>아이디</label>
+            <input
+              type="text"
+              value={username}
+              onChange={(e) => { setUsername(e.target.value); setAdminError(''); }}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+              placeholder="관리자 아이디"
+              autoFocus
+              className={inputClass}
+              style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+            />
           </div>
-        )}
-
-        {/* 전화번호 로그인 (테스트 계정) */}
-        {tab === 'phone' && (
-          <div className="space-y-4">
-            {phoneStep === 1 && (
-              <>
-                <div>
-                  <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>전화번호</label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => { setPhone(e.target.value.replace(/[^0-9]/g, '')); setPhoneError(''); }}
-                    onKeyDown={(e) => e.key === 'Enter' && handleCheckPhone()}
-                    placeholder="01012345678"
-                    maxLength={11}
-                    autoFocus
-                    className={inputClass}
-                    style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-                    onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-                  />
-                </div>
-                {phoneError && <p className="text-sm" style={{ color: '#dc2626' }}>{phoneError}</p>}
-                <button
-                  onClick={handleCheckPhone}
-                  disabled={phoneLoading || phone.length < 10}
-                  className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-                  style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-                >
-                  {phoneLoading ? '확인 중...' : '다음'}
-                </button>
-              </>
-            )}
-
-            {phoneStep === 2 && (
-              <>
-                <div>
-                  <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>비밀번호</label>
-                  <p className="text-sm mb-3" style={{ color: 'var(--th-text-sub)' }}>{phone}</p>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => { setPassword(e.target.value); setPhoneError(''); }}
-                    onKeyDown={(e) => e.key === 'Enter' && handlePhoneLogin()}
-                    placeholder="비밀번호"
-                    autoFocus
-                    className={inputClass}
-                    style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-                    onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-                  />
-                </div>
-                {phoneError && <p className="text-sm" style={{ color: '#dc2626' }}>{phoneError}</p>}
-                <button
-                  onClick={handlePhoneLogin}
-                  disabled={phoneLoading}
-                  className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
-                  style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-                >
-                  {phoneLoading ? '로그인 중...' : '로그인'}
-                </button>
-                <button
-                  onClick={() => { setPhoneStep(1); setPassword(''); setPhoneError(''); }}
-                  className="w-full py-2 text-sm"
-                  style={{ color: 'var(--th-text-sub)' }}
-                >
-                  전화번호 다시 입력
-                </button>
-              </>
-            )}
+          <div>
+            <label className="block mb-2 text-sm" style={{ color: 'var(--th-text-sub)' }}>비밀번호</label>
+            <input
+              type="password"
+              value={adminPassword}
+              onChange={(e) => { setAdminPassword(e.target.value); setAdminError(''); }}
+              onKeyDown={(e) => e.key === 'Enter' && handleAdminLogin()}
+              placeholder="비밀번호"
+              className={inputClass}
+              style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)', color: 'var(--th-text)' }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+            />
           </div>
-        )}
+          {adminError && <p className="text-sm" style={{ color: '#dc2626' }}>{adminError}</p>}
+          <button
+            onClick={handleAdminLogin}
+            disabled={adminLoading || !username.trim() || !adminPassword.trim()}
+            className="w-full py-3 rounded-full transition-opacity disabled:opacity-50"
+            style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
+          >
+            {adminLoading ? '로그인 중...' : '로그인'}
+          </button>
+        </div>
       </div>
 
       {/* Back link */}
