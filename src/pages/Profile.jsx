@@ -11,6 +11,14 @@ const maskPhone = (phone) => {
   return phone.replace(/(\d{3})(\d{4})(\d{4})/, '$1-****-$3');
 };
 
+const getErrorMessage = (err, fallback) => {
+  const data = err?.response?.data;
+  if (typeof data === 'string' && data.trim()) return data;
+  if (typeof data?.message === 'string' && data.message.trim()) return data.message;
+  if (typeof err?.message === 'string' && err.message.trim()) return err.message;
+  return fallback;
+};
+
 const Profile = () => {
   const navigate = useNavigate();
   const { lang, setLang, t } = useLanguage();
@@ -103,7 +111,7 @@ const Profile = () => {
       localStorage.removeItem('refreshToken');
       window.location.replace('/login');
     } catch (err) {
-      alert(err?.response?.data || '탈퇴에 실패했습니다.');
+      alert(getErrorMessage(err, '탈퇴에 실패했습니다.'));
       setIsDeletingAccount(false);
     }
   };
