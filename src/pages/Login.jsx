@@ -13,6 +13,37 @@ const Login = () => {
   const location = useLocation();
   const { t } = useLanguage();
   const googleAuthUrl = `${import.meta.env.VITE_API_URL}/auth/google`;
+  const featureCards = [
+    {
+      title: t('login', 'featureRoomsTitle'),
+      description: t('login', 'featureRoomsDesc'),
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 16.5v-9Z" stroke="currentColor" strokeWidth="1.8"/>
+          <path d="M8 10h8M8 14h5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+      ),
+    },
+    {
+      title: t('login', 'featureTrackingTitle'),
+      description: t('login', 'featureTrackingDesc'),
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 18.5h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+          <path d="M7.5 16V9.5M12 16V6.5M16.5 16v-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+        </svg>
+      ),
+    },
+    {
+      title: t('login', 'featureRankingTitle'),
+      description: t('login', 'featureRankingDesc'),
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M12 4.5 14.318 9.196l5.182.753-3.75 3.654.885 5.16L12 16.325 7.365 18.763l.885-5.16L4.5 9.949l5.182-.753L12 4.5Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/>
+        </svg>
+      ),
+    },
+  ];
 
   useEffect(() => {
     try {
@@ -57,8 +88,8 @@ const Login = () => {
 
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center"
-      style={{ maxWidth: '430px', margin: '0 auto', backgroundColor: V('--th-bg'), padding: '0 24px' }}
+      className="min-h-screen flex flex-col items-center"
+      style={{ maxWidth: '430px', margin: '0 auto', backgroundColor: V('--th-bg'), padding: '40px 24px 32px' }}
     >
       {/* Dot pattern */}
       <div style={{
@@ -67,7 +98,7 @@ const Login = () => {
         backgroundSize: '24px 24px', pointerEvents: 'none',
       }} />
 
-      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '340px' }}>
+      <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '360px' }}>
         {/* Logo */}
         <div className="text-center mb-10">
           <div className="flex justify-center mb-4">
@@ -140,6 +171,93 @@ const Login = () => {
             </button>
           </div>
         </div>
+
+        <section
+          aria-label={t('login', 'introTitle')}
+          style={{
+            marginTop: '20px',
+            borderRadius: '20px',
+            padding: '20px',
+            border: `1px solid color-mix(in srgb, var(--th-border) 70%, transparent)`,
+            background: 'linear-gradient(180deg, color-mix(in srgb, var(--th-card) 92%, transparent), color-mix(in srgb, var(--th-primary) 10%, var(--th-card)))',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.08)',
+            backdropFilter: 'blur(12px)',
+          }}
+        >
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '6px 10px',
+              borderRadius: '999px',
+              marginBottom: '12px',
+              backgroundColor: 'color-mix(in srgb, var(--th-primary) 14%, transparent)',
+              color: V('--th-primary'),
+              fontSize: '12px',
+              fontWeight: 700,
+              letterSpacing: '0.02em',
+            }}
+          >
+            <span style={{ width: '6px', height: '6px', borderRadius: '999px', backgroundColor: 'currentColor' }} />
+            {t('login', 'introBadge')}
+          </div>
+
+          <h2 style={{ margin: 0, color: V('--th-text'), fontSize: '20px', lineHeight: 1.35 }}>
+            {t('login', 'introTitle')}
+          </h2>
+          <p style={{ margin: '10px 0 0', color: V('--th-text-sub'), fontSize: '13px', lineHeight: 1.7 }}>
+            {t('login', 'introDescription')}
+          </p>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(1, minmax(0, 1fr))',
+              gap: '10px',
+              marginTop: '16px',
+            }}
+          >
+            {featureCards.map((card) => (
+              <div
+                key={card.title}
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  alignItems: 'flex-start',
+                  padding: '14px',
+                  borderRadius: '14px',
+                  border: `1px solid color-mix(in srgb, var(--th-border) 65%, transparent)`,
+                  backgroundColor: 'color-mix(in srgb, var(--th-card) 88%, transparent)',
+                }}
+              >
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    backgroundColor: 'color-mix(in srgb, var(--th-primary) 14%, transparent)',
+                    color: V('--th-primary'),
+                  }}
+                >
+                  {card.icon}
+                </div>
+                <div>
+                  <div style={{ color: V('--th-text'), fontSize: '14px', fontWeight: 700 }}>
+                    {card.title}
+                  </div>
+                  <div style={{ marginTop: '4px', color: V('--th-text-sub'), fontSize: '12px', lineHeight: 1.6 }}>
+                    {card.description}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Admin link */}
         <div className="text-center mt-6">

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Globe, Moon, Sun } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../api/axios';
+import api, { setAccessToken } from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -41,6 +41,7 @@ const Profile = () => {
   const [nickname, setNickname] = useState('');
   const [nicknameStatus, setNicknameStatus] = useState(null);
   const [isNicknameSaving, setIsNicknameSaving] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
 
   const checkNickname = async (value) => {
     if (!value.trim() || value.length < 2) { setNicknameStatus(null); return; }
@@ -88,17 +89,22 @@ const Profile = () => {
   };
 
   const handleDeleteAccount = async () => {
+    if (isDeletingAccount) return;
     if (!window.confirm('정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.')) return;
+    setIsDeletingAccount(true);
     try {
       await api.delete(`/members/${userId}`);
+      setAccessToken(null);
+      queryClient.clear();
       localStorage.removeItem('userId');
       localStorage.removeItem('nickname');
       localStorage.removeItem('role');
       localStorage.removeItem('phone');
       localStorage.removeItem('refreshToken');
-      navigate('/login');
+      window.location.replace('/login');
     } catch (err) {
       alert(err?.response?.data || '탈퇴에 실패했습니다.');
+      setIsDeletingAccount(false);
     }
   };
 
@@ -293,10 +299,17 @@ const Profile = () => {
         </p>
         <button
           onClick={handleDeleteAccount}
+          disabled={isDeletingAccount}
           className="w-full py-3 rounded-full transition-opacity"
-          style={{ backgroundColor: 'transparent', color: '#dc2626', border: '1px solid #dc2626' }}
+          style={{
+            backgroundColor: 'transparent',
+            color: '#dc2626',
+            border: '1px solid #dc2626',
+            opacity: isDeletingAccount ? 0.6 : 1,
+            cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
+          }}
         >
-          회원 탈퇴
+          {isDeletingAccount ? '탈퇴 처리 중...' : '회원 탈퇴'}
         </button>
       </div>
 

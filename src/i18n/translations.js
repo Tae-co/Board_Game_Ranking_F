@@ -56,6 +56,15 @@ const translations = {
       kakaoFailed: '카카오 로그인에 실패했습니다. 다시 시도해주세요.',
       kakaoCanceled: '카카오 로그인이 취소되었습니다.',
       webViewWarning: '앱 내 브라우저에서는 구글 로그인이 제한됩니다. Chrome 또는 Safari에서 boardup.pages.dev를 열어주세요.',
+      introBadge: '서비스 소개',
+      introTitle: '모임마다 보드게임 기록과 랭킹을 가볍게 쌓아가는 공간',
+      introDescription: 'BoardUp은 친구들과 그룹을 만들고, 플레이한 게임 결과를 남기고, 게임별 랭킹과 전적을 한눈에 확인할 수 있는 보드게임 기록 웹서비스예요.',
+      featureRoomsTitle: '그룹별로 모임 관리',
+      featureRoomsDesc: '초대 코드로 친구를 모으고, 멤버별로 같은 방에서 기록을 이어갈 수 있어요.',
+      featureTrackingTitle: '플레이 결과 빠르게 기록',
+      featureTrackingDesc: '게임이 끝난 뒤 점수와 순위를 바로 남겨서 매치 기록을 차곡차곡 쌓을 수 있어요.',
+      featureRankingTitle: '게임별 랭킹 확인',
+      featureRankingDesc: '누가 어떤 게임에 강한지, 전적과 티어 변화를 보기 쉽게 확인할 수 있어요.',
     },
 
     // 로비
@@ -376,6 +385,15 @@ const translations = {
       kakaoFailed: 'Kakao login failed. Please try again.',
       kakaoCanceled: 'Kakao login canceled.',
       webViewWarning: 'Google login is restricted in in-app browsers. Please open boardup.pages.dev in Chrome or Safari.',
+      introBadge: 'What is BoardUp?',
+      introTitle: 'A simple place to track board game sessions and rankings with your group',
+      introDescription: 'BoardUp helps you create groups, record match results, and check rankings and head-to-head records for each game in one place.',
+      featureRoomsTitle: 'Manage groups together',
+      featureRoomsDesc: 'Invite friends with a room code and keep all your session history in the same group.',
+      featureTrackingTitle: 'Record results quickly',
+      featureTrackingDesc: 'Save scores and placements right after each game so your match history builds up naturally.',
+      featureRankingTitle: 'See game-by-game rankings',
+      featureRankingDesc: 'Check who is strongest at each game with easy-to-read records and tier changes.',
     },
 
     // Lobby
