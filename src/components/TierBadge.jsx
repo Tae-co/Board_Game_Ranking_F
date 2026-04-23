@@ -1,6 +1,7 @@
-import { motion } from 'motion/react';
+/* eslint-disable react-refresh/only-export-components */
+import { memo } from 'react';
 
-function TierEmblem({ tier, size }) {
+const TierEmblem = memo(function TierEmblem({ tier, size }) {
   const sizeValue = size === 'sm' ? 32 : size === 'md' ? 40 : 56;
 
   return (
@@ -47,34 +48,28 @@ function TierEmblem({ tier, size }) {
       <circle cx="77" cy="50" r="3" fill={tier.accentColor} opacity="0.6" />
     </svg>
   );
-}
+});
 
-export function TierBadge({ tier, size = 'md' }) {
+export const TierBadge = memo(function TierBadge({ tier, size = 'md' }) {
   const sizeClasses = { sm: 'w-8 h-8', md: 'w-10 h-10', lg: 'w-14 h-14' };
 
   return (
-    <motion.div
+    <div
       className={`relative ${sizeClasses[size]} flex items-center justify-center`}
       style={{ filter: `drop-shadow(0 4px 8px ${tier.shadowColor}) drop-shadow(0 0 12px ${tier.glowColor})` }}
-      whileHover={{
-        scale: 1.15,
-        rotate: [0, -5, 5, 0],
-        transition: { duration: 0.6 },
-      }}
     >
       {(tier.name === '다이아몬드' || tier.name === '플래티넘') && (
-        <motion.div
+        <div
           className="absolute inset-0 rounded-full"
           style={{ background: `radial-gradient(circle, ${tier.glowColor} 0%, transparent 70%)` }}
-          whileHover={{ rotate: 360, scale: [1, 1.2, 1], transition: { rotate: { duration: 1, ease: 'linear' }, scale: { duration: 0.5 } } }}
         />
       )}
-      <motion.div whileHover={tier.name === '다이아몬드' ? { rotate: 360, transition: { duration: 1, ease: 'linear' } } : {}}>
+      <div>
         <TierEmblem tier={tier} size={size} />
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
-}
+});
 
 export const TIERS = {
   bronze: { name: '브론즈', color: '#8B4513', gradientFrom: '#CD7F32', gradientTo: '#6B3410', shadowColor: 'rgba(205, 127, 50, 0.5)', glowColor: 'rgba(205, 127, 50, 0.4)', accentColor: '#CD7F32', minPoints: 0, maxPoints: 999 },

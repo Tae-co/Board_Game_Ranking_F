@@ -1,37 +1,45 @@
-import { useEffect } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { setAccessToken } from './api/axios';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
 
-import Login from './pages/Login';
-import Lobby from './pages/Lobby';
-import Invite from './pages/Invite';
-import GameSelect from './pages/GameSelect';
-import MatchForm from './pages/MatchForm';
-import ScoreSheet from './pages/ScoreSheet';
-import Ranking from './pages/Ranking';
-import Profile from './pages/Profile';
-import AdminLogin from './pages/AdminLogin';
-import Admin from './pages/Admin';
-import OAuthCallback from './pages/OAuthCallback';
-import JoinByQR from './pages/JoinByQR';
-
 import './App.css';
 
+const Login = lazy(() => import('./pages/Login'));
+const Lobby = lazy(() => import('./pages/Lobby'));
+const Invite = lazy(() => import('./pages/Invite'));
+const GameSelect = lazy(() => import('./pages/GameSelect'));
+const MatchForm = lazy(() => import('./pages/MatchForm'));
+const ScoreSheet = lazy(() => import('./pages/ScoreSheet'));
+const Ranking = lazy(() => import('./pages/Ranking'));
+const Profile = lazy(() => import('./pages/Profile'));
+const AdminLogin = lazy(() => import('./pages/AdminLogin'));
+const Admin = lazy(() => import('./pages/Admin'));
+const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
+const JoinByQR = lazy(() => import('./pages/JoinByQR'));
+
+const RouteFallback = () => (
+  <div
+    style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--th-bg)',
+      color: 'var(--th-text-sub)',
+      fontSize: '14px',
+      fontWeight: 600,
+    }}
+  >
+    Loading...
+  </div>
+);
+
 function App() {
-  const isAuthenticated = () => !!localStorage.getItem('userId');
-  const isAdmin = () => localStorage.getItem('role') === 'ADMIN';
-
-  const PrivateRoute = ({ children }) =>
-    isAuthenticated() ? children : <Navigate to="/login" replace />;
-
-  const PublicRoute = ({ children }) =>
-    isAuthenticated() ? <Navigate to="/lobby" replace /> : children;
-
-  const AdminRoute = ({ children }) =>
-    isAdmin() ? children : <Navigate to="/admin/login" replace />;
+  const isAuthenticated = !!localStorage.getItem('userId');
+  const isAdmin = localStorage.getItem('role') === 'ADMIN';
 
   useEffect(() => {
     // 앱 시작 시 저장된 refresh token으로 access token 복구
@@ -52,32 +60,34 @@ function App() {
     <LanguageProvider>
     <BrowserRouter>
       <div className="min-h-screen">
-        <Routes>
-          <Route path="/" element={<Navigate to={isAuthenticated() ? '/lobby' : '/login'} replace />} />
+        <Suspense fallback={<RouteFallback />}>
+          <Routes>
+            <Route path="/" element={<Navigate to={isAuthenticated ? '/lobby' : '/login'} replace />} />
 
-          {/* 일반 유저 */}
-          <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-          <Route path="/lobby" element={<PrivateRoute><Lobby /></PrivateRoute>} />
-          <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-          <Route path="/invite/:roomId" element={<PrivateRoute><Invite /></PrivateRoute>} />
-          <Route path="/games/:roomId" element={<PrivateRoute><GameSelect /></PrivateRoute>} />
-          <Route path="/match-form/:roomId" element={<PrivateRoute><MatchForm /></PrivateRoute>} />
-          <Route path="/score-sheet/:boardGameId" element={<PrivateRoute><ScoreSheet /></PrivateRoute>} />
-          <Route path="/ranking/:roomId" element={<PrivateRoute><Ranking /></PrivateRoute>} />
+            {/* 일반 유저 */}
+            <Route path="/login" element={isAuthenticated ? <Navigate to="/lobby" replace /> : <Login />} />
+            <Route path="/lobby" element={isAuthenticated ? <Lobby /> : <Navigate to="/login" replace />} />
+            <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
+            <Route path="/invite/:roomId" element={isAuthenticated ? <Invite /> : <Navigate to="/login" replace />} />
+            <Route path="/games/:roomId" element={isAuthenticated ? <GameSelect /> : <Navigate to="/login" replace />} />
+            <Route path="/match-form/:roomId" element={isAuthenticated ? <MatchForm /> : <Navigate to="/login" replace />} />
+            <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
+            <Route path="/ranking/:roomId" element={isAuthenticated ? <Ranking /> : <Navigate to="/login" replace />} />
 
-          {/* QR 코드 초대 링크 */}
-          <Route path="/join" element={<JoinByQR />} />
+            {/* QR 코드 초대 링크 */}
+            <Route path="/join" element={<JoinByQR />} />
 
-          {/* OAuth2 콜백 */}
-          <Route path="/oauth-callback" element={<OAuthCallback />} />
+            {/* OAuth2 콜백 */}
+            <Route path="/oauth-callback" element={<OAuthCallback />} />
 
-          {/* 관리자 */}
-          <Route path="/admin-login" element={<PublicRoute><AdminLogin /></PublicRoute>} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminRoute><Admin /></AdminRoute>} />
+            {/* 관리자 */}
+            <Route path="/admin-login" element={isAuthenticated ? <Navigate to="/lobby" replace /> : <AdminLogin />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/admin/login" replace />} />
 
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </Suspense>
       </div>
     </BrowserRouter>
     </LanguageProvider>

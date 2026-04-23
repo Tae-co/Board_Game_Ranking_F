@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { memo, useCallback, useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Share2, ArrowLeft, Trophy, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
-import { motion } from 'motion/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { TierBadge, TIERS } from '../components/TierBadge';
 import api from '../api/axios';
@@ -13,6 +12,133 @@ const formatDate = (dateStr) => {
   const d = new Date(dateStr);
   return `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 };
+
+const getTier = (points) => {
+  if (points >= TIERS.diamond.minPoints) return TIERS.diamond;
+  if (points >= TIERS.platinum.minPoints) return TIERS.platinum;
+  if (points >= TIERS.gold.minPoints) return TIERS.gold;
+  if (points >= TIERS.silver.minPoints) return TIERS.silver;
+  return TIERS.bronze;
+};
+
+const buildSavedScores = (participants) => {
+  const savedScores = {};
+  participants.forEach((p) => {
+    if (!p.scoresJson) return;
+    try {
+      const parsed = JSON.parse(p.scoresJson);
+      Object.entries(parsed).forEach(([catKey, val]) => {
+        if (!savedScores[catKey]) savedScores[catKey] = {};
+        savedScores[catKey][p.memberId] = val;
+      });
+    } catch {
+      // Ignore legacy or malformed score payloads when opening past matches.
+    }
+  });
+  return Object.keys(savedScores).length > 0 ? savedScores : null;
+};
+
+const MatchCard = memo(function MatchCard({ match, isHost, onEdit, onDelete, onView, onShare }) {
+  return (
+    <div style={{ borderRadius: '14px', padding: '14px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+        <div>
+          <p style={{ fontSize: '11px', color: V('--th-text-sub') }}>{match.gameName}</p>
+          <p style={{ fontSize: '13px', fontWeight: '600', color: V('--th-text') }}>{formatDate(match.playedAt)}</p>
+        </div>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {isHost ? (
+            <>
+              <button onClick={() => onEdit(match)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', backgroundColor: V('--th-bg'), color: V('--th-primary'), border: `1px solid var(--th-primary)`, cursor: 'pointer' }}>수정</button>
+              <button onClick={() => onDelete(match.matchId)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', backgroundColor: V('--th-bg'), color: '#dc2626', border: '1px solid #dc2626', cursor: 'pointer' }}>삭제</button>
+            </>
+          ) : (
+            <button onClick={() => onView(match)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', backgroundColor: V('--th-bg'), color: V('--th-text-sub'), border: `1px solid var(--th-border)`, cursor: 'pointer' }}>상세</button>
+          )}
+          <button onClick={() => onShare(match)} style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer' }}>
+            <Share2 style={{ color: V('--th-text-sub'), width: '15px', height: '15px' }} />
+          </button>
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {match.participants.map((p) => (
+          <div key={p.memberId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{
+                width: '22px', height: '22px', borderRadius: '50%', fontSize: '11px', fontWeight: '700',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                backgroundColor: p.placement === 1 ? '#D4AF37' : p.placement === 2 ? '#9CA3AF' : p.placement === 3 ? '#92400E' : V('--th-border'),
+                color: '#FFFFFF',
+              }}>{p.placement}</span>
+              <span style={{ fontSize: '13px', color: V('--th-text') }}>{p.nickname}</span>
+            </div>
+            <span style={{ fontSize: '12px', fontWeight: '700', color: p.ratingChange > 0 ? '#16a34a' : '#dc2626' }}>
+              {p.ratingChange > 0 ? '+' : ''}{Math.round(p.ratingChange)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+});
+
+const RankingRow = memo(function RankingRow({ rank, rankNum, isMe, isHost, isTopThree, onEdit }) {
+  const tier = getTier(Math.round(rank.rating));
+  const winRate = (rank.winCount + rank.loseCount) > 0
+    ? Math.round(rank.winCount / (rank.winCount + rank.loseCount) * 100)
+    : 0;
+
+  return (
+    <div
+      style={{
+        display: 'flex', alignItems: 'center', gap: '10px',
+        padding: '12px 14px', borderRadius: '12px',
+        backgroundColor: isMe ? V('--th-bg-deep') : V('--th-card'),
+        border: `1px solid ${isMe ? 'var(--th-primary)' : 'var(--th-border)'}`,
+      }}
+    >
+      <div style={{
+        width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        backgroundColor: isTopThree ? (rankNum === 1 ? '#FFD700' : rankNum === 2 ? '#C0C0C0' : '#CD7F32') : V('--th-primary'),
+        color: isTopThree ? '#1a1a1a' : '#FFFFFF', fontSize: '12px', fontWeight: '700',
+      }}>
+        {rankNum}
+      </div>
+
+      <TierBadge tier={tier} size="sm" />
+
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '2px' }}>
+          <p style={{ fontSize: '14px', fontWeight: isMe ? '700' : '500', color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {rank.nickname}
+          </p>
+          {isMe && (
+            <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '8px', backgroundColor: V('--th-primary'), color: '#FFFFFF', fontWeight: '700', flexShrink: 0 }}>ME</span>
+          )}
+        </div>
+        <p style={{ fontSize: '10px', color: V('--th-text-sub'), whiteSpace: 'nowrap' }}>
+          <span style={{ fontWeight: '700' }}>W</span>{rank.winCount ?? 0}{' '}
+          <span style={{ fontWeight: '700' }}>L</span>{rank.loseCount ?? 0}{' '}
+          <span style={{ fontWeight: '700' }}>WR</span>{winRate}%
+        </p>
+      </div>
+
+      {isHost && (
+        <button
+          onClick={() => onEdit(rank)}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', flexShrink: 0 }}
+        >
+          <Pencil style={{ width: '14px', height: '14px', color: V('--th-text-sub') }} />
+        </button>
+      )}
+
+      <span style={{ fontSize: '15px', fontWeight: '700', color: V('--th-primary'), flexShrink: 0 }}>
+        {Math.round(rank.rating)}
+      </span>
+    </div>
+  );
+});
 
 const Ranking = () => {
   const { roomId } = useParams();
@@ -44,7 +170,10 @@ const Ranking = () => {
     staleTime: 1000 * 60 * 2,
   });
 
-  const isHost = roomMembers.find(m => m.memberId === myUserId)?.isHost ?? false;
+  const isHost = useMemo(
+    () => roomMembers.find(m => m.memberId === myUserId)?.isHost ?? false,
+    [roomMembers, myUserId]
+  );
 
   const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
     queryKey: ['rankings', roomId],
@@ -59,14 +188,6 @@ const Ranking = () => {
     enabled: activeTab === 'matches',
     staleTime: 1000 * 60 * 1,
   });
-
-  const getTier = (points) => {
-    if (points >= TIERS.diamond.minPoints) return TIERS.diamond;
-    if (points >= TIERS.platinum.minPoints) return TIERS.platinum;
-    if (points >= TIERS.gold.minPoints) return TIERS.gold;
-    if (points >= TIERS.silver.minPoints) return TIERS.silver;
-    return TIERS.bronze;
-  };
 
   const handleUpdateRating = async () => {
     if (!ratingEditModal) return;
@@ -107,61 +228,44 @@ const Ranking = () => {
     shareText(`🎮 오늘의 매치 결과 - ${match.gameName}\n\n${lines.join('\n')}`);
   };
 
-  const handleViewMatch = (match) => {
-    const savedScores = {};
-    match.participants.forEach(p => {
-      if (!p.scoresJson) return;
-      try {
-        const parsed = JSON.parse(p.scoresJson);
-        Object.entries(parsed).forEach(([catKey, val]) => {
-          if (!savedScores[catKey]) savedScores[catKey] = {};
-          savedScores[catKey][p.memberId] = val;
-        });
-      } catch {}
-    });
+  const openScoreSheet = useCallback((match, readOnly = false) => {
+    const savedScores = buildSavedScores(match.participants);
     navigate(`/score-sheet/${match.boardGameId}`, {
       state: {
         roomId: Number(roomId), gameName: match.gameName,
         players: match.participants.map(p => ({ memberId: p.memberId, nickname: p.nickname })),
-        savedScores: Object.keys(savedScores).length > 0 ? savedScores : null, readOnly: true,
+        savedScores,
+        ...(readOnly ? { readOnly: true } : { editMatchId: match.matchId }),
       },
     });
-  };
+  }, [navigate, roomId]);
 
-  const handleEditMatch = (match) => {
-    const savedScores = {};
-    match.participants.forEach(p => {
-      if (!p.scoresJson) return;
-      try {
-        const parsed = JSON.parse(p.scoresJson);
-        Object.entries(parsed).forEach(([catKey, val]) => {
-          if (!savedScores[catKey]) savedScores[catKey] = {};
-          savedScores[catKey][p.memberId] = val;
-        });
-      } catch {}
-    });
-    navigate(`/score-sheet/${match.boardGameId}`, {
-      state: {
-        roomId: Number(roomId), gameName: match.gameName,
-        players: match.participants.map(p => ({ memberId: p.memberId, nickname: p.nickname })),
-        editMatchId: match.matchId,
-        savedScores: Object.keys(savedScores).length > 0 ? savedScores : null,
-      },
-    });
-  };
+  const handleViewMatch = useCallback((match) => openScoreSheet(match, true), [openScoreSheet]);
+  const handleEditMatch = useCallback((match) => openScoreSheet(match, false), [openScoreSheet]);
 
-  const handleDeleteMatch = async (matchId) => {
+  const handleDeleteMatch = useCallback(async (matchId) => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
     try {
       await api.delete(`/matches/${matchId}?requesterId=${myUserId}`);
       refetchMatches();
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
     } catch { alert('삭제에 실패했습니다.'); }
-  };
+  }, [myUserId, queryClient, refetchMatches, roomId]);
 
-  const pagedRankings = rankings.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const totalPages = Math.ceil(rankings.length / PAGE_SIZE);
-  const isLoading = activeTab === 'matches' ? isMatchesLoading : isRankingLoading;
+  const handleOpenRatingEdit = useCallback((rank) => {
+    setRatingEditModal(rank);
+    setRatingEditValue(String(Math.round(rank.rating)));
+  }, []);
+
+  const pagedRankings = useMemo(
+    () => rankings.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    [rankings, page]
+  );
+  const totalPages = useMemo(() => Math.ceil(rankings.length / PAGE_SIZE), [rankings.length]);
+  const isLoading = useMemo(
+    () => activeTab === 'matches' ? isMatchesLoading : isRankingLoading,
+    [activeTab, isMatchesLoading, isRankingLoading]
+  );
 
   return (
     <div className="min-h-screen pb-8" style={{ maxWidth: '430px', margin: '0 auto', backgroundColor: V('--th-bg') }}>
@@ -252,45 +356,15 @@ const Ranking = () => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {matches.map((match) => (
-                  <div key={match.matchId} style={{ borderRadius: '14px', padding: '14px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      <div>
-                        <p style={{ fontSize: '11px', color: V('--th-text-sub') }}>{match.gameName}</p>
-                        <p style={{ fontSize: '13px', fontWeight: '600', color: V('--th-text') }}>{formatDate(match.playedAt)}</p>
-                      </div>
-                      <div style={{ display: 'flex', gap: '6px' }}>
-                        {isHost ? (
-                          <>
-                            <button onClick={() => handleEditMatch(match)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', backgroundColor: V('--th-bg'), color: V('--th-primary'), border: `1px solid var(--th-primary)`, cursor: 'pointer' }}>수정</button>
-                            <button onClick={() => handleDeleteMatch(match.matchId)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', backgroundColor: V('--th-bg'), color: '#dc2626', border: '1px solid #dc2626', cursor: 'pointer' }}>삭제</button>
-                          </>
-                        ) : (
-                          <button onClick={() => handleViewMatch(match)} style={{ padding: '4px 10px', borderRadius: '20px', fontSize: '11px', backgroundColor: V('--th-bg'), color: V('--th-text-sub'), border: `1px solid var(--th-border)`, cursor: 'pointer' }}>상세</button>
-                        )}
-                        <button onClick={() => handleShareMatch(match)} style={{ padding: '4px', background: 'none', border: 'none', cursor: 'pointer' }}>
-                          <Share2 style={{ color: V('--th-text-sub'), width: '15px', height: '15px' }} />
-                        </button>
-                      </div>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                      {match.participants.map((p) => (
-                        <div key={p.memberId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{
-                              width: '22px', height: '22px', borderRadius: '50%', fontSize: '11px', fontWeight: '700',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                              backgroundColor: p.placement === 1 ? '#D4AF37' : p.placement === 2 ? '#9CA3AF' : p.placement === 3 ? '#92400E' : V('--th-border'),
-                              color: '#FFFFFF',
-                            }}>{p.placement}</span>
-                            <span style={{ fontSize: '13px', color: V('--th-text') }}>{p.nickname}</span>
-                          </div>
-                          <span style={{ fontSize: '12px', fontWeight: '700', color: p.ratingChange > 0 ? '#16a34a' : '#dc2626' }}>
-                            {p.ratingChange > 0 ? '+' : ''}{Math.round(p.ratingChange)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <MatchCard
+                    key={match.matchId}
+                    match={match}
+                    isHost={isHost}
+                    onEdit={handleEditMatch}
+                    onDelete={handleDeleteMatch}
+                    onView={handleViewMatch}
+                    onShare={handleShareMatch}
+                  />
                 ))}
               </div>
             )
@@ -306,70 +380,18 @@ const Ranking = () => {
                 {pagedRankings.map((rank, idx) => {
                   const index = page * PAGE_SIZE + idx;
                   const isMe = rank.nickname === myNickname;
-                  const tier = getTier(Math.round(rank.rating));
                   const rankNum = index + 1;
 
                   return (
-                    <motion.div
+                    <RankingRow
                       key={rank.memberId}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: '10px',
-                        padding: '12px 14px', borderRadius: '12px',
-                        backgroundColor: isMe ? V('--th-bg-deep') : V('--th-card'),
-                        border: `1px solid ${isMe ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                      }}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.04 }}
-                    >
-                      {/* Rank number */}
-                      <div style={{
-                        width: '28px', height: '28px', borderRadius: '50%', flexShrink: 0,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        backgroundColor: rankNum === 1 && page === 0 ? '#FFD700' : rankNum === 2 && page === 0 ? '#C0C0C0' : rankNum === 3 && page === 0 ? '#CD7F32' : V('--th-primary'),
-                        color: rankNum <= 3 && page === 0 ? '#1a1a1a' : '#FFFFFF', fontSize: '12px', fontWeight: '700',
-                      }}>
-                        {rankNum}
-                      </div>
-
-                      {/* Tier badge */}
-                      <TierBadge tier={tier} size="sm" />
-
-                      {/* Name + ME + W/L/WR */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '2px' }}>
-                          <p style={{ fontSize: '14px', fontWeight: isMe ? '700' : '500', color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {rank.nickname}
-                          </p>
-                          {isMe && (
-                            <span style={{ fontSize: '9px', padding: '1px 5px', borderRadius: '8px', backgroundColor: V('--th-primary'), color: '#FFFFFF', fontWeight: '700', flexShrink: 0 }}>ME</span>
-                          )}
-                        </div>
-                        <p style={{ fontSize: '10px', color: V('--th-text-sub'), whiteSpace: 'nowrap' }}>
-                          <span style={{ fontWeight: '700' }}>W</span>{rank.winCount ?? 0}{' '}
-                          <span style={{ fontWeight: '700' }}>L</span>{rank.loseCount ?? 0}{' '}
-                          <span style={{ fontWeight: '700' }}>WR</span>
-                          {(rank.winCount + rank.loseCount) > 0
-                            ? Math.round(rank.winCount / (rank.winCount + rank.loseCount) * 100)
-                            : 0}%
-                        </p>
-                      </div>
-
-                      {/* Host edit pencil */}
-                      {isHost && (
-                        <button
-                          onClick={() => { setRatingEditModal(rank); setRatingEditValue(String(Math.round(rank.rating))); }}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', flexShrink: 0 }}
-                        >
-                          <Pencil style={{ width: '14px', height: '14px', color: V('--th-text-sub') }} />
-                        </button>
-                      )}
-
-                      {/* Rating */}
-                      <span style={{ fontSize: '15px', fontWeight: '700', color: V('--th-primary'), flexShrink: 0 }}>
-                        {Math.round(rank.rating)}
-                      </span>
-                    </motion.div>
+                      rank={rank}
+                      rankNum={rankNum}
+                      isMe={isMe}
+                      isHost={isHost}
+                      isTopThree={page === 0 && rankNum <= 3}
+                      onEdit={handleOpenRatingEdit}
+                    />
                   );
                 })}
               </div>
