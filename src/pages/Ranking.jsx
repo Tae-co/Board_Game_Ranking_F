@@ -283,7 +283,7 @@ const Ranking = () => {
           display: 'flex', alignItems: 'center', padding: '24px 16px 16px',
           position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-bg'),
         }}>
-          <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px', padding: '6px' }}>
+          <button onClick={() => navigate('/lobby')} style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '10px', padding: '6px' }}>
             <ArrowLeft style={{ color: V('--th-primary'), width: '24px', height: '24px' }} />
           </button>
           <Trophy style={{ color: V('--th-primary'), width: '20px', height: '20px', marginRight: '8px' }} />
