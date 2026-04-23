@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
@@ -14,6 +15,7 @@ const ScoreSheet = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, lang } = useLanguage();
+  const queryClient = useQueryClient();
   const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false } = location.state || {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,9 +31,14 @@ const ScoreSheet = () => {
   // 라운드 기반 게임(UNO, 루미큐브)의 totals를 테이블에서 받아옴
   const [roundTotals, setRoundTotals] = useState({});
 
-  const currentSchema = SCORE_SCHEMAS[boardGameId] ?? (gameName && Object.values(SCORE_SCHEMAS).find(s =>
-    gameName.toLowerCase().includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(gameName.toLowerCase())
-  )) ?? (players.length ? { name: gameName || '게임', type: 'generic' } : null);
+  const currentSchema = useMemo(() => {
+    const normalizedGameName = gameName.toLowerCase();
+    return SCORE_SCHEMAS[boardGameId]
+      ?? (gameName && Object.values(SCORE_SCHEMAS).find(s =>
+        normalizedGameName.includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(normalizedGameName)
+      ))
+      ?? (players.length ? { name: gameName || '게임', type: 'generic' } : null);
+  }, [boardGameId, gameName, players.length]);
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
@@ -58,7 +65,9 @@ const ScoreSheet = () => {
     return initScores(currentSchema, players);
   });
 
-  const allCategories = currentSchema ? getAllCategories(currentSchema) : [];
+  const allCategories = useMemo(() => (
+    currentSchema ? getAllCategories(currentSchema) : []
+  ), [currentSchema]);
 
   const handleChange = (catKey, memberId, value) => {
     setScores(prev => ({ ...prev, [catKey]: { ...prev[catKey], [memberId]: value } }));
@@ -163,6 +172,13 @@ const ScoreSheet = () => {
       const res = editMatchId
         ? await api.put(`/matches/${editMatchId}`, { boardGameId, roomId, participants })
         : await api.post('/matches', { boardGameId, roomId, participants });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['rankings', String(roomId)] }),
+        queryClient.invalidateQueries({ queryKey: ['matches', String(roomId)] }),
+        queryClient.invalidateQueries({ queryKey: ['rankings', Number(roomId)] }),
+        queryClient.invalidateQueries({ queryKey: ['matches', Number(roomId)] }),
+        queryClient.invalidateQueries({ queryKey: ['rooms'] }),
+      ]);
       navigate(`/ranking/${roomId}`, { state: { matchResult: res.data }, replace: true });
     } catch (err) {
       alert(t('scoreSheet', 'saveFailed'));

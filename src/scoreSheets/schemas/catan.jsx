@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-
+/* eslint-disable react-refresh/only-export-components */
 export const catanSchema = {
   name: "CATAN",
   type: "catan",
@@ -18,70 +17,46 @@ const CATAN_LIMITS = {
   vp_cards:   { min: 0, max: 5 },
 };
 
-const CatanScrollCell = ({ catKey, playerId, value, limits, color, handleChange }) => {
-  const divRef = useRef(null);
-  const touchStartY = useRef(null);
-  const [active, setActive] = useState(false);
-  const stateRef = useRef({ value, handleChange, catKey, playerId, limits });
-  useEffect(() => { stateRef.current = { value, handleChange, catKey, playerId, limits }; });
+const clampCatanValue = (rawValue, limits) => {
+  if (rawValue === "") return "";
+  const parsed = Number(rawValue);
+  if (Number.isNaN(parsed)) return limits.min;
+  return Math.min(limits.max, Math.max(limits.min, parsed));
+};
 
-  useEffect(() => {
-    const el = divRef.current;
-    if (!el) return;
-    const onTouchStart = (e) => { touchStartY.current = e.touches[0].clientY; setActive(true); };
-    const onTouchEnd = () => setActive(false);
-    const onTouchMove = (e) => {
-      if (touchStartY.current === null) return;
-      const diff = touchStartY.current - e.touches[0].clientY;
-      if (Math.abs(diff) > 8) {
-        e.preventDefault();
-        const { value: v, handleChange: hc, catKey: ck, playerId: pid, limits: lim } = stateRef.current;
-        const delta = diff > 0 ? 1 : -1;
-        const next = Math.min(lim.max, Math.max(lim.min, Number(v) + delta));
-        if (next !== Number(v)) if (navigator.vibrate) navigator.vibrate(10);
-        hc(ck, pid, next);
-        touchStartY.current = e.touches[0].clientY;
-      }
-    };
-    el.addEventListener('touchstart', onTouchStart, { passive: true });
-    el.addEventListener('touchend', onTouchEnd, { passive: true });
-    el.addEventListener('touchmove', onTouchMove, { passive: false });
-    return () => {
-      el.removeEventListener('touchstart', onTouchStart);
-      el.removeEventListener('touchend', onTouchEnd);
-      el.removeEventListener('touchmove', onTouchMove);
-    };
-  }, []);
-
-  const atMin = value <= limits.min;
-  const atMax = value >= limits.max;
+const CatanInputCell = ({ catKey, playerId, value, limits, color, handleChange, readOnly }) => {
+  const displayValue = value === "" ? "" : Number(value) || 0;
   return (
-    <div
-      ref={divRef}
-      onWheel={(e) => {
-        e.preventDefault();
-        const delta = e.deltaY < 0 ? 1 : -1;
-        const next = Math.min(limits.max, Math.max(limits.min, value + delta));
-        if (next !== value) if (navigator.vibrate) navigator.vibrate(10);
-        handleChange(catKey, playerId, next);
+    <input
+      type="text"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      value={displayValue}
+      readOnly={readOnly}
+      placeholder="0"
+      onChange={(e) => handleChange(catKey, playerId, clampCatanValue(e.target.value, limits))}
+      onBlur={(e) => {
+        const nextValue = e.target.value === "" ? limits.min : clampCatanValue(e.target.value, limits);
+        handleChange(catKey, playerId, nextValue);
       }}
-      style={{ display: "flex", alignItems: "center", justifyContent: "center", userSelect: "none", cursor: "ns-resize" }}
-    >
-      <span style={{
-        width: 52, height: 44, display: "flex", alignItems: "center", justifyContent: "center",
-        fontWeight: 800, fontSize: 15,
-        color: atMax ? color : atMin ? "#A08060" : "var(--th-text)",
+      style={{
+        width: 52,
+        height: 44,
+        textAlign: "center",
+        fontSize: 15,
+        fontWeight: 800,
         borderRadius: 8,
-        border: `2px solid ${active ? color : (value > 0 ? color : "#E5D5C0")}`,
-        boxShadow: active ? `0 0 0 2px ${color}44` : "none",
+        border: `2px solid ${displayValue > 0 ? color : "#E5D5C0"}`,
         background: "var(--th-bg)",
-        transition: "border-color 0.15s, box-shadow 0.15s",
-      }}>{value}</span>
-    </div>
+        color: displayValue >= limits.max ? color : displayValue > limits.min ? "var(--th-text)" : "#A08060",
+        outline: "none",
+        padding: 0,
+      }}
+    />
   );
 };
 
-export const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatanCheck, t }) => (
+export const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatanCheck, t, readOnly }) => (
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "#2C1F0E" }}>
@@ -107,13 +82,16 @@ export const CatanTable = ({ schema, players, scores, totals, handleChange, hand
             <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)", height: 44 }}>
               {cat.type === "exclusive_check" ? (
                 <button
-                  onClick={() => handleCatanCheck(cat.key, p.memberId)}
+                  onClick={readOnly ? undefined : () => handleCatanCheck(cat.key, p.memberId)}
+                  disabled={readOnly}
                   style={{
-                    width: 40, height: 36, borderRadius: 8, cursor: "pointer",
+                    width: 40, height: 36, borderRadius: 8,
                     border: `2px solid ${scores[cat.key]?.[p.memberId] ? cat.color : "#E5D5C0"}`,
                     background: scores[cat.key]?.[p.memberId] ? cat.color + "22" : "var(--th-bg)",
                     color: scores[cat.key]?.[p.memberId] ? cat.color : "#A08060",
                     fontWeight: 900, fontSize: 14,
+                    opacity: readOnly ? 0.7 : 1,
+                    cursor: readOnly ? "default" : "pointer",
                   }}
                 >
                   {scores[cat.key]?.[p.memberId] ? "✓" : "—"}
@@ -122,7 +100,15 @@ export const CatanTable = ({ schema, players, scores, totals, handleChange, hand
                 const limits = CATAN_LIMITS[cat.key];
                 const value = Number(scores[cat.key]?.[p.memberId] ?? 0);
                 return (
-                  <CatanScrollCell catKey={cat.key} playerId={p.memberId} value={value} limits={limits} color={cat.color} handleChange={handleChange} />
+                  <CatanInputCell
+                    catKey={cat.key}
+                    playerId={p.memberId}
+                    value={value}
+                    limits={limits}
+                    color={cat.color}
+                    handleChange={handleChange}
+                    readOnly={readOnly}
+                  />
                 );
               })()}
             </td>
