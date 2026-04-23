@@ -1,7 +1,8 @@
-import { Suspense, lazy, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { setAccessToken } from './api/axios';
+import { AUTH_CHANGED_EVENT, getStoredAuth } from './auth/storage';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
 
@@ -38,6 +39,8 @@ const RouteFallback = () => (
 );
 
 function App() {
+  const [authState, setAuthState] = useState(() => getStoredAuth());
+
   useEffect(() => {
     if (window.location.hostname.includes('pages.dev')) {
       const nextUrl = `https://yadarank.com${window.location.pathname}${window.location.search}${window.location.hash}`;
@@ -46,8 +49,22 @@ function App() {
     }
   }, []);
 
-  const isAuthenticated = !!localStorage.getItem('userId');
-  const isAdmin = localStorage.getItem('role') === 'ADMIN';
+  useEffect(() => {
+    const syncAuthState = () => {
+      setAuthState(getStoredAuth());
+    };
+
+    window.addEventListener(AUTH_CHANGED_EVENT, syncAuthState);
+    window.addEventListener('storage', syncAuthState);
+
+    return () => {
+      window.removeEventListener(AUTH_CHANGED_EVENT, syncAuthState);
+      window.removeEventListener('storage', syncAuthState);
+    };
+  }, []);
+
+  const isAuthenticated = !!authState.userId;
+  const isAdmin = authState.role === 'ADMIN';
 
   useEffect(() => {
     // 앱 시작 시 저장된 refresh token으로 access token 복구

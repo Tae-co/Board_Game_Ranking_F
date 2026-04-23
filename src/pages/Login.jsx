@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api, { setAccessToken } from '../api/axios';
+import { saveAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const V = (v) => `var(${v})`;
@@ -58,10 +59,12 @@ const Login = () => {
 
   const saveLoginData = (data) => {
     setAccessToken(data.accessToken);
-    localStorage.setItem('userId', data.memberId);
-    localStorage.setItem('nickname', data.nickname);
-    localStorage.setItem('role', data.role);
-    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+    saveAuthSession({
+      userId: data.memberId,
+      nickname: data.nickname,
+      role: data.role,
+      refreshToken: data.refreshToken,
+    });
     const redirect = location.state?.redirectAfterLogin;
     navigate(redirect || '/lobby');
   };

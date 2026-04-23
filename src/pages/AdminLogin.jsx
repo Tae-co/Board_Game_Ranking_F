@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
 import api, { setAccessToken } from '../api/axios';
+import { saveAuthSession } from '../auth/storage';
 
 const AdminLogin = () => {
   // 관리자 로그인
@@ -14,10 +15,12 @@ const AdminLogin = () => {
 
   const saveLoginData = (data) => {
     setAccessToken(data.accessToken);
-    localStorage.setItem('userId', data.memberId);
-    localStorage.setItem('nickname', data.nickname);
-    localStorage.setItem('role', data.role);
-    if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+    saveAuthSession({
+      userId: data.memberId,
+      nickname: data.nickname,
+      role: data.role,
+      refreshToken: data.refreshToken,
+    });
     navigate('/lobby');
   };
 

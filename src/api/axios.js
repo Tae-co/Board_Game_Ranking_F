@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearAuthSession } from '../auth/storage';
 
 let accessToken = null;
 
@@ -61,10 +62,7 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         setAccessToken(null);
-        localStorage.removeItem('userId');
-        localStorage.removeItem('nickname');
-        localStorage.removeItem('role');
-        localStorage.removeItem('refreshToken');
+        clearAuthSession();
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {

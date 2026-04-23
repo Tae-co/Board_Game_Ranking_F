@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, Plus, Search, ChevronRight, User } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../api/axios';
+import api, { setAccessToken } from '../api/axios';
+import { clearAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const ROOM_COLORS = ['#C0392B', '#8E44AD', '#2980B9', '#16A085', '#D35400', '#27AE60'];
@@ -83,11 +84,9 @@ const Lobby = () => {
 
   const handleLogout = () => {
     if (window.confirm(t('lobby', 'logoutConfirm'))) {
-      localStorage.removeItem('userId');
-      localStorage.removeItem('nickname');
-      localStorage.removeItem('role');
-      localStorage.removeItem('refreshToken');
-      navigate('/login');
+      setAccessToken(null);
+      clearAuthSession();
+      window.location.replace('/login');
     }
   };
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Globe, Moon, Sun } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api, { setAccessToken } from '../api/axios';
+import { clearAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../theme/ThemeContext';
 
@@ -104,11 +105,7 @@ const Profile = () => {
       await api.delete(`/members/${userId}`);
       setAccessToken(null);
       queryClient.clear();
-      localStorage.removeItem('userId');
-      localStorage.removeItem('nickname');
-      localStorage.removeItem('role');
-      localStorage.removeItem('phone');
-      localStorage.removeItem('refreshToken');
+      clearAuthSession();
       window.location.replace('/login');
     } catch (err) {
       alert(getErrorMessage(err, '탈퇴에 실패했습니다.'));

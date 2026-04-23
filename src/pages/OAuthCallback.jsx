@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { setAccessToken } from '../api/axios';
+import { saveAuthSession } from '../auth/storage';
 
 const OAuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -15,10 +16,12 @@ const OAuthCallback = () => {
 
     if (token && userId) {
       setAccessToken(token);
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('nickname', nickname || '');
-      localStorage.setItem('role', role || 'USER');
-      if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+      saveAuthSession({
+        userId,
+        nickname,
+        role,
+        refreshToken,
+      });
       navigate('/lobby', { replace: true });
     } else {
       navigate('/login', { replace: true });

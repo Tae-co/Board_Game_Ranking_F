@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Edit2, Trash2, Shield } from 'lucide-react';
 import api, { setAccessToken } from '../api/axios';
+import { clearAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const Admin = () => {
@@ -132,11 +133,8 @@ const Admin = () => {
 
   const handleLogout = () => {
     setAccessToken(null);
-    localStorage.removeItem('userId');
-    localStorage.removeItem('nickname');
-    localStorage.removeItem('role');
-    localStorage.removeItem('refreshToken');
-    navigate('/admin-login');
+    clearAuthSession();
+    window.location.replace('/admin-login');
   };
 
   const inputStyle = {
