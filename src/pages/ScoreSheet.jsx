@@ -16,7 +16,7 @@ const ScoreSheet = () => {
   const location = useLocation();
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
-  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false } = location.state || {};
+  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null } = location.state || {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scienceModal, setScienceModal] = useState(null);
@@ -188,12 +188,20 @@ const ScoreSheet = () => {
     }
   };
 
+  const handleBack = () => {
+    if (backTo) {
+      navigate(backTo);
+      return;
+    }
+    navigate(-1);
+  };
+
   if (!players.length) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>😅</div>
         <p style={{ color: "var(--th-text-sub)", marginBottom: 24 }}>{t('scoreSheet', 'wrongAccess')}</p>
-        <button onClick={() => navigate(-1)} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
+        <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
           {t('scoreSheet', 'goBack')}
         </button>
       </div>
@@ -208,7 +216,7 @@ const ScoreSheet = () => {
 
       {/* Header */}
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--th-bg)", padding: "20px 16px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-        <button onClick={() => navigate(-1)} style={{ padding: 8, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: "var(--th-primary)" }}>
+        <button onClick={handleBack} style={{ padding: 8, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: "var(--th-primary)" }}>
           <ArrowLeft size={24} />
         </button>
         <div>

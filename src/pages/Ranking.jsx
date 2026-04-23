@@ -235,6 +235,7 @@ const Ranking = () => {
         roomId: Number(roomId), gameName: match.gameName,
         players: match.participants.map(p => ({ memberId: p.memberId, nickname: p.nickname })),
         savedScores,
+        backTo: `/ranking/${roomId}`,
         ...(readOnly ? { readOnly: true } : { editMatchId: match.matchId }),
       },
     });
