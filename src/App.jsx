@@ -20,6 +20,10 @@ const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Admin = lazy(() => import('./pages/Admin'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 const JoinByQR = lazy(() => import('./pages/JoinByQR'));
+const CreateGroup = lazy(() => import('./pages/CreateGroup'));
+const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
+const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
+const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
 
 const RouteFallback = () => (
   <div
@@ -87,11 +91,15 @@ function App() {
       <div className="min-h-screen">
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/" element={<Navigate to={isAuthenticated ? '/lobby' : '/login'} replace />} />
+            <Route path="/" element={<Navigate to={isAuthenticated ? '/community' : '/login'} replace />} />
 
             {/* 일반 유저 */}
-            <Route path="/login" element={isAuthenticated ? <Navigate to="/lobby" replace /> : <Login />} />
+            <Route path="/login" element={isAuthenticated ? <Navigate to="/community" replace /> : <Login />} />
+            <Route path="/community" element={isAuthenticated ? <CommunityLobby /> : <Navigate to="/login" replace />} />
             <Route path="/lobby" element={isAuthenticated ? <Lobby /> : <Navigate to="/login" replace />} />
+            <Route path="/create-group" element={isAuthenticated ? <CreateGroup /> : <Navigate to="/login" replace />} />
+            <Route path="/create-community" element={isAuthenticated ? <CreateCommunity /> : <Navigate to="/login" replace />} />
+            <Route path="/manage-community" element={isAuthenticated ? <CommunitySettings /> : <Navigate to="/login" replace />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
             <Route path="/invite/:roomId" element={isAuthenticated ? <Invite /> : <Navigate to="/login" replace />} />
             <Route path="/games/:roomId" element={isAuthenticated ? <GameSelect /> : <Navigate to="/login" replace />} />

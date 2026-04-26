@@ -1,33 +1,68 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Plus, Search, ChevronRight, User } from 'lucide-react';
+import { ChevronRight, ArrowLeft, Plus, Users } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api, { setAccessToken } from '../api/axios';
 import { clearAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
-const ROOM_COLORS = ['#C0392B', '#8E44AD', '#2980B9', '#16A085', '#D35400', '#27AE60'];
+const V = (v) => `var(${v})`;
+
+const DiceLogo = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="28" height="28">
+    <defs>
+      <linearGradient id="lobbyDiceTop" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#90C4F9"/>
+        <stop offset="100%" stopColor="#7B6CF6"/>
+      </linearGradient>
+      <linearGradient id="lobbyDiceLeft" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#6B5CE7"/>
+        <stop offset="100%" stopColor="#4835B0"/>
+      </linearGradient>
+      <linearGradient id="lobbyDiceRight" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#9B8EFA"/>
+        <stop offset="100%" stopColor="#7060E0"/>
+      </linearGradient>
+    </defs>
+    <polygon points="50,10 84,29 50,48 16,29" fill="url(#lobbyDiceTop)"/>
+    <polygon points="16,29 50,48 50,88 16,69" fill="url(#lobbyDiceLeft)"/>
+    <polygon points="84,29 50,48 50,88 84,69" fill="url(#lobbyDiceRight)"/>
+    <circle cx="37" cy="24" r="3.8" fill="#fff" opacity="0.92"/>
+    <circle cx="63" cy="38" r="3.8" fill="#fff" opacity="0.92"/>
+    <circle cx="27" cy="46" r="3.2" fill="#fff" opacity="0.85"/>
+    <circle cx="39" cy="53" r="3.2" fill="#fff" opacity="0.85"/>
+    <circle cx="27" cy="64" r="3.2" fill="#fff" opacity="0.85"/>
+    <circle cx="39" cy="71" r="3.2" fill="#fff" opacity="0.85"/>
+    <circle cx="72" cy="44" r="3.2" fill="#fff" opacity="0.85"/>
+    <circle cx="64" cy="58" r="3.2" fill="#fff" opacity="0.85"/>
+    <circle cx="72" cy="72" r="3.2" fill="#fff" opacity="0.85"/>
+  </svg>
+);
 
 const Lobby = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const [mode, setMode] = useState(null);
-  const [newRoomName, setNewRoomName] = useState('');
-  const [selectedGameId, setSelectedGameId] = useState(null);
+  const [showJoinSheet, setShowJoinSheet] = useState(false);
   const [joinCode, setJoinCode] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [gamePage, setGamePage] = useState(0);
-  const [gameSearch, setGameSearch] = useState('');
-  const GAMES_PER_PAGE = 6;
+  const [isJoining, setIsJoining] = useState(false);
+  const sheetRef = useRef(null);
   const nickname = localStorage.getItem('nickname') || '플레이어';
   const userId = localStorage.getItem('userId');
-  const isAdmin = localStorage.getItem('role') === 'ADMIN';
+  const selectedCommunity = (() => {
+    try { return JSON.parse(localStorage.getItem('selectedCommunity')); } catch { return null; }
+  })();
+  const communityId = selectedCommunity?.communityId ?? null;
+  const isAdmin = selectedCommunity?.isAdmin ?? false;
 
   const { data: rooms = [] } = useQuery({
-    queryKey: ['rooms', userId],
+    queryKey: communityId ? ['communityRooms', communityId, userId] : ['rooms', userId],
     queryFn: async () => {
       if (!userId || userId === 'null') return [];
+      if (communityId) {
+        const res = await api.get(`/communities/${communityId}/rooms?memberId=${userId}`);
+        return res.data || [];
+      }
       const res = await api.get(`/rooms/my/${userId}`);
       return res.data || [];
     },
@@ -41,323 +76,385 @@ const Lobby = () => {
       const res = await api.get('/games');
       return res.data || [];
     },
-    enabled: mode === 'create',
+    enabled: !communityId && rooms.length > 0,
     staleTime: 1000 * 60 * 30,
   });
 
-  const handleCreateRoom = async () => {
-    if (!newRoomName.trim()) { alert(t('lobby', 'roomNameRequired')); return; }
-    if (!selectedGameId) { alert(t('lobby', 'gameRequired')); return; }
-    setIsSubmitting(true);
-    try {
-      const res = await api.post('/rooms', {
-        roomName: newRoomName,
-        memberId: Number(userId),
-        boardGameId: selectedGameId,
-      });
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      setMode(null);
-      setNewRoomName('');
-      setSelectedGameId(null);
-      navigate(`/invite/${res.data.roomId}`);
-    } catch {
-      alert(t('lobby', 'createFailed'));
-    } finally {
-      setIsSubmitting(false);
+  const handleEnterRoom = async (room) => {
+    if (communityId && !room.isMember) {
+      try {
+        await api.post('/rooms/join', { inviteCode: room.inviteCode, memberId: Number(userId) });
+        queryClient.invalidateQueries({ queryKey: ['communityRooms', communityId, userId] });
+      } catch { /* 이미 멤버인 경우 무시 */ }
     }
+    navigate(`/invite/${room.roomId}`);
   };
 
   const handleJoinRoom = async () => {
-    if (!joinCode.trim()) { alert(t('lobby', 'codeRequired')); return; }
-    setIsSubmitting(true);
+    if (!joinCode.trim()) return;
+    setIsJoining(true);
     try {
       await api.post('/rooms/join', { inviteCode: joinCode.trim(), memberId: Number(userId) });
       setJoinCode('');
-      setMode(null);
+      setShowJoinSheet(false);
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
     } catch {
       alert(t('lobby', 'joinFailed'));
     } finally {
-      setIsSubmitting(false);
+      setIsJoining(false);
     }
   };
 
-  const handleLogout = () => {
-    if (window.confirm(t('lobby', 'logoutConfirm'))) {
-      setAccessToken(null);
-      clearAuthSession();
-      window.location.replace('/login');
-    }
-  };
+  useEffect(() => {
+    if (!showJoinSheet) return;
+    const handle = (e) => {
+      if (sheetRef.current && !sheetRef.current.contains(e.target)) setShowJoinSheet(false);
+    };
+    document.addEventListener('mousedown', handle);
+    return () => document.removeEventListener('mousedown', handle);
+  }, [showJoinSheet]);
 
-  const V = (v) => `var(${v})`;
+  useEffect(() => {
+    if (!showJoinSheet) return;
+    const handle = (e) => { if (e.key === 'Escape') setShowJoinSheet(false); };
+    document.addEventListener('keydown', handle);
+    return () => document.removeEventListener('keydown', handle);
+  }, [showJoinSheet]);
 
   return (
-    <div className="min-h-screen pb-8" style={{ maxWidth: '430px', margin: '0 auto', backgroundColor: V('--th-bg') }}>
-      {/* Dot pattern */}
+    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg') }}>
+
+      {/* Header */}
       <div style={{
-        position: 'fixed', inset: 0, zIndex: 0,
-        backgroundImage: `radial-gradient(circle, var(--th-dot) 1px, transparent 1px)`,
-        backgroundSize: '24px 24px', pointerEvents: 'none',
-      }} />
-
-      <div style={{ position: 'relative', zIndex: 1, padding: '24px 20px' }}>
-        {/* Profile Card */}
-        <div style={{ borderRadius: '16px', padding: '20px', marginBottom: '20px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <div>
-              <p style={{ fontSize: '12px', color: V('--th-text-sub'), marginBottom: '4px' }}>{t('lobby', 'greeting')}</p>
-              <p style={{ fontSize: '20px', fontWeight: '600', color: V('--th-text') }}>{nickname}{t('lobby', 'greetingSuffix')}</p>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {isAdmin && (
-                <button
-                  onClick={() => navigate('/admin')}
-                  style={{ padding: '6px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: '700', backgroundColor: V('--th-primary'), color: '#FFFFFF', border: 'none', cursor: 'pointer' }}
-                >
-                  {t('lobby', 'manageGames')}
-                </button>
-              )}
-              <button
-                onClick={() => navigate('/profile')}
-                style={{ padding: '8px 16px', borderRadius: '20px', fontSize: '13px', backgroundColor: V('--th-bg'), color: V('--th-primary'), border: `1px solid var(--th-border)`, cursor: 'pointer' }}
-              >
-                {t('lobby', 'profile')}
-              </button>
-            </div>
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '16px 20px',
+        backgroundColor: V('--th-nav-bg'),
+        position: 'sticky', top: 0, zIndex: 10,
+      }}>
+        {selectedCommunity ? (
+          <button
+            onClick={() => navigate('/community')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <ArrowLeft size={22} color="var(--th-primary)" />
+            <span style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)' }}>
+              {selectedCommunity.name}
+            </span>
+          </button>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <DiceLogo />
+            <span style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)' }}>
+              Yada Rank
+            </span>
           </div>
-          <button
-            onClick={handleLogout}
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-          >
-            <LogOut style={{ color: V('--th-text-sub'), width: '14px', height: '14px' }} />
-            <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{t('common', 'logout')}</span>
-          </button>
-        </div>
-
-        {/* Action Buttons */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-          <button
-            onClick={() => { setMode(mode === 'create' ? null : 'create'); setSelectedGameId(null); setNewRoomName(''); }}
+        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          {isAdmin && (
+            <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--th-text-sub)' }}>
+              Admin
+            </span>
+          )}
+          <div
+            onClick={() => navigate('/profile')}
             style={{
-              padding: '18px 12px', borderRadius: '16px',
-              backgroundColor: mode === 'create' ? V('--th-primary') : V('--th-card'),
-              border: `1px solid ${mode === 'create' ? 'var(--th-primary)' : 'var(--th-border)'}`,
-              cursor: 'pointer', transition: 'all 0.2s',
-              display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px',
+              width: 38, height: 38, borderRadius: '50%',
+              backgroundColor: 'var(--th-primary)', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 15, cursor: 'pointer', flexShrink: 0,
+              boxShadow: '0 2px 8px rgba(123,108,246,0.3)',
             }}
           >
-            <Plus style={{ color: mode === 'create' ? '#FFFFFF' : V('--th-primary'), width: '20px', height: '20px' }} />
-            <span style={{ fontWeight: '700', fontSize: '14px', color: mode === 'create' ? '#FFFFFF' : V('--th-text') }}>
-              {t('lobby', 'createGroup')}
-            </span>
-          </button>
-          <button
-            onClick={() => { setMode(mode === 'join' ? null : 'join'); setJoinCode(''); }}
-            style={{
-              padding: '18px 12px', borderRadius: '16px',
-              backgroundColor: mode === 'join' ? V('--th-primary') : V('--th-card'),
-              border: `1px solid ${mode === 'join' ? 'var(--th-primary)' : 'var(--th-border)'}`,
-              cursor: 'pointer', transition: 'all 0.2s',
-              display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '8px',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
-              <User style={{ color: mode === 'join' ? '#FFFFFF' : V('--th-text-sub'), width: '20px', height: '20px' }} />
-              <User style={{ color: mode === 'join' ? '#FFFFFF' : V('--th-text-sub'), width: '20px', height: '20px', marginLeft: '-8px' }} />
-            </div>
-            <span style={{ fontWeight: '700', fontSize: '14px', color: mode === 'join' ? '#FFFFFF' : V('--th-text') }}>
-              {t('lobby', 'joinWithCode')}
-            </span>
-          </button>
+            {(nickname || '?')[0].toUpperCase()}
+          </div>
+        </div>
+      </div>
+
+
+      <div style={{ padding: '4px 20px 24px' }}>
+
+        {/* Welcome Banner */}
+        <div style={{
+          borderRadius: '20px',
+          padding: '24px 22px',
+          marginBottom: '24px',
+          background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
+          <div style={{
+            position: 'absolute', right: -20, bottom: -20,
+            width: 120, height: 120, borderRadius: '50%',
+            backgroundColor: 'rgba(255,255,255,0.07)',
+          }}/>
+          <div style={{
+            position: 'absolute', right: 30, top: -30,
+            width: 80, height: 80, borderRadius: '50%',
+            backgroundColor: 'rgba(255,255,255,0.05)',
+          }}/>
+          <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 6px', letterSpacing: '-0.3px' }}>
+            Hi, {nickname}!
+          </p>
+          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.5 }}>
+            Ready to manage your collectives<br/>today?
+          </p>
         </div>
 
-        {/* Create Room Panel */}
-        {mode === 'create' && (
-          <div style={{ borderRadius: '16px', padding: '20px', marginBottom: '20px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
-            <h2 style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text'), marginBottom: '16px' }}>
-              {t('lobby', 'createGroup')}
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <input
-                type="text"
-                value={newRoomName}
-                onChange={(e) => setNewRoomName(e.target.value)}
-                placeholder={t('lobby', 'groupNamePlaceholder')}
-                autoFocus
-                style={{
-                  width: '100%', padding: '10px 14px', borderRadius: '10px',
-                  backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
-                  color: V('--th-text'), fontSize: '14px', outline: 'none', boxSizing: 'border-box',
-                }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-              />
-              <div>
-                <p style={{ fontSize: '12px', color: V('--th-text-sub'), marginBottom: '8px' }}>{t('lobby', 'selectGame')}</p>
-                <div style={{ position: 'relative', marginBottom: '8px' }}>
-                  <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '14px', height: '14px', color: V('--th-text-sub') }} />
-                  <input
-                    type="text"
-                    value={gameSearch}
-                    onChange={(e) => { setGameSearch(e.target.value); setGamePage(0); }}
-                    placeholder={t('lobby', 'gameSearchPlaceholder')}
-                    style={{
-                      width: '100%', padding: '8px 12px 8px 34px', borderRadius: '10px',
-                      backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
-                      color: V('--th-text'), fontSize: '13px', outline: 'none', boxSizing: 'border-box',
-                    }}
-                    onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-                    onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-                  />
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                  {(gameSearch
-                    ? games.filter(g => g.name.toLowerCase().includes(gameSearch.toLowerCase()))
-                    : games.slice(gamePage * GAMES_PER_PAGE, (gamePage + 1) * GAMES_PER_PAGE)
-                  ).map((game) => (
-                    <button
-                      key={game.id}
-                      onClick={() => setSelectedGameId(game.id)}
-                      style={{
-                        borderRadius: '10px', overflow: 'hidden',
-                        border: `2px solid ${selectedGameId === game.id ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                        backgroundColor: V('--th-bg'), cursor: 'pointer',
-                      }}
-                    >
-                      {game.imageUrl ? (
-                        <img src={game.imageUrl} alt={game.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover' }} />
-                      ) : (
-                        <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🎲</div>
-                      )}
-                      <p style={{
-                        fontSize: '11px', padding: '4px', textAlign: 'center',
-                        color: selectedGameId === game.id ? V('--th-primary') : V('--th-text'),
-                        fontWeight: selectedGameId === game.id ? '700' : '400',
-                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      }}>
-                        {game.name}
-                      </p>
-                    </button>
-                  ))}
-                </div>
-                {!gameSearch && games.length > GAMES_PER_PAGE && (
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '8px' }}>
-                    {Array.from({ length: Math.ceil(games.length / GAMES_PER_PAGE) }).map((_, i) => (
-                      <button
-                        key={i}
-                        onClick={() => setGamePage(i)}
-                        style={{
-                          width: '28px', height: '28px', borderRadius: '50%', fontSize: '12px', fontWeight: '700',
-                          backgroundColor: gamePage === i ? V('--th-primary') : V('--th-bg'),
-                          color: gamePage === i ? '#FFFFFF' : V('--th-text-sub'),
-                          border: `1px solid var(--th-border)`, cursor: 'pointer',
-                        }}
-                      >
-                        {i + 1}
-                      </button>
-                    ))}
-                  </div>
-                )}
+        {/* Action Buttons — 커뮤니티 모드에서는 숨김 */}
+        {!communityId && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '32px' }}>
+            <button
+              onClick={() => navigate('/create-group')}
+              style={{
+                padding: '20px 16px', borderRadius: '18px', cursor: 'pointer',
+                backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px',
+                textAlign: 'left', transition: 'border-color 0.2s, box-shadow 0.2s',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--th-primary)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(107,92,231,0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--th-border)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)'; }}
+            >
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%',
+                border: '1.5px solid var(--th-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Plus style={{ color: V('--th-text'), width: 18, height: 18 }} />
               </div>
-              <button
-                onClick={handleCreateRoom}
-                disabled={isSubmitting || !newRoomName.trim() || !selectedGameId}
-                style={{
-                  width: '100%', padding: '12px', borderRadius: '24px', fontSize: '14px', fontWeight: '700',
-                  backgroundColor: V('--th-primary'), color: '#FFFFFF', border: 'none', cursor: 'pointer',
-                  opacity: (isSubmitting || !newRoomName.trim() || !selectedGameId) ? 0.5 : 1,
-                }}
-              >
-                {isSubmitting ? t('lobby', 'creating') : t('lobby', 'createRoom')}
-              </button>
-            </div>
+              <div>
+                <div style={{ fontWeight: '700', fontSize: '14px', color: V('--th-text'), marginBottom: '3px' }}>
+                  {t('lobby', 'createGroup')}
+                </div>
+                <div style={{ fontSize: '11px', color: V('--th-text-sub') }}>
+                  Start a new circle
+                </div>
+              </div>
+            </button>
+
+            <button
+              onClick={() => { setJoinCode(''); setShowJoinSheet(true); }}
+              style={{
+                padding: '20px 16px', borderRadius: '18px', cursor: 'pointer',
+                backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+                display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '12px',
+                textAlign: 'left', transition: 'border-color 0.2s, box-shadow 0.2s',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--th-primary)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(107,92,231,0.12)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--th-border)'; e.currentTarget.style.boxShadow = '0 1px 4px rgba(0,0,0,0.04)'; }}
+            >
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%',
+                border: '1.5px solid var(--th-border)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <Users style={{ color: V('--th-text'), width: 18, height: 18 }} />
+              </div>
+              <div>
+                <div style={{ fontWeight: '700', fontSize: '14px', color: V('--th-text'), marginBottom: '3px' }}>
+                  {t('lobby', 'joinWithCode')}
+                </div>
+                <div style={{ fontSize: '11px', color: V('--th-text-sub') }}>
+                  Enter a shared ID
+                </div>
+              </div>
+            </button>
           </div>
         )}
 
-        {/* Join Room Panel */}
-        {mode === 'join' && (
-          <div style={{ borderRadius: '16px', padding: '20px', marginBottom: '20px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
-            <h2 style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text'), marginBottom: '16px' }}>
-              {t('lobby', 'joinWithCode')}
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <input
-                type="text"
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-                onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
-                placeholder={t('lobby', 'inviteCodePlaceholder')}
-                autoFocus
-                maxLength={8}
-                style={{
-                  width: '100%', padding: '12px 16px', borderRadius: '10px', textAlign: 'center',
-                  backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
-                  color: V('--th-primary'), fontSize: '18px', fontFamily: 'monospace',
-                  letterSpacing: '0.3em', fontWeight: '700', outline: 'none', boxSizing: 'border-box',
-                }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-                onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-              />
-              <button
-                onClick={handleJoinRoom}
-                disabled={isSubmitting || !joinCode.trim()}
-                style={{
-                  width: '100%', padding: '12px', borderRadius: '24px', fontSize: '14px', fontWeight: '700',
-                  backgroundColor: V('--th-primary'), color: '#FFFFFF', border: 'none', cursor: 'pointer',
-                  opacity: (isSubmitting || !joinCode.trim()) ? 0.5 : 1,
-                }}
-              >
-                {isSubmitting ? '...' : t('lobby', 'join')}
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Room List */}
+        {/* My Groups / Community Groups */}
         <div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: 0 }}>
+              {communityId ? t('community', 'communityGroups') : t('lobby', 'myGroups')}
+            </p>
+            {/* 커뮤니티 모드 + Admin: 그룹 생성 버튼 */}
+            {communityId && isAdmin && (
+              <button
+                onClick={() => navigate('/create-group')}
+                style={{
+                  width: 32, height: 32, borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                  border: 'none', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(107,92,231,0.3)',
+                }}
+              >
+                <Plus size={16} color="#fff" />
+              </button>
+            )}
+          </div>
+
           {rooms.length === 0 ? (
-            <div style={{ borderRadius: '16px', padding: '32px', border: `2px dashed var(--th-border)`, textAlign: 'center' }}>
-              <p style={{ color: V('--th-text-sub') }}>{t('lobby', 'noGroups')}</p>
-              <p style={{ fontSize: '13px', marginTop: '8px', color: V('--th-text-sub') }}>{t('lobby', 'noGroupsDesc')}</p>
+            <div style={{
+              borderRadius: '16px', padding: '40px 20px', border: `2px dashed var(--th-border)`,
+              textAlign: 'center',
+            }}>
+              <p style={{ color: V('--th-text-sub'), fontSize: '14px', margin: '0 0 6px' }}>{t('lobby', 'noGroups')}</p>
+              <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0 }}>{t('lobby', 'noGroupsDesc')}</p>
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {rooms.map((room, idx) => {
-                const color = ROOM_COLORS[idx % ROOM_COLORS.length];
+              {rooms.map((room) => {
+                const gameInfo = !communityId ? games.find(g => g.id === room.boardGameId) : null;
+                const imageUrl = communityId ? room.imageUrl : gameInfo?.imageUrl;
+                const isMember = communityId ? room.isMember : true;
                 return (
-                  <button
+                  <div
                     key={room.roomId}
-                    onClick={() => navigate(`/invite/${room.roomId}`)}
                     style={{
-                      width: '100%', borderRadius: '16px', padding: '16px',
+                      width: '100%', borderRadius: '16px', padding: '14px 16px',
                       backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
                       display: 'flex', alignItems: 'center', gap: '14px',
-                      cursor: 'pointer', transition: 'all 0.2s', textAlign: 'left',
+                      boxSizing: 'border-box',
+                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--th-primary)'}
-                    onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--th-border)'}
                   >
-                    <div style={{
-                      width: '44px', height: '44px', borderRadius: '12px', flexShrink: 0,
-                      backgroundColor: color, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '20px',
-                    }}>
-                      🎲
+                    {/* Game image */}
+                    <div
+                      onClick={() => handleEnterRoom(room)}
+                      style={{ cursor: 'pointer', flexShrink: 0 }}
+                    >
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={room.roomName}
+                          style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }}
+                        />
+                      ) : (
+                        <div style={{
+                          width: 48, height: 48, borderRadius: '50%',
+                          background: 'linear-gradient(135deg, #6B5CE7, #9B8EFA)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px',
+                        }}>
+                          🎲
+                        </div>
+                      )}
                     </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontWeight: '600', color: V('--th-text'), fontSize: '15px', marginBottom: '2px' }}>
-                        {room.roomName || room.name}
-                      </p>
+
+                    {/* Room info */}
+                    <div
+                      onClick={() => handleEnterRoom(room)}
+                      style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
+                    >
+                      <div style={{ fontWeight: '700', color: V('--th-text'), fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {room.roomName}
+                      </div>
+                      {communityId ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
+                          <span style={{
+                            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                            backgroundColor: room.sessionActive ? '#22c55e' : 'var(--th-text-sub)',
+                          }}/>
+                          <span style={{ fontSize: '12px', color: V('--th-text-sub'), fontWeight: '500' }}>
+                            {room.sessionActive ? t('community', 'activeSession') : t('community', 'inactiveSession')}
+                          </span>
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: '12px', color: V('--th-text-sub'), marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Users style={{ width: 12, height: 12 }} />
+                          <span>{room.memberCount ?? '—'} members</span>
+                        </div>
+                      )}
                     </div>
-                    <ChevronRight style={{ color: V('--th-primary'), width: '18px', height: '18px', flexShrink: 0 }} />
-                  </button>
+
+                    {/* 커뮤니티 모드: 참여 상태 표시 */}
+                    {communityId ? (
+                      isMember ? (
+                        <span style={{
+                          fontSize: '11px', fontWeight: '700', color: 'var(--th-primary)',
+                          backgroundColor: 'rgba(107,92,231,0.1)',
+                          padding: '4px 10px', borderRadius: '20px', flexShrink: 0,
+                        }}>
+                          {t('community', 'joinedBadge')}
+                        </span>
+                      ) : (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleEnterRoom(room); }}
+                          style={{
+                            fontSize: '12px', fontWeight: '700', color: '#fff',
+                            background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                            border: 'none', borderRadius: '20px',
+                            padding: '5px 12px', cursor: 'pointer', flexShrink: 0,
+                          }}
+                        >
+                          {t('community', 'enterRoom')}
+                        </button>
+                      )
+                    ) : (
+                      <ChevronRight
+                        onClick={() => handleEnterRoom(room)}
+                        style={{ color: V('--th-text-sub'), width: 18, height: 18, flexShrink: 0, cursor: 'pointer' }}
+                      />
+                    )}
+                  </div>
                 );
               })}
             </div>
           )}
         </div>
       </div>
+
+      {/* Join Code Bottom Sheet */}
+      {showJoinSheet && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)',
+          zIndex: 50, display: 'flex', alignItems: 'flex-end',
+        }}>
+          <div
+            ref={sheetRef}
+            style={{
+              width: '100%', maxWidth: '390px', margin: '0 auto',
+              backgroundColor: V('--th-card'),
+              borderRadius: '24px 24px 0 0',
+              padding: '24px 20px 40px',
+            }}
+          >
+            <div style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: V('--th-border'), margin: '0 auto 24px' }} />
+
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: V('--th-text'), marginBottom: '6px' }}>
+              {t('lobby', 'enterGroupCode')}
+            </h3>
+            <p style={{ fontSize: '13px', color: V('--th-text-sub'), marginBottom: '20px' }}>
+              {t('lobby', 'enterGroupCodeHint')}
+            </p>
+
+            <input
+              type="text"
+              value={joinCode}
+              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
+              onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
+              placeholder={t('lobby', 'inviteCodePlaceholder')}
+              autoFocus
+              maxLength={8}
+              style={{
+                width: '100%', padding: '14px 16px', borderRadius: '12px',
+                textAlign: 'center', fontFamily: 'monospace', fontSize: '22px',
+                letterSpacing: '0.3em', fontWeight: '700', outline: 'none',
+                backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
+                color: V('--th-primary'), boxSizing: 'border-box', marginBottom: '12px',
+              }}
+              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+            />
+
+            <button
+              onClick={handleJoinRoom}
+              disabled={isJoining || !joinCode.trim()}
+              style={{
+                width: '100%', padding: '15px', borderRadius: '50px',
+                background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                color: '#fff', fontWeight: '700', fontSize: '15px',
+                border: 'none', cursor: 'pointer',
+                opacity: (isJoining || !joinCode.trim()) ? 0.5 : 1,
+              }}
+            >
+              {isJoining ? '...' : t('lobby', 'joinGroup')}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
