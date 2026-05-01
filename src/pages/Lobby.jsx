@@ -398,8 +398,14 @@ const Lobby = () => {
               <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0 }}>{t('lobby', 'noGroupsDesc')}</p>
             </div>
           ) : (
-            <div style={{
-              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px',
+            <div className="hide-scrollbar" style={{
+              display: 'grid',
+              gridTemplateRows: 'repeat(3, auto)',
+              gridAutoFlow: 'column',
+              gridAutoColumns: '110px',
+              gap: '10px',
+              overflowX: 'auto',
+              paddingBottom: '4px',
             }}>
               {rooms.map((room) => {
                 const gameInfo = !communityId ? games.find(g => g.id === room.boardGameId) : null;
@@ -493,8 +499,14 @@ const Lobby = () => {
                 {t('community', 'noCommunityMembers')}
               </p>
             ) : (
-              <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px',
+              <div className="hide-scrollbar" style={{
+                display: 'grid',
+                gridTemplateRows: 'repeat(5, auto)',
+                gridAutoFlow: 'column',
+                gridAutoColumns: '64px',
+                gap: '8px',
+                overflowX: 'auto',
+                paddingBottom: '4px',
               }}>
                 {communityMembers.map((member) => {
                   const colors = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
