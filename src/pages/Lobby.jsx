@@ -398,11 +398,8 @@ const Lobby = () => {
               <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0 }}>{t('lobby', 'noGroupsDesc')}</p>
             </div>
           ) : (
-            <div className="hide-scrollbar" style={{
-              display: 'flex', gap: '12px',
-              overflowX: 'auto', paddingBottom: '4px',
-              scrollbarWidth: 'none',
-              WebkitOverflowScrolling: 'touch',
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px',
             }}>
               {rooms.map((room) => {
                 const gameInfo = !communityId ? games.find(g => g.id === room.boardGameId) : null;
@@ -413,7 +410,7 @@ const Lobby = () => {
                     key={room.roomId}
                     onClick={() => handleEnterRoom(room)}
                     style={{
-                      flexShrink: 0, width: '140px', borderRadius: '16px',
+                      borderRadius: '16px',
                       backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
                       boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
                       cursor: 'pointer', overflow: 'hidden',
@@ -496,11 +493,8 @@ const Lobby = () => {
                 {t('community', 'noCommunityMembers')}
               </p>
             ) : (
-              <div className="hide-scrollbar" style={{
-                display: 'flex', gap: '12px',
-                overflowX: 'auto', paddingBottom: '4px',
-                scrollbarWidth: 'none',
-                WebkitOverflowScrolling: 'touch',
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px',
               }}>
                 {communityMembers.map((member) => {
                   const colors = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
@@ -508,7 +502,6 @@ const Lobby = () => {
                   const isMe = String(member.memberId) === String(userId);
                   return (
                     <div key={member.memberId} style={{
-                      flexShrink: 0, width: '64px',
                       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
                     }}>
                       <div style={{
