@@ -82,7 +82,7 @@ const Profile = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const uploadRes = await api.post('/upload/image', formData, {
+      const uploadRes = await api.post('/upload/profile-image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       const url = uploadRes.data.url;
