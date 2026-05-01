@@ -27,40 +27,46 @@ const HpBar = ({ hp, maxHp }) => {
   );
 };
 
-export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnly }) => {
+export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnly, scores }) => {
   const { t } = useLanguage();
+  const _saved = (() => { try { return JSON.parse(scores?.["_data"]?.["all"] || ""); } catch { return null; } })();
 
-  const [gameMode, setGameMode] = useState("ffa"); // 'ffa' | 'team'
+  const [gameMode, setGameMode] = useState(_saved?.gameMode || "ffa");
   const [teamAssign, setTeamAssign] = useState(() => {
+    if (_saved?.teamAssign) return _saved.teamAssign;
     const init = {};
     players.forEach((p, i) => { init[p.memberId] = (i % 2) + 1; });
     return init;
   });
 
-  const [setupDone, setSetupDone] = useState(readOnly);
+  const [setupDone, setSetupDone] = useState(readOnly || !!_saved?.hpMap);
   const [setupHp, setSetupHp] = useState(() => {
+    if (_saved?.hpMap) return _saved.hpMap;
     const init = {};
     players.forEach(p => { init[p.memberId] = 50; });
     return init;
   });
   const [setupChar, setSetupChar] = useState(() => {
+    if (_saved?.charMap) return _saved.charMap;
     const init = {};
     players.forEach(p => { init[p.memberId] = ""; });
     return init;
   });
 
   const [hpMap, setHpMap] = useState(() => {
+    if (_saved?.hpMap) return _saved.hpMap;
     const init = {};
     players.forEach(p => { init[p.memberId] = 50; });
     return init;
   });
   const [charMap, setCharMap] = useState(() => {
+    if (_saved?.charMap) return _saved.charMap;
     const init = {};
     players.forEach(p => { init[p.memberId] = ""; });
     return init;
   });
 
-  const [winningTeam, setWinningTeam] = useState(null);
+  const [winningTeam, setWinningTeam] = useState(_saved?.winningTeam ?? null);
 
   const handleStartGame = () => {
     setHpMap({ ...setupHp });
@@ -388,8 +394,8 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
       )}
 
       {/* Current HP ranking summary */}
-      <div style={{ background: "#2C1F0E", padding: "12px 16px" }}>
-        <div style={{ fontSize: 11, color: "#A08060", marginBottom: 8, fontWeight: 700 }}>{t("scoreSheet", "hpRanking")}</div>
+      <div style={{ background: "var(--th-primary)", padding: "12px 16px" }}>
+        <div style={{ fontSize: 11, color: "var(--th-card)", marginBottom: 8, fontWeight: 700 }}>{t("scoreSheet", "hpRanking")}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {sorted.map((p, i) => {
             const hp = hpMap[p.memberId] ?? 50;
@@ -399,13 +405,13 @@ export const DiceThroneTable = ({ players, handleChange, onTotalsChange, readOnl
                 key={p.memberId}
                 style={{
                   flex: 1, minWidth: 60, padding: "8px 10px", borderRadius: 10, textAlign: "center",
-                  background: isFirst ? "var(--th-primary)" : "rgba(255,255,255,0.08)",
+                  background: isFirst ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)",
                 }}
               >
-                <div style={{ fontSize: 10, color: isFirst ? "rgba(255,255,255,0.8)" : "#A08060", marginBottom: 2 }}>
+                <div style={{ fontSize: 10, color: isFirst ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)", marginBottom: 2 }}>
                   {i + 1}{t("scoreSheet", "rankSuffix")} · {p.nickname}
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 900, color: isFirst ? "#fff" : hp > 0 ? "#F5E6D0" : "#6b7280" }}>
+                <div style={{ fontSize: 18, fontWeight: 900, color: isFirst ? "#FFD700" : hp > 0 ? "var(--th-card)" : "#6b7280" }}>
                   {hp > 0 ? hp : "✗"}
                 </div>
               </div>

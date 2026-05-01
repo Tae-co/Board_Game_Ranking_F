@@ -52,52 +52,48 @@ const HpBar = ({ hp, maxHp }) => {
   );
 };
 
-export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly }) => {
+export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly, scores }) => {
   const { t } = useLanguage();
+  const _saved = (() => { try { return JSON.parse(scores?.["_data"]?.["all"] || ""); } catch { return null; } })();
 
   const availableModes = getAvailableModes(players.length);
-  const [gameMode, setGameMode] = useState(availableModes[0]);
+  const [gameMode, setGameMode] = useState(_saved?.gameMode || availableModes[0]);
 
   const [teamAssign, setTeamAssign] = useState(() => {
+    if (_saved?.teamAssign) return _saved.teamAssign;
     const init = {};
-    players.forEach((p, i) => {
-      init[p.memberId] = (i % 2) + 1;
-    });
+    players.forEach((p, i) => { init[p.memberId] = (i % 2) + 1; });
     return init;
   });
 
-  const [setupDone, setSetupDone] = useState(readOnly);
+  const [setupDone, setSetupDone] = useState(readOnly || !!_saved?.hpMap);
   const [setupHp, setSetupHp] = useState(() => {
+    if (_saved?.hpMap) return _saved.hpMap;
     const init = {};
-    players.forEach((p) => {
-      init[p.memberId] = 16;
-    });
+    players.forEach((p) => { init[p.memberId] = 16; });
     return init;
   });
   const [setupChar, setSetupChar] = useState(() => {
+    if (_saved?.charMap) return _saved.charMap;
     const init = {};
-    players.forEach((p) => {
-      init[p.memberId] = "";
-    });
+    players.forEach((p) => { init[p.memberId] = ""; });
     return init;
   });
 
   const [hpMap, setHpMap] = useState(() => {
+    if (_saved?.hpMap) return _saved.hpMap;
     const init = {};
-    players.forEach((p) => {
-      init[p.memberId] = 16;
-    });
+    players.forEach((p) => { init[p.memberId] = 16; });
     return init;
   });
   const [charMap, setCharMap] = useState(() => {
+    if (_saved?.charMap) return _saved.charMap;
     const init = {};
-    players.forEach((p) => {
-      init[p.memberId] = "";
-    });
+    players.forEach((p) => { init[p.memberId] = ""; });
     return init;
   });
 
-  const [winningTeam, setWinningTeam] = useState(null);
+  const [winningTeam, setWinningTeam] = useState(_saved?.winningTeam ?? null);
 
   const handleStartGame = () => {
     setHpMap({ ...setupHp });
@@ -714,11 +710,11 @@ export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly
       )}
 
       {/* Current HP ranking summary */}
-      <div style={{ background: "#1a1a2e", padding: "12px 16px" }}>
+      <div style={{ background: "var(--th-primary)", padding: "12px 16px" }}>
         <div
           style={{
             fontSize: 11,
-            color: "#8888aa",
+            color: "var(--th-card)",
             marginBottom: 8,
             fontWeight: 700,
           }}
@@ -741,7 +737,7 @@ export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly
                   borderRadius: 10,
                   textAlign: "center",
                   background: isFirst
-                    ? "var(--th-primary)"
+                    ? "rgba(255,255,255,0.2)"
                     : tc
                     ? `${tc.badge}22`
                     : "rgba(255,255,255,0.08)",
@@ -751,7 +747,7 @@ export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly
                 <div
                   style={{
                     fontSize: 10,
-                    color: isFirst ? "rgba(255,255,255,0.8)" : "#8888aa",
+                    color: isFirst ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)",
                     marginBottom: 2,
                   }}
                 >
@@ -762,7 +758,7 @@ export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly
                   style={{
                     fontSize: 18,
                     fontWeight: 900,
-                    color: isFirst ? "#fff" : hp > 0 ? "#d0d0f0" : "#6b7280",
+                    color: isFirst ? "#FFD700" : hp > 0 ? "var(--th-card)" : "#6b7280",
                   }}
                 >
                   {hp > 0 ? hp : "✗"}

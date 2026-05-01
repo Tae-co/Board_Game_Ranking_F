@@ -4,8 +4,10 @@ import { ArrowLeft, Check, Search, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
+import { usePresence } from '../hooks/usePresence';
 
 const V = (v) => `var(${v})`;
+const nickName = () => localStorage.getItem('nickname') || '?';
 
 const GameSelect = () => {
   const { roomId } = useParams();
@@ -42,6 +44,9 @@ const GameSelect = () => {
     staleTime: 1000 * 60 * 2,
   });
 
+  const myId = Number(localStorage.getItem('userId'));
+  const onlineIds = usePresence(myId, roomId);
+
   const currentGame = games.find(g => g.id === room?.boardGameId);
 
   const togglePlayer = (memberId) => {
@@ -67,137 +72,161 @@ const GameSelect = () => {
     });
   };
 
-  return (
-    <div className="min-h-screen pb-24" style={{ maxWidth: '430px', margin: '0 auto', backgroundColor: V('--th-bg') }}>
-      {/* Dot pattern */}
-      <div style={{
-        position: 'fixed', inset: 0, zIndex: 0,
-        backgroundImage: 'radial-gradient(circle, var(--th-dot) 1px, transparent 1px)',
-        backgroundSize: '24px 24px', pointerEvents: 'none',
-      }} />
+  const isDisabled = selectedPlayers.size < 2 || (currentGame && selectedPlayers.size > currentGame.maxPlayers);
 
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        {/* Header */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: '10px',
-          padding: '24px 16px 16px', position: 'sticky', top: 0, zIndex: 10,
-          backgroundColor: V('--th-bg'),
-        }}>
+  return (
+    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg'), paddingBottom: 80 }}>
+
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '16px 20px', borderBottom: `1px solid var(--th-border)`,
+        backgroundColor: V('--th-nav-bg'), position: 'sticky', top: 0, zIndex: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
           <button
             onClick={() => navigate(`/invite/${roomId}`)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', marginRight: '4px', padding: '6px' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
           >
-            <ArrowLeft style={{ color: V('--th-primary'), width: '24px', height: '24px' }} />
+            <ArrowLeft style={{ width: 24, height: 24 }} />
           </button>
-          <h1 style={{ fontSize: '20px', fontWeight: '600', color: V('--th-text') }}>{t('gameSelect', 'title')}</h1>
+          <h1 style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text') }}>
+            {t('gameSelect', 'title')}
+          </h1>
         </div>
-
-        <div style={{ padding: '0 16px' }}>
-          {/* Search */}
-          <div style={{ position: 'relative', marginBottom: '10px' }}>
-            <Search style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', width: '15px', height: '15px', color: V('--th-text-sub') }} />
-            <input
-              type="text"
-              value={playerSearch}
-              onChange={(e) => setPlayerSearch(e.target.value)}
-              placeholder={t('gameSelect', 'playerSearchPlaceholder')}
-              style={{
-                width: '100%', padding: '12px 16px 12px 40px', borderRadius: '12px',
-                backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                color: V('--th-text'), fontSize: '14px', outline: 'none', boxSizing: 'border-box',
-              }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-            />
-          </div>
-
-          {/* Current game card + player selection */}
-          {currentGame && (
-            <>
-              <div style={{ borderRadius: '16px', overflow: 'hidden', marginBottom: '16px', border: `1px solid var(--th-primary)`, backgroundColor: V('--th-card') }}>
-                {currentGame.imageUrl ? (
-                  <div style={{ position: 'relative', height: '160px' }}>
-                    <img src={currentGame.imageUrl} alt={currentGame.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%)' }} />
-                    <div style={{ position: 'absolute', bottom: '12px', left: '16px', right: '16px' }}>
-                      <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
-                        <div>
-                          <p style={{ fontSize: '22px', fontWeight: '700', color: '#FFFFFF' }}>{currentGame.name}</p>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px' }}>
-                            <Users style={{ color: 'rgba(255,255,255,0.7)', width: '12px', height: '12px' }} />
-                            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.7)' }}>
-                              {currentGame.minPlayers}-{currentGame.maxPlayers} Players
-                            </span>
-                          </div>
-                        </div>
-                        <span style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.1em', padding: '4px 10px', borderRadius: '20px', backgroundColor: V('--th-primary'), color: '#FFFFFF' }}>
-                          STRATEGY
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div style={{ height: '160px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: V('--th-bg') }}>
-                    <span style={{ fontSize: '48px' }}>🎲</span>
-                  </div>
-                )}
-              </div>
-
-              <p style={{ fontSize: '12px', color: V('--th-text-sub'), letterSpacing: '0.1em', marginBottom: '10px' }}>
-                {t('gameSelect', 'selectPlayers').toUpperCase()}
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {members
-                  .filter(m => m.nickname.toLowerCase().includes(playerSearch.toLowerCase()))
-                  .map((member) => {
-                    const isSelected = selectedPlayers.has(member.memberId);
-                    return (
-                      <button
-                        key={member.memberId}
-                        onClick={() => togglePlayer(member.memberId)}
-                        style={{
-                          width: '100%', borderRadius: '14px', padding: '14px 16px',
-                          backgroundColor: V('--th-card'),
-                          border: `1px solid ${isSelected ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                          display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer',
-                        }}
-                      >
-                        <div style={{
-                          width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0,
-                          backgroundColor: isSelected ? V('--th-primary') : V('--th-bg'),
-                          border: `1px solid var(--th-border)`,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: '16px', fontWeight: '700',
-                          color: isSelected ? '#FFFFFF' : V('--th-text'),
-                        }}>
-                          {member.nickname[0]}
-                        </div>
-                        <p style={{ flex: 1, textAlign: 'left', color: V('--th-text'), fontSize: '15px', fontWeight: isSelected ? '600' : '400' }}>
-                          {member.nickname}
-                        </p>
-                        {isSelected && (
-                          <div style={{
-                            width: '24px', height: '24px', borderRadius: '50%', flexShrink: 0,
-                            backgroundColor: V('--th-primary'),
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          }}>
-                            <Check style={{ color: '#FFFFFF', width: '14px', height: '14px' }} />
-                          </div>
-                        )}
-                      </button>
-                    );
-                  })}
-              </div>
-            </>
-          )}
+        <div
+          onClick={() => navigate('/profile')}
+          style={{
+            width: 36, height: 36, borderRadius: '50%',
+            backgroundColor: 'var(--th-primary)', color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontWeight: 700, fontSize: 14, cursor: 'pointer', flexShrink: 0,
+          }}
+        >
+          {nickName()[0].toUpperCase()}
         </div>
       </div>
 
-      {/* Bottom Button */}
+      <div style={{ padding: '20px' }}>
+
+        {/* Current Game Card */}
+        {currentGame && (
+          <div style={{
+            borderRadius: '14px', padding: '14px 16px', marginBottom: '24px',
+            backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+            display: 'flex', alignItems: 'center', gap: '14px',
+          }}>
+            {currentGame.imageUrl ? (
+              <img
+                src={currentGame.imageUrl}
+                alt={currentGame.name}
+                style={{ width: 48, height: 48, borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }}
+              />
+            ) : (
+              <div style={{
+                width: 48, height: 48, borderRadius: '10px', flexShrink: 0,
+                backgroundColor: 'color-mix(in srgb, var(--th-primary) 14%, transparent)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px',
+              }}>🎲</div>
+            )}
+            <div>
+              <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), marginBottom: '2px' }}>
+                {currentGame.name}
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <Users style={{ color: V('--th-text-sub'), width: 12, height: 12 }} />
+                <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>
+                  {currentGame.minPlayers}-{currentGame.maxPlayers} PLAYERS
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Select Players Label */}
+        <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: '12px' }}>
+          {t('gameSelect', 'selectPlayers').toUpperCase()}
+        </p>
+
+        {/* Search */}
+        <div style={{ position: 'relative', marginBottom: '12px' }}>
+          <Search style={{
+            position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
+            width: 14, height: 14, color: V('--th-text-sub'),
+          }} />
+          <input
+            type="text"
+            value={playerSearch}
+            onChange={(e) => setPlayerSearch(e.target.value)}
+            placeholder={t('gameSelect', 'playerSearchPlaceholder')}
+            style={{
+              width: '100%', padding: '10px 12px 10px 34px', borderRadius: '10px',
+              backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+              color: V('--th-text'), fontSize: '14px', outline: 'none', boxSizing: 'border-box',
+            }}
+            onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+          />
+        </div>
+
+        {/* Player List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {members
+            .filter(m => m.nickname.toLowerCase().includes(playerSearch.toLowerCase()))
+            .map((member) => {
+              const isSelected = selectedPlayers.has(member.memberId);
+              return (
+                <button
+                  key={member.memberId}
+                  onClick={() => togglePlayer(member.memberId)}
+                  style={{
+                    width: '100%', borderRadius: '12px', padding: '12px 16px',
+                    backgroundColor: V('--th-card'),
+                    border: `${isSelected ? '2' : '1'}px solid ${isSelected ? 'var(--th-primary)' : 'var(--th-border)'}`,
+                    display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer',
+                    transition: 'border-color 0.15s',
+                  }}
+                >
+                  <div style={{ position: 'relative', flexShrink: 0 }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: '50%',
+                      backgroundColor: isSelected ? 'var(--th-primary)' : V('--th-bg'),
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '16px', fontWeight: '700',
+                      color: isSelected ? '#FFFFFF' : V('--th-text'),
+                    }}>
+                      {member.nickname[0]}
+                    </div>
+                    <div style={{
+                      position: 'absolute', bottom: 0, right: 0,
+                      width: 11, height: 11, borderRadius: '50%',
+                      backgroundColor: onlineIds.has(member.memberId) ? '#22c55e' : '#9ca3af',
+                      border: '2px solid var(--th-card)',
+                    }} />
+                  </div>
+                  <p style={{ flex: 1, textAlign: 'left', color: V('--th-text'), fontSize: '15px', fontWeight: isSelected ? '600' : '400' }}>
+                    {member.nickname}
+                  </p>
+                  {isSelected && (
+                    <div style={{
+                      width: 24, height: 24, borderRadius: '50%', flexShrink: 0,
+                      backgroundColor: 'var(--th-primary)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>
+                      <Check style={{ color: '#FFFFFF', width: 14, height: 14 }} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+        </div>
+      </div>
+
+      {/* Sticky Bottom Button */}
       <div style={{
-        position: 'fixed', bottom: '0', left: 0, right: 0, padding: '12px 16px',
-        backgroundColor: V('--th-bg'), borderTop: `1px solid var(--th-border)`,
-        maxWidth: '430px', margin: '0 auto', boxSizing: 'border-box',
+        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: '390px', padding: '12px 20px 24px',
+        backgroundColor: V('--th-nav-bg'), borderTop: `1px solid var(--th-border)`,
       }}>
         {currentGame && selectedPlayers.size > currentGame.maxPlayers && (
           <p style={{ textAlign: 'center', fontSize: '12px', color: '#dc2626', marginBottom: '8px' }}>
@@ -206,11 +235,11 @@ const GameSelect = () => {
         )}
         <button
           onClick={handleStartGame}
-          disabled={selectedPlayers.size < 2 || (currentGame && selectedPlayers.size > currentGame.maxPlayers)}
+          disabled={isDisabled}
           style={{
-            width: '100%', padding: '14px', borderRadius: '14px', fontSize: '15px', fontWeight: '700',
-            backgroundColor: V('--th-primary'), color: '#FFFFFF', border: 'none', cursor: 'pointer',
-            opacity: (selectedPlayers.size < 2 || (currentGame && selectedPlayers.size > currentGame.maxPlayers)) ? 0.5 : 1,
+            width: '100%', padding: '14px', borderRadius: '12px', fontSize: '15px', fontWeight: '700',
+            backgroundColor: 'var(--th-primary)', color: '#FFFFFF', border: 'none', cursor: 'pointer',
+            opacity: isDisabled ? 0.4 : 1,
           }}
         >
           {selectedPlayers.size > 0

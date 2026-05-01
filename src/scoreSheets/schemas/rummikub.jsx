@@ -34,9 +34,11 @@ const calcRoundScore = (round, players) => {
 
 const defaultRound = () => ({ winnerId: null, playerData: {} });
 
-export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly }) => {
+export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly, scores }) => {
   const { t } = useLanguage();
-  const [rounds, setRounds] = useState([defaultRound()]);
+  const [rounds, setRounds] = useState(() => {
+    try { const s = JSON.parse(scores?.["_data"]?.["all"] || ""); return s.rounds || [defaultRound()]; } catch { return [defaultRound()]; }
+  });
 
   // 누적 합계 계산
   const totals = {};
@@ -262,8 +264,8 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
       })}
 
       {/* 누적 합계 */}
-      <div style={{ background: "#2C1F0E", padding: "12px 16px" }}>
-        <div style={{ fontSize: 11, color: "#A08060", marginBottom: 8, fontWeight: 700 }}>{t('scoreSheet', 'cumulativeTotal')}</div>
+      <div style={{ background: "var(--th-primary)", padding: "12px 16px" }}>
+        <div style={{ fontSize: 11, color: "var(--th-card)", marginBottom: 8, fontWeight: 700 }}>{t('scoreSheet', 'cumulativeTotal')}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {players.map((p) => {
               const isLeader = p.memberId === leaderId;
@@ -275,14 +277,14 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly 
                     minWidth: 60,
                     padding: "8px 10px",
                     borderRadius: 10,
-                    background: isLeader ? "var(--th-primary)" : "rgba(255,255,255,0.08)",
+                    background: isLeader ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.08)",
                     textAlign: "center",
                   }}
                 >
-                  <div style={{ fontSize: 10, color: isLeader ? "rgba(255,255,255,0.8)" : "#A08060", marginBottom: 2 }}>
+                  <div style={{ fontSize: 10, color: isLeader ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)", marginBottom: 2 }}>
                     {p.nickname}
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: isLeader ? "#fff" : "#F5E6D0" }}>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: isLeader ? "#FFD700" : "var(--th-card)" }}>
                     {totals[p.memberId] ?? 0}
                   </div>
                 </div>

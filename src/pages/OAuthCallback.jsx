@@ -29,8 +29,8 @@ const OAuthCallback = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#FFF8F0' }}>
-      <p style={{ color: '#8B7355' }}>로그인 처리 중...</p>
+    <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: 'var(--th-bg)' }}>
+      <p style={{ color: 'var(--th-text-sub)' }}>로그인 처리 중...</p>
     </div>
   );
 };

@@ -1,4 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
+import { cl } from '../shared/scoreUtils';
+
 export const catanSchema = {
   name: "CATAN",
   type: "catan",
@@ -26,13 +28,26 @@ const clampCatanValue = (rawValue, limits) => {
 
 const CatanInputCell = ({ catKey, playerId, value, limits, color, handleChange, readOnly }) => {
   const displayValue = value === "" ? "" : Number(value) || 0;
+  if (readOnly) {
+    return (
+      <div style={{
+        width: 52, height: 44, textAlign: "center", fontSize: 15, fontWeight: 800,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        margin: "0 auto", borderRadius: 8,
+        border: `2px solid ${displayValue > 0 ? color : "var(--th-border)"}`,
+        background: "var(--th-bg)",
+        color: displayValue > 0 ? color : "var(--th-text-sub)",
+      }}>
+        {displayValue === "" ? 0 : displayValue}
+      </div>
+    );
+  }
   return (
     <input
       type="text"
       inputMode="numeric"
       pattern="[0-9]*"
       value={displayValue}
-      readOnly={readOnly}
       placeholder="0"
       onChange={(e) => handleChange(catKey, playerId, clampCatanValue(e.target.value, limits))}
       onBlur={(e) => {
@@ -46,9 +61,9 @@ const CatanInputCell = ({ catKey, playerId, value, limits, color, handleChange, 
         fontSize: 15,
         fontWeight: 800,
         borderRadius: 8,
-        border: `2px solid ${displayValue > 0 ? color : "#E5D5C0"}`,
+        border: `2px solid ${displayValue > 0 ? color : "var(--th-border)"}`,
         background: "var(--th-bg)",
-        color: displayValue >= limits.max ? color : displayValue > limits.min ? "var(--th-text)" : "#A08060",
+        color: displayValue >= limits.max ? color : displayValue > limits.min ? "var(--th-text)" : "var(--th-text-sub)",
         outline: "none",
         padding: 0,
       }}
@@ -56,16 +71,16 @@ const CatanInputCell = ({ catKey, playerId, value, limits, color, handleChange, 
   );
 };
 
-export const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatanCheck, t, readOnly }) => (
+export const CatanTable = ({ schema, players, scores, totals, handleChange, handleCatanCheck, t, lang, readOnly }) => (
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
-      <tr style={{ background: "#2C1F0E" }}>
-        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 9, fontWeight: 700, color: "#A08060", width: 80, whiteSpace: "nowrap" }}>{t('scoreSheet', 'category')}</th>
+      <tr style={{ background: "var(--th-primary)" }}>
+        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "var(--th-text-sub)", width: 100, whiteSpace: "nowrap" }}>{t('scoreSheet', 'category')}</th>
         {players.map(p => {
           const total = totals[p.memberId] ?? 0;
           const canWin = total >= 10;
           return (
-            <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: canWin ? "var(--th-primary)" : "#F5E6D0", minWidth: 64 }}>
+            <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: canWin ? "#FFD700" : "var(--th-card)", minWidth: 64, borderLeft: "1px solid rgba(255,255,255,0.15)" }}>
               {canWin ? "👑 " : ""}{p.nickname}
             </th>
           );
@@ -76,19 +91,21 @@ export const CatanTable = ({ schema, players, scores, totals, handleChange, hand
       {schema.categories.map((cat, idx) => (
         <tr key={cat.key} style={{ background: idx % 2 === 0 ? "var(--th-card)" : "var(--th-bg)", height: 44 }}>
           <td style={{ padding: "8px 4px 8px 8px", fontSize: 11, fontWeight: 700, color: "var(--th-text)", borderBottom: "1px solid var(--th-border)" }}>
-            <span>{cat.icon}</span>
+            <span style={{ marginRight: 4 }}>{cat.icon}</span>
+            <span style={{ color: cat.color }}>{cl(cat, lang)}</span>
+            {cat.multiplier > 1 && <span style={{ fontSize: 9, color: "var(--th-text-sub)", marginLeft: 3 }}>×{cat.multiplier}</span>}
           </td>
           {players.map(p => (
-            <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)", height: 44 }}>
+            <td key={p.memberId} style={{ padding: "4px 4px", textAlign: "center", borderBottom: "1px solid var(--th-border)", borderLeft: "1px solid var(--th-border)", height: 44 }}>
               {cat.type === "exclusive_check" ? (
                 <button
                   onClick={readOnly ? undefined : () => handleCatanCheck(cat.key, p.memberId)}
                   disabled={readOnly}
                   style={{
                     width: 40, height: 36, borderRadius: 8,
-                    border: `2px solid ${scores[cat.key]?.[p.memberId] ? cat.color : "#E5D5C0"}`,
+                    border: `2px solid ${scores[cat.key]?.[p.memberId] ? cat.color : "var(--th-border)"}`,
                     background: scores[cat.key]?.[p.memberId] ? cat.color + "22" : "var(--th-bg)",
-                    color: scores[cat.key]?.[p.memberId] ? cat.color : "#A08060",
+                    color: scores[cat.key]?.[p.memberId] ? cat.color : "var(--th-text-sub)",
                     fontWeight: 900, fontSize: 14,
                     opacity: readOnly ? 0.7 : 1,
                     cursor: readOnly ? "default" : "pointer",
@@ -115,14 +132,14 @@ export const CatanTable = ({ schema, players, scores, totals, handleChange, hand
           ))}
         </tr>
       ))}
-      <tr style={{ background: "#2C1F0E" }}>
-        <td style={{ padding: "10px 8px", fontWeight: 900, color: "var(--th-primary)", fontSize: 13 }}>{t('scoreSheet', 'total')}</td>
+      <tr style={{ background: "var(--th-primary)" }}>
+        <td style={{ padding: "10px 8px", fontWeight: 900, color: "var(--th-card)", fontSize: 13 }}>{t('scoreSheet', 'total')}</td>
         {players.map(p => {
           const total = totals[p.memberId] ?? 0;
           const canWin = total >= 10;
           return (
-            <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center" }}>
-              <div style={{ fontWeight: 900, fontSize: 18, color: canWin ? "var(--th-primary)" : "#F5E6D0" }}>{total}</div>
+            <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", borderLeft: "1px solid rgba(255,255,255,0.15)" }}>
+              <div style={{ fontWeight: 900, fontSize: 18, color: canWin ? "#FFD700" : "var(--th-card)" }}>{total}</div>
               {canWin && <div style={{ fontSize: 9, color: "var(--th-primary)", fontWeight: 700, marginTop: 2 }}>🏆 {t('scoreSheet', 'canWin')}</div>}
             </td>
           );

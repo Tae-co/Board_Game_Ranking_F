@@ -14,7 +14,7 @@ export const SplendorDuelTable = ({
   schema, players,
   duelWinCondition, setDuelWinCondition,
   duelWinnerId, setDuelWinnerId,
-  t, lang,
+  t, lang, readOnly,
 }) => {
   const p1 = players[0];
   const p2 = players[1];
@@ -41,9 +41,10 @@ export const SplendorDuelTable = ({
             return (
               <button
                 key={player.memberId}
-                onClick={() => setDuelWinnerId(isWinner ? null : player.memberId)}
+                onClick={readOnly ? undefined : () => setDuelWinnerId(isWinner ? null : player.memberId)}
+                disabled={readOnly}
                 style={{
-                  flex: 1, padding: "20px 8px", borderRadius: 14, cursor: "pointer", textAlign: "center",
+                  flex: 1, padding: "20px 8px", borderRadius: 14, cursor: readOnly ? "default" : "pointer", textAlign: "center",
                   border: `2px solid ${isWinner ? "var(--th-primary)" : "var(--th-border)"}`,
                   background: isWinner ? "var(--th-primary)" : "var(--th-card)",
                   color: isWinner ? "#fff" : "var(--th-text)",
@@ -66,7 +67,8 @@ export const SplendorDuelTable = ({
         </div>
         <select
           value={duelWinCondition ?? ""}
-          onChange={e => setDuelWinCondition(e.target.value || null)}
+          onChange={readOnly ? undefined : e => setDuelWinCondition(e.target.value || null)}
+          disabled={readOnly}
           style={{
             width: "100%", padding: "12px 14px", borderRadius: 12, fontSize: 14, fontWeight: 600,
             border: `2px solid ${duelWinCondition ? "var(--th-primary)" : "var(--th-border)"}`,

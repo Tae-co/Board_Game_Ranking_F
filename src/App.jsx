@@ -11,7 +11,6 @@ import './App.css';
 const Login = lazy(() => import('./pages/Login'));
 const Lobby = lazy(() => import('./pages/Lobby'));
 const Invite = lazy(() => import('./pages/Invite'));
-const GameSelect = lazy(() => import('./pages/GameSelect'));
 const MatchForm = lazy(() => import('./pages/MatchForm'));
 const ScoreSheet = lazy(() => import('./pages/ScoreSheet'));
 const Ranking = lazy(() => import('./pages/Ranking'));
@@ -102,7 +101,6 @@ function App() {
             <Route path="/manage-community" element={isAuthenticated ? <CommunitySettings /> : <Navigate to="/login" replace />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
             <Route path="/invite/:roomId" element={isAuthenticated ? <Invite /> : <Navigate to="/login" replace />} />
-            <Route path="/games/:roomId" element={isAuthenticated ? <GameSelect /> : <Navigate to="/login" replace />} />
             <Route path="/match-form/:roomId" element={isAuthenticated ? <MatchForm /> : <Navigate to="/login" replace />} />
             <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
             <Route path="/ranking/:roomId" element={isAuthenticated ? <Ranking /> : <Navigate to="/login" replace />} />

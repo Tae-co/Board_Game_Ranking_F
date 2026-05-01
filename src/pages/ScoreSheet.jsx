@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import NavAvatar from '../components/NavAvatar';
 import { useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -16,12 +17,19 @@ const ScoreSheet = () => {
   const location = useLocation();
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
-  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null } = location.state || {};
+  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null, backState = null } = location.state || {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scienceModal, setScienceModal] = useState(null);
-  const [duelWinnerId, setDuelWinnerId] = useState(null);
-  const [duelWinCondition, setDuelWinCondition] = useState(null);
+  const [duelWinnerId, setDuelWinnerId] = useState(() => {
+    if (!savedScores?.won) return null;
+    const entry = Object.entries(savedScores.won).find(([, v]) => v === true);
+    return entry ? Number(entry[0]) : null;
+  });
+  const [duelWinCondition, setDuelWinCondition] = useState(() => {
+    if (!savedScores?.win_condition) return null;
+    return Object.values(savedScores.win_condition)[0] ?? null;
+  });
   const [duelFellowshipId, setDuelFellowshipId] = useState(() => players[0]?.memberId ?? null);
 
   // 순위 직접 입력 모드 (supportsRankMode: true 게임 또는 스키마 없는 게임)
@@ -190,7 +198,7 @@ const ScoreSheet = () => {
 
   const handleBack = () => {
     if (backTo) {
-      navigate(backTo);
+      navigate(backTo, { state: backState });
       return;
     }
     navigate(-1);
@@ -215,19 +223,17 @@ const ScoreSheet = () => {
     <div style={{ fontFamily: "'Pretendard', sans-serif", background: "var(--th-bg)", minHeight: "100vh", paddingBottom: 100, maxWidth: '375px', margin: '0 auto' }}>
 
       {/* Header */}
-      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--th-bg)", padding: "20px 16px 12px", display: "flex", alignItems: "center", gap: 8 }}>
-        <button onClick={handleBack} style={{ padding: 8, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: "var(--th-primary)" }}>
-          <ArrowLeft size={24} />
+      <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--th-nav-bg)", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid var(--th-border)" }}>
+        <button onClick={handleBack} style={{ padding: 6, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: "var(--th-text)", flexShrink: 0 }}>
+          <ArrowLeft size={22} />
         </button>
-        <div>
-          <h2 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: "var(--th-text)" }}>{`${currentSchema.name} ${t('scoreSheet', 'scoreBoard')}`}</h2>
-          <p style={{ margin: 0, fontSize: 12, color: "var(--th-text-sub)" }}>{t('scoreSheet', 'enterScores')}</p>
-        </div>
+        <span style={{ flex: 1, fontSize: 17, fontWeight: 700, color: "var(--th-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentSchema.name}</span>
+        <NavAvatar />
       </div>
 
       {/* 순위 입력 모드 토글 (supportsRankMode 게임만) */}
       {currentSchema?.supportsRankMode && !readOnly && (
-        <div style={{ margin: "0 16px 12px", display: "flex", borderRadius: 12, overflow: "hidden", border: "1px solid var(--th-border)" }}>
+        <div style={{ margin: "16px 16px 12px", display: "flex", borderRadius: 12, overflow: "hidden", border: "1px solid var(--th-border)" }}>
           <button
             onClick={() => { setRankMode(false); setRankInputs({}); }}
             style={{
@@ -252,7 +258,7 @@ const ScoreSheet = () => {
       )}
 
       {/* 테이블 */}
-      <div style={{ margin: "0 16px", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
+      <div style={{ margin: currentSchema?.supportsRankMode && !readOnly ? "0 16px" : "16px 16px 0", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
         {(rankMode || !TableComponent) ? (
           <RankInputTable
             players={players}
@@ -334,7 +340,7 @@ const ScoreSheet = () => {
 
       {/* Bottom Fixed Button */}
       {!readOnly && (
-        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: 16, background: "var(--th-bg)", maxWidth: 375, margin: "0 auto" }}>
+        <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, padding: 16, background: "var(--th-nav-bg)", maxWidth: 375, margin: "0 auto" }}>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}

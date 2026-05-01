@@ -262,8 +262,9 @@ const translations = {
       groupLobby: '그룹 로비',
       startGame: '게임 시작',
       statsMatches: '매치',
+      statsWins: '승',
+      statsLosses: '패',
       statsWinRate: '승률',
-      statsBest: '최고',
     },
 
     // 프로필
@@ -307,7 +308,9 @@ const translations = {
     // 커뮤니티
     community: {
       myCommunity: '내 커뮤니티',
-      communityGroups: '커뮤니티 그룹',
+      communityGroups: '게임 그룹',
+      communityMembers: '커뮤니티 멤버',
+      noCommunityMembers: '커뮤니티 멤버가 없습니다',
       createCommunity: '커뮤니티 만들기',
       createCommunityDesc: '게이머들의 새로운 허브를 시작하세요.',
       enterCommunity: '커뮤니티 입장 →',
@@ -346,7 +349,7 @@ const translations = {
       joinedCommunities: '참가한 커뮤니티',
       noJoinedCommunities: '참가한 커뮤니티가 없습니다',
       joinCommunity: '커뮤니티 참가하기',
-      enterInviteCode: '초대 코드 입력 (예: AB1C2D3E)',
+      enterInviteCode: '초대 코드 입력 (예: AB12CD)',
       joinWithCodeBtn: '참가',
       invalidCode: '유효하지 않은 초대 코드입니다.',
       alreadyMember: '이미 참가한 커뮤니티입니다.',
@@ -658,8 +661,9 @@ const translations = {
       groupLobby: 'Group Lobby',
       startGame: 'Start Game',
       statsMatches: 'Matches',
+      statsWins: 'Wins',
+      statsLosses: 'Losses',
       statsWinRate: 'Win Rate',
-      statsBest: 'Best',
     },
 
     // Profile
@@ -703,7 +707,9 @@ const translations = {
     // Community
     community: {
       myCommunity: 'My Community',
-      communityGroups: 'Community Groups',
+      communityGroups: 'Game Groups',
+      communityMembers: 'Community Members',
+      noCommunityMembers: 'No community members',
       createCommunity: 'Create Community',
       createCommunityDesc: 'Initialize a new hub for gamers and creators.',
       enterCommunity: 'Enter Community →',
@@ -742,7 +748,7 @@ const translations = {
       joinedCommunities: 'Joined Communities',
       noJoinedCommunities: 'No joined communities yet',
       joinCommunity: 'Join a Community',
-      enterInviteCode: 'Enter invite code (e.g. AB1C2D3E)',
+      enterInviteCode: 'Enter invite code (e.g. AB12CD)',
       joinWithCodeBtn: 'Join',
       invalidCode: 'Invalid invite code.',
       alreadyMember: 'You are already a member.',

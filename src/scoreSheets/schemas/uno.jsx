@@ -9,10 +9,14 @@ export const unoSchema = {
 };
 
 // 라운드별 점수 입력 테이블
-export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) => {
+export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly, scores }) => {
   const { t } = useLanguage();
-  const [rounds, setRounds] = useState([{}]);
-  const [target, setTarget] = useState(500);
+  const [rounds, setRounds] = useState(() => {
+    try { const s = JSON.parse(scores?.["_data"]?.["all"] || ""); return s.rounds || [{}]; } catch { return [{}]; }
+  });
+  const [target, setTarget] = useState(() => {
+    try { const s = JSON.parse(scores?.["_data"]?.["all"] || ""); return s.target || 500; } catch { return 500; }
+  });
 
   const totals = {};
   players.forEach((p) => {
@@ -90,8 +94,8 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
       <div style={{ overflowX: "auto" }}>
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 48 + players.length * colW }}>
           <thead>
-            <tr style={{ background: "#2C1F0E" }}>
-              <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#A08060", width: 48 }}>
+            <tr style={{ background: "var(--th-primary)" }}>
+              <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "var(--th-text-sub)", width: 48 }}>
                 {t('scoreSheet', 'round')}
               </th>
               {players.map((p) => (
@@ -102,7 +106,7 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
                       textAlign: "center",
                       fontSize: 12,
                       fontWeight: 800,
-                      color: "#F5E6D0",
+                      color: "var(--th-card)",
                       width: colW,
                     }}
                   >
@@ -168,8 +172,8 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
             ))}
 
             {/* 합계 행 */}
-            <tr style={{ background: "#2C1F0E", borderTop: "2px solid var(--th-primary)" }}>
-              <td style={{ padding: "10px 8px", fontSize: 12, fontWeight: 700, color: "#A08060" }}>
+            <tr style={{ background: "var(--th-primary)", borderTop: "2px solid var(--th-primary)" }}>
+              <td style={{ padding: "10px 8px", fontSize: 12, fontWeight: 700, color: "var(--th-card)" }}>
                 {t('scoreSheet', 'totalShort')}
               </td>
               {players.map((p) => {
@@ -177,7 +181,7 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly }) =>
                 const reached = total >= target;
                 return (
                   <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center" }}>
-                    <span style={{ fontSize: 16, fontWeight: 900, color: reached ? "var(--th-primary)" : "#F5E6D0" }}>
+                    <span style={{ fontSize: 16, fontWeight: 900, color: reached ? "#FFD700" : "var(--th-card)" }}>
                       {total}
                     </span>
                     {reached && (

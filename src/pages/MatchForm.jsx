@@ -1,9 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Info } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft } from 'lucide-react';
+import NavAvatar from '../components/NavAvatar';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
+
+const V = (v) => `var(${v})`;
+const nickName = () => localStorage.getItem('nickname') || '?';
 
 const MatchForm = () => {
   const { roomId } = useParams();
@@ -18,6 +22,13 @@ const MatchForm = () => {
   const [scores, setScores] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const { data: games = [] } = useQuery({
+    queryKey: ['games'],
+    queryFn: async () => { const res = await api.get('/games'); return res.data || []; },
+    staleTime: 1000 * 60 * 30,
+  });
+  const currentGame = games.find(g => g.id === gameId);
+
   useEffect(() => {
     const fetchSelectedMembers = async () => {
       try {
@@ -25,12 +36,10 @@ const MatchForm = () => {
         const allMembers = res.data || [];
         const selected = allMembers.filter(m => players.includes(m.memberId));
         setPlayerDetails(selected);
-        const initialScores = {};
-        selected.forEach(p => { initialScores[p.memberId] = ''; });
-        setScores(initialScores);
-      } catch (err) {
-        console.error('참가자 정보를 불러오는데 실패했습니다.', err);
-      }
+        const init = {};
+        selected.forEach(p => { init[p.memberId] = ''; });
+        setScores(init);
+      } catch { /* ignore */ }
     };
     if (players.length > 0) fetchSelectedMembers();
   }, [roomId, players]);
@@ -43,8 +52,7 @@ const MatchForm = () => {
 
   const calcPlacements = () => {
     const entries = Object.entries(scores).map(([memberId, score]) => ({
-      memberId: Number(memberId),
-      score: Number(score),
+      memberId: Number(memberId), score: Number(score),
     }));
     const sorted = [...entries].sort((a, b) => b.score - a.score);
     const placements = {};
@@ -64,8 +72,8 @@ const MatchForm = () => {
     const hasEmpty = Object.values(scores).some(s => s === '');
     if (hasEmpty) { alert(t('matchForm', 'emptyScoreError')); return; }
     const placements = calcPlacements();
+    setIsSubmitting(true);
     try {
-      setIsSubmitting(true);
       const res = await api.post('/matches', {
         boardGameId: gameId,
         roomId: Number(roomId),
@@ -74,9 +82,8 @@ const MatchForm = () => {
       queryClient.invalidateQueries({ queryKey: ['rankings'] });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       navigate(`/ranking/${roomId}`, { state: { matchResult: res.data }, replace: true });
-    } catch (err) {
+    } catch {
       alert(t('matchForm', 'saveFailed'));
-      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -84,13 +91,12 @@ const MatchForm = () => {
 
   if (!gameId || players.length === 0) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6" style={{ backgroundColor: 'var(--th-bg)' }}>
-        <div className="text-5xl mb-4">😅</div>
-        <p className="mb-6" style={{ color: 'var(--th-text-sub)' }}>{t('matchForm', 'wrongAccess')}</p>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '24px', backgroundColor: V('--th-bg') }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>😅</div>
+        <p style={{ color: V('--th-text-sub'), marginBottom: '24px' }}>{t('matchForm', 'wrongAccess')}</p>
         <button
           onClick={() => navigate(-1)}
-          className="px-8 py-3 rounded-full"
-          style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
+          style={{ padding: '12px 32px', borderRadius: '12px', backgroundColor: 'var(--th-primary)', color: '#FFFFFF', border: 'none', cursor: 'pointer', fontWeight: '700' }}
         >
           {t('matchForm', 'goBack')}
         </button>
@@ -99,80 +105,130 @@ const MatchForm = () => {
   }
 
   const previewPlacements = Object.values(scores).some(s => s !== '') ? calcPlacements() : null;
-  const allFilled = Object.values(scores).every(s => s !== '');
-  const rankEmojis = ['🥇', '🥈', '🥉'];
+  const allFilled = playerDetails.length > 0 && Object.values(scores).every(s => s !== '');
+  const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
   return (
-    <div className="min-h-screen pb-24" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: 'var(--th-bg)' }}>
+    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg'), paddingBottom: 88 }}>
 
       {/* Header */}
-      <div className="px-6 py-6 flex items-center sticky top-0 z-10" style={{ backgroundColor: 'var(--th-bg)' }}>
-        <button
-          onClick={() => navigate(-1)}
-          className="mr-3 p-2 rounded-lg transition-colors"
-          style={{ color: 'var(--th-primary)' }}
-          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--th-card)'}
-          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <h1 className="text-xl" style={{ color: 'var(--th-text)' }}>{t('matchForm', 'title')}</h1>
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '16px 20px', borderBottom: `1px solid var(--th-border)`,
+        backgroundColor: V('--th-nav-bg'), position: 'sticky', top: 0, zIndex: 10,
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+          <button
+            onClick={() => navigate(-1)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+          >
+            <ArrowLeft style={{ width: 24, height: 24 }} />
+          </button>
+          <h1 style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text') }}>
+            {t('matchForm', 'submitGameResult')}
+          </h1>
+        </div>
+        <NavAvatar />
       </div>
 
-      {/* Info Banner */}
-      <div className="px-6 mb-6">
-        <div className="rounded-xl p-4 border flex gap-3" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
-          <Info className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: 'var(--th-primary)' }} />
-          <div>
-            <p className="text-sm mb-1" style={{ color: 'var(--th-text)' }}>{t('matchForm', 'infoTitle')}</p>
-            <p className="text-xs" style={{ color: 'var(--th-text-sub)' }}>{t('matchForm', 'infoDesc')}</p>
+      <div style={{ padding: '20px 20px' }}>
+
+        {/* Label + Title */}
+        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--th-primary)', letterSpacing: '0.1em', marginBottom: '8px' }}>
+          {t('matchForm', 'matchSessionFinished')}
+        </p>
+        <h2 style={{ fontSize: '28px', fontWeight: '700', color: V('--th-text'), marginBottom: '6px' }}>
+          {t('matchForm', 'gameOver')}
+        </h2>
+        <p style={{ fontSize: '13px', color: V('--th-text-sub'), marginBottom: '24px' }}>
+          {t('matchForm', 'gameOverDesc')}
+        </p>
+
+        {/* Game Info Card */}
+        <div style={{
+          borderRadius: '14px', padding: '14px 16px', marginBottom: '28px',
+          backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+          display: 'flex', alignItems: 'center', gap: '14px',
+        }}>
+          {currentGame?.imageUrl ? (
+            <img
+              src={currentGame.imageUrl}
+              alt={currentGame.name}
+              style={{ width: 48, height: 48, borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }}
+            />
+          ) : (
+            <div style={{
+              width: 48, height: 48, borderRadius: '10px', flexShrink: 0,
+              backgroundColor: 'color-mix(in srgb, var(--th-primary) 14%, transparent)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px',
+            }}>🎲</div>
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text') }}>{currentGame?.name || '—'}</p>
+            <div style={{ display: 'flex', gap: '12px', marginTop: '4px' }}>
+              <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>📅 {today}</span>
+              <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>👥 {playerDetails.length}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Player Score Input */}
-      <div className="px-6">
-        <div className="space-y-3">
+        {/* Column Headers */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px', padding: '0 4px' }}>
+          <p style={{ flex: 1, fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em' }}>
+            {t('matchForm', 'participants').toUpperCase()}
+          </p>
+          <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', width: 96, textAlign: 'center' }}>
+            {t('matchForm', 'finalScore').toUpperCase()}
+          </p>
+        </div>
+
+        {/* Player Rows */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {playerDetails.map((player) => {
             const placement = previewPlacements?.[player.memberId];
             const hasScore = !!scores[player.memberId];
+            const rankEmojis = ['🥇', '🥈', '🥉'];
 
             return (
               <div
                 key={player.memberId}
-                className="rounded-xl p-4 border flex items-center gap-3"
                 style={{
-                  backgroundColor: 'var(--th-card)',
-                  borderColor: hasScore ? 'var(--th-primary)' : 'var(--th-border)',
+                  borderRadius: '12px', padding: '12px 16px',
+                  backgroundColor: V('--th-card'),
+                  border: `1px solid ${hasScore ? 'var(--th-primary)' : 'var(--th-border)'}`,
+                  display: 'flex', alignItems: 'center', gap: '12px',
                 }}
               >
-                <div className="text-2xl w-8 text-center flex-shrink-0">
+                <div style={{ width: 24, textAlign: 'center', fontSize: '18px', flexShrink: 0 }}>
                   {placement && placement <= 3
                     ? rankEmojis[placement - 1]
                     : placement
-                      ? <span className="text-sm font-bold" style={{ color: 'var(--th-text-sub)' }}>{placement}{t('matchForm', 'rank')}</span>
-                      : <span style={{ color: 'var(--th-border)' }}>—</span>
+                      ? <span style={{ fontSize: '12px', fontWeight: '700', color: V('--th-text-sub') }}>{placement}{t('matchForm', 'rank')}</span>
+                      : <span style={{ color: V('--th-border') }}>—</span>
                   }
                 </div>
-                <div
-                  className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-                >
+                <div style={{
+                  width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                  backgroundColor: 'var(--th-primary)', color: '#FFFFFF',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '14px', fontWeight: '700',
+                }}>
                   {player.nickname[0]}
                 </div>
-                <div className="flex-1">
-                  <p style={{ color: 'var(--th-text)' }}>{player.nickname}</p>
-                </div>
+                <p style={{ flex: 1, fontSize: '14px', color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {player.nickname}
+                </p>
                 <input
                   type="number"
                   value={scores[player.memberId] || ''}
                   onChange={(e) => handleScoreChange(player.memberId, e.target.value)}
-                  placeholder={t('matchForm', 'scorePlaceholder')}
-                  className="w-24 px-3 py-2 rounded-lg border text-center focus:outline-none"
+                  placeholder="0"
                   style={{
-                    backgroundColor: 'var(--th-bg)',
-                    borderColor: hasScore ? 'var(--th-primary)' : 'var(--th-border)',
-                    color: 'var(--th-text)',
+                    width: 80, padding: '8px', borderRadius: '8px', textAlign: 'center',
+                    fontSize: '16px', fontWeight: '700', outline: 'none', flexShrink: 0,
+                    backgroundColor: V('--th-bg'),
+                    border: `1px solid ${hasScore ? 'var(--th-primary)' : 'var(--th-border)'}`,
+                    color: V('--th-text'),
                   }}
                   onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
                   onBlur={(e) => e.target.style.borderColor = hasScore ? 'var(--th-primary)' : 'var(--th-border)'}
@@ -183,17 +239,33 @@ const MatchForm = () => {
         </div>
       </div>
 
-      {/* Bottom Fixed Button */}
-      <div className="fixed bottom-0 left-0 right-0 p-6" style={{ backgroundColor: 'var(--th-bg)', maxWidth: '375px', margin: '0 auto' }}>
+      {/* Sticky Bottom */}
+      <div style={{
+        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: '390px', padding: '12px 20px 24px',
+        backgroundColor: V('--th-nav-bg'), borderTop: `1px solid var(--th-border)`,
+      }}>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting || !allFilled}
-          className="w-full py-4 rounded-full transition-opacity disabled:opacity-50"
-          style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+          style={{
+            width: '100%', padding: '14px', borderRadius: '12px',
+            fontSize: '14px', fontWeight: '700', letterSpacing: '0.05em',
+            backgroundColor: 'var(--th-primary)', color: '#FFFFFF', border: 'none', cursor: 'pointer',
+            opacity: (isSubmitting || !allFilled) ? 0.4 : 1,
+            marginBottom: '10px',
+          }}
         >
-          {isSubmitting ? t('matchForm', 'saving') : t('matchForm', 'saveResult')}
+          {isSubmitting ? t('matchForm', 'saving') : t('matchForm', 'submitResult').toUpperCase()}
+        </button>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+            fontSize: '13px', color: V('--th-text-sub'), padding: '4px',
+          }}
+        >
+          {t('matchForm', 'discardSession')}
         </button>
       </div>
     </div>

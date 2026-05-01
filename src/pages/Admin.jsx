@@ -138,9 +138,9 @@ const Admin = () => {
   };
 
   const inputStyle = {
-    backgroundColor: '#FFF8F0',
-    borderColor: '#E5D5C0',
-    color: '#2C1F0E',
+    backgroundColor: 'var(--th-bg)',
+    borderColor: 'var(--th-border)',
+    color: 'var(--th-text)',
   };
 
   const tabs = [
@@ -150,29 +150,29 @@ const Admin = () => {
   ];
 
   return (
-    <div className="min-h-screen pb-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: '#FFF8F0' }}>
+    <div className="min-h-screen pb-8" style={{ maxWidth: '375px', margin: '0 auto', backgroundColor: 'var(--th-bg)' }}>
 
       {/* Header */}
-      <div className="px-6 py-6 flex items-center justify-between sticky top-0 z-10" style={{ backgroundColor: '#FFF8F0' }}>
+      <div className="px-6 py-6 flex items-center justify-between sticky top-0 z-10" style={{ backgroundColor: 'var(--th-nav-bg)' }}>
         <div className="flex items-center">
           <button
             onClick={() => navigate('/lobby')}
             className="mr-3 p-2 rounded-lg transition-colors"
-            style={{ color: '#D4853A' }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+            style={{ color: 'var(--th-primary)' }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--th-card)'}
             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <Shield className="w-6 h-6 mr-2" style={{ color: '#D4853A' }} />
-          <h1 className="text-xl" style={{ color: '#2C1F0E' }}>{t('admin', 'title')}</h1>
+          <Shield className="w-6 h-6 mr-2" style={{ color: 'var(--th-primary)' }} />
+          <h1 className="text-xl" style={{ color: 'var(--th-text)' }}>{t('admin', 'title')}</h1>
         </div>
         <button
           onClick={handleLogout}
           className="text-sm font-bold transition-colors"
-          style={{ color: '#8B7355' }}
+          style={{ color: 'var(--th-text-sub)' }}
           onMouseEnter={(e) => e.currentTarget.style.color = '#dc2626'}
-          onMouseLeave={(e) => e.currentTarget.style.color = '#8B7355'}
+          onMouseLeave={(e) => e.currentTarget.style.color = 'var(--th-text-sub)'}
         >
           {t('common', 'logout')}
         </button>
@@ -180,15 +180,15 @@ const Admin = () => {
 
       {/* Tab Navigation */}
       <div className="px-6 mb-6">
-        <div className="flex gap-1 p-1 rounded-xl" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E5D5C0' }}>
+        <div className="flex gap-1 p-1 rounded-xl" style={{ backgroundColor: 'var(--th-card)', border: '1px solid var(--th-border)' }}>
           {tabs.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setActiveTab(key)}
               className="flex-1 py-2 px-1 rounded-lg text-xs transition-all"
               style={{
-                backgroundColor: activeTab === key ? '#D4853A' : 'transparent',
-                color: activeTab === key ? '#FFFFFF' : '#8B7355',
+                backgroundColor: activeTab === key ? 'var(--th-primary)' : 'transparent',
+                color: activeTab === key ? '#FFFFFF' : 'var(--th-text-sub)',
               }}
             >
               {label}
@@ -203,12 +203,12 @@ const Admin = () => {
         {activeTab === 'games' && (
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 style={{ color: '#2C1F0E' }}>{t('admin', 'registeredGames')} ({games.length})</h2>
+              <h2 style={{ color: 'var(--th-text)' }}>{t('admin', 'registeredGames')} ({games.length})</h2>
               {!showForm && (
                 <button
                   onClick={() => setShowForm(true)}
                   className="flex items-center gap-2 px-4 py-2 rounded-full transition-opacity"
-                  style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                  style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
                   onMouseEnter={(e) => e.currentTarget.style.opacity = '0.9'}
                   onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 >
@@ -220,8 +220,8 @@ const Admin = () => {
 
             {/* 추가/수정 폼 */}
             {showForm && (
-              <div className="rounded-2xl p-5 mb-5 border shadow-sm" style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}>
-                <p className="mb-4" style={{ color: '#2C1F0E' }}>{editingId ? t('admin', 'editGameTitle') : t('admin', 'addGameTitle')}</p>
+              <div className="rounded-2xl p-5 mb-5 border shadow-sm" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
+                <p className="mb-4" style={{ color: 'var(--th-text)' }}>{editingId ? t('admin', 'editGameTitle') : t('admin', 'addGameTitle')}</p>
                 <div className="space-y-3">
                   <input
                     type="text"
@@ -230,12 +230,12 @@ const Admin = () => {
                     style={inputStyle}
                     value={form.name}
                     onChange={(e) => setForm(p => ({ ...p, name: e.target.value }))}
-                    onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                    onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
                   />
                   <div className="flex gap-3">
                     <div className="flex-1">
-                      <label className="block mb-1.5 text-xs" style={{ color: '#8B7355' }}>{t('admin', 'minPlayers')}</label>
+                      <label className="block mb-1.5 text-xs" style={{ color: 'var(--th-text-sub)' }}>{t('admin', 'minPlayers')}</label>
                       <input
                         type="number"
                         min={1} max={10}
@@ -243,12 +243,12 @@ const Admin = () => {
                         style={inputStyle}
                         value={form.minPlayers}
                         onChange={(e) => setForm(p => ({ ...p, minPlayers: Number(e.target.value) }))}
-                        onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                        onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                        onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                        onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
                       />
                     </div>
                     <div className="flex-1">
-                      <label className="block mb-1.5 text-xs" style={{ color: '#8B7355' }}>{t('admin', 'maxPlayers')}</label>
+                      <label className="block mb-1.5 text-xs" style={{ color: 'var(--th-text-sub)' }}>{t('admin', 'maxPlayers')}</label>
                       <input
                         type="number"
                         min={1} max={10}
@@ -256,23 +256,23 @@ const Admin = () => {
                         style={inputStyle}
                         value={form.maxPlayers}
                         onChange={(e) => setForm(p => ({ ...p, maxPlayers: Number(e.target.value) }))}
-                        onFocus={(e) => e.target.style.borderColor = '#D4853A'}
-                        onBlur={(e) => e.target.style.borderColor = '#E5D5C0'}
+                        onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
+                        onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
                       />
                     </div>
                   </div>
 
                   {/* 이미지 업로드 */}
                   <div className="space-y-2">
-                    <label className="block text-xs" style={{ color: '#8B7355' }}>{t('admin', 'imageLabel')}</label>
+                    <label className="block text-xs" style={{ color: 'var(--th-text-sub)' }}>{t('admin', 'imageLabel')}</label>
                     <label
                       className="flex items-center gap-3 w-full px-4 py-3 rounded-lg border cursor-pointer transition-colors"
-                      style={{ backgroundColor: '#FFF8F0', borderColor: '#E5D5C0' }}
-                      onMouseEnter={(e) => e.currentTarget.style.borderColor = '#D4853A'}
-                      onMouseLeave={(e) => e.currentTarget.style.borderColor = '#E5D5C0'}
+                      style={{ backgroundColor: 'var(--th-bg)', borderColor: 'var(--th-border)' }}
+                      onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--th-primary)'}
+                      onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--th-border)'}
                     >
-                      <span style={{ color: '#D4853A' }}>📁</span>
-                      <span className="text-sm truncate" style={{ color: '#8B7355' }}>
+                      <span style={{ color: 'var(--th-primary)' }}>📁</span>
+                      <span className="text-sm truncate" style={{ color: 'var(--th-text-sub)' }}>
                         {imageFile ? imageFile.name : t('admin', 'selectImage')}
                       </span>
                       <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
@@ -283,7 +283,7 @@ const Admin = () => {
                           src={imagePreview || form.imageUrl}
                           alt="preview"
                           className="w-full h-full object-cover rounded-xl border"
-                          style={{ borderColor: '#E5D5C0' }}
+                          style={{ borderColor: 'var(--th-border)' }}
                         />
                         <button
                           onClick={() => { setImageFile(null); setImagePreview(''); setForm(p => ({ ...p, imageUrl: '' })); }}
@@ -301,14 +301,14 @@ const Admin = () => {
                       onClick={handleSubmit}
                       disabled={isSubmitting}
                       className="flex-1 py-3 rounded-full transition-opacity disabled:opacity-50"
-                      style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                      style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
                     >
                       {isSubmitting ? t('admin', 'saving') : editingId ? t('admin', 'update') : t('admin', 'add')}
                     </button>
                     <button
                       onClick={handleCancelForm}
                       className="px-5 py-3 rounded-full border transition-colors"
-                      style={{ backgroundColor: '#FFFFFF', color: '#8B7355', borderColor: '#E5D5C0' }}
+                      style={{ backgroundColor: 'var(--th-card)', color: 'var(--th-text-sub)', borderColor: 'var(--th-border)' }}
                     >
                       {t('common', 'cancel')}
                     </button>
@@ -319,8 +319,8 @@ const Admin = () => {
 
             {/* 게임 목록 */}
             {games.length === 0 ? (
-              <div className="rounded-2xl p-8 border-2 border-dashed text-center" style={{ borderColor: '#E5D5C0' }}>
-                <p style={{ color: '#8B7355' }}>{t('admin', 'noGames')}</p>
+              <div className="rounded-2xl p-8 border-2 border-dashed text-center" style={{ borderColor: 'var(--th-border)' }}>
+                <p style={{ color: 'var(--th-text-sub)' }}>{t('admin', 'noGames')}</p>
               </div>
             ) : (
               <>
@@ -329,26 +329,26 @@ const Admin = () => {
                     <div
                       key={game.id}
                       className="rounded-xl p-4 border"
-                      style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}
+                      style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
                           {game.imageUrl ? (
                             <img src={game.imageUrl} alt={game.name} className="w-full h-full object-cover" />
                           ) : (
-                            <div className="w-full h-full flex items-center justify-center text-xl" style={{ backgroundColor: '#FFF8F0' }}>🎲</div>
+                            <div className="w-full h-full flex items-center justify-center text-xl" style={{ backgroundColor: 'var(--th-bg)' }}>🎲</div>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="truncate" style={{ color: '#2C1F0E' }}>{game.name}</p>
-                          <p className="text-sm" style={{ color: '#8B7355' }}>{game.minPlayers}~{game.maxPlayers}{t('admin', 'persons')}</p>
+                          <p className="truncate" style={{ color: 'var(--th-text)' }}>{game.name}</p>
+                          <p className="text-sm" style={{ color: 'var(--th-text-sub)' }}>{game.minPlayers}~{game.maxPlayers}{t('admin', 'persons')}</p>
                         </div>
                         <div className="flex gap-2 flex-shrink-0">
                           <button
                             onClick={() => handleEdit(game)}
                             className="p-2 rounded-lg transition-colors"
-                            style={{ color: '#D4853A' }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF8F0'}
+                            style={{ color: 'var(--th-primary)' }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--th-bg)'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                           >
                             <Edit2 className="w-4 h-4" />
@@ -357,7 +357,7 @@ const Admin = () => {
                             onClick={() => handleDelete(game)}
                             className="p-2 rounded-lg transition-colors"
                             style={{ color: '#dc2626' }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#FFF8F0'}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'var(--th-bg)'}
                             onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                           >
                             <Trash2 className="w-4 h-4" />
@@ -375,9 +375,9 @@ const Admin = () => {
                         onClick={() => setGamePage(i)}
                         className="w-7 h-7 rounded-full text-xs font-bold transition-all"
                         style={{
-                          backgroundColor: gamePage === i ? '#D4853A' : '#FFFFFF',
-                          color: gamePage === i ? '#FFFFFF' : '#8B7355',
-                          border: '1px solid #E5D5C0',
+                          backgroundColor: gamePage === i ? 'var(--th-primary)' : 'var(--th-card)',
+                          color: gamePage === i ? '#FFFFFF' : 'var(--th-text-sub)',
+                          border: '1px solid var(--th-border)',
                         }}
                       >
                         {i + 1}
@@ -393,12 +393,12 @@ const Admin = () => {
         {/* 멤버 관리 탭 */}
         {activeTab === 'members' && (
           <div>
-            <h2 className="mb-4" style={{ color: '#2C1F0E' }}>{t('admin', 'allMembers')} ({members.length})</h2>
+            <h2 className="mb-4" style={{ color: 'var(--th-text)' }}>{t('admin', 'allMembers')} ({members.length})</h2>
             {isMembersLoading ? (
-              <div className="text-center py-10" style={{ color: '#8B7355' }}>{t('common', 'loading')}</div>
+              <div className="text-center py-10" style={{ color: 'var(--th-text-sub)' }}>{t('common', 'loading')}</div>
             ) : members.length === 0 ? (
-              <div className="rounded-2xl p-8 border-2 border-dashed text-center" style={{ borderColor: '#E5D5C0' }}>
-                <p style={{ color: '#8B7355' }}>{t('admin', 'noMembers')}</p>
+              <div className="rounded-2xl p-8 border-2 border-dashed text-center" style={{ borderColor: 'var(--th-border)' }}>
+                <p style={{ color: 'var(--th-text-sub)' }}>{t('admin', 'noMembers')}</p>
               </div>
             ) : (
               <div className="space-y-3">
@@ -406,19 +406,19 @@ const Admin = () => {
                   <div
                     key={member.memberId || member.id}
                     className="rounded-xl p-4 border"
-                    style={{ backgroundColor: '#FFFFFF', borderColor: '#E5D5C0' }}
+                    style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}
                   >
                     <div className="flex items-center gap-3">
                       <div
                         className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-                        style={{ backgroundColor: '#D4853A', color: '#FFFFFF' }}
+                        style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}
                       >
                         {member.nickname[0]}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="truncate" style={{ color: '#2C1F0E' }}>{member.nickname}</p>
+                        <p className="truncate" style={{ color: 'var(--th-text)' }}>{member.nickname}</p>
                         {member.phoneNumber && (
-                          <p className="text-sm" style={{ color: '#8B7355' }}>{member.phoneNumber}</p>
+                          <p className="text-sm" style={{ color: 'var(--th-text-sub)' }}>{member.phoneNumber}</p>
                         )}
                       </div>
                     </div>
