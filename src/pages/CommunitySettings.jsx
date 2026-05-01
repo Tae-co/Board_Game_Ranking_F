@@ -6,6 +6,15 @@ import { QRCodeSVG } from 'qrcode.react';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 
+const uploadImage = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await api.post('/upload/image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data.url;
+};
+
 const V = (v) => `var(${v})`;
 
 const REGIONS = [
@@ -64,7 +73,28 @@ const CommunitySettings = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [codeCopied, setCodeCopied] = useState(false);
   const [error, setError] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
   const initialized = useRef(false);
+
+  const handlePhotoSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setImagePreview(URL.createObjectURL(file));
+    setIsUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setUploadedImageUrl(url);
+    } catch {
+      alert('이미지 업로드에 실패했습니다.');
+      setImagePreview(null);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   // 기존 데이터로 폼 초기화
   useEffect(() => {
@@ -72,6 +102,9 @@ const CommunitySettings = () => {
       initialized.current = true;
       setName(detail.name || '');
       setRegion(detail.region || 'South Korea');
+      if (detail.imageUrl) {
+        setImagePreview(detail.imageUrl);
+      }
       const existingIds = new Set(
         (detail.admins || [])
           .filter((a) => a.memberId !== userId)
@@ -112,7 +145,7 @@ const CommunitySettings = () => {
       const res = await api.patch(`/communities/${communityId}`, {
         name: name.trim(),
         region,
-        imageUrl: storedCommunity?.imageUrl ?? null,
+        imageUrl: uploadedImageUrl ?? (detail?.imageUrl ?? null),
         adminMemberIds: [...selectedIds],
       });
       localStorage.setItem('myCommunity', JSON.stringify(res.data));
@@ -193,19 +226,47 @@ const CommunitySettings = () => {
 
       <div style={{ padding: '28px 20px' }}>
 
-        {/* Photo upload placeholder */}
+        {/* Photo upload */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
-          <div style={{
-            width: 100, height: 100, borderRadius: '18px',
-            border: `2px dashed var(--th-border)`,
-            backgroundColor: V('--th-card'),
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', marginBottom: '12px',
-          }}>
-            <Camera size={32} color={V('--th-text-sub')} strokeWidth={1.5} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handlePhotoSelect}
+          />
+          <div
+            onClick={() => fileInputRef.current.click()}
+            style={{
+              width: 100, height: 100, borderRadius: '18px',
+              border: imagePreview ? 'none' : `2px dashed var(--th-border)`,
+              backgroundColor: V('--th-card'),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', marginBottom: '12px',
+              overflow: 'hidden', position: 'relative',
+            }}
+          >
+            {imagePreview ? (
+              <>
+                <img
+                  src={imagePreview}
+                  alt="preview"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundColor: 'rgba(0,0,0,0.35)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Camera size={24} color="#fff" strokeWidth={1.5} />
+                </div>
+              </>
+            ) : (
+              <Camera size={32} color={V('--th-text-sub')} strokeWidth={1.5} />
+            )}
           </div>
           <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', textAlign: 'center', margin: 0 }}>
-            {t('community', 'uploadPhoto')}
+            {imagePreview ? t('community', 'changePhoto') || '사진 변경' : t('community', 'uploadPhoto')}
           </p>
         </div>
 

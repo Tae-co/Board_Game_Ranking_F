@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Camera } from 'lucide-react';
@@ -16,6 +16,15 @@ const REGIONS = [
   'Spain', 'Italy', 'Poland', 'Russia', 'Other',
 ];
 
+const uploadImage = async (file) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const res = await api.post('/upload/image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return res.data.url;
+};
+
 const CreateCommunity = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -27,6 +36,27 @@ const CreateCommunity = () => {
   const [region, setRegion] = useState('South Korea');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [imagePreview, setImagePreview] = useState(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handlePhotoSelect = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setImagePreview(URL.createObjectURL(file));
+    setIsUploading(true);
+    try {
+      const url = await uploadImage(file);
+      setUploadedImageUrl(url);
+    } catch {
+      alert('이미지 업로드에 실패했습니다.');
+      setImagePreview(null);
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -39,7 +69,7 @@ const CreateCommunity = () => {
       const res = await api.post('/communities', {
         name: name.trim(),
         region,
-        imageUrl: null,
+        imageUrl: uploadedImageUrl ?? null,
         createdBy: userId,
         adminMemberIds: [],
       });
@@ -91,19 +121,47 @@ const CreateCommunity = () => {
 
       <div style={{ padding: '28px 20px' }}>
 
-        {/* Photo upload placeholder */}
+        {/* Photo upload */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
-          <div style={{
-            width: 100, height: 100, borderRadius: '18px',
-            border: `2px dashed var(--th-border)`,
-            backgroundColor: V('--th-card'),
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', marginBottom: '12px',
-          }}>
-            <Camera size={32} color={V('--th-text-sub')} strokeWidth={1.5} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={handlePhotoSelect}
+          />
+          <div
+            onClick={() => fileInputRef.current.click()}
+            style={{
+              width: 100, height: 100, borderRadius: '18px',
+              border: imagePreview ? 'none' : `2px dashed var(--th-border)`,
+              backgroundColor: V('--th-card'),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', marginBottom: '12px',
+              overflow: 'hidden', position: 'relative',
+            }}
+          >
+            {imagePreview ? (
+              <>
+                <img
+                  src={imagePreview}
+                  alt="preview"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  backgroundColor: 'rgba(0,0,0,0.35)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Camera size={24} color="#fff" strokeWidth={1.5} />
+                </div>
+              </>
+            ) : (
+              <Camera size={32} color={V('--th-text-sub')} strokeWidth={1.5} />
+            )}
           </div>
           <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', textAlign: 'center', margin: 0 }}>
-            {t('community', 'uploadPhoto')}
+            {imagePreview ? t('community', 'changePhoto') || '사진 변경' : t('community', 'uploadPhoto')}
           </p>
         </div>
 
@@ -173,18 +231,18 @@ const CreateCommunity = () => {
 
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploading}
           style={{
             width: '100%', marginTop: '24px', padding: '16px',
-            borderRadius: '14px', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer',
-            background: isSubmitting
+            borderRadius: '14px', border: 'none', cursor: (isSubmitting || isUploading) ? 'not-allowed' : 'pointer',
+            background: (isSubmitting || isUploading)
               ? 'var(--th-border)'
               : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
             color: '#fff', fontSize: '16px', fontWeight: '700',
-            boxShadow: isSubmitting ? 'none' : '0 4px 16px rgba(107,92,231,0.35)',
+            boxShadow: (isSubmitting || isUploading) ? 'none' : '0 4px 16px rgba(107,92,231,0.35)',
           }}
         >
-          {isSubmitting ? t('community', 'creating') : t('community', 'createCommunity')}
+          {isUploading ? '사진 업로드 중...' : isSubmitting ? t('community', 'creating') : t('community', 'createCommunity')}
         </button>
       </div>
     </div>

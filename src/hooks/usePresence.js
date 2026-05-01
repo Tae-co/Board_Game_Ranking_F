@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { Client } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 
-const getWsUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || '/api';
-  if (apiUrl.startsWith('http')) {
-    return apiUrl.replace(/\/api.*$/, '/ws');
+const getWsBrokerUrl = () => {
+  const apiUrl = import.meta.env.VITE_API_URL || '';
+  if (apiUrl.startsWith('https://')) {
+    return apiUrl.replace(/\/api.*$/, '/ws').replace('https://', 'wss://');
   }
-  return '/ws';
+  if (apiUrl.startsWith('http://')) {
+    return apiUrl.replace(/\/api.*$/, '/ws').replace('http://', 'ws://');
+  }
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${proto}//${window.location.host}/ws`;
 };
 
 export const usePresence = (memberId, roomId) => {
@@ -17,7 +20,7 @@ export const usePresence = (memberId, roomId) => {
     if (!memberId || !roomId) return;
 
     const client = new Client({
-      webSocketFactory: () => new SockJS(getWsUrl()),
+      brokerURL: getWsBrokerUrl(),
       reconnectDelay: 5000,
       onConnect: () => {
         client.subscribe(`/topic/room/${roomId}/presence`, (msg) => {

@@ -8,4 +8,22 @@ export default defineConfig({
   optimizeDeps: {
     include: ['motion/react'],
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://meeple-production.up.railway.app',
+        changeOrigin: true,
+        secure: true,
+        headers: {
+          Origin: 'https://boardup.pages.dev',
+        },
+      },
+      '/ws': {
+        target: 'https://meeple-production.up.railway.app',
+        changeOrigin: true,
+        secure: true,
+        ws: true,
+      },
+    },
+  },
 })

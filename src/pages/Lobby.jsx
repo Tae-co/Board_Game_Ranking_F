@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ArrowLeft, Plus, Users } from 'lucide-react';
+import { ChevronRight, ArrowLeft, Plus, Users, Copy, CheckCheck, X, Settings } from 'lucide-react';
+import NavAvatar from '../components/NavAvatar';
+import { QRCodeSVG } from 'qrcode.react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api, { setAccessToken } from '../api/axios';
 import { clearAuthSession } from '../auth/storage';
@@ -54,6 +56,9 @@ const Lobby = () => {
   })();
   const communityId = selectedCommunity?.communityId ?? null;
   const isAdmin = selectedCommunity?.isAdmin ?? false;
+  const communityInviteCode = selectedCommunity?.inviteCode ?? null;
+  const [codeCopied, setCodeCopied] = useState(false);
+  const [showMemberManage, setShowMemberManage] = useState(false);
 
   const { data: rooms = [] } = useQuery({
     queryKey: communityId ? ['communityRooms', communityId, userId] : ['rooms', userId],
@@ -76,8 +81,18 @@ const Lobby = () => {
       const res = await api.get('/games');
       return res.data || [];
     },
-    enabled: !communityId && rooms.length > 0,
+    enabled: !communityId,
     staleTime: 1000 * 60 * 30,
+  });
+
+  const { data: communityMembers = [] } = useQuery({
+    queryKey: ['communityMembers', communityId],
+    queryFn: async () => {
+      const res = await api.get(`/communities/${communityId}/members`);
+      return res.data || [];
+    },
+    enabled: !!communityId,
+    staleTime: 1000 * 60 * 5,
   });
 
   const handleEnterRoom = async (room) => {
@@ -130,6 +145,7 @@ const Lobby = () => {
         padding: '16px 20px',
         backgroundColor: V('--th-nav-bg'),
         position: 'sticky', top: 0, zIndex: 10,
+        borderBottom: `1px solid var(--th-border)`,
       }}>
         {selectedCommunity ? (
           <button
@@ -155,50 +171,95 @@ const Lobby = () => {
               Admin
             </span>
           )}
-          <div
-            onClick={() => navigate('/profile')}
-            style={{
-              width: 38, height: 38, borderRadius: '50%',
-              backgroundColor: 'var(--th-primary)', color: '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontWeight: 700, fontSize: 15, cursor: 'pointer', flexShrink: 0,
-              boxShadow: '0 2px 8px rgba(123,108,246,0.3)',
-            }}
-          >
-            {(nickname || '?')[0].toUpperCase()}
-          </div>
+          <NavAvatar />
         </div>
       </div>
 
 
-      <div style={{ padding: '4px 20px 24px' }}>
+      <div style={{ padding: '20px 20px 24px' }}>
 
-        {/* Welcome Banner */}
-        <div style={{
-          borderRadius: '20px',
-          padding: '24px 22px',
-          marginBottom: '24px',
-          background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}>
+        {/* Banner */}
+        {communityId ? (
+          /* Community Hero Card */
           <div style={{
-            position: 'absolute', right: -20, bottom: -20,
-            width: 120, height: 120, borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.07)',
-          }}/>
+            borderRadius: '20px',
+            marginBottom: '24px',
+            position: 'relative',
+            overflow: 'hidden',
+            height: '200px',
+            backgroundColor: '#2a1f6e',
+            boxShadow: '0 4px 20px rgba(107,92,231,0.25)',
+          }}>
+            {selectedCommunity?.imageUrl ? (
+              <img
+                src={selectedCommunity.imageUrl}
+                alt={selectedCommunity.name}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
+            ) : (
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)' }} />
+            )}
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)',
+            }} />
+            <div style={{
+              position: 'absolute', bottom: 0, left: 0, right: 0,
+              padding: '16px 20px',
+              display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+            }}>
+              <div>
+                <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 4px', letterSpacing: '-0.3px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+                  {selectedCommunity?.name}
+                </p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Users style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.8)' }} />
+                  <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '500' }}>
+                    {selectedCommunity?.memberCount ?? 0} Members
+                  </span>
+                </div>
+              </div>
+              {selectedCommunity?.region && (
+                <div style={{
+                  backgroundColor: 'var(--th-primary)',
+                  borderRadius: '20px', padding: '6px 14px',
+                  fontSize: '11px', fontWeight: '700', color: '#fff',
+                  letterSpacing: '0.08em', textTransform: 'uppercase',
+                  boxShadow: '0 2px 8px rgba(107,92,231,0.5)',
+                }}>
+                  {selectedCommunity.region}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          /* Default Welcome Banner */
           <div style={{
-            position: 'absolute', right: 30, top: -30,
-            width: 80, height: 80, borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.05)',
-          }}/>
-          <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 6px', letterSpacing: '-0.3px' }}>
-            Hi, {nickname}!
-          </p>
-          <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.5 }}>
-            Ready to manage your collectives<br/>today?
-          </p>
-        </div>
+            borderRadius: '20px',
+            padding: '24px 22px',
+            marginBottom: '24px',
+            background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+            position: 'relative',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', right: -20, bottom: -20,
+              width: 120, height: 120, borderRadius: '50%',
+              backgroundColor: 'rgba(255,255,255,0.07)',
+            }}/>
+            <div style={{
+              position: 'absolute', right: 30, top: -30,
+              width: 80, height: 80, borderRadius: '50%',
+              backgroundColor: 'rgba(255,255,255,0.05)',
+            }}/>
+            <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 6px', letterSpacing: '-0.3px' }}>
+              Hi, {nickname}!
+            </p>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.5 }}>
+              Ready to manage your collectives<br/>today?
+            </p>
+          </div>
+        )}
 
         {/* Action Buttons — 커뮤니티 모드에서는 숨김 */}
         {!communityId && (
@@ -263,6 +324,48 @@ const Lobby = () => {
           </div>
         )}
 
+        {/* 초대 코드 — 커뮤니티 모드에서만 표시 */}
+        {communityId && communityInviteCode && (
+          <div style={{
+            backgroundColor: V('--th-card'), borderRadius: '18px',
+            border: `1px solid var(--th-border)`, padding: '20px',
+            marginBottom: '24px',
+          }}>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: V('--th-text-sub'), margin: '0 0 16px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+              {t('community', 'inviteCode')}
+            </p>
+            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+              <div style={{ padding: '10px', borderRadius: '12px', backgroundColor: '#fff', flexShrink: 0 }}>
+                <QRCodeSVG value={communityInviteCode} size={90} bgColor="#ffffff" fgColor="#1a1a2e" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontFamily: 'monospace', fontSize: '28px', fontWeight: '800',
+                  letterSpacing: '0.15em', color: V('--th-primary'), marginBottom: '12px',
+                }}>
+                  {communityInviteCode}
+                </div>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(communityInviteCode);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 16px', borderRadius: '10px', border: 'none', cursor: 'pointer',
+                    background: codeCopied ? 'rgba(34,197,94,0.15)' : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                    color: codeCopied ? '#22c55e' : '#fff',
+                    fontSize: '13px', fontWeight: '700', transition: 'all 0.2s',
+                  }}
+                >
+                  {codeCopied ? <><CheckCheck size={14} />{t('community', 'copyCode')}</> : <><Copy size={14} />{t('community', 'copyCode')}</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* My Groups / Community Groups */}
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
@@ -295,7 +398,12 @@ const Lobby = () => {
               <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0 }}>{t('lobby', 'noGroupsDesc')}</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div className="hide-scrollbar" style={{
+              display: 'flex', gap: '12px',
+              overflowX: 'auto', paddingBottom: '4px',
+              scrollbarWidth: 'none',
+              WebkitOverflowScrolling: 'touch',
+            }}>
               {rooms.map((room) => {
                 const gameInfo = !communityId ? games.find(g => g.id === room.boardGameId) : null;
                 const imageUrl = communityId ? room.imageUrl : gameInfo?.imageUrl;
@@ -303,98 +411,235 @@ const Lobby = () => {
                 return (
                   <div
                     key={room.roomId}
+                    onClick={() => handleEnterRoom(room)}
                     style={{
-                      width: '100%', borderRadius: '16px', padding: '14px 16px',
+                      flexShrink: 0, width: '140px', borderRadius: '16px',
                       backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                      display: 'flex', alignItems: 'center', gap: '14px',
-                      boxSizing: 'border-box',
                       boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                      cursor: 'pointer', overflow: 'hidden',
+                      display: 'flex', flexDirection: 'column',
                     }}
                   >
                     {/* Game image */}
-                    <div
-                      onClick={() => handleEnterRoom(room)}
-                      style={{ cursor: 'pointer', flexShrink: 0 }}
-                    >
+                    <div style={{
+                      width: '100%', height: '90px', position: 'relative',
+                      backgroundColor: 'rgba(107,92,231,0.08)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      overflow: 'hidden',
+                    }}>
                       {imageUrl ? (
-                        <img
-                          src={imageUrl}
-                          alt={room.roomName}
-                          style={{ width: 48, height: 48, borderRadius: '50%', objectFit: 'cover' }}
-                        />
+                        <img src={imageUrl} alt={room.roomName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <div style={{
-                          width: 48, height: 48, borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #6B5CE7, #9B8EFA)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px',
-                        }}>
-                          🎲
-                        </div>
+                        <span style={{ fontSize: '32px' }}>🎲</span>
                       )}
                     </div>
 
                     {/* Room info */}
-                    <div
-                      onClick={() => handleEnterRoom(room)}
-                      style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}
-                    >
-                      <div style={{ fontWeight: '700', color: V('--th-text'), fontSize: '15px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div style={{ padding: '10px 10px 12px', flex: 1 }}>
+                      <div style={{
+                        fontWeight: '700', color: V('--th-text'), fontSize: '13px',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        marginBottom: '5px',
+                      }}>
                         {room.roomName}
                       </div>
-                      {communityId ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
-                          <span style={{
-                            width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                            backgroundColor: room.sessionActive ? '#22c55e' : 'var(--th-text-sub)',
-                          }}/>
-                          <span style={{ fontSize: '12px', color: V('--th-text-sub'), fontWeight: '500' }}>
-                            {room.sessionActive ? t('community', 'activeSession') : t('community', 'inactiveSession')}
-                          </span>
-                        </div>
-                      ) : (
-                        <div style={{ fontSize: '12px', color: V('--th-text-sub'), marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Users style={{ width: 12, height: 12 }} />
-                          <span>{room.memberCount ?? '—'} members</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* 커뮤니티 모드: 참여 상태 표시 */}
-                    {communityId ? (
-                      isMember ? (
-                        <span style={{
-                          fontSize: '11px', fontWeight: '700', color: 'var(--th-primary)',
-                          backgroundColor: 'rgba(107,92,231,0.1)',
-                          padding: '4px 10px', borderRadius: '20px', flexShrink: 0,
-                        }}>
-                          {t('community', 'joinedBadge')}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Users style={{ width: 11, height: 11, color: V('--th-text-sub') }} />
+                        <span style={{ fontSize: '11px', color: V('--th-text-sub'), fontWeight: '500' }}>
+                          {(communityId ? room.memberCount : room.memberCount) ?? '—'}명
                         </span>
-                      ) : (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); handleEnterRoom(room); }}
-                          style={{
-                            fontSize: '12px', fontWeight: '700', color: '#fff',
-                            background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-                            border: 'none', borderRadius: '20px',
-                            padding: '5px 12px', cursor: 'pointer', flexShrink: 0,
-                          }}
-                        >
-                          {t('community', 'enterRoom')}
-                        </button>
-                      )
-                    ) : (
-                      <ChevronRight
-                        onClick={() => handleEnterRoom(room)}
-                        style={{ color: V('--th-text-sub'), width: 18, height: 18, flexShrink: 0, cursor: 'pointer' }}
-                      />
-                    )}
+                        {communityId && isMember && (
+                          <span style={{
+                            marginLeft: '4px', fontSize: '10px', fontWeight: '700',
+                            color: 'var(--th-primary)',
+                          }}>· 참가중</span>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 );
               })}
             </div>
           )}
         </div>
+
+        {/* Community Members */}
+        {communityId && (
+          <div style={{ marginTop: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Users size={18} color="var(--th-primary)" />
+                <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: 0 }}>
+                  {t('community', 'communityMembers')}
+                </p>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', color: V('--th-text-sub'), fontWeight: '600' }}>
+                  {communityMembers.length}
+                </span>
+                {isAdmin && (
+                  <button
+                    onClick={() => setShowMemberManage(true)}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
+                      color: V('--th-text-sub'), display: 'flex', alignItems: 'center',
+                    }}
+                  >
+                    <Settings size={18} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {communityMembers.length === 0 ? (
+              <p style={{ fontSize: '14px', color: V('--th-text-sub'), textAlign: 'center', padding: '20px 0' }}>
+                {t('community', 'noCommunityMembers')}
+              </p>
+            ) : (
+              <div className="hide-scrollbar" style={{
+                display: 'flex', gap: '12px',
+                overflowX: 'auto', paddingBottom: '4px',
+                scrollbarWidth: 'none',
+                WebkitOverflowScrolling: 'touch',
+              }}>
+                {communityMembers.map((member) => {
+                  const colors = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
+                  const color = colors[member.memberId % colors.length];
+                  const isMe = String(member.memberId) === String(userId);
+                  return (
+                    <div key={member.memberId} style={{
+                      flexShrink: 0, width: '64px',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                    }}>
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        backgroundColor: color,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontWeight: 700, fontSize: 18, color: '#fff',
+                        border: isMe ? '2.5px solid var(--th-primary)' : '2.5px solid transparent',
+                        boxSizing: 'border-box',
+                        boxShadow: isMe ? '0 0 0 2px rgba(107,92,231,0.25)' : 'none',
+                        overflow: 'hidden',
+                      }}>
+                        {member.profileImage
+                          ? <img src={member.profileImage} alt={member.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          : member.nickname[0].toUpperCase()
+                        }
+                      </div>
+                      <span style={{
+                        fontSize: '11px', fontWeight: isMe ? '700' : '500',
+                        color: isMe ? V('--th-primary') : V('--th-text'),
+                        textAlign: 'center', width: '100%',
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {member.nickname}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Community Member Management Overlay */}
+      {showMemberManage && communityId && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          backgroundColor: V('--th-bg'),
+          maxWidth: '390px', left: '50%', transform: 'translateX(-50%)',
+          overflowY: 'auto', paddingBottom: 40,
+        }}>
+          {/* Header */}
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '16px 20px', position: 'sticky', top: 0, zIndex: 10,
+            backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)`,
+          }}>
+            <button
+              onClick={() => setShowMemberManage(false)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+            >
+              <ArrowLeft style={{ width: 24, height: 24 }} />
+            </button>
+            <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>
+              멤버 관리
+            </h1>
+            <div style={{ width: 32 }} />
+          </div>
+
+          <div style={{ padding: '16px 20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
+              <Users size={16} color="var(--th-text-sub)" />
+              <span style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text-sub') }}>
+                {communityMembers.length}명
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              {communityMembers.map((member) => {
+                const colors = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
+                const color = colors[member.memberId % colors.length];
+                const isMe = String(member.memberId) === String(userId);
+                const canKick = !isMe;
+                return (
+                  <div
+                    key={member.memberId}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: '12px',
+                      padding: '12px 8px', borderBottom: `1px solid var(--th-border)`,
+                    }}
+                  >
+                    <div style={{
+                      width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                      backgroundColor: color,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: '16px', fontWeight: '700', color: '#fff',
+                      overflow: 'hidden',
+                    }}>
+                      {member.profileImage
+                        ? <img src={member.profileImage} alt={member.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                        : member.nickname[0].toUpperCase()
+                      }
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{
+                        fontSize: '15px', fontWeight: isMe ? '700' : '600',
+                        color: isMe ? 'var(--th-primary)' : V('--th-text'),
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {member.nickname}
+                      </div>
+                      {isMe && (
+                        <div style={{ fontSize: '11px', color: V('--th-text-sub'), marginTop: '2px' }}>나</div>
+                      )}
+                    </div>
+                    {canKick && (
+                      <button
+                        onClick={async () => {
+                          if (!window.confirm(`${member.nickname}님을 커뮤니티에서 내보내시겠습니까?`)) return;
+                          try {
+                            await api.delete(`/communities/${communityId}/members/${member.memberId}`);
+                            queryClient.invalidateQueries({ queryKey: ['communityMembers', communityId] });
+                          } catch { alert('멤버 내보내기에 실패했습니다.'); }
+                        }}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer',
+                          padding: '6px', borderRadius: '8px', flexShrink: 0,
+                          color: '#ef4444', display: 'flex', alignItems: 'center',
+                        }}
+                      >
+                        <X style={{ width: 18, height: 18 }} />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Join Code Bottom Sheet */}
       {showJoinSheet && (
