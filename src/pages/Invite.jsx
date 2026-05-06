@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Play, MoreVertical, X, Trophy, Users, Check } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
+import StorageImage from '../components/StorageImage';
+import { MemberCardSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -38,7 +40,7 @@ const MemberRow = ({ member, isMe, showKebab, isHost, openKebab, setOpenKebab, o
         overflow: 'hidden',
       }}>
         {member.profileImage
-          ? <img src={member.profileImage} alt={member.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+          ? <StorageImage src={member.profileImage} alt={member.nickname} loading="lazy" decoding="async" transform={{ width: 88, height: 88, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
           : member.nickname[0].toUpperCase()
         }
       </div>
@@ -124,6 +126,7 @@ const Invite = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [editRoomName, setEditRoomName] = useState('');
   const [saving, setSaving] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
 
   const { data: roomInfo = {}, refetch: refetchRoom } = useQuery({
     queryKey: ['room', roomId],
@@ -142,7 +145,7 @@ const Invite = () => {
   const roomName = roomInfo.roomName || '';
 
 
-  const { data: members = [], refetch: refetchMembers } = useQuery({
+  const { data: members = [], isLoading: membersLoading, refetch: refetchMembers } = useQuery({
     queryKey: ['roomMembers', roomId],
     queryFn: async () => {
       const res = await api.get(`/rooms/${roomId}/members`);
@@ -153,7 +156,7 @@ const Invite = () => {
 
   const isHost = members.find(m => m.memberId === userId)?.isHost ?? false;
 
-  const { data: games = [] } = useQuery({
+  const { data: games = [], isLoading: gamesLoading } = useQuery({
     queryKey: ['games'],
     queryFn: async () => { const res = await api.get('/games'); return res.data || []; },
     enabled: !!roomInfo.boardGameId,
@@ -189,6 +192,7 @@ const Invite = () => {
     try {
       await api.delete(`/rooms/${roomId}/members/${userId}`);
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
       navigate('/lobby');
     } catch { alert(t('invite', 'leaveFailed')); }
   };
@@ -198,6 +202,7 @@ const Invite = () => {
     try {
       await api.delete(`/rooms/${roomId}`);
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
       navigate('/lobby');
     } catch { alert(t('invite', 'deleteFailed')); }
   };
@@ -229,7 +234,7 @@ const Invite = () => {
     setShowSettings(true);
   };
 
-  useEffect(() => {
+useEffect(() => {
     if (!openKebab) return;
     const handle = () => setOpenKebab(null);
     document.addEventListener('click', handle);
@@ -237,70 +242,93 @@ const Invite = () => {
   }, [openKebab]);
 
   return (
-    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg'), paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 100 }}>
 
       {/* Header */}
       <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 20px',
-        backgroundColor: V('--th-nav-bg'), position: 'sticky', top: 0, zIndex: 10,
+        position: 'sticky', top: 0, zIndex: 10,
+        backgroundColor: V('--th-nav-bg'),
         borderBottom: `1px solid var(--th-border)`,
       }}>
-        <button
-          onClick={() => navigate('/lobby')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
-        >
-          <ArrowLeft style={{ width: 24, height: 24 }} />
-        </button>
-        <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>
-          Group Lobby
-        </h1>
-        <NavAvatar />
+        <div style={{
+          maxWidth: 390, margin: '0 auto',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '16px 20px',
+        }}>
+          <button
+            onClick={() => navigate('/lobby')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+          >
+            <ArrowLeft style={{ width: 24, height: 24 }} />
+          </button>
+          <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>
+            Group Lobby
+          </h1>
+          <NavAvatar />
+        </div>
       </div>
 
-      <div style={{ padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
         {/* Board Game Card */}
-        {gameInfo && (
+        {roomInfo.boardGameId && (
           <div style={{
             borderRadius: '18px', overflow: 'hidden',
             position: 'relative', height: '240px',
             border: '2px solid rgba(107,92,231,0.35)',
             boxShadow: '0 4px 20px rgba(107,92,231,0.18)',
+            backgroundColor: 'var(--th-card)',
           }}>
-            <img
-              src={gameInfo.imageUrl}
-              alt={gameInfo.name}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            />
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)',
-            }} />
-            <div style={{
-              position: 'absolute', bottom: 0, left: 0, right: 0,
-              padding: '16px 18px',
-              display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-            }}>
-              <div>
-                <p style={{ fontSize: '22px', fontWeight: '800', color: '#fff', margin: '0 0 5px', letterSpacing: '0.02em' }}>
-                  {gameInfo.name.toUpperCase()}
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <Users size={13} color="rgba(255,255,255,0.75)" />
-                  <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: '500' }}>
-                    {gameInfo.minPlayers}-{gameInfo.maxPlayers} Players
+            {/* shimmer — 데이터 로딩 중이거나 이미지 로딩 중일 때 */}
+            {(!gameInfo || !imgLoaded) && (
+              <div style={{
+                position: 'absolute', inset: 0,
+                background: 'linear-gradient(90deg, var(--th-card) 25%, var(--th-bg-deep) 50%, var(--th-card) 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.4s infinite',
+              }} />
+            )}
+            {gameInfo && (
+              <>
+                <StorageImage
+                  src={gameInfo.imageUrl}
+                  alt={gameInfo.name}
+                  onLoad={() => setImgLoaded(true)}
+                  transform={{ width: 780, height: 480, quality: 72 }}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
+                />
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)',
+                  opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s',
+                }} />
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0,
+                  padding: '16px 18px',
+                  display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+                  opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s',
+                }}>
+                  <div>
+                    <p style={{ fontSize: '22px', fontWeight: '800', color: '#fff', margin: '0 0 5px', letterSpacing: '0.02em' }}>
+                      {gameInfo.name.toUpperCase()}
+                    </p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <Users size={13} color="rgba(255,255,255,0.75)" />
+                      <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: '500' }}>
+                        {gameInfo.minPlayers}-{gameInfo.maxPlayers} Players
+                      </span>
+                    </div>
+                  </div>
+                  <span style={{
+                    fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em',
+                    color: '#fff', backgroundColor: 'var(--th-primary)',
+                    padding: '5px 13px', borderRadius: '20px',
+                  }}>
+                    STRATEGY
                   </span>
                 </div>
-              </div>
-              <span style={{
-                fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em',
-                color: '#fff', backgroundColor: 'var(--th-primary)',
-                padding: '5px 13px', borderRadius: '20px',
-              }}>
-                STRATEGY
-              </span>
-            </div>
+              </>
+            )}
           </div>
         )}
 
@@ -342,7 +370,9 @@ const Invite = () => {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {members.map((member) => {
+            {membersLoading ? (
+              [0, 1, 2].map(i => <MemberCardSkeleton key={i} />)
+            ) : members.map((member) => {
               const isMe = member.memberId === userId;
               const showKebab = isHost ? (!isMe && !member.isHost) : isMe;
               return (
@@ -368,11 +398,8 @@ const Invite = () => {
       </div>
 
       {/* Sticky Start Game Button */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: '390px', padding: '10px 20px 28px',
-        backgroundColor: V('--th-nav-bg'), borderTop: `1px solid var(--th-border)`,
-      }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px 28px' }}>
         {selectedPlayers.size > maxPlayers && (
           <p style={{ textAlign: 'center', fontSize: '12px', color: '#ef4444', margin: '0 0 6px' }}>
             {t('gameSelect', 'maxPlayersError').replace('{n}', maxPlayers)}
@@ -401,19 +428,20 @@ const Invite = () => {
           </span>
         </button>
       </div>
+      </div>
 
       {/* Group Settings Full-screen Overlay (host only) */}
       {showSettings && (
         <div style={{
-          position: 'fixed', inset: 0, zIndex: 100,
+          position: 'fixed', top: 0, bottom: 0, left: '50%', transform: 'translateX(-50%)',
+          width: '100%', maxWidth: '390px', zIndex: 100,
           backgroundColor: V('--th-bg'),
-          maxWidth: '390px', left: '50%', transform: 'translateX(-50%)',
           overflowY: 'auto', paddingBottom: 100,
         }}>
           {/* Settings Header */}
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '16px 20px', position: 'sticky', top: 0, zIndex: 10,
+            padding: 'calc(16px + env(safe-area-inset-top)) 20px 16px', position: 'sticky', top: 0, zIndex: 10,
             backgroundColor: V('--th-nav-bg'),
             borderBottom: `1px solid var(--th-border)`,
           }}>
@@ -507,9 +535,9 @@ const Invite = () => {
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
                           fontSize: '16px', fontWeight: '700', color: '#FFFFFF',
                           overflow: 'hidden',
-                        }}>
-                          {member.profileImage
-                            ? <img src={member.profileImage} alt={member.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                          }}>
+                            {member.profileImage
+                            ? <StorageImage src={member.profileImage} alt={member.nickname} loading="lazy" decoding="async" transform={{ width: 72, height: 72, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                             : member.nickname[0].toUpperCase()
                           }
                         </div>
@@ -557,7 +585,7 @@ const Invite = () => {
           {/* Settings Bottom Buttons */}
           <div style={{
             position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-            width: '100%', maxWidth: '390px', padding: '12px 20px 28px',
+            width: '100%', maxWidth: '390px', padding: '12px 20px calc(28px + env(safe-area-inset-bottom))',
             backgroundColor: V('--th-bg'), display: 'flex', flexDirection: 'column', gap: '10px',
           }}>
             <button
