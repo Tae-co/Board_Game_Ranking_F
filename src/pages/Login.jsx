@@ -1,19 +1,24 @@
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
 import api, { setAccessToken } from '../api/axios';
 import { saveAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 
 const V = (v) => `var(${v})`;
 
-const isWebView = /FBAN|FBAV|Instagram|Twitter|Line|KAKAOTALK/i.test(navigator.userAgent) ||
-  (navigator.userAgent.includes('Android') && /wv\)/i.test(navigator.userAgent));
+const isWebView = !Capacitor.isNativePlatform() && (
+  /FBAN|FBAV|Instagram|Twitter|Line|KAKAOTALK/i.test(navigator.userAgent) ||
+  (navigator.userAgent.includes('Android') && /wv\)/i.test(navigator.userAgent))
+);
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
   const googleAuthUrl = `${import.meta.env.VITE_API_URL}/auth/google`;
+  const googleNativeAuthUrl = 'https://meeple-production.up.railway.app/api/auth/google/native/login';
 
   useEffect(() => {
     try {
@@ -38,7 +43,15 @@ const Login = () => {
     navigate(redirect || '/lobby');
   };
 
-  const handleKakaoLogin = () => {
+  const handleKakaoLogin = async () => {
+    if (Capacitor.isNativePlatform()) {
+      try {
+        await Browser.open({ url: 'https://meeple-production.up.railway.app/api/auth/kakao/native/login' });
+      } catch (e) {
+        alert('카카오 로그인 오류: ' + e.message);
+      }
+      return;
+    }
     if (!window.Kakao?.isInitialized()) {
       alert(t('login', 'kakaoLoading'));
       return;
@@ -76,47 +89,7 @@ const Login = () => {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '56px' }}>
           <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-            <div style={{
-              width: '80px', height: '80px', borderRadius: '50%',
-              backgroundColor: '#fff',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.12)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="52" height="52">
-                <defs>
-                  <linearGradient id="diceTop" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stopColor="#90C4F9"/>
-                    <stop offset="100%" stopColor="#7B6CF6"/>
-                  </linearGradient>
-                  <linearGradient id="diceLeft" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#6B5CE7"/>
-                    <stop offset="100%" stopColor="#4835B0"/>
-                  </linearGradient>
-                  <linearGradient id="diceRight" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#9B8EFA"/>
-                    <stop offset="100%" stopColor="#7060E0"/>
-                  </linearGradient>
-                </defs>
-                {/* 윗면 */}
-                <polygon points="50,10 84,29 50,48 16,29" fill="url(#diceTop)"/>
-                {/* 왼쪽 면 */}
-                <polygon points="16,29 50,48 50,88 16,69" fill="url(#diceLeft)"/>
-                {/* 오른쪽 면 */}
-                <polygon points="84,29 50,48 50,88 84,69" fill="url(#diceRight)"/>
-                {/* 윗면 점 2개 (대각선) */}
-                <circle cx="37" cy="24" r="3.8" fill="#fff" opacity="0.92"/>
-                <circle cx="63" cy="38" r="3.8" fill="#fff" opacity="0.92"/>
-                {/* 왼쪽 면 점 4개 */}
-                <circle cx="27" cy="46" r="3.2" fill="#fff" opacity="0.85"/>
-                <circle cx="39" cy="53" r="3.2" fill="#fff" opacity="0.85"/>
-                <circle cx="27" cy="64" r="3.2" fill="#fff" opacity="0.85"/>
-                <circle cx="39" cy="71" r="3.2" fill="#fff" opacity="0.85"/>
-                {/* 오른쪽 면 점 3개 (대각선) */}
-                <circle cx="72" cy="44" r="3.2" fill="#fff" opacity="0.85"/>
-                <circle cx="64" cy="58" r="3.2" fill="#fff" opacity="0.85"/>
-                <circle cx="72" cy="72" r="3.2" fill="#fff" opacity="0.85"/>
-              </svg>
-            </div>
+            <img src="/logo.png" width="80" height="80" style={{ objectFit: 'contain' }} alt="logo" />
           </div>
           <h1 style={{ fontSize: '28px', fontWeight: '700', color: V('--th-text'), margin: '0 0 8px' }}>
             {t('login', 'title')}
@@ -140,7 +113,13 @@ const Login = () => {
 
           {/* Google */}
           <button
-            onClick={() => isWebView ? window.open(googleAuthUrl, '_blank') : (window.location.href = googleAuthUrl)}
+            onClick={async () => {
+              if (Capacitor.isNativePlatform()) {
+                try { await Browser.open({ url: googleNativeAuthUrl }); } catch (e) { alert('구글 로그인 오류: ' + e.message); }
+                return;
+              }
+              if (isWebView) { window.open(googleAuthUrl, '_blank'); } else { window.location.href = googleAuthUrl; }
+            }}
             style={{
               width: '100%', padding: '15px', borderRadius: '50px',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
