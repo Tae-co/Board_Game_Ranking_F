@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, ArrowLeft, Plus, Users, Copy, CheckCheck, X, Settings } from 'lucide-react';
+import { ArrowLeft, Plus, Users, Copy, CheckCheck, Settings } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
+import StorageImage from '../components/StorageImage';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api, { setAccessToken } from '../api/axios';
@@ -11,34 +12,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 const V = (v) => `var(${v})`;
 
 const DiceLogo = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="28" height="28">
-    <defs>
-      <linearGradient id="lobbyDiceTop" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#90C4F9"/>
-        <stop offset="100%" stopColor="#7B6CF6"/>
-      </linearGradient>
-      <linearGradient id="lobbyDiceLeft" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#6B5CE7"/>
-        <stop offset="100%" stopColor="#4835B0"/>
-      </linearGradient>
-      <linearGradient id="lobbyDiceRight" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#9B8EFA"/>
-        <stop offset="100%" stopColor="#7060E0"/>
-      </linearGradient>
-    </defs>
-    <polygon points="50,10 84,29 50,48 16,29" fill="url(#lobbyDiceTop)"/>
-    <polygon points="16,29 50,48 50,88 16,69" fill="url(#lobbyDiceLeft)"/>
-    <polygon points="84,29 50,48 50,88 84,69" fill="url(#lobbyDiceRight)"/>
-    <circle cx="37" cy="24" r="3.8" fill="#fff" opacity="0.92"/>
-    <circle cx="63" cy="38" r="3.8" fill="#fff" opacity="0.92"/>
-    <circle cx="27" cy="46" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="39" cy="53" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="27" cy="64" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="39" cy="71" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="72" cy="44" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="64" cy="58" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="72" cy="72" r="3.2" fill="#fff" opacity="0.85"/>
-  </svg>
+  <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
 );
 
 const Lobby = () => {
@@ -51,14 +25,26 @@ const Lobby = () => {
   const sheetRef = useRef(null);
   const nickname = localStorage.getItem('nickname') || '플레이어';
   const userId = localStorage.getItem('userId');
-  const selectedCommunity = (() => {
+  const [selectedCommunity, setSelectedCommunity] = useState(() => {
     try { return JSON.parse(localStorage.getItem('selectedCommunity')); } catch { return null; }
-  })();
+  });
+  useEffect(() => {
+    const handler = () => {
+      try { setSelectedCommunity(JSON.parse(localStorage.getItem('selectedCommunity'))); }
+      catch { setSelectedCommunity(null); }
+    };
+    window.addEventListener('selectedCommunityUpdated', handler);
+    return () => window.removeEventListener('selectedCommunityUpdated', handler);
+  }, []);
   const communityId = selectedCommunity?.communityId ?? null;
   const isAdmin = selectedCommunity?.isAdmin ?? false;
   const communityInviteCode = selectedCommunity?.inviteCode ?? null;
   const [codeCopied, setCodeCopied] = useState(false);
-  const [showMemberManage, setShowMemberManage] = useState(false);
+  const [roomPage, setRoomPage] = useState(0);
+  const [memberPage, setMemberPage] = useState(0);
+
+  const ROOMS_PER_PAGE = 9;   // 3열 × 3행
+  const MEMBERS_PER_PAGE = 15; // 5열 × 3행
 
   const { data: rooms = [] } = useQuery({
     queryKey: communityId ? ['communityRooms', communityId, userId] : ['rooms', userId],
@@ -137,16 +123,11 @@ const Lobby = () => {
   }, [showJoinSheet]);
 
   return (
-    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg') }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
 
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 20px',
-        backgroundColor: V('--th-nav-bg'),
-        position: 'sticky', top: 0, zIndex: 10,
-        borderBottom: `1px solid var(--th-border)`,
-      }}>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
         {selectedCommunity ? (
           <button
             onClick={() => navigate('/community')}
@@ -174,9 +155,9 @@ const Lobby = () => {
           <NavAvatar />
         </div>
       </div>
+      </div>
 
-
-      <div style={{ padding: '20px 20px 24px' }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 24px' }}>
 
         {/* Banner */}
         {communityId ? (
@@ -191,9 +172,12 @@ const Lobby = () => {
             boxShadow: '0 4px 20px rgba(107,92,231,0.25)',
           }}>
             {selectedCommunity?.imageUrl ? (
-              <img
+              <StorageImage
                 src={selectedCommunity.imageUrl}
                 alt={selectedCommunity.name}
+                loading="eager"
+                decoding="async"
+                transform={{ width: 780, height: 400, quality: 72 }}
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
             ) : (
@@ -397,73 +381,90 @@ const Lobby = () => {
               <p style={{ color: V('--th-text-sub'), fontSize: '14px', margin: '0 0 6px' }}>{t('lobby', 'noGroups')}</p>
               <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0 }}>{t('lobby', 'noGroupsDesc')}</p>
             </div>
-          ) : (
-            <div className="hide-scrollbar" style={{
-              display: 'grid',
-              gridTemplateRows: 'repeat(3, auto)',
-              gridAutoFlow: 'column',
-              gridAutoColumns: '110px',
-              gap: '10px',
-              overflowX: 'auto',
-              paddingBottom: '4px',
-            }}>
-              {rooms.map((room) => {
-                const gameInfo = !communityId ? games.find(g => g.id === room.boardGameId) : null;
-                const imageUrl = communityId ? room.imageUrl : gameInfo?.imageUrl;
-                const isMember = communityId ? room.isMember : true;
-                return (
-                  <div
-                    key={room.roomId}
-                    onClick={() => handleEnterRoom(room)}
-                    style={{
-                      borderRadius: '16px',
-                      backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                      boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                      cursor: 'pointer', overflow: 'hidden',
-                      display: 'flex', flexDirection: 'column',
-                    }}
-                  >
-                    {/* Game image */}
-                    <div style={{
-                      width: '100%', height: '90px', position: 'relative',
-                      backgroundColor: 'rgba(107,92,231,0.08)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      overflow: 'hidden',
-                    }}>
-                      {imageUrl ? (
-                        <img src={imageUrl} alt={room.roomName} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                      ) : (
-                        <span style={{ fontSize: '32px' }}>🎲</span>
-                      )}
-                    </div>
+          ) : (() => {
+            const totalRoomPages = Math.ceil(rooms.length / ROOMS_PER_PAGE);
+            const pagedRooms = rooms.slice(roomPage * ROOMS_PER_PAGE, (roomPage + 1) * ROOMS_PER_PAGE);
+            return (
+              <>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '10px',
+                }}>
+                  {pagedRooms.map((room) => {
+                    const gameInfo = !communityId ? games.find(g => g.id === room.boardGameId) : null;
+                    const imageUrl = communityId ? room.imageUrl : gameInfo?.imageUrl;
+                    const isMember = communityId ? room.isMember : true;
+                    return (
+                      <div
+                        key={room.roomId}
+                        onClick={() => handleEnterRoom(room)}
+                        style={{
+                          borderRadius: '16px',
+                          backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+                          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                          cursor: 'pointer', overflow: 'hidden',
+                          display: 'flex', flexDirection: 'column',
+                        }}
+                      >
+                        <div style={{
+                          width: '100%', height: '80px',
+                          backgroundColor: 'rgba(107,92,231,0.08)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          overflow: 'hidden',
+                        }}>
+                          {imageUrl ? (
+                            <StorageImage src={imageUrl} alt={room.roomName} loading="lazy" decoding="async" transform={{ width: 160, height: 160, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            <span style={{ fontSize: '28px' }}>🎲</span>
+                          )}
+                        </div>
+                        <div style={{ padding: '8px 8px 10px', flex: 1 }}>
+                          <div style={{
+                            fontWeight: '700', color: V('--th-text'), fontSize: '12px',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            marginBottom: '4px',
+                          }}>
+                            {room.roomName}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+                            <Users style={{ width: 10, height: 10, color: V('--th-text-sub') }} />
+                            <span style={{ fontSize: '10px', color: V('--th-text-sub'), fontWeight: '500' }}>
+                              {room.memberCount ?? '—'}명
+                            </span>
+                            {communityId && isMember && (
+                              <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-primary)' }}>· 참가중</span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
 
-                    {/* Room info */}
-                    <div style={{ padding: '10px 10px 12px', flex: 1 }}>
-                      <div style={{
-                        fontWeight: '700', color: V('--th-text'), fontSize: '13px',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                        marginBottom: '5px',
-                      }}>
-                        {room.roomName}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Users style={{ width: 11, height: 11, color: V('--th-text-sub') }} />
-                        <span style={{ fontSize: '11px', color: V('--th-text-sub'), fontWeight: '500' }}>
-                          {(communityId ? room.memberCount : room.memberCount) ?? '—'}명
-                        </span>
-                        {communityId && isMember && (
-                          <span style={{
-                            marginLeft: '4px', fontSize: '10px', fontWeight: '700',
-                            color: 'var(--th-primary)',
-                          }}>· 참가중</span>
-                        )}
-                      </div>
-                    </div>
+                {totalRoomPages > 1 && (
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '16px' }}>
+                    {Array.from({ length: totalRoomPages }, (_, i) => (
+                      <button
+                        key={i}
+                        onClick={() => setRoomPage(i)}
+                        style={{
+                          width: 30, height: 30, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                          fontSize: '13px', fontWeight: '700',
+                          backgroundColor: roomPage === i ? 'var(--th-primary)' : 'var(--th-card)',
+                          color: roomPage === i ? '#fff' : V('--th-text-sub'),
+                          border: `1px solid ${roomPage === i ? 'var(--th-primary)' : 'var(--th-border)'}`,
+                          transition: 'all 0.15s',
+                        }}
+                      >
+                        {i + 1}
+                      </button>
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          )}
+                )}
+              </>
+            );
+          })()}
         </div>
 
         {/* Community Members */}
@@ -482,7 +483,7 @@ const Lobby = () => {
                 </span>
                 {isAdmin && (
                   <button
-                    onClick={() => setShowMemberManage(true)}
+                    onClick={() => navigate('/community-members')}
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer', padding: '4px',
                       color: V('--th-text-sub'), display: 'flex', alignItems: 'center',
@@ -498,153 +499,78 @@ const Lobby = () => {
               <p style={{ fontSize: '14px', color: V('--th-text-sub'), textAlign: 'center', padding: '20px 0' }}>
                 {t('community', 'noCommunityMembers')}
               </p>
-            ) : (
-              <div className="hide-scrollbar" style={{
-                display: 'grid',
-                gridTemplateRows: 'repeat(5, auto)',
-                gridAutoFlow: 'column',
-                gridAutoColumns: '64px',
-                gap: '8px',
-                overflowX: 'auto',
-                paddingBottom: '4px',
-              }}>
-                {communityMembers.map((member) => {
-                  const colors = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
-                  const color = colors[member.memberId % colors.length];
-                  const isMe = String(member.memberId) === String(userId);
-                  return (
-                    <div key={member.memberId} style={{
-                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
-                    }}>
-                      <div style={{
-                        width: 44, height: 44, borderRadius: '50%',
-                        backgroundColor: color,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 700, fontSize: 18, color: '#fff',
-                        border: isMe ? '2.5px solid var(--th-primary)' : '2.5px solid transparent',
-                        boxSizing: 'border-box',
-                        boxShadow: isMe ? '0 0 0 2px rgba(107,92,231,0.25)' : 'none',
-                        overflow: 'hidden',
-                      }}>
-                        {member.profileImage
-                          ? <img src={member.profileImage} alt={member.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                          : member.nickname[0].toUpperCase()
-                        }
-                      </div>
-                      <span style={{
-                        fontSize: '11px', fontWeight: isMe ? '700' : '500',
-                        color: isMe ? V('--th-primary') : V('--th-text'),
-                        textAlign: 'center', width: '100%',
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {member.nickname}
-                      </span>
+            ) : (() => {
+              const totalMemberPages = Math.ceil(communityMembers.length / MEMBERS_PER_PAGE);
+              const pagedMembers = communityMembers.slice(memberPage * MEMBERS_PER_PAGE, (memberPage + 1) * MEMBERS_PER_PAGE);
+              return (
+                <>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(5, 1fr)',
+                    gap: '10px 6px',
+                  }}>
+                    {pagedMembers.map((member) => {
+                      const colors = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
+                      const color = colors[member.memberId % colors.length];
+                      const isMe = String(member.memberId) === String(userId);
+                      return (
+                        <div key={member.memberId} style={{
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+                        }}>
+                          <div style={{
+                            width: 44, height: 44, borderRadius: '50%',
+                            backgroundColor: color,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontWeight: 700, fontSize: 17, color: '#fff',
+                            border: isMe ? '2.5px solid var(--th-primary)' : '2.5px solid transparent',
+                            boxSizing: 'border-box',
+                            boxShadow: isMe ? '0 0 0 2px rgba(107,92,231,0.25)' : 'none',
+                            overflow: 'hidden',
+                          }}>
+                            {member.profileImage
+                              ? <StorageImage src={member.profileImage} alt={member.nickname} loading="lazy" decoding="async" transform={{ width: 88, height: 88, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                              : member.nickname[0].toUpperCase()
+                            }
+                          </div>
+                          <span style={{
+                            fontSize: '10px', fontWeight: isMe ? '700' : '500',
+                            color: isMe ? V('--th-primary') : V('--th-text'),
+                            textAlign: 'center', width: '100%',
+                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                          }}>
+                            {member.nickname}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {totalMemberPages > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', marginTop: '14px' }}>
+                      {Array.from({ length: totalMemberPages }, (_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setMemberPage(i)}
+                          style={{
+                            width: 30, height: 30, borderRadius: '50%', cursor: 'pointer',
+                            fontSize: '13px', fontWeight: '700',
+                            backgroundColor: memberPage === i ? 'var(--th-primary)' : 'var(--th-card)',
+                            color: memberPage === i ? '#fff' : V('--th-text-sub'),
+                            border: `1px solid ${memberPage === i ? 'var(--th-primary)' : 'var(--th-border)'}`,
+                            transition: 'all 0.15s',
+                          }}
+                        >
+                          {i + 1}
+                        </button>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
       </div>
-
-      {/* Community Member Management Overlay */}
-      {showMemberManage && communityId && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 100,
-          backgroundColor: V('--th-bg'),
-          maxWidth: '390px', left: '50%', transform: 'translateX(-50%)',
-          overflowY: 'auto', paddingBottom: 40,
-        }}>
-          {/* Header */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            padding: '16px 20px', position: 'sticky', top: 0, zIndex: 10,
-            backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)`,
-          }}>
-            <button
-              onClick={() => setShowMemberManage(false)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
-            >
-              <ArrowLeft style={{ width: 24, height: 24 }} />
-            </button>
-            <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>
-              멤버 관리
-            </h1>
-            <div style={{ width: 32 }} />
-          </div>
-
-          <div style={{ padding: '16px 20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
-              <Users size={16} color="var(--th-text-sub)" />
-              <span style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text-sub') }}>
-                {communityMembers.length}명
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-              {communityMembers.map((member) => {
-                const colors = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
-                const color = colors[member.memberId % colors.length];
-                const isMe = String(member.memberId) === String(userId);
-                const canKick = !isMe;
-                return (
-                  <div
-                    key={member.memberId}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '12px',
-                      padding: '12px 8px', borderBottom: `1px solid var(--th-border)`,
-                    }}
-                  >
-                    <div style={{
-                      width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
-                      backgroundColor: color,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '16px', fontWeight: '700', color: '#fff',
-                      overflow: 'hidden',
-                    }}>
-                      {member.profileImage
-                        ? <img src={member.profileImage} alt={member.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        : member.nickname[0].toUpperCase()
-                      }
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: '15px', fontWeight: isMe ? '700' : '600',
-                        color: isMe ? 'var(--th-primary)' : V('--th-text'),
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {member.nickname}
-                      </div>
-                      {isMe && (
-                        <div style={{ fontSize: '11px', color: V('--th-text-sub'), marginTop: '2px' }}>나</div>
-                      )}
-                    </div>
-                    {canKick && (
-                      <button
-                        onClick={async () => {
-                          if (!window.confirm(`${member.nickname}님을 커뮤니티에서 내보내시겠습니까?`)) return;
-                          try {
-                            await api.delete(`/communities/${communityId}/members/${member.memberId}`);
-                            queryClient.invalidateQueries({ queryKey: ['communityMembers', communityId] });
-                          } catch { alert('멤버 내보내기에 실패했습니다.'); }
-                        }}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          padding: '6px', borderRadius: '8px', flexShrink: 0,
-                          color: '#ef4444', display: 'flex', alignItems: 'center',
-                        }}
-                      >
-                        <X style={{ width: 18, height: 18 }} />
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Join Code Bottom Sheet */}
       {showJoinSheet && (

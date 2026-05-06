@@ -1,8 +1,11 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { Capacitor } from '@capacitor/core';
+import { App as CapApp } from '@capacitor/app';
+import { Browser } from '@capacitor/browser';
 import { setAccessToken } from './api/axios';
-import { AUTH_CHANGED_EVENT, getStoredAuth } from './auth/storage';
+import { AUTH_CHANGED_EVENT, getStoredAuth, saveAuthSession } from './auth/storage';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
 
@@ -23,6 +26,7 @@ const CreateGroup = lazy(() => import('./pages/CreateGroup'));
 const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
 const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
+const CommunityMemberManage = lazy(() => import('./pages/CommunityMemberManage'));
 
 const RouteFallback = () => (
   <div
@@ -53,6 +57,26 @@ function App() {
   }, []);
 
   useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handler = CapApp.addListener('appUrlOpen', async ({ url }) => {
+      if (!url.includes('oauth-callback')) return;
+      await Browser.close();
+      const urlObj = new URL(url);
+      const token = urlObj.searchParams.get('token');
+      const userId = urlObj.searchParams.get('userId');
+      const nickname = urlObj.searchParams.get('nickname');
+      const role = urlObj.searchParams.get('role');
+      const refreshToken = urlObj.searchParams.get('refreshToken');
+      if (token && userId) {
+        setAccessToken(token);
+        saveAuthSession({ userId, nickname, role, refreshToken });
+        setAuthState(getStoredAuth());
+      }
+    });
+    return () => { handler.then(h => h.remove()); };
+  }, []);
+
+  useEffect(() => {
     const syncAuthState = () => {
       setAuthState(getStoredAuth());
     };
@@ -68,6 +92,11 @@ function App() {
 
   const isAuthenticated = !!authState.userId;
   const isAdmin = authState.role === 'ADMIN';
+
+  useEffect(() => {
+    // Railway 서버 워밍업 - 콜드 스타트 방지
+    axios.get(`${import.meta.env.VITE_API_URL}/health`).catch(() => {});
+  }, []);
 
   useEffect(() => {
     // 앱 시작 시 저장된 refresh token으로 access token 복구
@@ -87,6 +116,12 @@ function App() {
     <ThemeProvider>
     <LanguageProvider>
     <BrowserRouter>
+      <div style={{
+        position: 'fixed', top: 0, left: 0, right: 0,
+        height: 'env(safe-area-inset-top)',
+        backgroundColor: 'var(--th-nav-bg)',
+        zIndex: 99999,
+      }} />
       <div className="min-h-screen">
         <Suspense fallback={<RouteFallback />}>
           <Routes>
@@ -99,6 +134,7 @@ function App() {
             <Route path="/create-group" element={isAuthenticated ? <CreateGroup /> : <Navigate to="/login" replace />} />
             <Route path="/create-community" element={isAuthenticated ? <CreateCommunity /> : <Navigate to="/login" replace />} />
             <Route path="/manage-community" element={isAuthenticated ? <CommunitySettings /> : <Navigate to="/login" replace />} />
+            <Route path="/community-members" element={isAuthenticated ? <CommunityMemberManage /> : <Navigate to="/login" replace />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
             <Route path="/invite/:roomId" element={isAuthenticated ? <Invite /> : <Navigate to="/login" replace />} />
             <Route path="/match-form/:roomId" element={isAuthenticated ? <MatchForm /> : <Navigate to="/login" replace />} />
