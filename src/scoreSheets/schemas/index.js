@@ -11,7 +11,7 @@ import { takenovoSchema } from './takenoko';
 import { littleTownsSchema } from './littleTowns';
 import { diceThroneSchema, DiceThroneTable } from './dicethrone.jsx';
 import { splendorDuelSchema, SplendorDuelTable } from './splendorduel.jsx';
-import { unmatchedSchema, UnmatchedTable } from './unmatched.jsx';
+import { unmatchedSchema, UnmatchedTable } from './unmatched/index.jsx';
 import FlatTable from '../tables/FlatTable';
 import SectionedTable from '../tables/SectionedTable';
 

@@ -1,59 +1,19 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Users, Hash, Shield } from 'lucide-react';
+import { Plus, Hash, Shield } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { CommunityCardSkeleton } from '../components/Skeleton';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
-import { getAvatarColorByStr as avatarColor } from '../utils/avatarUtils';
+import CommunityCard from '../components/community/CommunityCard';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
 );
 
-const AvatarStack = ({ admins = [], memberCount = 0 }) => {
-  const visible = admins.slice(0, 3);
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-      <div style={{ display: 'flex' }}>
-        {visible.map((admin, i) => (
-          <div
-            key={admin.memberId}
-            style={{
-              width: 28, height: 28, borderRadius: '50%',
-              backgroundColor: avatarColor(admin.nickname),
-              border: `2px solid var(--th-card)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '11px', fontWeight: '700', color: '#fff',
-              marginLeft: i === 0 ? 0 : -8,
-              zIndex: visible.length - i,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            {admin.profileImage
-              ? <StorageImage src={admin.profileImage} alt={admin.nickname} loading="lazy" decoding="async" transform={{ width: 56, height: 56, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              : (admin.nickname || '?')[0].toUpperCase()
-            }
-          </div>
-        ))}
-      </div>
-      {memberCount > 0 && (
-        <span style={{
-          fontSize: '12px', fontWeight: '600', color: V('--th-text-sub'),
-          backgroundColor: V('--th-bg'),
-          border: `1px solid var(--th-border)`,
-          borderRadius: '20px', padding: '2px 8px',
-        }}>
-          +{memberCount > 999 ? `${Math.floor(memberCount / 1000)}k` : memberCount}
-        </span>
-      )}
-    </div>
-  );
-};
 
 const CommunityLobby = () => {
   const navigate = useNavigate();
@@ -293,74 +253,13 @@ const CommunityLobby = () => {
             }}
           >
             {myCommunities.map((community) => (
-              <div
+              <CommunityCard
                 key={community.communityId}
-                style={{
-                  flex: '0 0 calc(100% - 40px)',
-                  scrollSnapAlign: 'start',
-                  borderRadius: '18px', padding: '18px',
-                  backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                }}
-              >
-                {/* 프로필 이미지 + Manage */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <div style={{
-                    width: 48, height: 48, borderRadius: '12px', overflow: 'hidden', flexShrink: 0,
-                    backgroundColor: 'var(--th-bg)', border: '1px solid var(--th-border)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {community.imageUrl ? (
-                      <StorageImage src={community.imageUrl} alt={community.name} loading="lazy" decoding="async" transform={{ width: 96, height: 96, quality: 70 }}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    ) : (
-                      <div style={{
-                        width: '100%', height: '100%',
-                        background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '20px', fontWeight: '800', color: '#fff',
-                      }}>
-                        {(community.name || '?')[0].toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                  <button
-                    onClick={() => handleManage(community)}
-                    style={{
-                      fontSize: '12px', fontWeight: '600', color: V('--th-text'),
-                      backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
-                      borderRadius: '8px', padding: '5px 12px', cursor: 'pointer',
-                    }}
-                  >
-                    {t('community', 'manage')}
-                  </button>
-                </div>
-
-                {/* 이름 + 그룹 수 */}
-                <p style={{ fontSize: '20px', fontWeight: '800', color: V('--th-text'), margin: '0 0 4px' }}>
-                  {community.name}
-                </p>
-                <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Users size={13} />
-                  {community.groupCount} {t('community', 'groups')}
-                </p>
-
-                {/* 아바타 스택 */}
-                <AvatarStack admins={community.admins ?? []} memberCount={community.memberCount ?? 0} />
-
-                {/* Enter 버튼 */}
-                <button
-                  onClick={() => handleEnterCommunity(community)}
-                  style={{
-                    width: '100%', padding: '13px',
-                    borderRadius: '12px', border: 'none', cursor: 'pointer',
-                    background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-                    color: '#fff', fontSize: '15px', fontWeight: '700',
-                  }}
-                >
-                  {t('community', 'enterCommunity')}
-                </button>
-              </div>
+                community={community}
+                onEnter={handleEnterCommunity}
+                onManage={handleManage}
+                t={t}
+              />
             ))}
           </div>
         )}
@@ -380,55 +279,12 @@ const CommunityLobby = () => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
             {joinedCommunities.map((community) => (
-              <div
+              <CommunityCard
                 key={community.communityId}
-                style={{
-                  borderRadius: '18px', padding: '18px',
-                  backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-                }}
-              >
-                <div style={{ marginBottom: '12px' }}>
-                  <div style={{
-                    width: 48, height: 48, borderRadius: '12px', overflow: 'hidden',
-                    backgroundColor: 'var(--th-bg)', border: '1px solid var(--th-border)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  {community.imageUrl ? (
-                      <StorageImage src={community.imageUrl} alt={community.name} loading="lazy" decoding="async" transform={{ width: 96, height: 96, quality: 70 }}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                    ) : (
-                      <div style={{
-                        width: '100%', height: '100%',
-                        background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '20px', fontWeight: '800', color: '#fff',
-                      }}>
-                        {(community.name || '?')[0].toUpperCase()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <p style={{ fontSize: '18px', fontWeight: '800', color: V('--th-text'), margin: '0 0 4px' }}>
-                  {community.name}
-                </p>
-                <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <Users size={13} />
-                  {community.groupCount} {t('community', 'groups')}
-                </p>
-                <AvatarStack admins={community.admins ?? []} memberCount={community.memberCount ?? 0} />
-                <button
-                  onClick={() => handleEnterCommunity(community)}
-                  style={{
-                    width: '100%', padding: '13px',
-                    borderRadius: '12px', border: 'none', cursor: 'pointer',
-                    background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-                    color: '#fff', fontSize: '15px', fontWeight: '700',
-                  }}
-                >
-                  {t('community', 'enterCommunity')}
-                </button>
-              </div>
+                community={community}
+                onEnter={handleEnterCommunity}
+                t={t}
+              />
             ))}
           </div>
         )}

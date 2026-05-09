@@ -9,6 +9,8 @@ import api, { setAccessToken } from '../api/axios';
 import { clearAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import RoomCard from '../components/lobby/RoomCard';
+import JoinCodeSheet from '../components/lobby/JoinCodeSheet';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -395,48 +397,14 @@ const Lobby = () => {
                     const imageUrl = communityId ? room.imageUrl : gameInfo?.imageUrl;
                     const isMember = communityId ? room.isMember : true;
                     return (
-                      <div
+                      <RoomCard
                         key={room.roomId}
+                        room={room}
+                        imageUrl={imageUrl}
+                        isMember={isMember}
+                        communityId={communityId}
                         onClick={() => handleEnterRoom(room)}
-                        style={{
-                          borderRadius: '16px',
-                          backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                          boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-                          cursor: 'pointer', overflow: 'hidden',
-                          display: 'flex', flexDirection: 'column',
-                        }}
-                      >
-                        <div style={{
-                          width: '100%', height: '80px',
-                          backgroundColor: 'rgba(107,92,231,0.08)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          overflow: 'hidden',
-                        }}>
-                          {imageUrl ? (
-                            <StorageImage src={imageUrl} alt={room.roomName} loading="lazy" decoding="async" transform={{ width: 160, height: 160, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                          ) : (
-                            <span style={{ fontSize: '28px' }}>🎲</span>
-                          )}
-                        </div>
-                        <div style={{ padding: '8px 8px 10px', flex: 1 }}>
-                          <div style={{
-                            fontWeight: '700', color: V('--th-text'), fontSize: '12px',
-                            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            marginBottom: '4px',
-                          }}>
-                            {room.roomName}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
-                            <Users style={{ width: 10, height: 10, color: V('--th-text-sub') }} />
-                            <span style={{ fontSize: '10px', color: V('--th-text-sub'), fontWeight: '500' }}>
-                              {room.memberCount ?? '—'}명
-                            </span>
-                            {communityId && isMember && (
-                              <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-primary)' }}>· 참가중</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      />
                     );
                   })}
                 </div>
@@ -571,64 +539,15 @@ const Lobby = () => {
         )}
       </div>
 
-      {/* Join Code Bottom Sheet */}
       {showJoinSheet && (
-        <div style={{
-          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.4)',
-          zIndex: 50, display: 'flex', alignItems: 'flex-end',
-        }}>
-          <div
-            ref={sheetRef}
-            style={{
-              width: '100%', maxWidth: '390px', margin: '0 auto',
-              backgroundColor: V('--th-card'),
-              borderRadius: '24px 24px 0 0',
-              padding: '24px 20px 40px',
-            }}
-          >
-            <div style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: V('--th-border'), margin: '0 auto 24px' }} />
-
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: V('--th-text'), marginBottom: '6px' }}>
-              {t('lobby', 'enterGroupCode')}
-            </h3>
-            <p style={{ fontSize: '13px', color: V('--th-text-sub'), marginBottom: '20px' }}>
-              {t('lobby', 'enterGroupCodeHint')}
-            </p>
-
-            <input
-              type="text"
-              value={joinCode}
-              onChange={(e) => setJoinCode(e.target.value.toUpperCase())}
-              onKeyDown={(e) => e.key === 'Enter' && handleJoinRoom()}
-              placeholder={t('lobby', 'inviteCodePlaceholder')}
-              autoFocus
-              maxLength={8}
-              style={{
-                width: '100%', padding: '14px 16px', borderRadius: '12px',
-                textAlign: 'center', fontFamily: 'monospace', fontSize: '22px',
-                letterSpacing: '0.3em', fontWeight: '700', outline: 'none',
-                backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
-                color: V('--th-primary'), boxSizing: 'border-box', marginBottom: '12px',
-              }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-            />
-
-            <button
-              onClick={handleJoinRoom}
-              disabled={isJoining || !joinCode.trim()}
-              style={{
-                width: '100%', padding: '15px', borderRadius: '50px',
-                background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-                color: '#fff', fontWeight: '700', fontSize: '15px',
-                border: 'none', cursor: 'pointer',
-                opacity: (isJoining || !joinCode.trim()) ? 0.5 : 1,
-              }}
-            >
-              {isJoining ? '...' : t('lobby', 'joinGroup')}
-            </button>
-          </div>
-        </div>
+        <JoinCodeSheet
+          sheetRef={sheetRef}
+          joinCode={joinCode}
+          setJoinCode={setJoinCode}
+          isJoining={isJoining}
+          onJoin={handleJoinRoom}
+          t={t}
+        />
       )}
     </div>
   );

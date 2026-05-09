@@ -1,0 +1,16 @@
+export default {
+  title: 'Game Setup',
+  searchPlaceholder: 'Search games',
+  playerSearchPlaceholder: 'Search players...',
+  noResults: 'No results found',
+  selectGame: 'Select Game',
+  persons: ' players',
+  selected: '✓ Selected',
+  selectPlayers: 'Select Players',
+  startButton: ' selected! Start Game',
+  startPlaceholder: 'Select a game and players',
+  minPlayersError: 'Please select at least 2 players!',
+  noGameError: 'Please select a game first!',
+  maxPlayersError: 'Maximum {n} players allowed.',
+  currentGame: 'Current Game',
+};

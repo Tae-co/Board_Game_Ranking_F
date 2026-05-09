@@ -12,6 +12,10 @@ const CreateGroup = () => {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const userId = localStorage.getItem('userId');
+  const communityId = (() => {
+    try { return JSON.parse(localStorage.getItem('selectedCommunity'))?.communityId ?? null; }
+    catch { return null; }
+  })();
 
   const [roomName, setRoomName] = useState('');
   const [selectedGameId, setSelectedGameId] = useState(null);
@@ -49,8 +53,10 @@ const CreateGroup = () => {
         roomName: roomName.trim(),
         memberId: Number(userId),
         boardGameId: selectedGameId,
+        ...(communityId ? { communityId: Number(communityId) } : {}),
       });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
       navigate(`/invite/${res.data.roomId}`);
     } catch {
       alert(t('lobby', 'createFailed'));

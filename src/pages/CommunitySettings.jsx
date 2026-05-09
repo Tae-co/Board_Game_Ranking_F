@@ -53,6 +53,8 @@ const CommunitySettings = () => {
   const [region, setRegion] = useState('South Korea');
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [searchQuery, setSearchQuery] = useState('');
+  const [adminPage, setAdminPage] = useState(0);
+  const ADMIN_PER_PAGE = 10;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -118,6 +120,8 @@ const CommunitySettings = () => {
         m.nickname.toLowerCase().includes(searchQuery.toLowerCase())
       )
     : allMembers;
+  const totalAdminPages = Math.ceil(filteredMembers.length / ADMIN_PER_PAGE);
+  const pagedAdminMembers = filteredMembers.slice(adminPage * ADMIN_PER_PAGE, (adminPage + 1) * ADMIN_PER_PAGE);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -379,7 +383,7 @@ const CommunitySettings = () => {
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => { setSearchQuery(e.target.value); setAdminPage(0); }}
               placeholder={t('community', 'searchByNickname')}
               style={{
                 flex: 1, border: 'none', outline: 'none',
@@ -389,13 +393,13 @@ const CommunitySettings = () => {
           </div>
 
           {/* Member list */}
-          <div style={{ maxHeight: '280px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {filteredMembers.length === 0 ? (
               <p style={{ fontSize: '13px', color: V('--th-text-sub'), textAlign: 'center', padding: '20px 0', margin: 0 }}>
                 {t('community', 'searchNoResult')}
               </p>
             ) : (
-              filteredMembers.map((m) => {
+              pagedAdminMembers.map((m) => {
                 const isSelected = selectedIds.has(m.memberId);
                 const isDisabled = !isSelected && selectedIds.size >= 4;
                 return (
@@ -411,7 +415,6 @@ const CommunitySettings = () => {
                       opacity: isDisabled ? 0.4 : 1,
                     }}
                   >
-                    {/* Avatar */}
                     <div style={{
                       width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
                       backgroundColor: isSelected ? 'var(--th-primary)' : 'var(--th-bg)',
@@ -423,16 +426,12 @@ const CommunitySettings = () => {
                     }}>
                       {m.nickname[0].toUpperCase()}
                     </div>
-
-                    {/* Nickname */}
                     <span style={{
                       flex: 1, fontSize: '14px', fontWeight: '500', textAlign: 'left',
                       color: isSelected ? 'var(--th-primary)' : V('--th-text'),
                     }}>
                       {m.nickname}
                     </span>
-
-                    {/* Check icon */}
                     {isSelected && (
                       <Check size={16} color="var(--th-primary)" strokeWidth={2.5} />
                     )}
@@ -441,6 +440,27 @@ const CommunitySettings = () => {
               })
             )}
           </div>
+
+          {/* Pagination */}
+          {totalAdminPages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
+              <button
+                onClick={() => setAdminPage(p => Math.max(0, p - 1))}
+                disabled={adminPage === 0}
+                style={{ padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: `1px solid var(--th-border)`, backgroundColor: V('--th-bg'), color: adminPage === 0 ? V('--th-text-sub') : V('--th-text'), cursor: adminPage === 0 ? 'not-allowed' : 'pointer' }}
+              >
+                ‹
+              </button>
+              <span style={{ fontSize: 12, fontWeight: 700, color: V('--th-text-sub') }}>{adminPage + 1} / {totalAdminPages}</span>
+              <button
+                onClick={() => setAdminPage(p => Math.min(totalAdminPages - 1, p + 1))}
+                disabled={adminPage >= totalAdminPages - 1}
+                style={{ padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: `1px solid var(--th-border)`, backgroundColor: V('--th-bg'), color: adminPage >= totalAdminPages - 1 ? V('--th-text-sub') : V('--th-text'), cursor: adminPage >= totalAdminPages - 1 ? 'not-allowed' : 'pointer' }}
+              >
+                ›
+              </button>
+            </div>
+          )}
         </div>
 
         {error && (

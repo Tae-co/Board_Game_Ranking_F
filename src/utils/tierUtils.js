@@ -9,10 +9,10 @@ export const getErrorMessage = (err, fallback) => {
 };
 
 export const getTierFromRating = (rating = 1500) => {
-  if (rating >= 2500) return { ...TIERS.diamond, label: 'DIAMOND' };
-  if (rating >= 2000) return { ...TIERS.platinum, label: 'PLATINUM' };
-  if (rating >= 1500) return { ...TIERS.gold, label: 'GOLD' };
-  if (rating >= 1000) return { ...TIERS.silver, label: 'SILVER' };
+  if (rating >= 2600) return { ...TIERS.diamond, label: 'DIAMOND' };
+  if (rating >= 2300) return { ...TIERS.platinum, label: 'PLATINUM' };
+  if (rating >= 2000) return { ...TIERS.gold, label: 'GOLD' };
+  if (rating >= 1700) return { ...TIERS.silver, label: 'SILVER' };
   return { ...TIERS.bronze, label: 'BRONZE' };
 };
 
