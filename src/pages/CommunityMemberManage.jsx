@@ -5,8 +5,7 @@ import { ArrowLeft, Users, X } from 'lucide-react';
 import StorageImage from '../components/StorageImage';
 import NavAvatar from '../components/NavAvatar';
 import api from '../api/axios';
-
-const V = (v) => `var(${v})`;
+import { V } from '../utils/cssUtils';
 const COLORS = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
 const PER_PAGE = 10;
 

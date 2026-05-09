@@ -5,8 +5,7 @@ import { Browser } from '@capacitor/browser';
 import api, { setAccessToken } from '../api/axios';
 import { saveAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
-
-const V = (v) => `var(${v})`;
+import { V } from '../utils/cssUtils';
 
 const isWebView = !Capacitor.isNativePlatform() && (
   /FBAN|FBAV|Instagram|Twitter|Line|KAKAOTALK/i.test(navigator.userAgent) ||
@@ -89,7 +88,14 @@ const Login = () => {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: '56px' }}>
           <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center' }}>
-            <img src="/logo.png" width="80" height="80" style={{ objectFit: 'contain' }} alt="logo" />
+            <div style={{
+              width: '100px', height: '100px', borderRadius: '28px',
+              background: '#f3f1ff', border: '1px solid #e0d9ff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 24px rgba(107, 92, 231, 0.12)',
+            }}>
+              <img src="/logo.png" width="68" height="68" style={{ objectFit: 'contain' }} alt="logo" />
+            </div>
           </div>
           <h1 style={{ fontSize: '28px', fontWeight: '700', color: V('--th-text'), margin: '0 0 8px' }}>
             {t('login', 'title')}
@@ -179,7 +185,10 @@ const Login = () => {
           BY CONTINUING, YOU AGREE TO OUR{' '}
           <span style={{ fontWeight: '600' }}>TERMS</span>
           {' · '}
-          <span style={{ fontWeight: '600' }}>PRIVACY</span>
+          <span
+            style={{ fontWeight: '600', cursor: 'pointer', textDecoration: 'underline' }}
+            onClick={() => Browser.open({ url: 'https://yadarank.com/privacy.html' })}
+          >PRIVACY</span>
         </p>
       </div>
     </div>

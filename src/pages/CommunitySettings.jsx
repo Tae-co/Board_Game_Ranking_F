@@ -4,33 +4,18 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Camera, Search, Check, Trash2, Copy, CheckCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import api from '../api/axios';
+import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
+import NavAvatar from '../components/NavAvatar';
+import { V } from '../utils/cssUtils';
+import { REGION_NAMES } from '../constants/regions';
 
-const uploadImage = async (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  const res = await api.post('/upload/image', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return res.data.url;
-};
-
-const V = (v) => `var(${v})`;
-
-const REGIONS = [
-  'South Korea', 'United States', 'Japan', 'China', 'United Kingdom',
-  'Germany', 'France', 'Canada', 'Australia', 'Singapore',
-  'Hong Kong', 'Taiwan', 'Thailand', 'Vietnam', 'Indonesia',
-  'Philippines', 'Malaysia', 'India', 'Brazil', 'Mexico',
-  'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Finland',
-  'Spain', 'Italy', 'Poland', 'Russia', 'Other',
-];
+const REGIONS = [...REGION_NAMES, 'Other'];
 
 const CommunitySettings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const nickname = localStorage.getItem('nickname') || '?';
   const userId = Number(localStorage.getItem('userId'));
 
   const storedCommunity = (() => {
@@ -53,14 +38,14 @@ const CommunitySettings = () => {
     staleTime: 0,
   });
 
-  // 전체 멤버 목록 (자신 제외)
+  // 커뮤니티 멤버 목록 (자신 제외)
   const { data: allMembers = [], isLoading: membersLoading } = useQuery({
-    queryKey: ['memberSearch', userId],
+    queryKey: ['communityMembers', communityId],
     queryFn: async () => {
-      const res = await api.get('/members/search', { params: { excludeId: userId } });
-      return res.data || [];
+      const res = await api.get(`/communities/${communityId}/members`);
+      return (res.data || []).filter((m) => m.memberId !== userId);
     },
-    enabled: !!userId,
+    enabled: !!communityId,
     staleTime: 1000 * 60 * 5,
   });
 
@@ -86,11 +71,11 @@ const CommunitySettings = () => {
     setImagePreview(URL.createObjectURL(file));
     setIsUploading(true);
     try {
-      const url = await uploadImage(file);
+      const url = await uploadImage(file, detail?.imageUrl);
       setUploadedImageUrl(url);
-    } catch {
-      alert('이미지 업로드에 실패했습니다.');
-      setImagePreview(null);
+    } catch (err) {
+      alert(err?.message || '이미지 업로드에 실패했습니다.');
+      setImagePreview(detail?.imageUrl || null);
     } finally {
       setIsUploading(false);
     }
@@ -149,6 +134,20 @@ const CommunitySettings = () => {
         adminMemberIds: [...selectedIds],
       });
       localStorage.setItem('myCommunity', JSON.stringify(res.data));
+      try {
+        const stored = localStorage.getItem('selectedCommunity');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (String(parsed.communityId) === String(communityId)) {
+            localStorage.setItem('selectedCommunity', JSON.stringify({
+              ...parsed,
+              name: name.trim(),
+              imageUrl: uploadedImageUrl ?? detail?.imageUrl ?? null,
+            }));
+            window.dispatchEvent(new Event('selectedCommunityUpdated'));
+          }
+        }
+      } catch {}
       queryClient.invalidateQueries({ queryKey: ['myCommunitiesList', String(userId)] });
       queryClient.invalidateQueries({ queryKey: ['communityDetail', communityId] });
       navigate('/community', { replace: true });
@@ -189,42 +188,27 @@ const CommunitySettings = () => {
   const totalAdminCount = selectedIds.size + 1; // +1 for creator
 
   return (
-    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
 
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 20px',
-        backgroundColor: V('--th-nav-bg'),
-        position: 'sticky', top: 0, zIndex: 10,
-        borderBottom: `1px solid var(--th-border)`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-          >
-            <ArrowLeft size={22} color={V('--th-primary')} />
-          </button>
-          <span style={{ fontSize: '18px', fontWeight: '700', color: V('--th-primary') }}>
-            {t('community', 'editCommunity')}
-          </span>
-        </div>
-        <div
-          onClick={() => navigate('/profile')}
-          style={{
-            width: 36, height: 36, borderRadius: '50%',
-            backgroundColor: 'var(--th-primary)', color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 700, fontSize: 14, cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(123,108,246,0.3)',
-          }}
-        >
-          {(nickname || '?')[0].toUpperCase()}
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => navigate(-1)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+            >
+              <ArrowLeft size={22} color={V('--th-primary')} />
+            </button>
+            <span style={{ fontSize: '18px', fontWeight: '700', color: V('--th-primary') }}>
+              {t('community', 'editCommunity')}
+            </span>
+          </div>
+          <NavAvatar size={36} fontSize={14} />
         </div>
       </div>
 
-      <div style={{ padding: '28px 20px' }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '28px 20px' }}>
 
         {/* Photo upload */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
@@ -467,19 +451,19 @@ const CommunitySettings = () => {
 
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting}
+          disabled={isSubmitting || isUploading}
           style={{
             width: '100%', padding: '16px',
             borderRadius: '14px', border: 'none', cursor: isSubmitting ? 'not-allowed' : 'pointer',
-            background: isSubmitting
+            background: (isSubmitting || isUploading)
               ? 'var(--th-border)'
               : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
             color: '#fff', fontSize: '16px', fontWeight: '700',
-            boxShadow: isSubmitting ? 'none' : '0 4px 16px rgba(107,92,231,0.35)',
+            boxShadow: (isSubmitting || isUploading) ? 'none' : '0 4px 16px rgba(107,92,231,0.35)',
             marginBottom: '12px',
           }}
         >
-          {isSubmitting ? t('community', 'saving') : t('community', 'saveChanges')}
+          {isUploading ? '이미지 업로드 중...' : isSubmitting ? t('community', 'saving') : t('community', 'saveChanges')}
         </button>
 
         {/* Delete button */}

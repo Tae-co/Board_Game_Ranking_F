@@ -21,7 +21,7 @@ const AdminLogin = () => {
       role: data.role,
       refreshToken: data.refreshToken,
     });
-    navigate('/lobby');
+    navigate(data.role === 'ADMIN' ? '/admin' : '/lobby');
   };
 
   const handleAdminLogin = async () => {

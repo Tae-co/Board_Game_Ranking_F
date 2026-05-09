@@ -8,8 +8,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api, { setAccessToken } from '../api/axios';
 import { clearAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
-
-const V = (v) => `var(${v})`;
+import { V } from '../utils/cssUtils';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />

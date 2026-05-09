@@ -6,6 +6,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
+import FlatTable from '../scoreSheets/tables/FlatTable';
+import SectionedTable from '../scoreSheets/tables/SectionedTable';
 import { getAllCategories, cl } from '../scoreSheets/shared/scoreUtils';
 import { ScienceModal } from '../scoreSheets/shared/ScoreCell';
 import RankInputTable from '../scoreSheets/components/RankInputTable';
@@ -17,7 +19,7 @@ const ScoreSheet = () => {
   const location = useLocation();
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
-  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null, backState = null } = location.state || {};
+  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null, backState = null, previewMode = false, schemaJson = null } = location.state || {};
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scienceModal, setScienceModal] = useState(null);
@@ -41,12 +43,26 @@ const ScoreSheet = () => {
 
   const currentSchema = useMemo(() => {
     const normalizedGameName = gameName.toLowerCase();
-    return SCORE_SCHEMAS[boardGameId]
+
+    // 1. 코드 기반 스키마 (카탄, 우노 등)
+    const codeSchema = SCORE_SCHEMAS[boardGameId]
       ?? (gameName && Object.values(SCORE_SCHEMAS).find(s =>
         normalizedGameName.includes(s.name.toLowerCase()) || s.name.toLowerCase().includes(normalizedGameName)
-      ))
-      ?? (players.length ? { name: gameName || '게임', type: 'generic' } : null);
-  }, [boardGameId, gameName, players.length]);
+      ));
+    if (codeSchema) return codeSchema;
+
+    // 2. DB 기반 스키마 (어드민에서 등록한 flat/sectioned 게임)
+    if (schemaJson) {
+      try {
+        const parsed = typeof schemaJson === 'string' ? JSON.parse(schemaJson) : schemaJson;
+        if (parsed.type === 'flat') return { ...parsed, TableComponent: FlatTable };
+        if (parsed.type === 'sectioned') return { ...parsed, TableComponent: SectionedTable };
+      } catch {}
+    }
+
+    // 3. null → 점수판 준비 안됨 UI
+    return null;
+  }, [boardGameId, gameName, schemaJson]);
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
@@ -216,6 +232,19 @@ const ScoreSheet = () => {
     );
   }
 
+  if (!currentSchema) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)", padding: 24, textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>🎲</div>
+        <p style={{ color: "var(--th-text)", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>점수판이 아직 준비되지 않았습니다.</p>
+        <p style={{ color: "var(--th-text-sub)", fontSize: 13, marginBottom: 24 }}>관리자에게 문의하세요.</p>
+        <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
+          {t('scoreSheet', 'goBack')}
+        </button>
+      </div>
+    );
+  }
+
   const TableComponent = currentSchema?.TableComponent;
   const winnerNickname = players.find(p => p.memberId === winnerId)?.nickname;
 
@@ -346,7 +375,7 @@ const ScoreSheet = () => {
       )}
 
       {/* Bottom Fixed Button */}
-      {!readOnly && (
+      {!readOnly && !previewMode && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20, background: 'linear-gradient(to top, var(--th-bg) 70%, transparent)' }}>
           <div style={{ maxWidth: 375, margin: '0 auto', padding: '20px 16px 32px' }}>
             <button

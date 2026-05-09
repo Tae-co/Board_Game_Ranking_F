@@ -1,40 +1,15 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Globe, Sun, Moon, LogOut, Pencil, ChevronRight, Camera } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api, { setAccessToken } from '../api/axios';
+import { uploadProfileImage } from '../api/uploadImage';
 import { clearAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../theme/ThemeContext';
-import { TierBadge, TIERS } from '../components/TierBadge';
-
-const V = (v) => `var(${v})`;
-
-const getErrorMessage = (err, fallback) => {
-  const data = err?.response?.data;
-  if (typeof data === 'string' && data.trim()) return data;
-  if (typeof data?.message === 'string' && data.message.trim()) return data.message;
-  if (typeof err?.message === 'string' && err.message.trim()) return err.message;
-  return fallback;
-};
-
-const getTierFromRating = (rating = 1500) => {
-  if (rating >= 2500) return { ...TIERS.diamond, label: 'DIAMOND' };
-  if (rating >= 2000) return { ...TIERS.platinum, label: 'PLATINUM' };
-  if (rating >= 1500) return { ...TIERS.gold, label: 'GOLD' };
-  if (rating >= 1000) return { ...TIERS.silver, label: 'SILVER' };
-  return { ...TIERS.bronze, label: 'BRONZE' };
-};
-
-const getTierBg = (label) => {
-  switch (label) {
-    case 'DIAMOND': return { bg: '#EEF2FF', text: '#3730A3' };
-    case 'PLATINUM': return { bg: '#F0FDFA', text: '#0F766E' };
-    case 'GOLD': return { bg: '#FFFBEB', text: '#B45309' };
-    case 'SILVER': return { bg: '#F8FAFC', text: '#475569' };
-    default: return { bg: '#FFF7ED', text: '#9A3412' };
-  }
-};
+import { TierBadge } from '../components/TierBadge';
+import { V } from '../utils/cssUtils';
+import { getErrorMessage, getTierFromRating, getTierBg } from '../utils/tierUtils';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -80,14 +55,10 @@ const Profile = () => {
     e.target.value = '';
     setIsUploadingPhoto(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const uploadRes = await api.post('/upload/profile-image', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      });
-      const url = uploadRes.data.url;
+      const url = await uploadProfileImage(file, profileData?.profileImage);
       await api.patch(`/members/${userId}/profile-image`, { profileImage: url });
       localStorage.setItem('profileImage', url);
+      window.dispatchEvent(new Event('profileImageUpdated'));
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
     } catch { alert('사진 업로드에 실패했습니다.'); }
     finally { setIsUploadingPhoto(false); }
@@ -162,28 +133,24 @@ const Profile = () => {
   };
 
   return (
-    <div style={{ maxWidth: 390, margin: '0 auto', backgroundColor: V('--th-bg'), minHeight: '100vh', paddingBottom: 40 }}>
+    <div style={{ backgroundColor: V('--th-bg'), minHeight: '100vh', paddingBottom: 40 }}>
 
       {/* Header */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 10,
-        backgroundColor: V('--th-nav-bg'),
-        padding: '16px 20px',
-        display: 'flex', alignItems: 'center', gap: 12,
-        borderBottom: `1px solid var(--th-border)`,
-      }}>
-        <button onClick={() => navigate(-1)} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-primary'), flexShrink: 0 }}>
-          <ArrowLeft size={22} />
-        </button>
-        <span style={{ flex: 1, fontSize: 17, fontWeight: 700, color: V('--th-primary') }}>
-          {t('profile', 'title')}
-        </span>
-        <button onClick={handleLogout} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-text-sub'), flexShrink: 0 }}>
-          <LogOut size={20} />
-        </button>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={() => navigate(-1)} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-primary'), flexShrink: 0 }}>
+            <ArrowLeft size={22} />
+          </button>
+          <span style={{ flex: 1, fontSize: 17, fontWeight: 700, color: V('--th-primary') }}>
+            {t('profile', 'title')}
+          </span>
+          <button onClick={handleLogout} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-text-sub'), flexShrink: 0 }}>
+            <LogOut size={20} />
+          </button>
+        </div>
       </div>
 
-      <div style={{ padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
         {/* Profile Card */}
         <div style={{

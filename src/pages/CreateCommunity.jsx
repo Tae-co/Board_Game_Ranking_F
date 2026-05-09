@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Camera } from 'lucide-react';
 import api from '../api/axios';
+import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
-
-const V = (v) => `var(${v})`;
+import { V } from '../utils/cssUtils';
 
 const REGIONS = [
   'South Korea', 'United States', 'Japan', 'China', 'United Kingdom',
@@ -16,14 +16,6 @@ const REGIONS = [
   'Spain', 'Italy', 'Poland', 'Russia', 'Other',
 ];
 
-const uploadImage = async (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  const res = await api.post('/upload/image', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return res.data.url;
-};
 
 const CreateCommunity = () => {
   const navigate = useNavigate();
@@ -84,42 +76,38 @@ const CreateCommunity = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
 
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 20px',
-        backgroundColor: V('--th-nav-bg'),
-        position: 'sticky', top: 0, zIndex: 10,
-        borderBottom: `1px solid var(--th-border)`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <button
+              onClick={() => navigate(-1)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+            >
+              <ArrowLeft size={22} color={V('--th-primary')} />
+            </button>
+            <span style={{ fontSize: '18px', fontWeight: '700', color: V('--th-primary') }}>
+              {t('community', 'createCommunity')}
+            </span>
+          </div>
+          <div
+            onClick={() => navigate('/profile')}
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              backgroundColor: 'var(--th-primary)', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 14, cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(123,108,246,0.3)',
+            }}
           >
-            <ArrowLeft size={22} color={V('--th-primary')} />
-          </button>
-          <span style={{ fontSize: '18px', fontWeight: '700', color: V('--th-primary') }}>
-            {t('community', 'createCommunity')}
-          </span>
-        </div>
-        <div
-          onClick={() => navigate('/profile')}
-          style={{
-            width: 36, height: 36, borderRadius: '50%',
-            backgroundColor: 'var(--th-primary)', color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 700, fontSize: 14, cursor: 'pointer',
-            boxShadow: '0 2px 8px rgba(123,108,246,0.3)',
-          }}
-        >
-          {(nickname || '?')[0].toUpperCase()}
+            {(nickname || '?')[0].toUpperCase()}
+          </div>
         </div>
       </div>
 
-      <div style={{ padding: '28px 20px' }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '28px 20px' }}>
 
         {/* Photo upload */}
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>

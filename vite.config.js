@@ -5,8 +5,25 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-data': ['axios', '@tanstack/react-query'],
+          'vendor-ui': ['lucide-react', 'motion/react'],
+          'vendor-capacitor': ['@capacitor/core', '@capacitor/app', '@capacitor/browser'],
+        },
+      },
+    },
+  },
   optimizeDeps: {
-    include: ['motion/react'],
+    include: [
+      'react', 'react-dom', 'react-router-dom',
+      'axios', '@tanstack/react-query',
+      '@capacitor/core', '@capacitor/app', '@capacitor/browser',
+      'lucide-react', 'motion/react',
+    ],
   },
   server: {
     proxy: {

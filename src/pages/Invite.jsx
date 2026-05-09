@@ -8,15 +8,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 import { usePresence } from '../hooks/usePresence';
-
-const V = (v) => `var(${v})`;
+import { V } from '../utils/cssUtils';
+import { getAvatarColorById as getAvatarColor } from '../utils/avatarUtils';
 const myNickname = () => localStorage.getItem('nickname') || '?';
-
-const avatarColors = [
-  '#6B5CE7', '#7B8FF5', '#A78BFA', '#60A5FA', '#34D399',
-  '#F472B6', '#FB923C', '#FBBF24', '#38BDF8', '#4ADE80',
-];
-const getAvatarColor = (memberId) => avatarColors[memberId % avatarColors.length];
 
 const MemberRow = ({ member, isMe, showKebab, isHost, openKebab, setOpenKebab, onKick, onLeave, t, isOnline, isSelected, onToggle }) => (
   <div

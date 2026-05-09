@@ -1,96 +1,18 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Pencil, Share2 } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
+import StorageImage from '../components/StorageImage';
+import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
+import { V } from '../utils/cssUtils';
+import { REGION_TIMEZONE } from '../constants/regions';
+import { formatDate, formatTime, ordinalSuffix } from '../utils/dateUtils';
+import MedalBadge from '../components/shared/MedalBadge';
+import InitialAvatar from '../components/shared/InitialAvatar';
 
-const V = (v) => `var(${v})`;
-
-const REGION_TIMEZONE = {
-  'South Korea': 'Asia/Seoul',
-  'United States': 'America/New_York',
-  'Japan': 'Asia/Tokyo',
-  'China': 'Asia/Shanghai',
-  'United Kingdom': 'Europe/London',
-  'Germany': 'Europe/Berlin',
-  'France': 'Europe/Paris',
-  'Canada': 'America/Toronto',
-  'Australia': 'Australia/Sydney',
-  'Singapore': 'Asia/Singapore',
-  'Hong Kong': 'Asia/Hong_Kong',
-  'Taiwan': 'Asia/Taipei',
-  'Thailand': 'Asia/Bangkok',
-  'Vietnam': 'Asia/Ho_Chi_Minh',
-  'Indonesia': 'Asia/Jakarta',
-  'Philippines': 'Asia/Manila',
-  'Malaysia': 'Asia/Kuala_Lumpur',
-  'India': 'Asia/Kolkata',
-  'Brazil': 'America/Sao_Paulo',
-  'Mexico': 'America/Mexico_City',
-  'Netherlands': 'Europe/Amsterdam',
-  'Sweden': 'Europe/Stockholm',
-  'Norway': 'Europe/Oslo',
-  'Denmark': 'Europe/Copenhagen',
-  'Finland': 'Europe/Helsinki',
-  'Spain': 'Europe/Madrid',
-  'Italy': 'Europe/Rome',
-  'Poland': 'Europe/Warsaw',
-  'Russia': 'Europe/Moscow',
-};
-
-const formatDate = (dateStr, timezone) => {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-    ...(timezone ? { timeZone: timezone } : {}),
-  }).format(new Date(dateStr));
-};
-
-const formatTime = (dateStr, timezone) => {
-  return new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit', minute: '2-digit', hour12: true,
-    ...(timezone ? { timeZone: timezone } : {}),
-  }).format(new Date(dateStr));
-};
-
-const ordinalSuffix = (n) => {
-  const s = ['th', 'st', 'nd', 'rd'];
-  const v = n % 100;
-  return n + (s[(v - 20) % 10] || s[v] || s[0]);
-};
-
-const MedalBadge = ({ place, size = 22 }) => {
-  const cfg = {
-    1: { outer: '#FFD700', inner: '#FFA500', ribbon: '#E69500' },
-    2: { outer: '#C8C8D4', inner: '#A0A0B0', ribbon: '#8888A0' },
-    3: { outer: '#D4936A', inner: '#B07040', ribbon: '#8A5530' },
-  }[place] || {};
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <circle cx="12" cy="13" r="8" fill={cfg.outer} />
-      <circle cx="12" cy="13" r="6" fill={cfg.inner} />
-      <path d="M12 8l1.18 2.39 2.64.38-1.91 1.86.45 2.63L12 14.01l-2.36 1.25.45-2.63-1.91-1.86 2.64-.38z" fill="#fff" />
-      <path d="M9 4h6l-1 4H10z" fill={cfg.ribbon} />
-      <path d="M9 4l-2 4h3l1-4z" fill={cfg.outer} />
-      <path d="M15 4l2 4h-3l-1-4z" fill={cfg.outer} />
-    </svg>
-  );
-};
-
-const InitialAvatar = ({ nickname, profileImage, size = 36, color = 'var(--th-primary)', fontSize = 14 }) => (
-  <div style={{
-    width: size, height: size, borderRadius: '50%',
-    backgroundColor: color, color: '#fff',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontWeight: 700, fontSize, flexShrink: 0, overflow: 'hidden',
-  }}>
-    {profileImage
-      ? <img src={profileImage} alt={nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-      : (nickname || '?')[0].toUpperCase()
-    }
-  </div>
-);
 
 const buildSavedScores = (participants) => {
   const first = participants.find(p => p.scoresJson);
@@ -159,11 +81,14 @@ const Ranking = () => {
     staleTime: 1000 * 60 * 3,
   });
 
-  const { data: allMatches = [], isLoading: isMatchesLoading, refetch: refetchMatches } = useQuery({
+  const { data: allMatchesRaw = [], isLoading: isMatchesLoading, refetch: refetchMatches } = useQuery({
     queryKey: ['matches', roomId],
     queryFn: async () => { const res = await api.get(`/rooms/${roomId}/matches`); return res.data || []; },
     staleTime: 1000 * 60 * 1,
   });
+  const allMatches = room?.boardGameId
+    ? allMatchesRaw.filter(m => m.boardGameId === room.boardGameId)
+    : allMatchesRaw;
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
@@ -177,10 +102,43 @@ const Ranking = () => {
   );
 
   const myRank = useMemo(() => rankings.find(r => r.memberId === myUserId), [rankings, myUserId]);
+  const myRankPosition = useMemo(() => {
+    const idx = rankings.findIndex(r => r.memberId === myUserId);
+    return idx >= 0 ? idx + 1 : null;
+  }, [rankings, myUserId]);
   const myWinRate = useMemo(() => {
     if (!myRank || (myRank.winCount + myRank.loseCount) === 0) return 0;
     return Math.round(myRank.winCount / (myRank.winCount + myRank.loseCount) * 100);
   }, [myRank]);
+
+  const nativeShare = (title, text) => {
+    if (navigator.share) {
+      navigator.share({ title, text }).catch(() => {});
+    }
+  };
+
+  const shareMatchResult = () => {
+    if (!matchResult) return;
+    const gameName = gameInfo?.name || room?.roomName || '보드게임';
+    const lines = matchResult
+      .sort((a, b) => b.ratingChange - a.ratingChange)
+      .map(r => `${r.nickname} ${r.ratingChange >= 0 ? '+' : ''}${Math.round(r.ratingChange)}`)
+      .join(' · ');
+    nativeShare(
+      `🎮 ${gameName} 한판 결과!`,
+      `${lines}\n\nYadaRank에서 보드게임 랭킹을 기록 중이에요 👉 yadarank.com`,
+    );
+  };
+
+  const shareMyRank = () => {
+    if (!myRank || !myRankPosition) return;
+    const gameName = gameInfo?.name || room?.roomName || '보드게임';
+    const nickname = localStorage.getItem('nickname') || myRank.nickname;
+    nativeShare(
+      `🏆 ${nickname}의 ${gameName} 랭킹`,
+      `${myRankPosition}위 · 레이팅 ${Math.round(myRank.rating)} · 승률 ${myWinRate}% (${myRank.winCount}승 ${myRank.loseCount}패)\n\nYadaRank에서 보드게임 랭킹 관리 중 👉 yadarank.com`,
+    );
+  };
 
   const handleUpdateRating = async () => {
     if (!ratingEditModal) return;
@@ -241,16 +199,20 @@ const Ranking = () => {
   }, [rankings]);
 
   return (
-    <div style={{ maxWidth: 390, margin: '0 auto', backgroundColor: V('--th-bg'), minHeight: '100vh', paddingBottom: 100, fontFamily: "'Pretendard', sans-serif" }}>
+    <div style={{ backgroundColor: V('--th-bg'), minHeight: '100vh', paddingBottom: 100, fontFamily: "'Pretendard', sans-serif" }}>
 
       {/* Header */}
-      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: `1px solid var(--th-border)` }}>
-        <button onClick={() => navigate(`/invite/${roomId}`)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--th-primary)', flexShrink: 0 }}>
-          <ArrowLeft size={22} />
-        </button>
-        <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--th-primary)' }}>My Group</span>
-        <NavAvatar />
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <button onClick={() => navigate(`/invite/${roomId}`)} style={{ padding: 6, borderRadius: 8, border: 'none', background: 'transparent', cursor: 'pointer', color: 'var(--th-primary)', flexShrink: 0 }}>
+            <ArrowLeft size={22} />
+          </button>
+          <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--th-primary)' }}>My Group</span>
+          <NavAvatar />
+        </div>
       </div>
+
+      <div style={{ maxWidth: 390, margin: '0 auto' }}>
 
       {/* Room info row */}
       <div style={{ padding: '20px 20px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -258,33 +220,51 @@ const Ranking = () => {
       </div>
 
       {/* Stats card */}
-      <div style={{ margin: '16px 16px 0', padding: '16px', borderRadius: 16, background: V('--th-card'), border: `1px solid var(--th-border)`, display: 'flex', alignItems: 'center', gap: 16 }}>
-        {gameInfo?.imageUrl ? (
-          <img src={gameInfo.imageUrl} alt={gameInfo.name} style={{ width: 72, height: 72, borderRadius: 14, objectFit: 'cover', flexShrink: 0 }} />
-        ) : (
-          <div style={{ width: 72, height: 72, borderRadius: 14, background: V('--th-bg'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, flexShrink: 0 }}>🎲</div>
-        )}
-        <div style={{ minWidth: 0 }}>
-          <div style={{ fontSize: 14, fontWeight: 700, color: V('--th-text'), marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{gameInfo?.name || room?.roomName || '—'}</div>
-          <div style={{ display: 'flex', gap: 16 }}>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('ranking', 'statsMatches')}</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: V('--th-text') }}>{myRank ? myRank.winCount + myRank.loseCount : 0}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('ranking', 'statsWins')}</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: '#22c55e' }}>{myRank?.winCount ?? 0}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('ranking', 'statsLosses')}</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: '#ef4444' }}>{myRank?.loseCount ?? 0}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('ranking', 'statsWinRate')}</div>
-              <div style={{ fontSize: 15, fontWeight: 900, color: V('--th-text') }}>{myWinRate}%</div>
+      <div style={{ margin: '16px 16px 0', padding: '16px', borderRadius: 16, background: V('--th-card'), border: `1px solid var(--th-border)` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          {gameInfo?.imageUrl ? (
+            <StorageImage src={gameInfo.imageUrl} alt={gameInfo.name} loading="lazy" decoding="async" transform={{ width: 144, height: 144, quality: 72 }} style={{ width: 72, height: 72, borderRadius: 14, objectFit: 'cover', flexShrink: 0 }} />
+          ) : (
+            <div style={{ width: 72, height: 72, borderRadius: 14, background: V('--th-bg'), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 32, flexShrink: 0 }}>🎲</div>
+          )}
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div style={{ fontSize: 14, fontWeight: 700, color: V('--th-text'), marginBottom: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{gameInfo?.name || room?.roomName || '—'}</div>
+            <div style={{ display: 'flex', gap: 16 }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('ranking', 'statsMatches')}</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: V('--th-text') }}>{myRank ? myRank.winCount + myRank.loseCount : 0}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('ranking', 'statsWins')}</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: '#22c55e' }}>{myRank?.winCount ?? 0}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('ranking', 'statsLosses')}</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: '#ef4444' }}>{myRank?.loseCount ?? 0}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('ranking', 'statsWinRate')}</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: V('--th-text') }}>{myWinRate}%</div>
+              </div>
             </div>
           </div>
         </div>
+        {myRank && myRankPosition && (
+          <button
+            onClick={shareMyRank}
+            style={{
+              marginTop: 12, width: '100%', padding: '10px', borderRadius: 10,
+              backgroundColor: 'color-mix(in srgb, var(--th-primary) 10%, transparent)',
+              border: '1px solid var(--th-primary)', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+            }}
+          >
+            <Share2 size={15} color="var(--th-primary)" />
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--th-primary)' }}>
+              랭킹 공유하기
+            </span>
+          </button>
+        )}
       </div>
 
       {/* Tabs */}
@@ -314,7 +294,21 @@ const Ranking = () => {
       {matchResult && activeTab === 'group' && (
         <div style={{ padding: '12px 16px 0' }}>
           <div style={{ borderRadius: 12, padding: 14, backgroundColor: V('--th-card'), border: `1px solid var(--th-primary)` }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-primary'), marginBottom: 10 }}>🎮 {t('ranking', 'matchResult')}</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-primary'), margin: 0 }}>🎮 {t('ranking', 'matchResult')}</p>
+              <button
+                onClick={shareMatchResult}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 5,
+                  padding: '5px 10px', borderRadius: 8,
+                  backgroundColor: 'color-mix(in srgb, var(--th-primary) 10%, transparent)',
+                  border: '1px solid var(--th-primary)', cursor: 'pointer',
+                }}
+              >
+                <Share2 size={13} color="var(--th-primary)" />
+                <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--th-primary)' }}>결과 공유</span>
+              </button>
+            </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {matchResult.map((r) => (
                 <div key={r.memberId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 10, backgroundColor: V('--th-bg') }}>
@@ -332,9 +326,8 @@ const Ranking = () => {
       {/* Content */}
       <div style={{ padding: '12px 16px 0' }}>
         {isLoading ? (
-          <div style={{ textAlign: 'center', padding: '64px 0' }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>⏳</div>
-            <p style={{ color: V('--th-text-sub') }}>{t('common', 'loading')}</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 8 }}>
+            {[0, 1, 2, 3, 4].map(i => <RankRowSkeleton key={i} />)}
           </div>
         ) : activeTab === 'matches' ? (
           <>
@@ -446,7 +439,7 @@ const Ranking = () => {
                           boxSizing: 'border-box', overflow: 'hidden',
                         }}>
                           {rank.profileImage
-                            ? <img src={rank.profileImage} alt={rank.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                            ? <StorageImage src={rank.profileImage} alt={rank.nickname} loading="lazy" decoding="async" transform={{ width: avatarSize * 2, height: avatarSize * 2, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                             : (rank.nickname || '?')[0].toUpperCase()
                           }
                         </div>
@@ -557,27 +550,27 @@ const Ranking = () => {
         )}
       </div>
 
+      </div>
+
       {/* Bottom Button */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: '390px', padding: '12px 20px 28px',
-        backgroundColor: V('--th-nav-bg'),
-      }}>
-        <button
-          onClick={() => navigate(`/invite/${roomId}`)}
-          style={{
-            width: '100%', padding: '15px', borderRadius: '50px', cursor: 'pointer',
-            background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-            border: 'none',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-            boxShadow: '0 4px 16px rgba(107, 92, 231, 0.4)',
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          <span style={{ fontWeight: '700', fontSize: '15px', color: '#FFFFFF' }}>
-            {t('ranking', 'startGame')}
-          </span>
-        </button>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20, background: 'linear-gradient(to top, var(--th-bg) 70%, transparent)' }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 32px' }}>
+          <button
+            onClick={() => navigate(`/invite/${roomId}`)}
+            style={{
+              width: '100%', padding: '15px', borderRadius: '50px', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              border: 'none',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+              boxShadow: '0 4px 16px rgba(107, 92, 231, 0.4)',
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="#FFFFFF"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span style={{ fontWeight: '700', fontSize: '15px', color: '#FFFFFF' }}>
+              {t('ranking', 'startGame')}
+            </span>
+          </button>
+        </div>
       </div>
 
       {/* Rating Edit Modal */}

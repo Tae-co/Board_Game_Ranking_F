@@ -2,9 +2,27 @@ import axios from 'axios';
 import { clearAuthSession } from '../auth/storage';
 
 let accessToken = null;
+let _refreshPromise = null;
 
 export const setAccessToken = (token) => { accessToken = token; };
 export const getAccessToken = () => accessToken;
+
+// 여러 곳에서 동시에 호출해도 refresh HTTP 요청은 한 번만 발생
+export const ensureToken = () => {
+  if (accessToken) return Promise.resolve();
+  if (_refreshPromise) return _refreshPromise;
+  const storedRefreshToken = localStorage.getItem('refreshToken');
+  if (!storedRefreshToken) return Promise.resolve();
+  _refreshPromise = axios.post(
+    `${import.meta.env.VITE_API_URL}/auth/refresh`,
+    { refreshToken: storedRefreshToken }
+  ).then(res => {
+    setAccessToken(res.data.accessToken);
+  }).catch(() => {}).finally(() => {
+    _refreshPromise = null;
+  });
+  return _refreshPromise;
+};
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,

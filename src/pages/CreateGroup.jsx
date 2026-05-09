@@ -4,8 +4,7 @@ import { ArrowLeft, Search } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
-
-const V = (v) => `var(${v})`;
+import { V } from '../utils/cssUtils';
 const nickname = () => localStorage.getItem('nickname') || '?';
 
 const CreateGroup = () => {
@@ -61,39 +60,37 @@ const CreateGroup = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg'), paddingBottom: 80 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 80 }}>
 
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 20px', borderBottom: `1px solid var(--th-border)`,
-        backgroundColor: V('--th-nav-bg'), position: 'sticky', top: 0, zIndex: 10,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-          <button
-            onClick={() => navigate('/lobby')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+            <button
+              onClick={() => navigate('/lobby')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+            >
+              <ArrowLeft style={{ width: 24, height: 24 }} />
+            </button>
+            <h1 style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text'), flex: 1 }}>
+              {t('lobby', 'createGroup')}
+            </h1>
+          </div>
+          <div
+            onClick={() => navigate('/profile')}
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              backgroundColor: 'var(--th-primary)', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 14, cursor: 'pointer', flexShrink: 0,
+            }}
           >
-            <ArrowLeft style={{ width: 24, height: 24 }} />
-          </button>
-          <h1 style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text'), flex: 1 }}>
-            {t('lobby', 'createGroup')}
-          </h1>
-        </div>
-        <div
-          onClick={() => navigate('/profile')}
-          style={{
-            width: 36, height: 36, borderRadius: '50%',
-            backgroundColor: 'var(--th-primary)', color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 700, fontSize: 14, cursor: 'pointer', flexShrink: 0,
-          }}
-        >
-          {nickname()[0].toUpperCase()}
+            {nickname()[0].toUpperCase()}
+          </div>
         </div>
       </div>
 
-      <div style={{ padding: '24px 20px' }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '24px 20px' }}>
 
         {/* Group Name */}
         <div style={{ marginBottom: '28px' }}>
@@ -203,23 +200,21 @@ const CreateGroup = () => {
       </div>
 
       {/* Sticky Create Button */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: '390px', padding: '12px 20px 24px',
-        backgroundColor: V('--th-nav-bg'), borderTop: `1px solid var(--th-border)`,
-      }}>
-        <button
-          onClick={handleCreate}
-          disabled={isSubmitting || !roomName.trim() || !selectedGameId}
-          style={{
-            width: '100%', padding: '14px', borderRadius: '12px',
-            backgroundColor: 'var(--th-primary)', color: '#FFFFFF',
-            fontWeight: '700', fontSize: '15px', border: 'none', cursor: 'pointer',
-            opacity: (isSubmitting || !roomName.trim() || !selectedGameId) ? 0.4 : 1,
-          }}
-        >
-          {isSubmitting ? t('lobby', 'creating') : t('lobby', 'createRoom')}
-        </button>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px 24px' }}>
+          <button
+            onClick={handleCreate}
+            disabled={isSubmitting || !roomName.trim() || !selectedGameId}
+            style={{
+              width: '100%', padding: '14px', borderRadius: '12px',
+              backgroundColor: 'var(--th-primary)', color: '#FFFFFF',
+              fontWeight: '700', fontSize: '15px', border: 'none', cursor: 'pointer',
+              opacity: (isSubmitting || !roomName.trim() || !selectedGameId) ? 0.4 : 1,
+            }}
+          >
+            {isSubmitting ? t('lobby', 'creating') : t('lobby', 'createRoom')}
+          </button>
+        </div>
       </div>
     </div>
   );

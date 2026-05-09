@@ -1,45 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Users, Hash } from 'lucide-react';
+import { Plus, Users, Hash, Shield } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
+import StorageImage from '../components/StorageImage';
+import { CommunityCardSkeleton } from '../components/Skeleton';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
-
-const V = (v) => `var(${v})`;
-
-const AVATAR_COLORS = ['#6B5CE7', '#7B8FF5', '#9B8EFA', '#5B4EDA', '#22c55e', '#f59e0b'];
-const avatarColor = (str) => AVATAR_COLORS[(str?.charCodeAt(0) ?? 0) % AVATAR_COLORS.length];
+import { V } from '../utils/cssUtils';
+import { getAvatarColorByStr as avatarColor } from '../utils/avatarUtils';
 
 const DiceLogo = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="28" height="28">
-    <defs>
-      <linearGradient id="commDiceTop" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#90C4F9"/>
-        <stop offset="100%" stopColor="#7B6CF6"/>
-      </linearGradient>
-      <linearGradient id="commDiceLeft" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#6B5CE7"/>
-        <stop offset="100%" stopColor="#4835B0"/>
-      </linearGradient>
-      <linearGradient id="commDiceRight" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#9B8EFA"/>
-        <stop offset="100%" stopColor="#7060E0"/>
-      </linearGradient>
-    </defs>
-    <polygon points="50,10 84,29 50,48 16,29" fill="url(#commDiceTop)"/>
-    <polygon points="16,29 50,48 50,88 16,69" fill="url(#commDiceLeft)"/>
-    <polygon points="84,29 50,48 50,88 84,69" fill="url(#commDiceRight)"/>
-    <circle cx="37" cy="24" r="3.8" fill="#fff" opacity="0.92"/>
-    <circle cx="63" cy="38" r="3.8" fill="#fff" opacity="0.92"/>
-    <circle cx="27" cy="46" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="39" cy="53" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="27" cy="64" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="39" cy="71" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="72" cy="44" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="64" cy="58" r="3.2" fill="#fff" opacity="0.85"/>
-    <circle cx="72" cy="72" r="3.2" fill="#fff" opacity="0.85"/>
-  </svg>
+  <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
 );
 
 const AvatarStack = ({ admins = [], memberCount = 0 }) => {
@@ -63,7 +35,7 @@ const AvatarStack = ({ admins = [], memberCount = 0 }) => {
             }}
           >
             {admin.profileImage
-              ? <img src={admin.profileImage} alt={admin.nickname} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              ? <StorageImage src={admin.profileImage} alt={admin.nickname} loading="lazy" decoding="async" transform={{ width: 56, height: 56, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
               : (admin.nickname || '?')[0].toUpperCase()
             }
           </div>
@@ -89,12 +61,13 @@ const CommunityLobby = () => {
   const { t } = useLanguage();
   const nickname = localStorage.getItem('nickname') || '?';
   const userId = localStorage.getItem('userId');
+  const isSystemAdmin = localStorage.getItem('role') === 'ADMIN';
 
   const [joinCode, setJoinCode] = useState('');
   const [joinError, setJoinError] = useState('');
   const [joinLoading, setJoinLoading] = useState(false);
 
-  const { data: myCommunities = [] } = useQuery({
+  const { data: myCommunities = [], isLoading: myLoading } = useQuery({
     queryKey: ['myCommunitiesList', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -110,7 +83,7 @@ const CommunityLobby = () => {
     else if (myCommunities.length === 0 && userId) localStorage.removeItem('myCommunity');
   }, [myCommunities, userId]);
 
-  const { data: joinedCommunities = [] } = useQuery({
+  const { data: joinedCommunities = [], isLoading: joinedLoading } = useQuery({
     queryKey: ['joinedCommunities', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -156,26 +129,32 @@ const CommunityLobby = () => {
   };
 
   return (
-    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg'), paddingBottom: 40 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 40 }}>
 
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 20px',
-        backgroundColor: V('--th-nav-bg'),
-        position: 'sticky', top: 0, zIndex: 10,
-        borderBottom: `1px solid var(--th-border)`,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <DiceLogo />
-          <span style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)' }}>
-            Yada Rank
-          </span>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <DiceLogo />
+            <span style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)' }}>
+              Yada Rank
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {isSystemAdmin && (
+              <button
+                onClick={() => navigate('/admin')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+              >
+                <Shield style={{ width: 20, height: 20 }} />
+              </button>
+            )}
+            <NavAvatar />
+          </div>
         </div>
-        <NavAvatar />
       </div>
 
-      <div style={{ padding: '20px 20px 0' }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 0' }}>
 
         {/* Welcome Banner */}
         <div style={{
@@ -200,23 +179,23 @@ const CommunityLobby = () => {
         <div style={{
           backgroundColor: V('--th-card'), borderRadius: '18px',
           border: `1px solid var(--th-border)`, padding: '18px',
-          marginBottom: '28px',
+          marginBottom: '28px', overflow: 'hidden',
         }}>
           <p style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text'), margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '7px' }}>
             <Hash size={16} color="var(--th-primary)" />
             {t('community', 'joinCommunity')}
           </p>
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
             <input
               value={joinCode}
               onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setJoinError(''); }}
               onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
               placeholder={t('community', 'enterInviteCode')}
               style={{
-                flex: 1, padding: '11px 14px',
+                flex: 1, minWidth: 0, padding: '10px 12px',
                 borderRadius: '10px', border: `1px solid ${joinError ? '#ef4444' : 'var(--th-border)'}`,
                 backgroundColor: V('--th-bg'), color: V('--th-text'),
-                fontSize: '14px', fontWeight: '600', letterSpacing: '0.08em',
+                fontSize: '13px', fontWeight: '600', letterSpacing: '0.08em',
                 outline: 'none',
               }}
             />
@@ -224,7 +203,7 @@ const CommunityLobby = () => {
               onClick={handleJoin}
               disabled={joinLoading || !joinCode.trim()}
               style={{
-                padding: '11px 18px', borderRadius: '10px', border: 'none',
+                padding: '10px 16px', borderRadius: '10px', border: 'none',
                 cursor: joinLoading || !joinCode.trim() ? 'not-allowed' : 'pointer',
                 background: joinLoading || !joinCode.trim()
                   ? 'var(--th-border)'
@@ -262,7 +241,11 @@ const CommunityLobby = () => {
           )}
         </div>
 
-        {myCommunities.length === 0 ? (
+        {myLoading ? (
+          <div style={{ display: 'flex', gap: 12, marginBottom: 28, paddingLeft: 10 }}>
+            {[0, 1].map(i => <div key={i} style={{ flex: '0 0 calc(100% - 40px)' }}><CommunityCardSkeleton /></div>)}
+          </div>
+        ) : myCommunities.length === 0 ? (
           /* 커뮤니티 없을 때 — Create CTA */
           <button
             onClick={() => navigate('/create-community')}
@@ -301,7 +284,7 @@ const CommunityLobby = () => {
               scrollSnapType: 'x mandatory',
               WebkitOverflowScrolling: 'touch',
               scrollbarWidth: 'none',
-              marginLeft: '-20px',
+              marginLeft: '-10px',
               marginRight: '-20px',
               paddingLeft: '20px',
               paddingRight: '20px',
@@ -325,10 +308,10 @@ const CommunityLobby = () => {
                   <div style={{
                     width: 48, height: 48, borderRadius: '12px', overflow: 'hidden', flexShrink: 0,
                     backgroundColor: 'var(--th-bg)', border: '1px solid var(--th-border)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {community.imageUrl ? (
-                      <img src={community.imageUrl} alt={community.name}
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {community.imageUrl ? (
+                      <StorageImage src={community.imageUrl} alt={community.name} loading="lazy" decoding="async" transform={{ width: 96, height: 96, quality: 70 }}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     ) : (
                       <div style={{
@@ -386,7 +369,11 @@ const CommunityLobby = () => {
         <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), marginBottom: '14px' }}>
           {t('community', 'joinedCommunities')}
         </p>
-        {joinedCommunities.length === 0 ? (
+        {joinedLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
+            {[0, 1].map(i => <CommunityCardSkeleton key={i} />)}
+          </div>
+        ) : joinedCommunities.length === 0 ? (
           <p style={{ fontSize: '14px', color: V('--th-text-sub'), textAlign: 'center', padding: '20px 0 28px' }}>
             {t('community', 'noJoinedCommunities')}
           </p>
@@ -405,10 +392,10 @@ const CommunityLobby = () => {
                   <div style={{
                     width: 48, height: 48, borderRadius: '12px', overflow: 'hidden',
                     backgroundColor: 'var(--th-bg)', border: '1px solid var(--th-border)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  }}>
-                    {community.imageUrl ? (
-                      <img src={community.imageUrl} alt={community.name}
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  {community.imageUrl ? (
+                      <StorageImage src={community.imageUrl} alt={community.name} loading="lazy" decoding="async" transform={{ width: 96, height: 96, quality: 70 }}
                         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                     ) : (
                       <div style={{
@@ -462,7 +449,7 @@ const RoomCard = ({ room, manageLabel, activeLabel, inactiveLabel, onManage }) =
     }}>
       <div style={{ width: 52, height: 52, borderRadius: '10px', overflow: 'hidden', flexShrink: 0, backgroundColor: 'var(--th-bg)' }}>
         {room.imageUrl && !imgError ? (
-          <img src={room.imageUrl} alt={room.roomName} onError={() => setImgError(true)}
+          <StorageImage src={room.imageUrl} alt={room.roomName} onError={() => setImgError(true)} transform={{ width: 104, height: 104, quality: 70 }}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🎲</div>

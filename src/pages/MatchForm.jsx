@@ -5,8 +5,7 @@ import NavAvatar from '../components/NavAvatar';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
-
-const V = (v) => `var(${v})`;
+import { V } from '../utils/cssUtils';
 const nickName = () => localStorage.getItem('nickname') || '?';
 
 const MatchForm = () => {
@@ -109,29 +108,27 @@ const MatchForm = () => {
   const today = new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
   return (
-    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg'), paddingBottom: 88 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 88 }}>
 
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 20px', borderBottom: `1px solid var(--th-border)`,
-        backgroundColor: V('--th-nav-bg'), position: 'sticky', top: 0, zIndex: 10,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-          <button
-            onClick={() => navigate(-1)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
-          >
-            <ArrowLeft style={{ width: 24, height: 24 }} />
-          </button>
-          <h1 style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text') }}>
-            {t('matchForm', 'submitGameResult')}
-          </h1>
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+            <button
+              onClick={() => navigate(-1)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+            >
+              <ArrowLeft style={{ width: 24, height: 24 }} />
+            </button>
+            <h1 style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text') }}>
+              {t('matchForm', 'submitGameResult')}
+            </h1>
+          </div>
+          <NavAvatar />
         </div>
-        <NavAvatar />
       </div>
 
-      <div style={{ padding: '20px 20px' }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px' }}>
 
         {/* Label + Title */}
         <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--th-primary)', letterSpacing: '0.1em', marginBottom: '8px' }}>
@@ -240,33 +237,31 @@ const MatchForm = () => {
       </div>
 
       {/* Sticky Bottom */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: '390px', padding: '12px 20px 24px',
-        backgroundColor: V('--th-nav-bg'), borderTop: `1px solid var(--th-border)`,
-      }}>
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting || !allFilled}
-          style={{
-            width: '100%', padding: '14px', borderRadius: '12px',
-            fontSize: '14px', fontWeight: '700', letterSpacing: '0.05em',
-            backgroundColor: 'var(--th-primary)', color: '#FFFFFF', border: 'none', cursor: 'pointer',
-            opacity: (isSubmitting || !allFilled) ? 0.4 : 1,
-            marginBottom: '10px',
-          }}
-        >
-          {isSubmitting ? t('matchForm', 'saving') : t('matchForm', 'submitResult').toUpperCase()}
-        </button>
-        <button
-          onClick={() => navigate(-1)}
-          style={{
-            width: '100%', background: 'none', border: 'none', cursor: 'pointer',
-            fontSize: '13px', color: V('--th-text-sub'), padding: '4px',
-          }}
-        >
-          {t('matchForm', 'discardSession')}
-        </button>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px 24px' }}>
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || !allFilled}
+            style={{
+              width: '100%', padding: '14px', borderRadius: '12px',
+              fontSize: '14px', fontWeight: '700', letterSpacing: '0.05em',
+              backgroundColor: 'var(--th-primary)', color: '#FFFFFF', border: 'none', cursor: 'pointer',
+              opacity: (isSubmitting || !allFilled) ? 0.4 : 1,
+              marginBottom: '10px',
+            }}
+          >
+            {isSubmitting ? t('matchForm', 'saving') : t('matchForm', 'submitResult').toUpperCase()}
+          </button>
+          <button
+            onClick={() => navigate(-1)}
+            style={{
+              width: '100%', background: 'none', border: 'none', cursor: 'pointer',
+              fontSize: '13px', color: V('--th-text-sub'), padding: '4px',
+            }}
+          >
+            {t('matchForm', 'discardSession')}
+          </button>
+        </div>
       </div>
     </div>
   );

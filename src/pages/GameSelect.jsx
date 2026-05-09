@@ -5,8 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 import { usePresence } from '../hooks/usePresence';
-
-const V = (v) => `var(${v})`;
+import { V } from '../utils/cssUtils';
 const nickName = () => localStorage.getItem('nickname') || '?';
 
 const GameSelect = () => {
@@ -68,46 +67,44 @@ const GameSelect = () => {
     const gameId = room?.boardGameId;
     const gameName = currentGame?.name || '';
     navigate(`/score-sheet/${gameId}`, {
-      state: { roomId, gameName, players: members.filter(m => selectedPlayers.has(m.memberId)) },
+      state: { roomId, gameName, players: members.filter(m => selectedPlayers.has(m.memberId)), schemaJson: currentGame?.schemaJson ?? null },
     });
   };
 
   const isDisabled = selectedPlayers.size < 2 || (currentGame && selectedPlayers.size > currentGame.maxPlayers);
 
   return (
-    <div style={{ minHeight: '100vh', maxWidth: '390px', margin: '0 auto', backgroundColor: V('--th-bg'), paddingBottom: 80 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 80 }}>
 
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        padding: '16px 20px', borderBottom: `1px solid var(--th-border)`,
-        backgroundColor: V('--th-nav-bg'), position: 'sticky', top: 0, zIndex: 10,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-          <button
-            onClick={() => navigate(`/invite/${roomId}`)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+            <button
+              onClick={() => navigate(`/invite/${roomId}`)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+            >
+              <ArrowLeft style={{ width: 24, height: 24 }} />
+            </button>
+            <h1 style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text') }}>
+              {t('gameSelect', 'title')}
+            </h1>
+          </div>
+          <div
+            onClick={() => navigate('/profile')}
+            style={{
+              width: 36, height: 36, borderRadius: '50%',
+              backgroundColor: 'var(--th-primary)', color: '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontWeight: 700, fontSize: 14, cursor: 'pointer', flexShrink: 0,
+            }}
           >
-            <ArrowLeft style={{ width: 24, height: 24 }} />
-          </button>
-          <h1 style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text') }}>
-            {t('gameSelect', 'title')}
-          </h1>
-        </div>
-        <div
-          onClick={() => navigate('/profile')}
-          style={{
-            width: 36, height: 36, borderRadius: '50%',
-            backgroundColor: 'var(--th-primary)', color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontWeight: 700, fontSize: 14, cursor: 'pointer', flexShrink: 0,
-          }}
-        >
-          {nickName()[0].toUpperCase()}
+            {nickName()[0].toUpperCase()}
+          </div>
         </div>
       </div>
 
-      <div style={{ padding: '20px' }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px' }}>
 
         {/* Current Game Card */}
         {currentGame && (
@@ -223,11 +220,8 @@ const GameSelect = () => {
       </div>
 
       {/* Sticky Bottom Button */}
-      <div style={{
-        position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: '390px', padding: '12px 20px 24px',
-        backgroundColor: V('--th-nav-bg'), borderTop: `1px solid var(--th-border)`,
-      }}>
+      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px 24px' }}>
         {currentGame && selectedPlayers.size > currentGame.maxPlayers && (
           <p style={{ textAlign: 'center', fontSize: '12px', color: '#dc2626', marginBottom: '8px' }}>
             {t('gameSelect', 'maxPlayersError').replace('{n}', currentGame.maxPlayers)}
@@ -246,6 +240,7 @@ const GameSelect = () => {
             ? `${selectedPlayers.size}${t('gameSelect', 'startButton')}`
             : t('gameSelect', 'startPlaceholder')}
         </button>
+      </div>
       </div>
     </div>
   );

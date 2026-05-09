@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import ScoreCell from '../shared/ScoreCell';
 import TotalRow from '../shared/TotalRow';
 import { cl } from '../shared/scoreUtils';
@@ -15,14 +16,15 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
       </tr>
     </thead>
     <tbody>
-      {schema.sections.map((section) => {
+      {schema.sections.map((section, idx) => {
+        const sectionKey = section.key ?? section.title ?? idx;
         const sectionTotals = players.reduce((acc, p) => {
           acc[p.memberId] = section.categories.reduce((s, c) => s + (Number(scores[c.key]?.[p.memberId]) || 0), 0);
           return acc;
         }, {});
         return (
-          <>
-            <tr key={`sh-${section.key}`}>
+          <Fragment key={sectionKey}>
+            <tr>
               <td colSpan={players.length + 1} style={{
                 padding: "7px 8px", fontSize: 11, fontWeight: 900,
                 color: section.color, background: section.bgColor,
@@ -44,7 +46,7 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
                 ))}
               </tr>
             ))}
-            <tr key={`st-${section.key}`} style={{ background: section.bgColor }}>
+            <tr style={{ background: section.bgColor }}>
               <td style={{ padding: "6px 8px 6px 16px", fontSize: 11, fontWeight: 800, color: section.color, borderBottom: `2px solid ${section.color}` }}>
                 {t('scoreSheet', 'subtotal')}
               </td>
@@ -54,7 +56,7 @@ const SectionedTable = ({ schema, players, scores, totals, winnerId, handleChang
                 </td>
               ))}
             </tr>
-          </>
+          </Fragment>
         );
       })}
       <TotalRow players={players} totals={totals} winnerId={winnerId} t={t} />

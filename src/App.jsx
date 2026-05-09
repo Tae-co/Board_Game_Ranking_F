@@ -4,7 +4,7 @@ import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
-import { setAccessToken } from './api/axios';
+import { setAccessToken, ensureToken } from './api/axios';
 import { AUTH_CHANGED_EVENT, getStoredAuth, saveAuthSession } from './auth/storage';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
@@ -99,17 +99,8 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // 앱 시작 시 저장된 refresh token으로 access token 복구
-    const storedRefreshToken = localStorage.getItem('refreshToken');
-    if (!storedRefreshToken) return;
-    axios.post(
-      `${import.meta.env.VITE_API_URL}/auth/refresh`,
-      { refreshToken: storedRefreshToken }
-    ).then((res) => {
-      setAccessToken(res.data.accessToken);
-    }).catch(() => {
-      // refresh token 없거나 만료 → 로그인 필요
-    });
+    // 앱 시작 시 저장된 refresh token으로 access token 복구 (Admin.jsx와 동일한 promise 공유)
+    ensureToken();
   }, []);
 
   return (
@@ -125,7 +116,7 @@ function App() {
       <div className="min-h-screen">
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/" element={<Navigate to={isAuthenticated ? '/community' : '/login'} replace />} />
+            <Route path="/" element={<Navigate to={isAdmin ? '/admin' : isAuthenticated ? '/community' : '/login'} replace />} />
 
             {/* 일반 유저 */}
             <Route path="/login" element={isAuthenticated ? <Navigate to="/community" replace /> : <Login />} />
@@ -148,7 +139,7 @@ function App() {
             <Route path="/oauth-callback" element={<OAuthCallback />} />
 
             {/* 관리자 */}
-            <Route path="/admin-login" element={isAuthenticated ? <Navigate to="/lobby" replace /> : <AdminLogin />} />
+            <Route path="/admin-login" element={isAdmin ? <Navigate to="/admin" replace /> : isAuthenticated ? <Navigate to="/community" replace /> : <AdminLogin />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/admin/login" replace />} />
 
