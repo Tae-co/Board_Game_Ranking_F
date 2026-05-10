@@ -5,9 +5,12 @@ import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
+import { leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating } from '../api/services/rooms';
+import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import { getSelectedCommunity } from '../utils/storage';
+import { getAuthUserId, getNickname } from '../auth/storage';
 import { REGION_TIMEZONE } from '../constants/regions';
 import RoomSettingsOverlay from '../components/invite/RoomSettingsOverlay';
 import GameCard from '../components/invite/GameCard';
@@ -46,7 +49,7 @@ const Invite = () => {
   const location = useLocation();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const userId = Number(localStorage.getItem('userId'));
+  const userId = Number(getAuthUserId());
   const matchResult = location.state?.matchResult || null;
   const communityTimezone = REGION_TIMEZONE[getSelectedCommunity()?.region] || undefined;
 
@@ -186,7 +189,7 @@ const Invite = () => {
   const handleLeaveRoom = async () => {
     if (!window.confirm(t('invite', 'leaveConfirm'))) return;
     try {
-      await api.delete(`/rooms/${roomId}/members/${userId}`);
+      await leaveRoom(roomId, userId);
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
       navigate('/lobby');
@@ -196,7 +199,7 @@ const Invite = () => {
   const handleDeleteRoom = async () => {
     if (!window.confirm(t('invite', 'deleteConfirm'))) return;
     try {
-      await api.delete(`/rooms/${roomId}`);
+      await deleteRoom(roomId);
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
       navigate('/lobby');
@@ -206,7 +209,7 @@ const Invite = () => {
   const handleKickMember = async (member) => {
     if (!window.confirm(`${member.nickname}${t('invite', 'kickConfirm')}`)) return;
     try {
-      await api.delete(`/rooms/${roomId}/members/${member.memberId}`);
+      await kickRoomMember(roomId, member.memberId);
       refetchMembers();
     } catch { alert(t('invite', 'kickFailed')); }
   };
@@ -216,7 +219,7 @@ const Invite = () => {
     if (!trimmed) return;
     setSaving(true);
     try {
-      await api.patch(`/rooms/${roomId}/name`, { requesterId: userId, roomName: trimmed });
+      await updateRoomName(roomId, trimmed);
       await refetchRoom();
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       setShowSettings(false);
@@ -233,7 +236,7 @@ const Invite = () => {
   const shareMyRank = useCallback(() => {
     if (!myRank || !myRankPosition) return;
     const gameName = gameInfo?.name || roomInfo?.roomName || '보드게임';
-    const nickname = localStorage.getItem('nickname') || myRank.nickname;
+    const nickname = getNickname() || myRank.nickname;
     nativeShare(
       `🏆 ${nickname}의 ${gameName} 랭킹`,
       `${myRankPosition}위 · 레이팅 ${Math.round(myRank.rating)} · 승률 ${myWinRate}% (${myRank.winCount}승 ${myRank.loseCount}패)\n\nYadaRank에서 보드게임 랭킹 관리 중 👉 yadarank.com`,
@@ -259,9 +262,7 @@ const Invite = () => {
     if (isNaN(val) || val < 0) return;
     setIsRatingEditSaving(true);
     try {
-      await api.put(`/rooms/${roomId}/members/${ratingEditModal.memberId}/rating`, {
-        requesterId: userId, rating: val,
-      });
+      await updateMemberRating(roomId, ratingEditModal.memberId, { rating: val });
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
       setRatingEditModal(null);
     } catch { alert(t('ranking', 'editRatingFailed')); }
@@ -287,11 +288,11 @@ const Invite = () => {
   const handleDeleteMatch = useCallback(async (matchId) => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
     try {
-      await api.delete(`/matches/${matchId}?requesterId=${userId}`);
+      await deleteMatch(matchId);
       refetchMatches();
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
     } catch { alert('삭제에 실패했습니다.'); }
-  }, [userId, queryClient, refetchMatches, roomId]);
+  }, [queryClient, refetchMatches, roomId]);
 
   const handleOpenRatingEdit = useCallback((rank) => {
     setRatingEditModal(rank);

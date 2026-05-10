@@ -6,20 +6,20 @@ import StorageImage from '../components/StorageImage';
 import NavAvatar from '../components/NavAvatar';
 import api from '../api/axios';
 import { V } from '../utils/cssUtils';
+import { getAuthUserId } from '../auth/storage';
+import { getSelectedCommunity } from '../utils/storage';
 const COLORS = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
 const PER_PAGE = 10;
 
 const CommunityMemberManage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const userId = localStorage.getItem('userId');
+  const userId = getAuthUserId();
   const [page, setPage] = useState(0);
 
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
-  const selectedCommunity = (() => {
-    try { return JSON.parse(localStorage.getItem('selectedCommunity')); } catch { return null; }
-  })();
+  const selectedCommunity = getSelectedCommunity();
   const communityId = selectedCommunity?.communityId ?? null;
 
   const { data: members = [], isLoading } = useQuery({
