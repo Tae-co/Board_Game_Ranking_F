@@ -9,6 +9,8 @@ import { useLanguage } from '../i18n/LanguageContext';
 import NavAvatar from '../components/NavAvatar';
 import { V } from '../utils/cssUtils';
 import { REGION_NAMES } from '../constants/regions';
+import { getAuthUserId } from '../auth/storage';
+import { getMyCommunity, setMyCommunity, removeMyCommunity, getSelectedCommunity, setSelectedCommunity, removeSelectedCommunity, notifySelectedCommunityUpdated } from '../utils/storage';
 
 const REGIONS = [...REGION_NAMES, 'Other'];
 
@@ -16,11 +18,9 @@ const CommunitySettings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const userId = Number(localStorage.getItem('userId'));
+  const userId = Number(getAuthUserId());
 
-  const storedCommunity = (() => {
-    try { return JSON.parse(localStorage.getItem('myCommunity')); } catch { return null; }
-  })();
+  const storedCommunity = getMyCommunity();
 
   useEffect(() => {
     if (!storedCommunity) navigate('/community', { replace: true });
@@ -137,21 +137,16 @@ const CommunitySettings = () => {
         imageUrl: uploadedImageUrl ?? (detail?.imageUrl ?? null),
         adminMemberIds: [...selectedIds],
       });
-      localStorage.setItem('myCommunity', JSON.stringify(res.data));
-      try {
-        const stored = localStorage.getItem('selectedCommunity');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (String(parsed.communityId) === String(communityId)) {
-            localStorage.setItem('selectedCommunity', JSON.stringify({
-              ...parsed,
-              name: name.trim(),
-              imageUrl: uploadedImageUrl ?? detail?.imageUrl ?? null,
-            }));
-            window.dispatchEvent(new Event('selectedCommunityUpdated'));
-          }
-        }
-      } catch {}
+      setMyCommunity(res.data);
+      const parsed = getSelectedCommunity();
+      if (parsed && String(parsed.communityId) === String(communityId)) {
+        setSelectedCommunity({
+          ...parsed,
+          name: name.trim(),
+          imageUrl: uploadedImageUrl ?? detail?.imageUrl ?? null,
+        });
+        notifySelectedCommunityUpdated();
+      }
       queryClient.invalidateQueries({ queryKey: ['myCommunitiesList', String(userId)] });
       queryClient.invalidateQueries({ queryKey: ['communityDetail', communityId] });
       navigate('/community', { replace: true });
@@ -166,8 +161,8 @@ const CommunitySettings = () => {
     setIsDeleting(true);
     try {
       await api.delete(`/communities/${communityId}`);
-      localStorage.removeItem('myCommunity');
-      localStorage.removeItem('selectedCommunity');
+      removeMyCommunity();
+      removeSelectedCommunity();
       queryClient.removeQueries({ queryKey: ['myCommunitiesList'] });
       queryClient.removeQueries({ queryKey: ['communityRooms'] });
       navigate('/community', { replace: true });

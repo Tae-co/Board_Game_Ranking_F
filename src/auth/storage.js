@@ -7,6 +7,14 @@ export const getStoredAuth = () => ({
   refreshToken: localStorage.getItem('refreshToken'),
 });
 
+export const getAuthUserId = () => localStorage.getItem('userId');
+export const getNickname = () => localStorage.getItem('nickname') || '';
+export const getRole = () => localStorage.getItem('role') || 'USER';
+export const setNickname = (nickname) => {
+  localStorage.setItem('nickname', nickname || '');
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
+};
+
 const notifyAuthChanged = () => {
   window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 };

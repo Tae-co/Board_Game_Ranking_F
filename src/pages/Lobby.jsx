@@ -6,7 +6,9 @@ import StorageImage from '../components/StorageImage';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api, { setAccessToken } from '../api/axios';
-import { clearAuthSession } from '../auth/storage';
+import { joinRoom } from '../api/services/rooms';
+import { clearAuthSession, getAuthUserId, getNickname } from '../auth/storage';
+import { getSelectedCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import RoomCard from '../components/lobby/RoomCard';
@@ -24,15 +26,12 @@ const Lobby = () => {
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const sheetRef = useRef(null);
-  const nickname = localStorage.getItem('nickname') || '플레이어';
-  const userId = localStorage.getItem('userId');
-  const [selectedCommunity, setSelectedCommunity] = useState(() => {
-    try { return JSON.parse(localStorage.getItem('selectedCommunity')); } catch { return null; }
-  });
+  const nickname = getNickname() || '플레이어';
+  const userId = getAuthUserId();
+  const [selectedCommunity, setSelectedCommunity] = useState(() => getSelectedCommunity());
   useEffect(() => {
     const handler = () => {
-      try { setSelectedCommunity(JSON.parse(localStorage.getItem('selectedCommunity'))); }
-      catch { setSelectedCommunity(null); }
+      setSelectedCommunity(getSelectedCommunity() ?? null);
     };
     window.addEventListener('selectedCommunityUpdated', handler);
     return () => window.removeEventListener('selectedCommunityUpdated', handler);
@@ -85,7 +84,7 @@ const Lobby = () => {
   const handleEnterRoom = async (room) => {
     if (communityId && !room.isMember) {
       try {
-        await api.post('/rooms/join', { inviteCode: room.inviteCode, memberId: Number(userId) });
+        await joinRoom(room.inviteCode);
         queryClient.invalidateQueries({ queryKey: ['communityRooms', communityId, userId] });
       } catch { /* 이미 멤버인 경우 무시 */ }
     }
@@ -96,7 +95,7 @@ const Lobby = () => {
     if (!joinCode.trim()) return;
     setIsJoining(true);
     try {
-      await api.post('/rooms/join', { inviteCode: joinCode.trim(), memberId: Number(userId) });
+      await joinRoom(joinCode.trim());
       setJoinCode('');
       setShowJoinSheet(false);
       queryClient.invalidateQueries({ queryKey: ['rooms'] });

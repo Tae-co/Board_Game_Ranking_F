@@ -2,20 +2,17 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../api/axios';
+import { createRoom } from '../api/services/rooms';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
-const nickname = () => localStorage.getItem('nickname') || '?';
+import { getNickname } from '../auth/storage';
+import { getSelectedCommunity } from '../utils/storage';
 
 const CreateGroup = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const userId = localStorage.getItem('userId');
-  const communityId = (() => {
-    try { return JSON.parse(localStorage.getItem('selectedCommunity'))?.communityId ?? null; }
-    catch { return null; }
-  })();
+  const communityId = getSelectedCommunity()?.communityId ?? null;
 
   const [roomName, setRoomName] = useState('');
   const [selectedGameId, setSelectedGameId] = useState(null);
@@ -26,10 +23,7 @@ const CreateGroup = () => {
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
-    queryFn: async () => {
-      const res = await api.get('/games');
-      return res.data || [];
-    },
+    queryFn: () => import('../api/services/games').then(m => m.getGames()),
     staleTime: 1000 * 60 * 30,
   });
 
@@ -49,9 +43,8 @@ const CreateGroup = () => {
     if (!roomName.trim() || !selectedGameId) return;
     setIsSubmitting(true);
     try {
-      const res = await api.post('/rooms', {
+      const res = await createRoom({
         roomName: roomName.trim(),
-        memberId: Number(userId),
         boardGameId: selectedGameId,
         ...(communityId ? { communityId: Number(communityId) } : {}),
       });
@@ -91,7 +84,7 @@ const CreateGroup = () => {
               fontWeight: 700, fontSize: 14, cursor: 'pointer', flexShrink: 0,
             }}
           >
-            {nickname()[0].toUpperCase()}
+            {getNickname()[0]?.toUpperCase()}
           </div>
         </div>
       </div>

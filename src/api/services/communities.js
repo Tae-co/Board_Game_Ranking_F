@@ -13,7 +13,7 @@ export const createCommunity = (payload) => api.post('/communities', payload).th
 export const updateCommunity = (communityId, payload) =>
   api.patch(`/communities/${communityId}`, payload).then(r => r.data);
 export const deleteCommunity = (communityId) => api.delete(`/communities/${communityId}`);
-export const joinCommunity = (inviteCode, memberId) =>
-  api.post('/communities/join', { inviteCode, memberId: Number(memberId) });
+export const joinCommunity = (inviteCode) =>
+  api.post('/communities/join', { inviteCode });
 export const kickCommunityMember = (communityId, memberId) =>
   api.delete(`/communities/${communityId}/members/${memberId}`);

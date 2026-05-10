@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
-const nickName = () => localStorage.getItem('nickname') || '?';
+import { getNickname } from '../auth/storage';
 
 const MatchForm = () => {
   const { roomId } = useParams();

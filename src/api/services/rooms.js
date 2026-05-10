@@ -7,16 +7,16 @@ export const getCommunityRooms = (communityId, userId) =>
   api.get(`/communities/${communityId}/rooms?memberId=${userId}`).then(r => r.data);
 
 export const createRoom = (payload) => api.post('/rooms', payload).then(r => r.data);
-export const joinRoom = (inviteCode, memberId) =>
-  api.post('/rooms/join', { inviteCode, memberId: Number(memberId) });
+export const joinRoom = (inviteCode) =>
+  api.post('/rooms/join', { inviteCode });
 export const deleteRoom = (roomId) => api.delete(`/rooms/${roomId}`);
 
 export const kickRoomMember = (roomId, memberId) =>
   api.delete(`/rooms/${roomId}/members/${memberId}`);
 export const leaveRoom = (roomId, userId) =>
   api.delete(`/rooms/${roomId}/members/${userId}`);
-export const updateRoomName = (roomId, requesterId, roomName) =>
-  api.patch(`/rooms/${roomId}/name`, { requesterId, roomName });
+export const updateRoomName = (roomId, roomName) =>
+  api.patch(`/rooms/${roomId}/name`, { roomName });
 
 export const getRoomRankings = (roomId) =>
   api.get(`/rooms/${roomId}/rankings`).then(r => r.data || []);

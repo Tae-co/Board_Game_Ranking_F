@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StorageImage from './StorageImage';
+import { getNickname } from '../auth/storage';
+import { getProfileImage } from '../utils/storage';
 
 const NavAvatar = ({ size = 38, fontSize = 15 }) => {
   const navigate = useNavigate();
-  const nickname = localStorage.getItem('nickname') || '?';
-  const [profileImage, setProfileImage] = useState(localStorage.getItem('profileImage'));
+  const nickname = getNickname() || '?';
+  const [profileImage, setProfileImage] = useState(getProfileImage);
 
   useEffect(() => {
-    const handler = () => setProfileImage(localStorage.getItem('profileImage'));
+    const handler = () => setProfileImage(getProfileImage());
     window.addEventListener('profileImageUpdated', handler);
     return () => window.removeEventListener('profileImageUpdated', handler);
   }, []);

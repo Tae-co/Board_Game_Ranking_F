@@ -2,9 +2,11 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Globe, Sun, Moon, LogOut, Pencil, ChevronRight, Camera } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api, { setAccessToken } from '../api/axios';
+import { setAccessToken } from '../api/axios';
+import { updateProfileImage as updateProfileImageApi, updateNickname as updateNicknameApi, deleteMember } from '../api/services/members';
 import { uploadProfileImage } from '../api/uploadImage';
-import { clearAuthSession } from '../auth/storage';
+import { clearAuthSession, getAuthUserId, getNickname, setNickname } from '../auth/storage';
+import { setProfileImage } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../theme/ThemeContext';
 import { TierBadge } from '../components/TierBadge';
@@ -16,27 +18,26 @@ const Profile = () => {
   const { lang, setLang, t } = useLanguage();
   const { themeKey, setTheme } = useTheme();
   const queryClient = useQueryClient();
-  const userId = localStorage.getItem('userId');
+  const userId = getAuthUserId();
 
   const { data: profileData } = useQuery({
     queryKey: ['profile', userId],
-    queryFn: async () => { const res = await api.get(`/members/${userId}`); return res.data; },
+    queryFn: () => import('../api/services/members').then(m => m.getMember(userId)),
   });
 
   const { data: stats } = useQuery({
     queryKey: ['memberStats', userId],
-    queryFn: async () => { const res = await api.get(`/members/${userId}/stats`); return res.data; },
+    queryFn: () => import('../api/services/members').then(m => m.getMemberStats(userId)),
     staleTime: 1000 * 60 * 5,
   });
 
   useEffect(() => {
     if (profileData?.profileImage !== undefined) {
-      if (profileData.profileImage) localStorage.setItem('profileImage', profileData.profileImage);
-      else localStorage.removeItem('profileImage');
+      setProfileImage(profileData.profileImage || null);
     }
   }, [profileData]);
 
-  const currentNickname = profileData?.nickname || localStorage.getItem('nickname') || '';
+  const currentNickname = profileData?.nickname || getNickname() || '';
   const maxRating = Math.round(profileData?.overallRating ?? 1500);
   const tier = getTierFromRating(maxRating);
   const tierStyle = getTierBg(tier.label);
@@ -56,8 +57,8 @@ const Profile = () => {
     setIsUploadingPhoto(true);
     try {
       const url = await uploadProfileImage(file, profileData?.profileImage);
-      await api.patch(`/members/${userId}/profile-image`, { profileImage: url });
-      localStorage.setItem('profileImage', url);
+      await updateProfileImageApi(userId, url);
+      setProfileImage(url);
       window.dispatchEvent(new Event('profileImageUpdated'));
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
     } catch { alert('사진 업로드에 실패했습니다.'); }
@@ -76,8 +77,8 @@ const Profile = () => {
     if (value.trim() === currentNickname) { setNicknameStatus('same'); return; }
     setNicknameStatus('checking');
     try {
-      const res = await api.get(`/auth/check-nickname?nickname=${encodeURIComponent(value)}`);
-      setNicknameStatus(res.data.available ? 'ok' : 'taken');
+      const data = await import('../api/services/members').then(m => m.checkNickname(value));
+      setNicknameStatus(data.available ? 'ok' : 'taken');
     } catch { setNicknameStatus(null); }
   };
 
@@ -94,8 +95,8 @@ const Profile = () => {
     if (nicknameStatus === 'taken') return;
     setIsNicknameSaving(true);
     try {
-      await api.patch(`/members/${userId}/nickname`, { nickname: nickname.trim() });
-      localStorage.setItem('nickname', nickname.trim());
+      await updateNicknameApi(userId, nickname.trim());
+      setNickname(nickname.trim());
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       setShowNicknameEdit(false);
       alert(t('profile', 'nicknameSaved'));
@@ -108,7 +109,7 @@ const Profile = () => {
     if (!window.confirm('정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.')) return;
     setIsDeletingAccount(true);
     try {
-      await api.delete(`/members/${userId}`);
+      await deleteMember(userId);
       setAccessToken(null);
       queryClient.clear();
       clearAuthSession();

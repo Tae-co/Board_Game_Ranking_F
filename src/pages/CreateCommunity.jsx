@@ -2,10 +2,12 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Camera } from 'lucide-react';
-import api from '../api/axios';
+import { createCommunity } from '../api/services/communities';
 import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import { getNickname } from '../auth/storage';
+import { setMyCommunity } from '../utils/storage';
 
 const REGIONS = [
   'South Korea', 'United States', 'Japan', 'China', 'United Kingdom',
@@ -21,8 +23,7 @@ const CreateCommunity = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const nickname = localStorage.getItem('nickname') || '?';
-  const userId = Number(localStorage.getItem('userId'));
+  const nickname = getNickname() || '?';
 
   const [name, setName] = useState('');
   const [region, setRegion] = useState('South Korea');
@@ -58,15 +59,14 @@ const CreateCommunity = () => {
     setError('');
     setIsSubmitting(true);
     try {
-      const res = await api.post('/communities', {
+      const res = await createCommunity({
         name: name.trim(),
         region,
         imageUrl: uploadedImageUrl ?? null,
-        createdBy: userId,
         adminMemberIds: [],
       });
-      localStorage.setItem('myCommunity', JSON.stringify(res.data));
-      queryClient.invalidateQueries({ queryKey: ['myCommunitiesList', String(userId)] });
+      setMyCommunity(res);
+      queryClient.invalidateQueries({ queryKey: ['myCommunitiesList'] });
       navigate('/community', { replace: true });
     } catch {
       setError(t('community', 'createFailed'));
