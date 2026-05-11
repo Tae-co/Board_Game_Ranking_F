@@ -8,6 +8,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
 import FlatTable from '../scoreSheets/tables/FlatTable';
 import SectionedTable from '../scoreSheets/tables/SectionedTable';
+import ConditionTable from '../scoreSheets/tables/ConditionTable';
 import { getAllCategories } from '../scoreSheets/shared/scoreUtils';
 import { ScienceModal } from '../scoreSheets/shared/ScoreCell';
 import WinnerBanner from '../scoreSheets/shared/WinnerBanner';
@@ -58,6 +59,7 @@ const ScoreSheet = () => {
         const parsed = typeof schemaJson === 'string' ? JSON.parse(schemaJson) : schemaJson;
         if (parsed.type === 'flat') return { ...parsed, TableComponent: FlatTable };
         if (parsed.type === 'sectioned') return { ...parsed, TableComponent: SectionedTable };
+        if (parsed.type === 'conditional') return { ...parsed, TableComponent: ConditionTable };
       } catch {}
     }
 
@@ -151,7 +153,17 @@ const ScoreSheet = () => {
 
   const handleSubmit = async () => {
     let participants;
-    if (currentSchema?.type === "duel" || currentSchema?.type === "splendorduel") {
+    if (currentSchema?.type === "conditional") {
+      if (!duelWinnerId) { alert(t('scoreSheet', 'winnerRequired')); return; }
+      participants = players.map(p => ({
+        memberId: p.memberId,
+        placement: p.memberId === duelWinnerId ? 1 : 2,
+        scoresJson: JSON.stringify({
+          win_condition: duelWinCondition,
+          won: p.memberId === duelWinnerId,
+        }),
+      }));
+    } else if (currentSchema?.type === "duel" || currentSchema?.type === "splendorduel") {
       if (!duelWinnerId) { alert(t('scoreSheet', 'winnerRequired')); return; }
       const allCats = getAllCategories(currentSchema);
       participants = players.map(p => ({

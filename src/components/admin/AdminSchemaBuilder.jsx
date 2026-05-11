@@ -6,15 +6,16 @@ const AdminSchemaBuilder = ({
   schemaType, setSchemaType,
   schemaCategories, setSchemaCategories,
   schemaSections, setSchemaSections,
-  newCategory, newSection,
+  schemaConditions, setSchemaConditions,
+  newCategory, newSection, newCondition,
 }) => (
   <div className="space-y-2 pt-1">
     <label className="block text-xs" style={{ color: 'var(--th-text-sub)' }}>점수판 타입</label>
     <div className="flex gap-2">
-      {[['none', '없음'], ['flat', '일반형'], ['sectioned', '섹션형']].map(([val, label]) => (
+      {[['none', '없음'], ['flat', '일반형'], ['sectioned', '섹션형'], ['conditional', '조건형']].map(([val, label]) => (
         <button
           key={val}
-          onClick={() => { setSchemaType(val); setSchemaCategories([]); setSchemaSections([]); }}
+          onClick={() => { setSchemaType(val); setSchemaCategories([]); setSchemaSections([]); setSchemaConditions([]); }}
           className="flex-1 py-2 rounded-lg text-xs font-bold border transition-all"
           style={{
             backgroundColor: schemaType === val ? 'var(--th-primary)' : 'transparent',
@@ -60,6 +61,38 @@ const AdminSchemaBuilder = ({
           style={{ borderColor: 'var(--th-primary)', color: 'var(--th-primary)', backgroundColor: 'transparent', borderStyle: 'dashed' }}
         >
           + 카테고리 추가
+        </button>
+      </div>
+    )}
+
+    {/* conditional 조건 빌더 */}
+    {schemaType === 'conditional' && (
+      <div className="space-y-2 pt-1">
+        <p style={{ fontSize: 11, color: 'var(--th-text-sub)', marginBottom: 4 }}>
+          승자를 직접 선택하고, 어떤 조건으로 이겼는지 고르는 방식입니다.
+        </p>
+        {schemaConditions.map((cond, i) => (
+          <div key={cond.key} style={{ padding: '8px', borderRadius: 8, backgroundColor: 'var(--th-bg)', border: '1px solid var(--th-border)' }}>
+            <div style={{ display: 'flex', gap: 5, alignItems: 'center', marginBottom: 5 }}>
+              <input placeholder="한글 조건명" value={cond.label} onChange={e => setSchemaConditions(prev => prev.map((c, idx) => idx === i ? { ...c, label: e.target.value } : c))} style={{ ...inputStyle, flex: 1, minWidth: 0 }} />
+              <input placeholder="English name" value={cond.labelEn} onChange={e => setSchemaConditions(prev => prev.map((c, idx) => idx === i ? { ...c, labelEn: e.target.value } : c))} style={{ ...inputStyle, flex: 1, minWidth: 0 }} />
+              <input type="color" value={cond.color} onChange={e => setSchemaConditions(prev => prev.map((c, idx) => idx === i ? { ...c, color: e.target.value } : c))} style={{ width: 24, height: 24, padding: 2, borderRadius: 4, border: 'none', cursor: 'pointer', flexShrink: 0 }} />
+              <button onClick={() => setSchemaConditions(prev => prev.filter((_, idx) => idx !== i))} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', padding: 2, flexShrink: 0 }}>
+                <Trash2 size={13} />
+              </button>
+            </div>
+            <div style={{ display: 'flex', gap: 5 }}>
+              <input placeholder="설명 (한글, 선택)" value={cond.desc} onChange={e => setSchemaConditions(prev => prev.map((c, idx) => idx === i ? { ...c, desc: e.target.value } : c))} style={{ ...inputStyle, flex: 1, minWidth: 0 }} />
+              <input placeholder="Description (optional)" value={cond.descEn} onChange={e => setSchemaConditions(prev => prev.map((c, idx) => idx === i ? { ...c, descEn: e.target.value } : c))} style={{ ...inputStyle, flex: 1, minWidth: 0 }} />
+            </div>
+          </div>
+        ))}
+        <button
+          onClick={() => setSchemaConditions(prev => [...prev, newCondition()])}
+          className="w-full py-2 rounded-lg text-xs border transition-colors"
+          style={{ borderColor: 'var(--th-primary)', color: 'var(--th-primary)', backgroundColor: 'transparent', borderStyle: 'dashed' }}
+        >
+          + 승리 조건 추가
         </button>
       </div>
     )}
