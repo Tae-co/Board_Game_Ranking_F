@@ -8,7 +8,7 @@ export default {
   selected: '✓ Selected',
   selectPlayers: 'Select Players',
   startButton: ' selected! Start Game',
-  startPlaceholder: 'Select a game and players',
+  startPlaceholder: 'Select the Players',
   minPlayersError: 'Please select at least 2 players!',
   noGameError: 'Please select a game first!',
   maxPlayersError: 'Maximum {n} players allowed.',

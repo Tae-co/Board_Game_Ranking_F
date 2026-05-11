@@ -5,8 +5,7 @@ import { Plus, Hash, Shield } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { CommunityCardSkeleton } from '../components/Skeleton';
-import api from '../api/axios';
-import { joinCommunity } from '../api/services/communities';
+import { joinCommunity, getMyCommunities, getJoinedCommunities } from '../api/services/communities';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
@@ -34,8 +33,7 @@ const CommunityLobby = () => {
     queryKey: ['myCommunitiesList', userId],
     queryFn: async () => {
       if (!userId) return [];
-      const res = await api.get(`/communities/my/list/${userId}`);
-      return res.data || [];
+      return getMyCommunities(userId);
     },
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,
@@ -50,8 +48,7 @@ const CommunityLobby = () => {
     queryKey: ['joinedCommunities', userId],
     queryFn: async () => {
       if (!userId) return [];
-      const res = await api.get(`/communities/joined/${userId}`);
-      return res.data || [];
+      return getJoinedCommunities(userId);
     },
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,

@@ -9,6 +9,7 @@ export default {
   deleteRoom: 'Delete Room',
   leaveRoom: 'Leave',
   startGame: 'Start Game',
+  startPlaceholder: 'Select the Players',
   viewRanking: 'View Ranking',
   leaveConfirm: 'Are you sure you want to leave?',
   deleteConfirm: 'All records will be deleted. Are you sure?',

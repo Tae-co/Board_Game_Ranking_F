@@ -5,8 +5,9 @@ import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api, { setAccessToken } from '../api/axios';
-import { joinRoom } from '../api/services/rooms';
+import { joinRoom, getMyRooms, getCommunityRooms } from '../api/services/rooms';
+import { getGames } from '../api/services/games';
+import { getCommunityMembers } from '../api/services/communities';
 import { clearAuthSession, getAuthUserId, getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -50,12 +51,8 @@ const Lobby = () => {
     queryKey: communityId ? ['communityRooms', communityId, userId] : ['rooms', userId],
     queryFn: async () => {
       if (!userId || userId === 'null') return [];
-      if (communityId) {
-        const res = await api.get(`/communities/${communityId}/rooms?memberId=${userId}`);
-        return res.data || [];
-      }
-      const res = await api.get(`/rooms/my/${userId}`);
-      return res.data || [];
+      if (communityId) return getCommunityRooms(communityId, userId);
+      return getMyRooms(userId);
     },
     enabled: !!userId && userId !== 'null',
     staleTime: 1000 * 60 * 2,
@@ -63,20 +60,14 @@ const Lobby = () => {
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
-    queryFn: async () => {
-      const res = await api.get('/games');
-      return res.data || [];
-    },
+    queryFn: getGames,
     enabled: !communityId,
     staleTime: 1000 * 60 * 30,
   });
 
   const { data: communityMembers = [] } = useQuery({
     queryKey: ['communityMembers', communityId],
-    queryFn: async () => {
-      const res = await api.get(`/communities/${communityId}/members`);
-      return res.data || [];
-    },
+    queryFn: () => getCommunityMembers(communityId),
     enabled: !!communityId,
     staleTime: 1000 * 60 * 5,
   });

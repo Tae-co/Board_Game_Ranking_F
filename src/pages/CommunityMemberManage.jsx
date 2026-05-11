@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Users, X } from 'lucide-react';
 import StorageImage from '../components/StorageImage';
 import NavAvatar from '../components/NavAvatar';
-import api from '../api/axios';
+import { getCommunityMembers, kickCommunityMember } from '../api/services/communities';
 import { V } from '../utils/cssUtils';
 import { getAuthUserId } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
@@ -25,8 +25,7 @@ const CommunityMemberManage = () => {
   const { data: members = [], isLoading } = useQuery({
     queryKey: ['communityMembers', communityId],
     queryFn: async () => {
-      const res = await api.get(`/communities/${communityId}/members`);
-      return res.data || [];
+      return getCommunityMembers(communityId);
     },
     enabled: !!communityId,
     staleTime: 1000 * 60 * 5,
@@ -35,7 +34,7 @@ const CommunityMemberManage = () => {
   const handleKick = async (member) => {
     if (!window.confirm(`${member.nickname}님을 커뮤니티에서 내보내시겠습니까?`)) return;
     try {
-      await api.delete(`/communities/${communityId}/members/${member.memberId}`);
+      await kickCommunityMember(communityId, member.memberId);
       queryClient.invalidateQueries({ queryKey: ['communityMembers', communityId] });
       setPage(0);
     } catch {

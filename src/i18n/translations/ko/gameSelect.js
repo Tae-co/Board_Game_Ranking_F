@@ -8,7 +8,7 @@ export default {
   selected: '✓ 선택됨',
   selectPlayers: '플레이어 선택',
   startButton: '명 선택 완료! 게임 시작',
-  startPlaceholder: '게임과 플레이어를 선택해주세요',
+  startPlaceholder: '플레이어를 선택해주세요',
   minPlayersError: '게임은 최소 2명 이상 선택해야 합니다!',
   noGameError: '보드게임을 먼저 선택해주세요!',
   maxPlayersError: '최대 {n}명까지 참여 가능합니다.',

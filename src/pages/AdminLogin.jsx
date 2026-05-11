@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck } from 'lucide-react';
-import api, { setAccessToken } from '../api/axios';
+import { setAccessToken } from '../api/axios';
+import { adminLogin } from '../api/services/auth';
 import { saveAuthSession } from '../auth/storage';
 
 const AdminLogin = () => {
@@ -29,8 +30,8 @@ const AdminLogin = () => {
     setAdminError('');
     setAdminLoading(true);
     try {
-      const res = await api.post('/auth/admin-login', { username, password: adminPassword });
-      saveLoginData(res.data);
+      const data = await adminLogin(username, adminPassword);
+      saveLoginData(data);
     } catch {
       setAdminError('아이디 또는 비밀번호가 틀렸습니다.');
     } finally {

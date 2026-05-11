@@ -114,7 +114,7 @@ const CreateCommunity = () => {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             style={{ display: 'none' }}
             onChange={handlePhotoSelect}
           />

@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { setAccessToken } from '../api/axios';
 import { updateProfileImage as updateProfileImageApi, updateNickname as updateNicknameApi, deleteMember } from '../api/services/members';
 import { uploadProfileImage } from '../api/uploadImage';
-import { clearAuthSession, getAuthUserId, getNickname, setNickname } from '../auth/storage';
+import { clearAuthSession, getAuthUserId, getNickname, setNickname as persistNickname } from '../auth/storage';
 import { setProfileImage } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -48,6 +48,7 @@ const Profile = () => {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showNicknameEdit, setShowNicknameEdit] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [showPhotoMenu, setShowPhotoMenu] = useState(false);
   const fileInputRef = useRef(null);
 
   const handlePhotoSelect = async (e) => {
@@ -62,6 +63,18 @@ const Profile = () => {
       window.dispatchEvent(new Event('profileImageUpdated'));
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
     } catch { alert('사진 업로드에 실패했습니다.'); }
+    finally { setIsUploadingPhoto(false); }
+  };
+
+  const handleResetPhoto = async () => {
+    setShowPhotoMenu(false);
+    setIsUploadingPhoto(true);
+    try {
+      await updateProfileImageApi(userId, null);
+      setProfileImage(null);
+      window.dispatchEvent(new Event('profileImageUpdated'));
+      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+    } catch { alert('기본 프로필로 변경에 실패했습니다.'); }
     finally { setIsUploadingPhoto(false); }
   };
 
@@ -96,8 +109,11 @@ const Profile = () => {
     setIsNicknameSaving(true);
     try {
       await updateNicknameApi(userId, nickname.trim());
-      setNickname(nickname.trim());
+      persistNickname(nickname.trim());
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['roomMembers'] });
+      queryClient.invalidateQueries({ queryKey: ['rankings'] });
+      queryClient.invalidateQueries({ queryKey: ['matches'] });
       setShowNicknameEdit(false);
       alert(t('profile', 'nicknameSaved'));
     } catch { alert(t('profile', 'nicknameFailed')); }
@@ -163,7 +179,7 @@ const Profile = () => {
           {/* Avatar */}
           <div style={{ position: 'relative' }}>
             <div
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setShowPhotoMenu(v => !v)}
               style={{
                 width: 84, height: 84, borderRadius: '50%',
                 backgroundColor: 'var(--th-primary)',
@@ -198,7 +214,7 @@ const Profile = () => {
 
             {/* Camera button */}
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => setShowPhotoMenu(v => !v)}
               style={{
                 position: 'absolute', bottom: 0, left: 0,
                 width: 26, height: 26, borderRadius: '50%',
@@ -209,6 +225,50 @@ const Profile = () => {
             >
               <Camera size={12} color="var(--th-primary)" />
             </button>
+
+            {/* Photo action menu */}
+            {showPhotoMenu && (
+              <>
+                <div
+                  onClick={() => setShowPhotoMenu(false)}
+                  style={{ position: 'fixed', inset: 0, zIndex: 100 }}
+                />
+                <div style={{
+                  position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
+                  marginTop: 10, zIndex: 101,
+                  backgroundColor: V('--th-card'), borderRadius: 14,
+                  border: `1px solid var(--th-border)`,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                  overflow: 'hidden', minWidth: 160,
+                }}>
+                  <button
+                    onClick={() => { setShowPhotoMenu(false); fileInputRef.current?.click(); }}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 10,
+                      width: '100%', padding: '13px 16px', border: 'none', background: 'none',
+                      cursor: 'pointer', fontSize: 14, fontWeight: 600, color: V('--th-text'),
+                      borderBottom: `1px solid var(--th-border)`,
+                    }}
+                  >
+                    <Camera size={15} color={V('--th-primary')} />
+                    사진 변경
+                  </button>
+                  {profileData?.profileImage && (
+                    <button
+                      onClick={handleResetPhoto}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        width: '100%', padding: '13px 16px', border: 'none', background: 'none',
+                        cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#dc2626',
+                      }}
+                    >
+                      <span style={{ fontSize: 15 }}>↩</span>
+                      기본 프로필
+                    </button>
+                  )}
+                </div>
+              </>
+            )}
 
             {/* Nickname edit button */}
             <button
@@ -227,7 +287,7 @@ const Profile = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp,image/gif"
               onChange={handlePhotoSelect}
               style={{ display: 'none' }}
             />

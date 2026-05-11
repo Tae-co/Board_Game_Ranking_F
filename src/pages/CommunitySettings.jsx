@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Camera, Search, Check, Trash2, Copy, CheckCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import api from '../api/axios';
+import { getCommunity, getCommunityMembers, updateCommunity, deleteCommunity } from '../api/services/communities';
 import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
 import NavAvatar from '../components/NavAvatar';
@@ -30,10 +30,7 @@ const CommunitySettings = () => {
 
   const { data: detail, isLoading: detailLoading } = useQuery({
     queryKey: ['communityDetail', communityId],
-    queryFn: async () => {
-      const res = await api.get(`/communities/${communityId}`);
-      return res.data;
-    },
+    queryFn: () => getCommunity(communityId),
     enabled: !!communityId,
     staleTime: 0,
   });
@@ -42,8 +39,8 @@ const CommunitySettings = () => {
   const { data: allMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['communityMembers', communityId],
     queryFn: async () => {
-      const res = await api.get(`/communities/${communityId}/members`);
-      return (res.data || []).filter((m) => m.memberId !== userId);
+      const data = await getCommunityMembers(communityId);
+      return data.filter((m) => m.memberId !== userId);
     },
     enabled: !!communityId,
     staleTime: 1000 * 60 * 5,
@@ -131,13 +128,13 @@ const CommunitySettings = () => {
     setError('');
     setIsSubmitting(true);
     try {
-      const res = await api.patch(`/communities/${communityId}`, {
+      const res = await updateCommunity(communityId, {
         name: name.trim(),
         region,
         imageUrl: uploadedImageUrl ?? (detail?.imageUrl ?? null),
         adminMemberIds: [...selectedIds],
       });
-      setMyCommunity(res.data);
+      setMyCommunity(res);
       const parsed = getSelectedCommunity();
       if (parsed && String(parsed.communityId) === String(communityId)) {
         setSelectedCommunity({
@@ -160,7 +157,7 @@ const CommunitySettings = () => {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await api.delete(`/communities/${communityId}`);
+      await deleteCommunity(communityId);
       removeMyCommunity();
       removeSelectedCommunity();
       queryClient.removeQueries({ queryKey: ['myCommunitiesList'] });
@@ -214,7 +211,7 @@ const CommunitySettings = () => {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             style={{ display: 'none' }}
             onChange={handlePhotoSelect}
           />
