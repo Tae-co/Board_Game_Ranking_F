@@ -5,7 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { setAccessToken } from '../api/axios';
 import { updateProfileImage as updateProfileImageApi, updateNickname as updateNicknameApi, deleteMember } from '../api/services/members';
 import { uploadProfileImage } from '../api/uploadImage';
-import { clearAuthSession, getAuthUserId, getNickname, setNickname } from '../auth/storage';
+import { clearAuthSession, getAuthUserId, getNickname, setNickname as persistNickname } from '../auth/storage';
 import { setProfileImage } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -109,8 +109,11 @@ const Profile = () => {
     setIsNicknameSaving(true);
     try {
       await updateNicknameApi(userId, nickname.trim());
-      setNickname(nickname.trim());
+      persistNickname(nickname.trim());
       queryClient.invalidateQueries({ queryKey: ['profile'] });
+      queryClient.invalidateQueries({ queryKey: ['roomMembers'] });
+      queryClient.invalidateQueries({ queryKey: ['rankings'] });
+      queryClient.invalidateQueries({ queryKey: ['matches'] });
       setShowNicknameEdit(false);
       alert(t('profile', 'nicknameSaved'));
     } catch { alert(t('profile', 'nicknameFailed')); }
