@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { usePresence } from '../hooks/usePresence';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Play, Share2 } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
@@ -84,6 +85,14 @@ const Invite = () => {
     queryFn: () => getRoomMembers(roomId),
     staleTime: 1000 * 60 * 2,
   });
+
+  const onlineIds = usePresence(userId, roomId);
+
+  useEffect(() => {
+    if (membersLoading || onlineIds.size === 0) return;
+    const memberIdSet = new Set(members.map(m => m.memberId));
+    if ([...onlineIds].some(id => !memberIdSet.has(id))) refetchMembers();
+  }, [onlineIds, members, membersLoading, refetchMembers]);
 
   const isHost = members.find(m => m.memberId === userId)?.isHost ?? false;
 
