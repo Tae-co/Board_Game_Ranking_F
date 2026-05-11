@@ -9,6 +9,7 @@ export default {
   deleteRoom: '방 삭제',
   leaveRoom: '나가기',
   startGame: '게임 시작',
+  startPlaceholder: '플레이어를 선택해주세요',
   viewRanking: '랭킹 보기',
   leaveConfirm: '정말 방을 나가시겠습니까?',
   deleteConfirm: '방을 삭제하면 모든 기록이 사라집니다. 정말 삭제하시겠습니까?',

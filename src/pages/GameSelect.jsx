@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Search, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import api from '../api/axios';
+import { getRoom, getRoomMembers } from '../api/services/rooms';
+import { getGames } from '../api/services/games';
 import { useLanguage } from '../i18n/LanguageContext';
 import { usePresence } from '../hooks/usePresence';
 import { V } from '../utils/cssUtils';
-const nickName = () => localStorage.getItem('nickname') || '?';
+import { getNickname, getAuthUserId } from '../auth/storage';
 
 const GameSelect = () => {
   const { roomId } = useParams();
@@ -18,32 +19,23 @@ const GameSelect = () => {
 
   const { data: room } = useQuery({
     queryKey: ['room', roomId],
-    queryFn: async () => {
-      const res = await api.get(`/rooms/${roomId}`);
-      return res.data;
-    },
+    queryFn: () => getRoom(roomId),
     staleTime: 1000 * 60 * 10,
   });
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
-    queryFn: async () => {
-      const res = await api.get('/games');
-      return res.data || [];
-    },
+    queryFn: getGames,
     staleTime: 1000 * 60 * 30,
   });
 
   const { data: members = [] } = useQuery({
     queryKey: ['roomMembers', roomId],
-    queryFn: async () => {
-      const res = await api.get(`/rooms/${roomId}/members`);
-      return res.data || [];
-    },
+    queryFn: () => getRoomMembers(roomId),
     staleTime: 1000 * 60 * 2,
   });
 
-  const myId = Number(localStorage.getItem('userId'));
+  const myId = Number(getAuthUserId());
   const onlineIds = usePresence(myId, roomId);
 
   const currentGame = games.find(g => g.id === room?.boardGameId);
@@ -99,7 +91,7 @@ const GameSelect = () => {
               fontWeight: 700, fontSize: 14, cursor: 'pointer', flexShrink: 0,
             }}
           >
-            {nickName()[0].toUpperCase()}
+            {getNickname()[0]?.toUpperCase()}
           </div>
         </div>
       </div>

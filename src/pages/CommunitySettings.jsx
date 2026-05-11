@@ -3,12 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Camera, Search, Check, Trash2, Copy, CheckCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
-import api from '../api/axios';
+import { getCommunity, getCommunityMembers, updateCommunity, deleteCommunity } from '../api/services/communities';
 import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
 import NavAvatar from '../components/NavAvatar';
 import { V } from '../utils/cssUtils';
 import { REGION_NAMES } from '../constants/regions';
+import { getAuthUserId } from '../auth/storage';
+import { getMyCommunity, setMyCommunity, removeMyCommunity, getSelectedCommunity, setSelectedCommunity, removeSelectedCommunity, notifySelectedCommunityUpdated } from '../utils/storage';
 
 const REGIONS = [...REGION_NAMES, 'Other'];
 
@@ -16,11 +18,9 @@ const CommunitySettings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const userId = Number(localStorage.getItem('userId'));
+  const userId = Number(getAuthUserId());
 
-  const storedCommunity = (() => {
-    try { return JSON.parse(localStorage.getItem('myCommunity')); } catch { return null; }
-  })();
+  const storedCommunity = getMyCommunity();
 
   useEffect(() => {
     if (!storedCommunity) navigate('/community', { replace: true });
@@ -30,10 +30,7 @@ const CommunitySettings = () => {
 
   const { data: detail, isLoading: detailLoading } = useQuery({
     queryKey: ['communityDetail', communityId],
-    queryFn: async () => {
-      const res = await api.get(`/communities/${communityId}`);
-      return res.data;
-    },
+    queryFn: () => getCommunity(communityId),
     enabled: !!communityId,
     staleTime: 0,
   });
@@ -42,8 +39,8 @@ const CommunitySettings = () => {
   const { data: allMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['communityMembers', communityId],
     queryFn: async () => {
-      const res = await api.get(`/communities/${communityId}/members`);
-      return (res.data || []).filter((m) => m.memberId !== userId);
+      const data = await getCommunityMembers(communityId);
+      return data.filter((m) => m.memberId !== userId);
     },
     enabled: !!communityId,
     staleTime: 1000 * 60 * 5,
@@ -131,27 +128,22 @@ const CommunitySettings = () => {
     setError('');
     setIsSubmitting(true);
     try {
-      const res = await api.patch(`/communities/${communityId}`, {
+      const res = await updateCommunity(communityId, {
         name: name.trim(),
         region,
         imageUrl: uploadedImageUrl ?? (detail?.imageUrl ?? null),
         adminMemberIds: [...selectedIds],
       });
-      localStorage.setItem('myCommunity', JSON.stringify(res.data));
-      try {
-        const stored = localStorage.getItem('selectedCommunity');
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (String(parsed.communityId) === String(communityId)) {
-            localStorage.setItem('selectedCommunity', JSON.stringify({
-              ...parsed,
-              name: name.trim(),
-              imageUrl: uploadedImageUrl ?? detail?.imageUrl ?? null,
-            }));
-            window.dispatchEvent(new Event('selectedCommunityUpdated'));
-          }
-        }
-      } catch {}
+      setMyCommunity(res);
+      const parsed = getSelectedCommunity();
+      if (parsed && String(parsed.communityId) === String(communityId)) {
+        setSelectedCommunity({
+          ...parsed,
+          name: name.trim(),
+          imageUrl: uploadedImageUrl ?? detail?.imageUrl ?? null,
+        });
+        notifySelectedCommunityUpdated();
+      }
       queryClient.invalidateQueries({ queryKey: ['myCommunitiesList', String(userId)] });
       queryClient.invalidateQueries({ queryKey: ['communityDetail', communityId] });
       navigate('/community', { replace: true });
@@ -165,9 +157,9 @@ const CommunitySettings = () => {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      await api.delete(`/communities/${communityId}`);
-      localStorage.removeItem('myCommunity');
-      localStorage.removeItem('selectedCommunity');
+      await deleteCommunity(communityId);
+      removeMyCommunity();
+      removeSelectedCommunity();
       queryClient.removeQueries({ queryKey: ['myCommunitiesList'] });
       queryClient.removeQueries({ queryKey: ['communityRooms'] });
       navigate('/community', { replace: true });
@@ -219,7 +211,7 @@ const CommunitySettings = () => {
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/*"
+            accept="image/jpeg,image/png,image/webp,image/gif"
             style={{ display: 'none' }}
             onChange={handlePhotoSelect}
           />

@@ -3,10 +3,12 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../api/axios';
+import { getRoomMembers } from '../api/services/rooms';
+import { getGames } from '../api/services/games';
+import { createMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
-const nickName = () => localStorage.getItem('nickname') || '?';
+import { getNickname } from '../auth/storage';
 
 const MatchForm = () => {
   const { roomId } = useParams();
@@ -23,7 +25,7 @@ const MatchForm = () => {
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
-    queryFn: async () => { const res = await api.get('/games'); return res.data || []; },
+    queryFn: getGames,
     staleTime: 1000 * 60 * 30,
   });
   const currentGame = games.find(g => g.id === gameId);
@@ -31,8 +33,7 @@ const MatchForm = () => {
   useEffect(() => {
     const fetchSelectedMembers = async () => {
       try {
-        const res = await api.get(`/rooms/${roomId}/members`);
-        const allMembers = res.data || [];
+        const allMembers = await getRoomMembers(roomId);
         const selected = allMembers.filter(m => players.includes(m.memberId));
         setPlayerDetails(selected);
         const init = {};
@@ -73,14 +74,14 @@ const MatchForm = () => {
     const placements = calcPlacements();
     setIsSubmitting(true);
     try {
-      const res = await api.post('/matches', {
+      const res = await createMatch({
         boardGameId: gameId,
         roomId: Number(roomId),
         participants: playerDetails.map(p => ({ memberId: p.memberId, placement: placements[p.memberId] })),
       });
       queryClient.invalidateQueries({ queryKey: ['rankings'] });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      navigate(`/invite/${roomId}`, { state: { matchResult: res.data }, replace: true });
+      navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
     } catch {
       alert(t('matchForm', 'saveFailed'));
     } finally {

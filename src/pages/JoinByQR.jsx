@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import api from '../api/axios';
+import { joinRoom } from '../api/services/rooms';
+import { getAuthUserId } from '../auth/storage';
 
 const JoinByQR = () => {
   const [searchParams] = useSearchParams();
@@ -15,7 +16,7 @@ const JoinByQR = () => {
       return;
     }
 
-    const userId = localStorage.getItem('userId');
+    const userId = getAuthUserId();
     if (!userId) {
       navigate('/login', { state: { redirectAfterLogin: `/join?code=${code}` } });
       return;
@@ -23,10 +24,7 @@ const JoinByQR = () => {
 
     const join = async () => {
       try {
-        const res = await api.post('/rooms/join', {
-          inviteCode: code,
-          memberId: Number(userId),
-        });
+        const res = await joinRoom(code);
         navigate(`/ranking/${res.data.roomId}`);
       } catch (e) {
         const msg = e?.response?.data?.message || '방 참여에 실패했습니다.';

@@ -5,10 +5,12 @@ import { Plus, Hash, Shield } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { CommunityCardSkeleton } from '../components/Skeleton';
-import api from '../api/axios';
+import { joinCommunity, getMyCommunities, getJoinedCommunities } from '../api/services/communities';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
+import { getNickname, getAuthUserId, getRole } from '../auth/storage';
+import { setSelectedCommunity, setMyCommunity, removeMyCommunity } from '../utils/storage';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -19,9 +21,9 @@ const CommunityLobby = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const nickname = localStorage.getItem('nickname') || '?';
-  const userId = localStorage.getItem('userId');
-  const isSystemAdmin = localStorage.getItem('role') === 'ADMIN';
+  const nickname = getNickname() || '?';
+  const userId = getAuthUserId();
+  const isSystemAdmin = getRole() === 'ADMIN';
 
   const [joinCode, setJoinCode] = useState('');
   const [joinError, setJoinError] = useState('');
@@ -31,24 +33,22 @@ const CommunityLobby = () => {
     queryKey: ['myCommunitiesList', userId],
     queryFn: async () => {
       if (!userId) return [];
-      const res = await api.get(`/communities/my/list/${userId}`);
-      return res.data || [];
+      return getMyCommunities(userId);
     },
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,
   });
 
   useEffect(() => {
-    if (myCommunities.length > 0) localStorage.setItem('myCommunity', JSON.stringify(myCommunities[0]));
-    else if (myCommunities.length === 0 && userId) localStorage.removeItem('myCommunity');
+    if (myCommunities.length > 0) setMyCommunity(myCommunities[0]);
+    else if (myCommunities.length === 0 && userId) removeMyCommunity();
   }, [myCommunities, userId]);
 
   const { data: joinedCommunities = [], isLoading: joinedLoading } = useQuery({
     queryKey: ['joinedCommunities', userId],
     queryFn: async () => {
       if (!userId) return [];
-      const res = await api.get(`/communities/joined/${userId}`);
-      return res.data || [];
+      return getJoinedCommunities(userId);
     },
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,
@@ -56,7 +56,7 @@ const CommunityLobby = () => {
 
   const handleEnterCommunity = (community) => {
     const isAdmin = (community.admins ?? []).some(a => a.memberId === Number(userId));
-    localStorage.setItem('selectedCommunity', JSON.stringify({
+    setSelectedCommunity({
       communityId: community.communityId,
       name: community.name,
       isAdmin,
@@ -64,7 +64,7 @@ const CommunityLobby = () => {
       imageUrl: community.imageUrl ?? null,
       region: community.region ?? null,
       memberCount: community.memberCount ?? 0,
-    }));
+    });
     navigate('/lobby');
   };
 
@@ -73,7 +73,7 @@ const CommunityLobby = () => {
     setJoinError('');
     setJoinLoading(true);
     try {
-      await api.post('/communities/join', { inviteCode: joinCode.trim(), memberId: Number(userId) });
+      await joinCommunity(joinCode.trim());
       setJoinCode('');
       queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
     } catch (e) {
@@ -84,7 +84,7 @@ const CommunityLobby = () => {
   };
 
   const handleManage = (community) => {
-    localStorage.setItem('myCommunity', JSON.stringify(community));
+    setMyCommunity(community);
     navigate('/manage-community');
   };
 
