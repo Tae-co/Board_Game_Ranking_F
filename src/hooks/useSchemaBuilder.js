@@ -10,10 +10,16 @@ const newSection = () => ({
   title: '', titleEn: '', categories: [newCategory()],
 });
 
+const newCondition = () => ({
+  key: `cond_${Math.random().toString(36).slice(2, 8)}`,
+  label: '', labelEn: '', color: '#6b5ce7', desc: '', descEn: '',
+});
+
 export const useSchemaBuilder = () => {
   const [schemaType, setSchemaType] = useState('none');
   const [schemaCategories, setSchemaCategories] = useState([]);
   const [schemaSections, setSchemaSections] = useState([]);
+  const [schemaConditions, setSchemaConditions] = useState([]);
 
   const buildSchemaJson = (gameName) => {
     if (schemaType === 'none') return null;
@@ -36,6 +42,16 @@ export const useSchemaBuilder = () => {
         })),
       });
     }
+    if (schemaType === 'conditional') {
+      return JSON.stringify({
+        name: gameName, type: 'conditional',
+        winConditions: schemaConditions.map(({ key, label, labelEn, color, desc, descEn }) => ({
+          key, label, labelEn, color,
+          ...(desc && { desc }),
+          ...(descEn && { descEn }),
+        })),
+      });
+    }
     return null;
   };
 
@@ -55,6 +71,12 @@ export const useSchemaBuilder = () => {
         }
       }
     }
+    if (schemaType === 'conditional') {
+      if (schemaConditions.length === 0) return '승리 조건을 1개 이상 추가해주세요.';
+      for (const c of schemaConditions) {
+        if (!c.label || !c.labelEn) return '모든 조건에 한글명과 영문명을 입력해주세요.';
+      }
+    }
     return null;
   };
 
@@ -62,6 +84,7 @@ export const useSchemaBuilder = () => {
     setSchemaType('none');
     setSchemaCategories([]);
     setSchemaSections([]);
+    setSchemaConditions([]);
   };
 
   const loadFromGame = (game) => {
@@ -73,6 +96,9 @@ export const useSchemaBuilder = () => {
         if (parsed.type === 'sectioned') setSchemaSections(
           (parsed.sections || []).map(s => ({ ...s, id: Math.random().toString(36).slice(2, 8) }))
         );
+        if (parsed.type === 'conditional') setSchemaConditions(
+          (parsed.winConditions || []).map(c => ({ ...c, key: c.key || `cond_${Math.random().toString(36).slice(2, 8)}` }))
+        );
         return;
       } catch { /* fall through */ }
     }
@@ -83,7 +109,8 @@ export const useSchemaBuilder = () => {
     schemaType, setSchemaType,
     schemaCategories, setSchemaCategories,
     schemaSections, setSchemaSections,
-    newCategory, newSection,
+    schemaConditions, setSchemaConditions,
+    newCategory, newSection, newCondition,
     buildSchemaJson, validateSchemaUI, resetSchema, loadFromGame,
   };
 };

@@ -41,6 +41,26 @@ const WinnerBanner = ({ schema, duelWinnerId, duelFellowshipId, duelWinCondition
     );
   }
 
+  if (schema?.type === 'conditional') {
+    if (!duelWinnerId) return null;
+    const winnerNick = players.find(p => p.memberId === duelWinnerId)?.nickname;
+    const wc = schema.winConditions?.find(w => w.key === duelWinCondition);
+    return (
+      <div style={{ margin: '16px 16px 0', background: wc?.color || 'var(--th-primary)', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
+        <div style={{ width: 40, height: 40, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M2 19h20v2H2v-2zm2-2l3-8 5 4 5-4 3 8H4zm8-10a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>
+        </div>
+        <div>
+          <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>{`${winnerNick} ${t('scoreSheet', 'victory')}`}</div>
+          {wc && <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: 2, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.6)' }} />
+            {cl(wc, lang)}
+          </div>}
+        </div>
+      </div>
+    );
+  }
+
   if (!Object.values(totals).some(v => v > 0)) return null;
   return (
     <div style={{ margin: '16px 16px 0', background: 'var(--th-primary)', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
