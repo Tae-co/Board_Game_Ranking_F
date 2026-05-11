@@ -41,6 +41,13 @@ input[type="number"]::-webkit-outer-spin-button {
 ::-webkit-scrollbar { width: 0; height: 0; }
 * { scrollbar-width: none; }
 
+/* 이미지 저장 방지 (모바일 롱프레스, PC 우클릭) */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* 테마 적응형 ghost 버튼 */
 .btn-ghost {
   background-color: var(--th-btn-ghost-bg, #FFFFFF);

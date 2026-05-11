@@ -57,8 +57,12 @@ const StorageImage = ({
     onError?.(event);
   };
 
+  const handleContextMenu = (e) => e.preventDefault();
+
   return (
     <img
+      draggable={false}
+      onContextMenu={handleContextMenu}
       {...props}
       src={currentSrc}
       onError={handleError}
