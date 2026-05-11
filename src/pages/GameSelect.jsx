@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Search, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import api from '../api/axios';
+import { getRoom, getRoomMembers } from '../api/services/rooms';
+import { getGames } from '../api/services/games';
 import { useLanguage } from '../i18n/LanguageContext';
 import { usePresence } from '../hooks/usePresence';
 import { V } from '../utils/cssUtils';
@@ -18,28 +19,19 @@ const GameSelect = () => {
 
   const { data: room } = useQuery({
     queryKey: ['room', roomId],
-    queryFn: async () => {
-      const res = await api.get(`/rooms/${roomId}`);
-      return res.data;
-    },
+    queryFn: () => getRoom(roomId),
     staleTime: 1000 * 60 * 10,
   });
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
-    queryFn: async () => {
-      const res = await api.get('/games');
-      return res.data || [];
-    },
+    queryFn: getGames,
     staleTime: 1000 * 60 * 30,
   });
 
   const { data: members = [] } = useQuery({
     queryKey: ['roomMembers', roomId],
-    queryFn: async () => {
-      const res = await api.get(`/rooms/${roomId}/members`);
-      return res.data || [];
-    },
+    queryFn: () => getRoomMembers(roomId),
     staleTime: 1000 * 60 * 2,
   });
 

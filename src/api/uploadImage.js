@@ -8,6 +8,12 @@ const compressImage = (file, maxWidth = 800, quality = 0.7) =>
     const url = URL.createObjectURL(file);
     const fallback = () => {
       URL.revokeObjectURL(url);
+      // HEIC 등 canvas가 처리 못하는 포맷은 업로드 거부
+      const type = file.type.toLowerCase();
+      if (type === 'image/heic' || type === 'image/heif' || type === '') {
+        reject(new Error('지원하지 않는 이미지 형식입니다. JPEG 또는 PNG 파일을 사용해 주세요.'));
+        return;
+      }
       if (file.size > MAX_UPLOAD_BYTES) {
         reject(new Error(`파일 크기가 너무 큽니다 (최대 4MB). 더 작은 이미지를 사용해 주세요.`));
       } else {
@@ -46,7 +52,8 @@ const uploadToBackend = async (file, endpoint, oldUrl) => {
   const formData = new FormData();
   formData.append('file', compressed, 'image.jpg');
   if (oldUrl) formData.append('oldUrl', oldUrl);
-  const res = await api.post(endpoint, formData);
+  // Content-Type을 undefined로 지정해 브라우저가 multipart/form-data boundary를 자동 설정하게 함
+  const res = await api.post(endpoint, formData, { headers: { 'Content-Type': undefined } });
   return res.data.url;
 };
 

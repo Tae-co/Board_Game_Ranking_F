@@ -4,8 +4,8 @@ import { ArrowLeft, Play, Share2 } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../api/axios';
-import { leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating } from '../api/services/rooms';
+import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating } from '../api/services/rooms';
+import { getGames } from '../api/services/games';
 import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -68,7 +68,7 @@ const Invite = () => {
 
   const { data: roomInfo = {}, refetch: refetchRoom } = useQuery({
     queryKey: ['room', roomId],
-    queryFn: async () => (await api.get(`/rooms/${roomId}`)).data,
+    queryFn: () => getRoom(roomId),
     staleTime: 1000 * 60 * 10,
     initialData: () => {
       const cachedRooms = queryClient.getQueryData(['rooms', String(userId)]);
@@ -81,7 +81,7 @@ const Invite = () => {
 
   const { data: members = [], isLoading: membersLoading, refetch: refetchMembers } = useQuery({
     queryKey: ['roomMembers', roomId],
-    queryFn: async () => (await api.get(`/rooms/${roomId}/members`)).data || [],
+    queryFn: () => getRoomMembers(roomId),
     staleTime: 1000 * 60 * 2,
   });
 
@@ -89,7 +89,7 @@ const Invite = () => {
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
-    queryFn: async () => (await api.get('/games')).data || [],
+    queryFn: getGames,
     enabled: !!roomInfo.boardGameId,
     staleTime: 1000 * 60 * 30,
   });
@@ -97,13 +97,13 @@ const Invite = () => {
 
   const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
     queryKey: ['rankings', roomId],
-    queryFn: async () => (await api.get(`/rooms/${roomId}/rankings`)).data || [],
+    queryFn: () => getRoomRankings(roomId),
     staleTime: 1000 * 60 * 3,
   });
 
   const { data: allMatchesRaw = [], isLoading: isMatchesLoading, refetch: refetchMatches } = useQuery({
     queryKey: ['matches', roomId],
-    queryFn: async () => (await api.get(`/rooms/${roomId}/matches`)).data || [],
+    queryFn: () => getRoomMatches(roomId),
     staleTime: 1000 * 60 * 1,
   });
   const allMatches = roomInfo.boardGameId
@@ -548,7 +548,7 @@ const Invite = () => {
             <span style={{ fontWeight: '700', fontSize: '15px', color: '#FFFFFF' }}>
               {selectedPlayers.size > 0
                 ? `${selectedPlayers.size}${t('gameSelect', 'startButton')}`
-                : `${minPlayers}${t('invite', 'startGame')}`}
+                : t('invite', 'startPlaceholder')}
             </span>
           </button>
         </div>

@@ -4,7 +4,8 @@ import { ArrowLeft, Share2 } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import api from '../api/axios';
+import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches } from '../api/services/rooms';
+import { getGames } from '../api/services/games';
 import { getAuthUserId, getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 import { updateMemberRating } from '../api/services/rooms';
@@ -66,13 +67,13 @@ const Ranking = () => {
 
   const { data: room } = useQuery({
     queryKey: ['room', roomId],
-    queryFn: async () => { const res = await api.get(`/rooms/${roomId}`); return res.data; },
+    queryFn: () => getRoom(roomId),
     staleTime: 1000 * 60 * 10,
   });
 
   const { data: roomMembers = [] } = useQuery({
     queryKey: ['roomMembers', roomId],
-    queryFn: async () => { const res = await api.get(`/rooms/${roomId}/members`); return res.data || []; },
+    queryFn: () => getRoomMembers(roomId),
     staleTime: 1000 * 60 * 2,
   });
 
@@ -83,13 +84,13 @@ const Ranking = () => {
 
   const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
     queryKey: ['rankings', roomId],
-    queryFn: async () => { const res = await api.get(`/rooms/${roomId}/rankings`); return res.data || []; },
+    queryFn: () => getRoomRankings(roomId),
     staleTime: 1000 * 60 * 3,
   });
 
   const { data: allMatchesRaw = [], isLoading: isMatchesLoading, refetch: refetchMatches } = useQuery({
     queryKey: ['matches', roomId],
-    queryFn: async () => { const res = await api.get(`/rooms/${roomId}/matches`); return res.data || []; },
+    queryFn: () => getRoomMatches(roomId),
     staleTime: 1000 * 60 * 1,
   });
   const allMatches = room?.boardGameId
@@ -98,7 +99,7 @@ const Ranking = () => {
 
   const { data: games = [] } = useQuery({
     queryKey: ['games'],
-    queryFn: () => api.get('/games').then(r => r.data),
+    queryFn: getGames,
     staleTime: 1000 * 60 * 30,
   });
 

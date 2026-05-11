@@ -2,7 +2,8 @@ import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
-import api, { setAccessToken } from '../api/axios';
+import { setAccessToken } from '../api/axios';
+import { kakaoLogin } from '../api/services/auth';
 import { saveAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -59,8 +60,8 @@ const Login = () => {
       throughTalk: false,
       success: async (authObj) => {
         try {
-          const res = await api.post('/auth/kakao', { kakaoAccessToken: authObj.access_token });
-          saveLoginData(res.data);
+          const data = await kakaoLogin(authObj.access_token);
+          saveLoginData(data);
         } catch {
           alert(t('login', 'kakaoFailed'));
         }

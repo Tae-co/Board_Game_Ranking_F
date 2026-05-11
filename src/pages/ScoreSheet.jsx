@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import NavAvatar from '../components/NavAvatar';
 import { useQueryClient } from '@tanstack/react-query';
-import api from '../api/axios';
+import { createMatch, updateMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
 import FlatTable from '../scoreSheets/tables/FlatTable';
@@ -195,8 +195,8 @@ const ScoreSheet = () => {
     try {
       setIsSubmitting(true);
       const res = editMatchId
-        ? await api.put(`/matches/${editMatchId}`, { boardGameId, roomId, participants })
-        : await api.post('/matches', { boardGameId, roomId, participants });
+        ? await updateMatch(editMatchId, { boardGameId, roomId, participants })
+        : await createMatch({ boardGameId, roomId, participants });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['rankings', String(roomId)] }),
         queryClient.invalidateQueries({ queryKey: ['matches', String(roomId)] }),
@@ -204,7 +204,7 @@ const ScoreSheet = () => {
         queryClient.invalidateQueries({ queryKey: ['matches', Number(roomId)] }),
         queryClient.invalidateQueries({ queryKey: ['rooms'] }),
       ]);
-      navigate(`/invite/${roomId}`, { state: { matchResult: res.data }, replace: true });
+      navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
     } catch (err) {
       alert(t('scoreSheet', 'saveFailed'));
       console.error(err);
