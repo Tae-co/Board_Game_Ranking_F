@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { joinCommunity } from '../api/services/communities';
 import { getAuthUserId } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -9,6 +10,7 @@ const JoinByQR = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const queryClient = useQueryClient();
   const [error, setError] = useState('');
   const [pendingCode, setPendingCode] = useState(null);
   const [joining, setJoining] = useState(false);
@@ -34,6 +36,8 @@ const JoinByQR = () => {
     setJoining(true);
     try {
       await joinCommunity(pendingCode);
+      const userId = getAuthUserId();
+      queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
       navigate('/community');
     } catch (e) {
       const msg = e?.response?.data?.message || '커뮤니티 참여에 실패했습니다.';
