@@ -69,7 +69,7 @@ const Lobby = () => {
     queryKey: ['communityMembers', communityId],
     queryFn: () => getCommunityMembers(communityId),
     enabled: !!communityId,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 30,
   });
 
   const handleEnterRoom = async (room) => {
@@ -311,7 +311,7 @@ const Lobby = () => {
             </p>
             <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
               <div style={{ padding: '10px', borderRadius: '12px', backgroundColor: '#fff', flexShrink: 0 }}>
-                <QRCodeSVG value={`${window.location.origin}/join?code=${communityInviteCode}`} size={90} bgColor="#ffffff" fgColor="#1a1a2e" />
+                <QRCodeSVG value={`${import.meta.env.VITE_APP_URL || window.location.origin}/join?code=${communityInviteCode}`} size={90} bgColor="#ffffff" fgColor="#1a1a2e" />
               </div>
               <div style={{ flex: 1 }}>
                 <div style={{
