@@ -50,4 +50,7 @@ export default {
   enterRoom: '입장하기',
   inviteCode: '초대 코드',
   copyCode: '복사',
+  joinConfirmTitle: '커뮤니티에 참가하시겠습니까?',
+  joinConfirmDesc: '초대 코드',
+  joinConfirmButton: '참가하기',
 };

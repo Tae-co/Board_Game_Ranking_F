@@ -50,4 +50,7 @@ export default {
   enterRoom: 'Enter',
   inviteCode: 'Invite Code',
   copyCode: 'Copy',
+  joinConfirmTitle: 'Join this community?',
+  joinConfirmDesc: 'Invite code',
+  joinConfirmButton: 'Join',
 };
