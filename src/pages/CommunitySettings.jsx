@@ -261,7 +261,7 @@ const CommunitySettings = () => {
               {t('community', 'inviteCode')}
             </p>
             <QRCodeSVG
-              value={detail.inviteCode}
+              value={`${window.location.origin}/join?code=${detail.inviteCode}`}
               size={140}
               bgColor="transparent"
               fgColor="var(--th-text)"
