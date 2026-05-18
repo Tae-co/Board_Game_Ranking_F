@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { joinRoom } from '../api/services/rooms';
+import { joinCommunity } from '../api/services/communities';
 import { getAuthUserId } from '../auth/storage';
 
 const JoinByQR = () => {
@@ -12,7 +12,7 @@ const JoinByQR = () => {
     const code = searchParams.get('code');
 
     if (!code) {
-      navigate('/lobby');
+      navigate('/community');
       return;
     }
 
@@ -24,12 +24,12 @@ const JoinByQR = () => {
 
     const join = async () => {
       try {
-        const res = await joinRoom(code);
-        navigate(`/ranking/${res.data.roomId}`);
+        await joinCommunity(code);
+        navigate('/community');
       } catch (e) {
-        const msg = e?.response?.data?.message || '방 참여에 실패했습니다.';
+        const msg = e?.response?.data?.message || '커뮤니티 참여에 실패했습니다.';
         setError(msg);
-        setTimeout(() => navigate('/lobby'), 2000);
+        setTimeout(() => navigate('/community'), 2000);
       }
     };
 
@@ -45,7 +45,7 @@ const JoinByQR = () => {
         <>
           <div className="w-10 h-10 rounded-full border-4 border-t-transparent animate-spin"
             style={{ borderColor: 'var(--th-primary)', borderTopColor: 'transparent' }} />
-          <p>방에 참여하는 중...</p>
+          <p>커뮤니티에 참여하는 중...</p>
         </>
       )}
     </div>
