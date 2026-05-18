@@ -1,9 +1,7 @@
-import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { setAccessToken } from '../api/axios';
-import { kakaoLogin } from '../api/services/auth';
 import { saveAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -19,17 +17,6 @@ const Login = () => {
   const { t } = useLanguage();
   const googleAuthUrl = `${import.meta.env.VITE_API_URL}/auth/google`;
   const googleNativeAuthUrl = 'https://meeple-production.up.railway.app/api/auth/google/native/login';
-
-  useEffect(() => {
-    try {
-      const key = import.meta.env.VITE_KAKAO_APP_KEY;
-      if (window.Kakao && key && !window.Kakao.isInitialized()) {
-        window.Kakao.init(key);
-      }
-    } catch (e) {
-      console.warn('Kakao SDK init 실패:', e);
-    }
-  }, []);
 
   const saveLoginData = (data) => {
     setAccessToken(data.accessToken);
@@ -52,24 +39,9 @@ const Login = () => {
       }
       return;
     }
-    if (!window.Kakao?.isInitialized()) {
-      alert(t('login', 'kakaoLoading'));
-      return;
-    }
-    window.Kakao.Auth.login({
-      throughTalk: false,
-      success: async (authObj) => {
-        try {
-          const data = await kakaoLogin(authObj.access_token);
-          saveLoginData(data);
-        } catch {
-          alert(t('login', 'kakaoFailed'));
-        }
-      },
-      fail: () => {
-        alert(t('login', 'kakaoCanceled'));
-      },
-    });
+    const redirect = location.state?.redirectAfterLogin;
+    if (redirect) sessionStorage.setItem('pendingRedirect', redirect);
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao/login`;
   };
 
   return (
