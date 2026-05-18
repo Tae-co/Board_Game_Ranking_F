@@ -40,7 +40,7 @@ const Login = () => {
       refreshToken: data.refreshToken,
     });
     const redirect = location.state?.redirectAfterLogin;
-    navigate(redirect || '/lobby');
+    navigate(redirect || '/community');
   };
 
   const handleKakaoLogin = async () => {
@@ -121,6 +121,8 @@ const Login = () => {
           {/* Google */}
           <button
             onClick={async () => {
+              const redirect = location.state?.redirectAfterLogin;
+              if (redirect) sessionStorage.setItem('pendingRedirect', redirect);
               if (Capacitor.isNativePlatform()) {
                 try { await Browser.open({ url: googleNativeAuthUrl }); } catch (e) { alert('구글 로그인 오류: ' + e.message); }
                 return;

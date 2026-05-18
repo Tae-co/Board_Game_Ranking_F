@@ -22,7 +22,9 @@ const OAuthCallback = () => {
         role,
         refreshToken,
       });
-      navigate('/lobby', { replace: true });
+      const redirect = sessionStorage.getItem('pendingRedirect');
+      if (redirect) sessionStorage.removeItem('pendingRedirect');
+      navigate(redirect || '/community', { replace: true });
     } else {
       navigate('/login', { replace: true });
     }
