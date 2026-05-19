@@ -5,7 +5,7 @@ const StatsCard = ({ myRank, myWinRate, myStreak, streakLoading, myRankPosition,
   const total = myRank.winCount + myRank.loseCount;
   if (total === 0) return null;
   const streakColor = myStreak?.isWin ? '#22c55e' : '#ef4444';
-  const streakLabel = myStreak ? `${myStreak.count}${myStreak.isWin ? '연승' : '연패'}` : null;
+  const streakLabel = myStreak ? `${myStreak.count} ${myStreak.isWin ? t('ranking', 'streakWin') : t('ranking', 'streakLoss')}` : null;
   const labelStyle = { fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap' };
   const valueStyle = { fontSize: 15, fontWeight: 900 };
   const itemStyle = { flex: 1, minWidth: 0 };
