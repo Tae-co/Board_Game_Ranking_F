@@ -44,10 +44,10 @@ const AvatarStack = ({ admins = [], memberCount = 0 }) => {
   );
 };
 
-const CommunityCard = ({ community, onEnter, onManage, t }) => (
+const CommunityCard = ({ community, onEnter, onManage, isCarousel, t }) => (
   <div style={{
-    flex: onManage ? '0 0 calc(100% - 40px)' : undefined,
-    scrollSnapAlign: onManage ? 'start' : undefined,
+    flex: isCarousel ? '0 0 calc(100% - 40px)' : undefined,
+    scrollSnapAlign: isCarousel ? 'start' : undefined,
     borderRadius: '18px', padding: '18px',
     backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',

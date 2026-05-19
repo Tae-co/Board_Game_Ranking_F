@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Globe, Sun, Moon, LogOut, Pencil, ChevronRight, Camera } from 'lucide-react';
+import { ArrowLeft, Globe, Sun, Moon, LogOut, Pencil, ChevronRight, Camera, MessageSquarePlus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { setAccessToken } from '../api/axios';
 import { updateProfileImage as updateProfileImageApi, updateNickname as updateNicknameApi, deleteMember } from '../api/services/members';
@@ -12,6 +12,7 @@ import { useTheme } from '../theme/ThemeContext';
 import { TierBadge } from '../components/TierBadge';
 import { V } from '../utils/cssUtils';
 import { getErrorMessage, getTierFromRating, getTierBg } from '../utils/tierUtils';
+import FeedbackModal from '../components/shared/FeedbackModal';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ const Profile = () => {
   const [nicknameStatus, setNicknameStatus] = useState(null);
   const [isNicknameSaving, setIsNicknameSaving] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [showNicknameEdit, setShowNicknameEdit] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [showPhotoMenu, setShowPhotoMenu] = useState(false);
@@ -433,6 +435,24 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* Feedback / Bug Report */}
+        <button
+          onClick={() => setShowFeedbackModal(true)}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 12,
+            padding: '16px 18px', borderRadius: 18,
+            backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+            cursor: 'pointer', textAlign: 'left',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+          }}
+        >
+          <MessageSquarePlus size={18} style={{ color: V('--th-primary'), flexShrink: 0 }} />
+          <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: V('--th-text') }}>
+            {t('profile', 'feedbackButton')}
+          </span>
+          <ChevronRight size={16} style={{ color: V('--th-text-sub') }} />
+        </button>
+
         {/* Delete Account */}
         <div style={{ borderRadius: 18, padding: '16px 18px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
           <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 6 }}>회원 탈퇴</div>
@@ -453,6 +473,8 @@ const Profile = () => {
         </div>
 
       </div>
+
+      {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} />}
     </div>
   );
 };

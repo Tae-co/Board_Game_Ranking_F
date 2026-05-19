@@ -60,8 +60,18 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               <div style={{ fontSize: 13, fontWeight: isMe || isSelected ? 700 : 500, color: isMe || isSelected ? 'var(--th-primary)' : V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {rank.nickname}
               </div>
-              {isMe && <div style={{ fontSize: 10, color: 'var(--th-primary)', fontWeight: 700, letterSpacing: '0.05em' }}>YOU</div>}
-              {isUnranked && <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>UNRANKED</div>}
+              {isUnranked ? (
+                <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>UNRANKED</div>
+              ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+                  {isMe && <span style={{ fontSize: 9, color: 'var(--th-primary)', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>YOU</span>}
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{rank.winCount}W</span>
+                  <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626' }}>{rank.loseCount}L</span>
+                </div>
+              ) : isMe ? (
+                <div style={{ fontSize: 10, color: 'var(--th-primary)', fontWeight: 700, letterSpacing: '0.05em' }}>YOU</div>
+              ) : null}
             </div>
             {isHost && !isUnranked && (
               <button
