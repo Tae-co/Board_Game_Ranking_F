@@ -33,4 +33,10 @@ export default {
   statsWins: '승',
   statsLosses: '패',
   statsWinRate: '승률',
+  feedbackTitle: '피드백 / 버그 신고',
+  feedbackTypeFeedback: '피드백',
+  feedbackTypeBug: '버그 신고',
+  feedbackPlaceholder: '자유롭게 의견을 남겨주세요 :)',
+  feedbackSubmit: '이메일로 보내기',
+  feedbackButton: '피드백 / 버그 신고',
 };
