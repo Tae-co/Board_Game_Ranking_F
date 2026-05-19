@@ -100,7 +100,7 @@ const ScoreSheet = () => {
     setScores(prev => ({ ...prev, [catKey]: { ...prev[catKey], [memberId]: value } }));
   };
 
-  const isRoundBased = currentSchema?.type === 'uno' || currentSchema?.type === 'rummikub' || currentSchema?.type === 'dicethrone';
+  const isRoundBased = currentSchema?.type === 'uno' || currentSchema?.type === 'rummikub' || currentSchema?.type === 'dicethrone' || currentSchema?.type === 'saboteur';
   const lowestWins = !!currentSchema?.lowestWins;
 
   const totals = useMemo(() => {

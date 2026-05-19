@@ -12,6 +12,7 @@ import { littleTownsSchema } from './littleTowns';
 import { diceThroneSchema, DiceThroneTable } from './dicethrone.jsx';
 import { splendorDuelSchema, SplendorDuelTable } from './splendorduel.jsx';
 import { unmatchedSchema, UnmatchedTable } from './unmatched/index.jsx';
+import { saboteurSchema, SaboteurTable } from './saboteur.jsx';
 import FlatTable from '../tables/FlatTable';
 import SectionedTable from '../tables/SectionedTable';
 
@@ -30,4 +31,5 @@ export const SCORE_SCHEMAS = {
   14: { ...diceThroneSchema,      TableComponent: DiceThroneTable },
   15: { ...splendorDuelSchema,    TableComponent: SplendorDuelTable },
   16: { ...unmatchedSchema,       TableComponent: UnmatchedTable },
+  17: { ...saboteurSchema,       TableComponent: SaboteurTable },
 };
