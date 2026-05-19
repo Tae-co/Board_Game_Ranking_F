@@ -75,7 +75,7 @@ export const SplendorDuelTable = ({
               >
                 <PlayerAvatar player={player} isWinner={isWinner} />
                 <div style={{ fontSize: 14, fontWeight: 900 }}>{player.nickname}</div>
-                {isWinner && <div style={{ fontSize: 11, marginTop: 4, color: "rgba(255,255,255,0.85)" }}>승리!</div>}
+                {isWinner && <div style={{ fontSize: 11, marginTop: 4, color: "rgba(255,255,255,0.85)" }}>{t('scoreSheet', 'victory')}</div>}
               </button>
             );
           })}

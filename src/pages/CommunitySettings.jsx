@@ -62,6 +62,7 @@ const CommunitySettings = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
   const initialized = useRef(false);
+  const adminsTouched = useRef(false);
 
   const handlePhotoSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -82,23 +83,27 @@ const CommunitySettings = () => {
 
   // 기존 데이터로 폼 초기화
   useEffect(() => {
-    if (detail && !initialized.current) {
-      initialized.current = true;
-      setName(detail.name || '');
-      setRegion(detail.region || 'South Korea');
-      if (detail.imageUrl) {
-        setImagePreview(detail.imageUrl);
+    if (detail) {
+      if (!initialized.current) {
+        initialized.current = true;
+        setName(detail.name || '');
+        setRegion(detail.region || 'South Korea');
+        if (detail.imageUrl) setImagePreview(detail.imageUrl);
       }
-      const existingIds = new Set(
-        (detail.admins || [])
-          .filter((a) => a.memberId !== userId)
-          .map((a) => a.memberId)
-      );
-      setSelectedIds(existingIds);
+      // 어드민 선택은 유저가 수동으로 건드리기 전까지 API 응답과 동기화
+      if (!adminsTouched.current) {
+        const existingIds = new Set(
+          (detail.admins || [])
+            .filter((a) => a.memberId !== userId)
+            .map((a) => a.memberId)
+        );
+        setSelectedIds(existingIds);
+      }
     }
   }, [detail, userId]);
 
   const toggleAdmin = (memberId) => {
+    adminsTouched.current = true;
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(memberId)) {

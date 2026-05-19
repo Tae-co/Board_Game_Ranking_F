@@ -31,4 +31,6 @@ export default {
   statsWins: '승',
   statsLosses: '패',
   statsWinRate: '승률',
+  streakWin: '연승',
+  streakLoss: '연패',
 };

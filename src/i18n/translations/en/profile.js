@@ -33,4 +33,10 @@ export default {
   statsWins: 'Wins',
   statsLosses: 'Losses',
   statsWinRate: 'Win Rate',
+  feedbackTitle: 'Feedback / Bug Report',
+  feedbackTypeFeedback: 'Feedback',
+  feedbackTypeBug: 'Bug Report',
+  feedbackPlaceholder: 'Leave your thoughts freely :)',
+  feedbackSubmit: 'Send via Email',
+  feedbackButton: 'Feedback / Bug Report',
 };

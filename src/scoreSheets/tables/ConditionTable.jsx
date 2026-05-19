@@ -57,7 +57,7 @@ const ConditionTable = ({
                   {player.nickname}
                 </div>
                 {isWinner && (
-                  <div style={{ fontSize: 10, marginTop: 3, color: 'rgba(255,255,255,0.85)' }}>승리!</div>
+                  <div style={{ fontSize: 10, marginTop: 3, color: 'rgba(255,255,255,0.85)' }}>{t('scoreSheet', 'victory')}</div>
                 )}
               </button>
             );

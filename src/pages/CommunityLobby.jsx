@@ -331,6 +331,7 @@ const CommunityLobby = () => {
                 community={community}
                 onEnter={handleEnterCommunity}
                 onManage={handleManage}
+                isCarousel
                 t={t}
               />
             ))}
@@ -351,14 +352,18 @@ const CommunityLobby = () => {
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
-            {joinedCommunities.map((community) => (
-              <CommunityCard
-                key={community.communityId}
-                community={community}
-                onEnter={handleEnterCommunity}
-                t={t}
-              />
-            ))}
+            {joinedCommunities.map((community) => {
+              const isAdmin = (community.admins ?? []).some(a => a.memberId === Number(userId));
+              return (
+                <CommunityCard
+                  key={community.communityId}
+                  community={community}
+                  onEnter={handleEnterCommunity}
+                  onManage={isAdmin ? handleManage : undefined}
+                  t={t}
+                />
+              );
+            })}
           </div>
         )}
 
