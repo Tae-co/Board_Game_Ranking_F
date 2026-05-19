@@ -41,7 +41,8 @@ const Login = () => {
     }
     const redirect = location.state?.redirectAfterLogin;
     if (redirect) sessionStorage.setItem('pendingRedirect', redirect);
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao/login`;
+    const returnTo = encodeURIComponent(window.location.origin);
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao/login?returnTo=${returnTo}`;
   };
 
   return (
@@ -99,7 +100,9 @@ const Login = () => {
                 try { await Browser.open({ url: googleNativeAuthUrl }); } catch (e) { alert('구글 로그인 오류: ' + e.message); }
                 return;
               }
-              if (isWebView) { window.open(googleAuthUrl, '_blank'); } else { window.location.href = googleAuthUrl; }
+              const returnTo = encodeURIComponent(window.location.origin);
+              const googleLoginUrl = `${import.meta.env.VITE_API_URL}/auth/google?returnTo=${returnTo}`;
+              if (isWebView) { window.open(googleLoginUrl, '_blank'); } else { window.location.href = googleLoginUrl; }
             }}
             style={{
               width: '100%', padding: '15px', borderRadius: '50px',
