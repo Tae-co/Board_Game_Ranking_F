@@ -31,4 +31,6 @@ export default {
   statsWins: 'Wins',
   statsLosses: 'Losses',
   statsWinRate: 'Win Rate',
+  streakWin: 'W Streak',
+  streakLoss: 'L Streak',
 };
