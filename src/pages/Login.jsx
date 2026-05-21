@@ -3,6 +3,7 @@ import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { setAccessToken } from '../api/axios';
 import { saveAuthSession } from '../auth/storage';
+import { appleLogin } from '../api/services/auth';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 
@@ -28,6 +29,20 @@ const Login = () => {
     });
     const redirect = location.state?.redirectAfterLogin;
     navigate(redirect || '/community');
+  };
+
+  const handleAppleLogin = async () => {
+    try {
+      const result = await Capacitor.Plugins.AppleAuth.authorize();
+      const { identityToken, givenName, familyName } = result;
+      const nickname = [givenName, familyName].filter(Boolean).join(' ') || 'Apple User';
+      const data = await appleLogin(identityToken, nickname);
+      saveLoginData(data);
+    } catch (e) {
+      if (e?.message !== 'cancelled') {
+        alert('Apple 로그인 오류: ' + (e?.message || ''));
+      }
+    }
   };
 
   const handleKakaoLogin = async () => {
@@ -89,6 +104,26 @@ const Login = () => {
             }}>
               ⚠️ {t('login', 'webViewWarning')}
             </div>
+          )}
+
+          {/* Sign in with Apple - iOS 네이티브에서만 표시 */}
+          {Capacitor.getPlatform() === 'ios' && (
+            <button
+              onClick={handleAppleLogin}
+              style={{
+                width: '100%', padding: '15px', borderRadius: '50px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
+                backgroundColor: '#000', color: '#fff', border: 'none',
+                fontSize: '15px', fontWeight: '500', cursor: 'pointer', transition: 'opacity 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            >
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M12.26 0c.08 1.04-.3 2.06-.96 2.8-.66.74-1.66 1.3-2.66 1.22-.1-1 .34-2.04 1-2.76C10.3.52 11.36-.02 12.26 0zM15.9 12.38c-.44 1-.66 1.44-1.22 2.32-.8 1.22-1.92 2.74-3.32 2.76-1.24.02-1.56-.8-3.24-.78-1.68.02-2.04.82-3.28.78-1.4-.04-2.46-1.42-3.26-2.64C-.68 12.3-.28 8.7 1.6 6.78c1.32-1.36 3.38-1.66 4.86-.72.6.38 1.12.92 1.74.92.64 0 1.2-.56 2.16-.88 1.38-.46 3.02-.12 4.06 1.16-.62.42-2.52 1.86-2.24 4.28.26 2.18 1.96 3.3 3.72 3.84z" fill="#fff"/>
+              </svg>
+              {t('login', 'appleLogin') || 'Continue with Apple'}
+            </button>
           )}
 
           {/* Google */}
