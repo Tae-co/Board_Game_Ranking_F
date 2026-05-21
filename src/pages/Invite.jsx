@@ -236,9 +236,13 @@ const Invite = () => {
     setSaving(true);
     try {
       await updateRoomName(roomId, trimmed);
-      await refetchRoom();
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      const updateName = (old) =>
+        Array.isArray(old)
+          ? old.map(r => String(r.roomId) === String(roomId) ? { ...r, roomName: trimmed } : r)
+          : old;
+      queryClient.setQueryData(['room', roomId], (old) => old ? { ...old, roomName: trimmed } : old);
+      queryClient.setQueriesData({ queryKey: ['rooms'] }, updateName);
+      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, updateName);
       setShowSettings(false);
     } catch { alert('방 이름 변경에 실패했습니다.'); }
     setSaving(false);
