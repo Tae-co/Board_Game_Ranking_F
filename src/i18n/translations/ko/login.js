@@ -34,6 +34,7 @@ export default {
   nicknameTaken: '✕ 이미 사용 중인 닉네임이에요',
   nicknameChecking: '확인 중...',
   or: '또는',
+  appleLogin: 'Apple로 시작하기',
   googleLogin: '구글로 시작하기',
   kakaoLogin: '카카오로 시작하기',
   kakaoLoading: '카카오 SDK 로딩 중입니다. 잠시 후 다시 시도해주세요.',

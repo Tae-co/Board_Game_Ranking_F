@@ -34,6 +34,7 @@ export default {
   nicknameTaken: '✕ Nickname already taken',
   nicknameChecking: 'Checking...',
   or: 'or',
+  appleLogin: 'Continue with Apple',
   googleLogin: 'Continue with Google',
   kakaoLogin: 'Continue with Kakao',
   kakaoLoading: 'Kakao SDK loading. Please try again.',
