@@ -1,8 +1,8 @@
 export default {
   title: 'Profile',
   changeNickname: 'Change Nickname',
-  nicknamePlaceholder: 'New nickname (2~10 chars)',
-  nicknameRange: '2~10 chars',
+  nicknamePlaceholder: 'New nickname (2~20 chars)',
+  nicknameRange: '2~20 chars',
   saveNickname: 'Change Nickname',
   savingNickname: 'Saving...',
   changePassword: 'Change Password',
