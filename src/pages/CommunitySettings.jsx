@@ -149,7 +149,17 @@ const CommunitySettings = () => {
         });
         notifySelectedCommunityUpdated();
       }
-      queryClient.invalidateQueries({ queryKey: ['myCommunitiesList', String(userId)] });
+      const updatedName = name.trim();
+      const updatedImageUrl = uploadedImageUrl ?? detail?.imageUrl ?? null;
+      const patchList = (old) => {
+        if (!Array.isArray(old)) return old;
+        return old.map(c => String(c.communityId) === String(communityId)
+          ? { ...c, name: updatedName, imageUrl: updatedImageUrl }
+          : c
+        );
+      };
+      queryClient.setQueriesData({ queryKey: ['myCommunitiesList'] }, patchList);
+      queryClient.setQueriesData({ queryKey: ['joinedCommunities'] }, patchList);
       queryClient.invalidateQueries({ queryKey: ['communityDetail', communityId] });
       navigate('/community', { replace: true });
     } catch {

@@ -206,8 +206,9 @@ const Invite = () => {
     if (!window.confirm(t('invite', 'leaveConfirm'))) return;
     try {
       await leaveRoom(roomId, userId);
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
+      queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
+      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, removeRoom);
       navigate('/lobby');
     } catch { alert(t('invite', 'leaveFailed')); }
   };
@@ -216,8 +217,9 @@ const Invite = () => {
     if (!window.confirm(t('invite', 'deleteConfirm'))) return;
     try {
       await deleteRoom(roomId);
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
+      queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
+      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, removeRoom);
       navigate('/lobby');
     } catch { alert(t('invite', 'deleteFailed')); }
   };
@@ -226,7 +228,9 @@ const Invite = () => {
     if (!window.confirm(`${member.nickname}${t('invite', 'kickConfirm')}`)) return;
     try {
       await kickRoomMember(roomId, member.memberId);
-      refetchMembers();
+      queryClient.setQueryData(['roomMembers', roomId], (old) =>
+        Array.isArray(old) ? old.filter(m => m.memberId !== member.memberId) : old
+      );
     } catch { alert(t('invite', 'kickFailed')); }
   };
 
@@ -310,7 +314,9 @@ const Invite = () => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
     try {
       await deleteMatch(matchId);
-      refetchMatches();
+      queryClient.setQueryData(['matches', roomId], (old) =>
+        Array.isArray(old) ? old.filter(m => m.matchId !== matchId) : old
+      );
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
     } catch { alert('삭제에 실패했습니다.'); }
   }, [queryClient, refetchMatches, roomId]);
