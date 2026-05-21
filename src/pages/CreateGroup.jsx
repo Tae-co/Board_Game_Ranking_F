@@ -50,7 +50,7 @@ const CreateGroup = () => {
       });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
-      navigate(`/invite/${res.data.roomId}`);
+      navigate(`/invite/${res.roomId}`);
     } catch {
       alert(t('lobby', 'createFailed'));
     } finally {
