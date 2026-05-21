@@ -74,7 +74,14 @@ const Invite = () => {
     initialData: () => {
       const cachedRooms = queryClient.getQueryData(['rooms', String(userId)]);
       const found = cachedRooms?.find(r => String(r.roomId) === String(roomId));
-      return found ?? undefined;
+      if (found) return found;
+      const communityCache = queryClient.getQueriesData({ queryKey: ['communityRooms'] });
+      for (const [, rooms] of communityCache) {
+        if (!Array.isArray(rooms)) continue;
+        const hit = rooms.find(r => String(r.roomId) === String(roomId));
+        if (hit) return hit;
+      }
+      return undefined;
     },
   });
 
@@ -231,6 +238,7 @@ const Invite = () => {
       await updateRoomName(roomId, trimmed);
       await refetchRoom();
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
       setShowSettings(false);
     } catch { alert('방 이름 변경에 실패했습니다.'); }
     setSaving(false);

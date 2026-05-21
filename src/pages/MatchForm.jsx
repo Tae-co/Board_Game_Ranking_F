@@ -232,6 +232,7 @@ const MatchForm = () => {
         });
         queryClient.invalidateQueries({ queryKey: ['rankings'] });
         queryClient.invalidateQueries({ queryKey: ['rooms'] });
+        queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
         navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
       } catch {
         alert(t('matchForm', 'saveFailed'));
