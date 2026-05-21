@@ -90,6 +90,7 @@ const Lobby = () => {
       setJoinCode('');
       setShowJoinSheet(false);
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
     } catch {
       alert(t('lobby', 'joinFailed'));
     } finally {

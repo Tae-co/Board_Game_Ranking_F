@@ -215,6 +215,7 @@ const ScoreSheet = () => {
         queryClient.invalidateQueries({ queryKey: ['rankings', Number(roomId)] }),
         queryClient.invalidateQueries({ queryKey: ['matches', Number(roomId)] }),
         queryClient.invalidateQueries({ queryKey: ['rooms'] }),
+        queryClient.invalidateQueries({ queryKey: ['communityRooms'] }),
       ]);
       navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
     } catch (err) {
