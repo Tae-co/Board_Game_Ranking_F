@@ -332,7 +332,7 @@ const Profile = () => {
                 onChange={(e) => handleNicknameChange(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSaveNickname()}
                 placeholder={t('profile', 'nicknamePlaceholder')}
-                maxLength={10}
+                maxLength={20}
                 autoFocus
                 style={{
                   width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: 14, outline: 'none',

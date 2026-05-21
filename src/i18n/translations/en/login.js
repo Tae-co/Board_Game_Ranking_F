@@ -15,7 +15,7 @@ export default {
   verifyOtp: 'Verify',
   nicknameLabel: 'Set Nickname',
   nicknameDesc: 'Set your nickname and password',
-  nicknamePlaceholder: 'Nickname (2~10 chars)',
+  nicknamePlaceholder: 'Nickname (2~20 chars)',
   passwordPlaceholder: 'Password (min 6 chars)',
   start: 'Get Started',
   starting: 'Signing up...',

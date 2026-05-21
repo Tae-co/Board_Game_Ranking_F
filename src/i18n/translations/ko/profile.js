@@ -1,8 +1,8 @@
 export default {
   title: '프로필',
   changeNickname: '닉네임 변경',
-  nicknamePlaceholder: '새 닉네임 (2~10자)',
-  nicknameRange: '2~10자',
+  nicknamePlaceholder: '새 닉네임 (2~20자)',
+  nicknameRange: '2~20자',
   saveNickname: '닉네임 변경하기',
   savingNickname: '저장 중...',
   changePassword: '비밀번호 변경',
