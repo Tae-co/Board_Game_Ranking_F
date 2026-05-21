@@ -35,7 +35,9 @@ const CommunityMemberManage = () => {
     if (!window.confirm(`${member.nickname}님을 커뮤니티에서 내보내시겠습니까?`)) return;
     try {
       await kickCommunityMember(communityId, member.memberId);
-      queryClient.invalidateQueries({ queryKey: ['communityMembers', communityId] });
+      queryClient.setQueryData(['communityMembers', communityId], (old) =>
+        Array.isArray(old) ? old.filter(m => m.memberId !== member.memberId) : old
+      );
       setPage(0);
     } catch {
       alert('멤버 내보내기에 실패했습니다.');
