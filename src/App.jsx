@@ -50,7 +50,7 @@ function App() {
 
   useEffect(() => {
     if (window.location.hostname.includes('pages.dev')) {
-      const nextUrl = `https://yadarank.com${window.location.pathname}${window.location.search}${window.location.hash}`;
+      const nextUrl = `https://app.yadarank.com${window.location.pathname}${window.location.search}${window.location.hash}`;
       window.location.replace(nextUrl);
       return;
     }

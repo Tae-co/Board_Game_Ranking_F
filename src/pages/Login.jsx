@@ -200,7 +200,7 @@ const Login = () => {
           {' · '}
           <span
             style={{ fontWeight: '600', cursor: 'pointer', textDecoration: 'underline' }}
-            onClick={() => Browser.open({ url: 'https://yadarank.com/privacy.html' })}
+            onClick={() => Browser.open({ url: 'https://yadarank.com/privacy' })}
           >PRIVACY</span>
         </p>
       </div>
