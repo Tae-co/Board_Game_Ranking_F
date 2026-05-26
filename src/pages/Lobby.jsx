@@ -41,6 +41,7 @@ const Lobby = () => {
   const isAdmin = selectedCommunity?.isAdmin ?? false;
   const communityInviteCode = selectedCommunity?.inviteCode ?? null;
   const [codeCopied, setCodeCopied] = useState(false);
+  const [showQrPopup, setShowQrPopup] = useState(false);
   const [roomPage, setRoomPage] = useState(0);
   const [memberPage, setMemberPage] = useState(0);
 
@@ -90,6 +91,7 @@ const Lobby = () => {
       setJoinCode('');
       setShowJoinSheet(false);
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
     } catch {
       alert(t('lobby', 'joinFailed'));
     } finally {
@@ -187,22 +189,59 @@ const Lobby = () => {
                 <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 4px', letterSpacing: '-0.3px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
                   {selectedCommunity?.name}
                 </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: communityInviteCode ? '8px' : 0 }}>
                   <Users style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.8)' }} />
                   <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '500' }}>
                     {selectedCommunity?.memberCount ?? 0} Members
                   </span>
                 </div>
+                {selectedCommunity?.region && (
+                  <div style={{
+                    display: 'inline-block',
+                    backgroundColor: 'var(--th-primary)',
+                    borderRadius: '20px', padding: '5px 12px',
+                    fontSize: '11px', fontWeight: '700', color: '#fff',
+                    letterSpacing: '0.08em', textTransform: 'uppercase',
+                    boxShadow: '0 2px 8px rgba(107,92,231,0.5)',
+                  }}>
+                    {selectedCommunity.region}
+                  </div>
+                )}
               </div>
-              {selectedCommunity?.region && (
+              {communityInviteCode && (
                 <div style={{
-                  backgroundColor: 'var(--th-primary)',
-                  borderRadius: '20px', padding: '6px 14px',
-                  fontSize: '11px', fontWeight: '700', color: '#fff',
-                  letterSpacing: '0.08em', textTransform: 'uppercase',
-                  boxShadow: '0 2px 8px rgba(107,92,231,0.5)',
+                  display: 'flex', alignItems: 'center', gap: '4px',
+                  backgroundColor: 'rgba(0,0,0,0.45)',
+                  backdropFilter: 'blur(6px)',
+                  borderRadius: '10px',
+                  padding: '6px 10px 6px 10px',
+                  border: '1px solid rgba(255,255,255,0.12)',
                 }}>
-                  {selectedCommunity.region}
+                  <button
+                    onClick={() => setShowQrPopup(true)}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                      display: 'flex', alignItems: 'center', gap: '5px',
+                    }}
+                  >
+                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.6)', fontWeight: '700', letterSpacing: '0.08em' }}>CODE</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: '15px', fontWeight: '800', color: '#fff', letterSpacing: '0.1em' }}>
+                      {communityInviteCode}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(communityInviteCode);
+                      setCodeCopied(true);
+                      setTimeout(() => setCodeCopied(false), 2000);
+                    }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0 2px 4px', display: 'flex', alignItems: 'center' }}
+                  >
+                    {codeCopied
+                      ? <CheckCheck size={14} color="#22c55e" />
+                      : <Copy size={14} color="rgba(255,255,255,0.7)" />
+                    }
+                  </button>
                 </div>
               )}
             </div>
@@ -296,48 +335,6 @@ const Lobby = () => {
                 </div>
               </div>
             </button>
-          </div>
-        )}
-
-        {/* 초대 코드 — 커뮤니티 모드에서만 표시 */}
-        {communityId && communityInviteCode && (
-          <div style={{
-            backgroundColor: V('--th-card'), borderRadius: '18px',
-            border: `1px solid var(--th-border)`, padding: '20px',
-            marginBottom: '24px',
-          }}>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: V('--th-text-sub'), margin: '0 0 16px', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
-              {t('community', 'inviteCode')}
-            </p>
-            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ padding: '10px', borderRadius: '12px', backgroundColor: '#fff', flexShrink: 0 }}>
-                <QRCodeSVG value={`${import.meta.env.VITE_APP_URL || window.location.origin}/join?code=${communityInviteCode}`} size={90} bgColor="#ffffff" fgColor="#1a1a2e" />
-              </div>
-              <div style={{ flex: 1 }}>
-                <div style={{
-                  fontFamily: 'monospace', fontSize: '28px', fontWeight: '800',
-                  letterSpacing: '0.15em', color: V('--th-primary'), marginBottom: '12px',
-                }}>
-                  {communityInviteCode}
-                </div>
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(communityInviteCode);
-                    setCodeCopied(true);
-                    setTimeout(() => setCodeCopied(false), 2000);
-                  }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    padding: '8px 16px', borderRadius: '10px', border: 'none', cursor: 'pointer',
-                    background: codeCopied ? 'rgba(34,197,94,0.15)' : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-                    color: codeCopied ? '#22c55e' : '#fff',
-                    fontSize: '13px', fontWeight: '700', transition: 'all 0.2s',
-                  }}
-                >
-                  {codeCopied ? <><CheckCheck size={14} />{t('community', 'copyCode')}</> : <><Copy size={14} />{t('community', 'copyCode')}</>}
-                </button>
-              </div>
-            </div>
           </div>
         )}
 
@@ -473,6 +470,7 @@ const Lobby = () => {
                       return (
                         <div key={member.memberId} style={{
                           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+                          minWidth: 0,
                         }}>
                           <div style={{
                             width: 44, height: 44, borderRadius: '50%',
@@ -528,6 +526,64 @@ const Lobby = () => {
           </div>
         )}
       </div>
+
+      {showQrPopup && communityInviteCode && (
+        <div
+          onClick={() => setShowQrPopup(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 200,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '24px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: V('--th-card'), borderRadius: '24px',
+              padding: '32px 28px', width: '100%', maxWidth: '320px',
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            }}
+          >
+            <p style={{ fontSize: '13px', fontWeight: '700', color: V('--th-text-sub'), margin: 0, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+              {t('community', 'inviteCode')}
+            </p>
+            <div style={{ padding: '14px', borderRadius: '16px', backgroundColor: '#fff' }}>
+              <QRCodeSVG
+                value={`${import.meta.env.VITE_APP_URL || window.location.origin}/join?code=${communityInviteCode}`}
+                size={160}
+                bgColor="#ffffff"
+                fgColor="#1a1a2e"
+              />
+            </div>
+            <div style={{
+              fontFamily: 'monospace', fontSize: '32px', fontWeight: '800',
+              letterSpacing: '0.2em', color: V('--th-primary'),
+            }}>
+              {communityInviteCode}
+            </div>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(communityInviteCode);
+                setCodeCopied(true);
+                setTimeout(() => setCodeCopied(false), 2000);
+              }}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '8px',
+                padding: '12px 28px', borderRadius: '14px', border: 'none', cursor: 'pointer',
+                background: codeCopied ? 'rgba(34,197,94,0.15)' : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                color: codeCopied ? '#22c55e' : '#fff',
+                fontSize: '15px', fontWeight: '700', transition: 'all 0.2s', width: '100%',
+                justifyContent: 'center',
+              }}
+            >
+              {codeCopied ? <CheckCheck size={16} /> : <Copy size={16} />}
+              {t('community', 'copyCode')}
+            </button>
+          </div>
+        </div>
+      )}
 
       {showJoinSheet && (
         <JoinCodeSheet

@@ -15,7 +15,7 @@ export default {
   verifyOtp: '인증 확인',
   nicknameLabel: '닉네임 설정',
   nicknameDesc: '사용하실 닉네임과 비밀번호를 설정해주세요',
-  nicknamePlaceholder: '닉네임 (2~10자)',
+  nicknamePlaceholder: '닉네임 (2~20자)',
   passwordPlaceholder: '비밀번호 (6자 이상)',
   start: '시작하기',
   starting: '가입 중...',

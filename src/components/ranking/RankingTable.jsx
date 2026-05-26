@@ -8,12 +8,14 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
   return (
   <>
     <div style={{
-      display: 'flex', padding: '6px 12px', marginBottom: 4, marginTop: 4,
+      display: 'flex', alignItems: 'center', gap: 10, padding: '6px 12px', marginBottom: 4, marginTop: 4,
       backgroundColor: V('--th-card'), borderRadius: 8,
       border: '1px solid var(--th-border)',
     }}>
-      <div style={{ width: 32, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>RANK</div>
-      <div style={{ flex: 1, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', paddingLeft: 36 }}>PLAYER</div>
+      {!!onToggle && <div style={{ width: 20, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0, textAlign: 'center' }}>SEL</div>}
+      <div style={{ width: 24, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0 }}>RANK</div>
+      <div style={{ width: 28, flexShrink: 0 }} />
+      <div style={{ flex: 1, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>PLAYER</div>
       <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>RATING</div>
     </div>
 
@@ -52,6 +54,22 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               transition: 'all 0.15s',
             }}
           >
+            {selectable && (
+              isSelected ? (
+                <div style={{
+                  width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                  backgroundColor: 'var(--th-primary)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <Check style={{ color: '#fff', width: 12, height: 12 }} />
+                </div>
+              ) : (
+                <div style={{
+                  width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                  border: `1.5px solid var(--th-border)`,
+                }} />
+              )
+            )}
             <div style={{ width: 24, fontSize: 12, fontWeight: 700, color: isMe || isSelected ? 'var(--th-primary)' : V('--th-text-sub'), textAlign: 'center' }}>
               {isUnranked ? '—' : rankNum}
             </div>
@@ -81,19 +99,9 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                 <Pencil style={{ width: 13, height: 13, color: V('--th-text-sub') }} />
               </button>
             )}
-            {isSelected ? (
-              <div style={{
-                width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
-                backgroundColor: 'var(--th-primary)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <Check style={{ color: '#fff', width: 13, height: 13 }} />
-              </div>
-            ) : (
-              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--th-primary)', flexShrink: 0 }}>
-                {isUnranked ? '—' : Math.round(rank.rating).toLocaleString()}
-              </span>
-            )}
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--th-primary)', flexShrink: 0 }}>
+              {isUnranked ? '—' : Math.round(rank.rating).toLocaleString()}
+            </span>
           </div>
         );
       })}

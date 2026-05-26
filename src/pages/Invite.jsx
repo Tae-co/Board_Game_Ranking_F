@@ -74,7 +74,14 @@ const Invite = () => {
     initialData: () => {
       const cachedRooms = queryClient.getQueryData(['rooms', String(userId)]);
       const found = cachedRooms?.find(r => String(r.roomId) === String(roomId));
-      return found ?? undefined;
+      if (found) return found;
+      const communityCache = queryClient.getQueriesData({ queryKey: ['communityRooms'] });
+      for (const [, rooms] of communityCache) {
+        if (!Array.isArray(rooms)) continue;
+        const hit = rooms.find(r => String(r.roomId) === String(roomId));
+        if (hit) return hit;
+      }
+      return undefined;
     },
   });
 
@@ -199,8 +206,9 @@ const Invite = () => {
     if (!window.confirm(t('invite', 'leaveConfirm'))) return;
     try {
       await leaveRoom(roomId, userId);
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
+      queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
+      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, removeRoom);
       navigate('/lobby');
     } catch { alert(t('invite', 'leaveFailed')); }
   };
@@ -209,8 +217,9 @@ const Invite = () => {
     if (!window.confirm(t('invite', 'deleteConfirm'))) return;
     try {
       await deleteRoom(roomId);
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
+      queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
+      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, removeRoom);
       navigate('/lobby');
     } catch { alert(t('invite', 'deleteFailed')); }
   };
@@ -219,7 +228,9 @@ const Invite = () => {
     if (!window.confirm(`${member.nickname}${t('invite', 'kickConfirm')}`)) return;
     try {
       await kickRoomMember(roomId, member.memberId);
-      refetchMembers();
+      queryClient.setQueryData(['roomMembers', roomId], (old) =>
+        Array.isArray(old) ? old.filter(m => m.memberId !== member.memberId) : old
+      );
     } catch { alert(t('invite', 'kickFailed')); }
   };
 
@@ -229,8 +240,13 @@ const Invite = () => {
     setSaving(true);
     try {
       await updateRoomName(roomId, trimmed);
-      await refetchRoom();
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      const updateName = (old) =>
+        Array.isArray(old)
+          ? old.map(r => String(r.roomId) === String(roomId) ? { ...r, roomName: trimmed } : r)
+          : old;
+      queryClient.setQueryData(['room', roomId], (old) => old ? { ...old, roomName: trimmed } : old);
+      queryClient.setQueriesData({ queryKey: ['rooms'] }, updateName);
+      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, updateName);
       setShowSettings(false);
     } catch { alert('방 이름 변경에 실패했습니다.'); }
     setSaving(false);
@@ -298,7 +314,9 @@ const Invite = () => {
     if (!window.confirm('정말 삭제하시겠습니까?')) return;
     try {
       await deleteMatch(matchId);
-      refetchMatches();
+      queryClient.setQueryData(['matches', roomId], (old) =>
+        Array.isArray(old) ? old.filter(m => m.matchId !== matchId) : old
+      );
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
     } catch { alert('삭제에 실패했습니다.'); }
   }, [queryClient, refetchMatches, roomId]);
