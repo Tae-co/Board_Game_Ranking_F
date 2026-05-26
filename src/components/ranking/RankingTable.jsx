@@ -8,13 +8,14 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
   return (
   <>
     <div style={{
-      display: 'flex', padding: '6px 12px', marginBottom: 4, marginTop: 4,
+      display: 'flex', alignItems: 'center', gap: 10, padding: '6px 12px', marginBottom: 4, marginTop: 4,
       backgroundColor: V('--th-card'), borderRadius: 8,
       border: '1px solid var(--th-border)',
     }}>
-      {!!onToggle && <div style={{ width: 30, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0 }}>SEL</div>}
-      <div style={{ width: 32, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0 }}>RANK</div>
-      <div style={{ flex: 1, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', paddingLeft: 36 }}>PLAYER</div>
+      {!!onToggle && <div style={{ width: 20, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0, textAlign: 'center' }}>SEL</div>}
+      <div style={{ width: 24, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0 }}>RANK</div>
+      <div style={{ width: 28, flexShrink: 0 }} />
+      <div style={{ flex: 1, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>PLAYER</div>
       <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>RATING</div>
     </div>
 
