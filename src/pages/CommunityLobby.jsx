@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Hash, Shield } from 'lucide-react';
+import { Plus, Shield } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { CommunityCardSkeleton } from '../components/Skeleton';
@@ -30,6 +30,7 @@ const CommunityLobby = () => {
   const [joinLoading, setJoinLoading] = useState(false);
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
   const [pendingJoinCode, setPendingJoinCode] = useState('');
+  const [showJoinInput, setShowJoinInput] = useState(false);
 
   const { data: myCommunities = [], isLoading: myLoading } = useQuery({
     queryKey: ['myCommunitiesList', userId],
@@ -74,6 +75,7 @@ const CommunityLobby = () => {
     if (!joinCode.trim()) return;
     setJoinError('');
     setPendingJoinCode(joinCode.trim());
+    setShowJoinInput(false);
     setShowJoinConfirm(true);
   };
 
@@ -208,56 +210,54 @@ const CommunityLobby = () => {
           </p>
         </div>
 
-        {/* Join Community 섹션 */}
-        <div style={{
-          backgroundColor: V('--th-card'), borderRadius: '18px',
-          border: `1px solid var(--th-border)`, padding: '18px',
-          marginBottom: '28px', overflow: 'hidden',
-        }}>
-          <p style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text'), margin: '0 0 12px', display: 'flex', alignItems: 'center', gap: '7px' }}>
-            <Hash size={16} color="var(--th-primary)" />
-            {t('community', 'joinCommunity')}
+        {/* Joined Communities */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+          <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), margin: 0 }}>
+            {t('community', 'joinedCommunities')}
           </p>
-          <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-            <input
-              value={joinCode}
-              onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setJoinError(''); }}
-              onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
-              placeholder={t('community', 'enterInviteCode')}
-              style={{
-                flex: 1, minWidth: 0, padding: '10px 12px',
-                borderRadius: '10px', border: `1px solid ${joinError ? '#ef4444' : 'var(--th-border)'}`,
-                backgroundColor: V('--th-bg'), color: V('--th-text'),
-                fontSize: '13px', fontWeight: '600', letterSpacing: '0.08em',
-                outline: 'none',
-              }}
-            />
-            <button
-              onClick={handleJoin}
-              disabled={joinLoading || !joinCode.trim()}
-              style={{
-                padding: '10px 16px', borderRadius: '10px', border: 'none',
-                cursor: joinLoading || !joinCode.trim() ? 'not-allowed' : 'pointer',
-                background: joinLoading || !joinCode.trim()
-                  ? 'var(--th-border)'
-                  : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-                color: '#fff', fontSize: '14px', fontWeight: '700', flexShrink: 0,
-              }}
-            >
-              {joinLoading ? '...' : t('community', 'joinWithCodeBtn')}
-            </button>
-          </div>
-          {joinError && (
-            <p style={{ fontSize: '12px', color: '#ef4444', margin: '6px 0 0' }}>{joinError}</p>
-          )}
+          <button
+            onClick={() => { setJoinCode(''); setJoinError(''); setShowJoinInput(true); }}
+            style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              border: 'none', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 2px 8px rgba(107,92,231,0.3)',
+            }}
+          >
+            <Plus size={16} color="#fff" />
+          </button>
         </div>
+        {joinedLoading ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
+            {[0, 1].map(i => <CommunityCardSkeleton key={i} />)}
+          </div>
+        ) : joinedCommunities.length === 0 ? (
+          <p style={{ fontSize: '14px', color: V('--th-text-sub'), textAlign: 'center', padding: '20px 0 28px' }}>
+            {t('community', 'noJoinedCommunities')}
+          </p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
+            {joinedCommunities.map((community) => {
+              const isAdmin = (community.admins ?? []).some(a => a.memberId === Number(userId));
+              return (
+                <CommunityCard
+                  key={community.communityId}
+                  community={community}
+                  onEnter={handleEnterCommunity}
+                  onManage={isAdmin ? handleManage : undefined}
+                  t={t}
+                />
+              );
+            })}
+          </div>
+        )}
 
-        {/* My Community 헤더 */}
+        {/* My Community */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
           <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), margin: 0 }}>
             {t('community', 'myCommunity')}
           </p>
-          {/* 이미 커뮤니티가 있을 때만 + 버튼 표시 */}
           {myCommunities.length > 0 && (
             <button
               onClick={() => navigate('/create-community')}
@@ -279,7 +279,6 @@ const CommunityLobby = () => {
             {[0, 1].map(i => <div key={i} style={{ flex: '0 0 calc(100% - 40px)' }}><CommunityCardSkeleton /></div>)}
           </div>
         ) : myCommunities.length === 0 ? (
-          /* 커뮤니티 없을 때 — Create CTA */
           <button
             onClick={() => navigate('/create-community')}
             style={{
@@ -308,21 +307,14 @@ const CommunityLobby = () => {
             </p>
           </button>
         ) : (
-          /* 가로 스와이프 커뮤니티 카드 */
           <div
             style={{
-              display: 'flex',
-              gap: '12px',
-              overflowX: 'auto',
-              scrollSnapType: 'x mandatory',
-              WebkitOverflowScrolling: 'touch',
-              scrollbarWidth: 'none',
-              marginLeft: '-10px',
-              marginRight: '-20px',
-              paddingLeft: '20px',
-              paddingRight: '20px',
-              paddingBottom: '4px',
-              marginBottom: '28px',
+              display: 'flex', gap: '12px',
+              overflowX: 'auto', scrollSnapType: 'x mandatory',
+              WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none',
+              marginLeft: '-10px', marginRight: '-20px',
+              paddingLeft: '20px', paddingRight: '20px',
+              paddingBottom: '4px', marginBottom: '28px',
             }}
           >
             {myCommunities.map((community) => (
@@ -338,32 +330,65 @@ const CommunityLobby = () => {
           </div>
         )}
 
-        {/* 참가한 커뮤니티 */}
-        <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), marginBottom: '14px' }}>
-          {t('community', 'joinedCommunities')}
-        </p>
-        {joinedLoading ? (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 28 }}>
-            {[0, 1].map(i => <CommunityCardSkeleton key={i} />)}
-          </div>
-        ) : joinedCommunities.length === 0 ? (
-          <p style={{ fontSize: '14px', color: V('--th-text-sub'), textAlign: 'center', padding: '20px 0 28px' }}>
-            {t('community', 'noJoinedCommunities')}
-          </p>
-        ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
-            {joinedCommunities.map((community) => {
-              const isAdmin = (community.admins ?? []).some(a => a.memberId === Number(userId));
-              return (
-                <CommunityCard
-                  key={community.communityId}
-                  community={community}
-                  onEnter={handleEnterCommunity}
-                  onManage={isAdmin ? handleManage : undefined}
-                  t={t}
-                />
-              );
-            })}
+        {/* 코드 입력 모달 */}
+        {showJoinInput && (
+          <div
+            onClick={() => setShowJoinInput(false)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 100,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            }}
+          >
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                backgroundColor: V('--th-card'), borderRadius: '24px 24px 0 0',
+                padding: '28px 24px 40px', width: '100%', maxWidth: '480px',
+                boxShadow: '0 -4px 32px rgba(0,0,0,0.2)',
+              }}
+            >
+              <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: 'var(--th-border)', margin: '0 auto 24px' }} />
+              <p style={{ fontSize: '18px', fontWeight: '800', color: V('--th-text'), margin: '0 0 6px' }}>
+                {t('community', 'joinCommunity')}
+              </p>
+              <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: '0 0 20px' }}>
+                {t('community', 'enterInviteCode')}
+              </p>
+              <input
+                autoFocus
+                value={joinCode}
+                onChange={(e) => { setJoinCode(e.target.value.toUpperCase()); setJoinError(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
+                placeholder="AB12CD"
+                style={{
+                  width: '100%', boxSizing: 'border-box',
+                  padding: '14px 16px', borderRadius: '12px',
+                  border: `1px solid ${joinError ? '#ef4444' : 'var(--th-border)'}`,
+                  backgroundColor: V('--th-bg'), color: V('--th-text'),
+                  fontSize: '20px', fontWeight: '700', letterSpacing: '0.15em',
+                  outline: 'none', textAlign: 'center', marginBottom: '8px',
+                }}
+              />
+              {joinError && (
+                <p style={{ fontSize: '12px', color: '#ef4444', margin: '0 0 12px', textAlign: 'center' }}>{joinError}</p>
+              )}
+              <button
+                onClick={handleJoin}
+                disabled={joinLoading || !joinCode.trim()}
+                style={{
+                  width: '100%', padding: '15px', borderRadius: '14px', border: 'none',
+                  marginTop: joinError ? 0 : '12px',
+                  cursor: joinLoading || !joinCode.trim() ? 'not-allowed' : 'pointer',
+                  background: joinLoading || !joinCode.trim()
+                    ? 'var(--th-border)'
+                    : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                  color: '#fff', fontSize: '16px', fontWeight: '700',
+                }}
+              >
+                {joinLoading ? '...' : t('community', 'joinWithCodeBtn')}
+              </button>
+            </div>
           </div>
         )}
 
