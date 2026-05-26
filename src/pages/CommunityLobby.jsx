@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Shield } from 'lucide-react';
@@ -31,6 +31,31 @@ const CommunityLobby = () => {
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
   const [pendingJoinCode, setPendingJoinCode] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
+  const [sheetDragY, setSheetDragY] = useState(0);
+  const dragStartY = useRef(null);
+
+  useEffect(() => {
+    if (showJoinInput) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      setSheetDragY(0);
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [showJoinInput]);
+
+  const handleSheetTouchStart = (e) => {
+    dragStartY.current = e.touches[0].clientY;
+  };
+  const handleSheetTouchMove = (e) => {
+    const dy = e.touches[0].clientY - dragStartY.current;
+    if (dy > 0) setSheetDragY(dy);
+  };
+  const handleSheetTouchEnd = () => {
+    if (sheetDragY > 80) setShowJoinInput(false);
+    else setSheetDragY(0);
+    dragStartY.current = null;
+  };
 
   const { data: myCommunities = [], isLoading: myLoading } = useQuery({
     queryKey: ['myCommunitiesList', userId],
@@ -342,13 +367,18 @@ const CommunityLobby = () => {
           >
             <div
               onClick={(e) => e.stopPropagation()}
+              onTouchStart={handleSheetTouchStart}
+              onTouchMove={handleSheetTouchMove}
+              onTouchEnd={handleSheetTouchEnd}
               style={{
                 backgroundColor: V('--th-card'), borderRadius: '24px 24px 0 0',
                 padding: '28px 24px 40px', width: '100%', maxWidth: '480px',
                 boxShadow: '0 -4px 32px rgba(0,0,0,0.2)',
+                transform: `translateY(${sheetDragY}px)`,
+                transition: sheetDragY === 0 ? 'transform 0.3s ease' : 'none',
               }}
             >
-              <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: 'var(--th-border)', margin: '0 auto 24px' }} />
+              <div style={{ width: 36, height: 4, borderRadius: 2, backgroundColor: 'var(--th-border)', margin: '0 auto 24px', cursor: 'grab' }} />
               <p style={{ fontSize: '18px', fontWeight: '800', color: V('--th-text'), margin: '0 0 6px' }}>
                 {t('community', 'joinCommunity')}
               </p>
