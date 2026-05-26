@@ -3,7 +3,7 @@ import { Pencil, Check } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
 import { V } from '../../utils/cssUtils';
 
-const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle }) => {
+const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId }) => {
   const touchStartX = useRef(null);
   return (
   <>
@@ -36,6 +36,7 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
         const isUnranked = rank.hasRank === false;
         const isSelected = selectedPlayers?.has(rank.memberId);
         const selectable = !!onToggle;
+        const isHighlighted = highlightMemberId === rank.memberId;
         return (
           <div
             key={rank.memberId}
@@ -48,9 +49,9 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               backgroundColor: isSelected
                 ? 'color-mix(in srgb, var(--th-primary) 12%, transparent)'
                 : isMe ? 'color-mix(in srgb, var(--th-primary) 8%, transparent)' : V('--th-card'),
-              border: `1px solid ${isSelected || isMe ? 'var(--th-primary)' : 'var(--th-border)'}`,
-              borderLeft: isSelected || isMe ? '4px solid var(--th-primary)' : `1px solid var(--th-border)`,
-              boxShadow: isMe ? '0 2px 12px color-mix(in srgb, var(--th-primary) 20%, transparent)' : 'none',
+              border: `1px solid ${isHighlighted ? '#f59e0b' : isSelected || isMe ? 'var(--th-primary)' : 'var(--th-border)'}`,
+              borderLeft: isHighlighted ? '4px solid #f59e0b' : isSelected || isMe ? '4px solid var(--th-primary)' : `1px solid var(--th-border)`,
+              boxShadow: isHighlighted ? '0 2px 12px rgba(245,158,11,0.3)' : isMe ? '0 2px 12px color-mix(in srgb, var(--th-primary) 20%, transparent)' : 'none',
               transition: 'all 0.15s',
             }}
           >

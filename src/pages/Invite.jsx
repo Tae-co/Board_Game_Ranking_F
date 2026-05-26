@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { usePresence } from '../hooks/usePresence';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Play, Share2 } from 'lucide-react';
+import { ArrowLeft, Play, Share2, Search, X } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -66,6 +66,9 @@ const Invite = () => {
   const PAGE_SIZE = 7;
   const MATCH_PAGE_SIZE = 5;
   const touchStartX = useRef(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const searchInputRef = useRef(null);
 
   const { data: roomInfo = {}, refetch: refetchRoom } = useQuery({
     queryKey: ['room', roomId],
@@ -175,6 +178,23 @@ const Invite = () => {
     [mergedPlayers, page]
   );
   const totalPages = useMemo(() => Math.ceil(mergedPlayers.length / PAGE_SIZE), [mergedPlayers.length]);
+
+  const searchResult = useMemo(() => {
+    if (!searchQuery.trim()) return null;
+    const q = searchQuery.toLowerCase();
+    const idx = mergedPlayers.findIndex(r => r.nickname.toLowerCase().includes(q));
+    if (idx === -1) return null;
+    return { memberId: mergedPlayers[idx].memberId, pageNum: Math.floor(idx / PAGE_SIZE) };
+  }, [searchQuery, mergedPlayers, PAGE_SIZE]);
+
+  useEffect(() => {
+    if (searchResult) setPage(searchResult.pageNum);
+  }, [searchResult]);
+
+  useEffect(() => {
+    if (showSearch) setTimeout(() => searchInputRef.current?.focus(), 50);
+    else setSearchQuery('');
+  }, [showSearch]);
 
   const minPlayers = gameInfo?.minPlayers ?? 2;
   const maxPlayers = gameInfo?.maxPlayers ?? 99;
@@ -531,6 +551,40 @@ const Invite = () => {
               {rankings.length >= 1 && (
                 <PodiumRanking rankings={rankings} myUserId={userId} />
               )}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 6 }}>
+                {showSearch ? (
+                  <div style={{
+                    flex: 1, display: 'flex', alignItems: 'center', gap: 8,
+                    backgroundColor: V('--th-card'), border: `1px solid var(--th-primary)`,
+                    borderRadius: 12, padding: '8px 12px',
+                  }}>
+                    <Search size={14} color="var(--th-primary)" style={{ flexShrink: 0 }} />
+                    <input
+                      ref={searchInputRef}
+                      value={searchQuery}
+                      onChange={e => setSearchQuery(e.target.value)}
+                      placeholder="Enter player's name"
+                      style={{
+                        flex: 1, background: 'none', border: 'none', outline: 'none',
+                        fontSize: 13, fontWeight: 500, color: V('--th-text'),
+                      }}
+                    />
+                    <button
+                      onClick={() => setShowSearch(false)}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
+                    >
+                      <X size={16} color="var(--th-text-sub)" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowSearch(true)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', color: V('--th-text-sub') }}
+                  >
+                    <Search size={18} />
+                  </button>
+                )}
+              </div>
               <RankingTable
                 pagedRankings={pagedRankings}
                 page={page}
@@ -542,6 +596,7 @@ const Invite = () => {
                 PAGE_SIZE={PAGE_SIZE}
                 selectedPlayers={selectedPlayers}
                 onToggle={togglePlayer}
+                highlightMemberId={searchResult?.memberId}
               />
             </>
           )}

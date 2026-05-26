@@ -81,7 +81,6 @@ api.interceptors.response.use(
         processQueue(refreshError, null);
         setAccessToken(null);
         clearAuthSession();
-        window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
