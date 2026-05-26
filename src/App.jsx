@@ -22,7 +22,6 @@ const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Admin = lazy(() => import('./pages/Admin'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 const JoinByQR = lazy(() => import('./pages/JoinByQR'));
-const LandingPage = lazy(() => import('./pages/LandingPage'));
 const CreateGroup = lazy(() => import('./pages/CreateGroup'));
 const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
@@ -117,7 +116,7 @@ function App() {
       <div className="min-h-screen">
         <Suspense fallback={<RouteFallback />}>
           <Routes>
-            <Route path="/" element={isAuthenticated ? <Navigate to={isAdmin ? '/admin' : '/community'} replace /> : <LandingPage />} />
+            <Route path="/" element={<Navigate to={isAdmin ? '/admin' : isAuthenticated ? '/community' : '/login'} replace />} />
 
             {/* 일반 유저 */}
             <Route path="/login" element={isAuthenticated ? <Navigate to="/community" replace /> : <Login />} />
