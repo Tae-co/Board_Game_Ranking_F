@@ -19,7 +19,7 @@ export default {
   noGroups: 'No groups in this community',
   uploadPhoto: 'UPLOAD COMMUNITY PROFILE PHOTO',
   communityNameLabel: 'Community Name',
-  communityNamePlaceholder: 'e.g., yada-seoul',
+  communityNamePlaceholder: 'ex: community name',
   regionLabel: 'Region',
   adminsLabel: 'Add Admins',
   adminsSelected: '/5 Admins Selected',

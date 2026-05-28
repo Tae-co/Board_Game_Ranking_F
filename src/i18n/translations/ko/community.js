@@ -19,7 +19,7 @@ export default {
   noGroups: '이 커뮤니티에 그룹이 없습니다',
   uploadPhoto: '커뮤니티 프로필 사진 업로드',
   communityNameLabel: '커뮤니티 이름',
-  communityNamePlaceholder: '예: yada-seoul',
+  communityNamePlaceholder: '예: 커뮤니티 이름',
   regionLabel: '지역',
   adminsLabel: '어드민 추가',
   adminsSelected: '/5 어드민 선택됨',
