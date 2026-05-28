@@ -38,7 +38,7 @@ export default {
   deleteConfirmButton: 'Delete',
   deleting: 'Deleting...',
   deleteFailed: 'Failed to delete community.',
-  joinedCommunities: 'Joined Communities',
+  joinedCommunities: 'Joined Community',
   noJoinedCommunities: 'No joined communities yet',
   joinCommunity: 'Join a Community',
   enterInviteCode: 'Enter invite code (e.g. AB12CD)',
