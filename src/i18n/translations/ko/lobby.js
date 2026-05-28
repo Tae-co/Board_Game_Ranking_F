@@ -25,4 +25,7 @@ export default {
   creating: '생성 중...',
   groupLobby: '그룹 로비',
   startGame: '게임 시작',
+  enterGroupCode: '그룹 코드 입력',
+  enterGroupCodeHint: '코드를 입력해 참가하세요',
+  joinGroup: '그룹 참가',
 };
