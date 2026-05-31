@@ -370,8 +370,9 @@ const Lobby = () => {
               <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0 }}>{t('lobby', 'noGroupsDesc')}</p>
             </div>
           ) : (() => {
-            const totalRoomPages = Math.ceil(rooms.length / ROOMS_PER_PAGE);
-            const pagedRooms = rooms.slice(roomPage * ROOMS_PER_PAGE, (roomPage + 1) * ROOMS_PER_PAGE);
+            const sortedRooms = [...rooms].sort((a, b) => (b.memberCount ?? 0) - (a.memberCount ?? 0));
+            const totalRoomPages = Math.ceil(sortedRooms.length / ROOMS_PER_PAGE);
+            const pagedRooms = sortedRooms.slice(roomPage * ROOMS_PER_PAGE, (roomPage + 1) * ROOMS_PER_PAGE);
             return (
               <>
                 <div style={{

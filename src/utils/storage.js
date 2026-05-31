@@ -50,6 +50,27 @@ export const removeProfileImage = () => {
   localStorage.removeItem(PROFILE_IMAGE_KEY);
 };
 
+const COMMUNITY_VISIT_KEY = 'communityVisitOrder';
+
+export const getCommunityVisitOrder = () => {
+  try { return JSON.parse(localStorage.getItem(COMMUNITY_VISIT_KEY)) || {}; } catch { return {}; }
+};
+
+export const recordCommunityVisit = (communityId) => {
+  const order = getCommunityVisitOrder();
+  order[communityId] = Date.now();
+  localStorage.setItem(COMMUNITY_VISIT_KEY, JSON.stringify(order));
+};
+
+export const sortByRecentVisit = (communities) => {
+  const order = getCommunityVisitOrder();
+  return [...communities].sort((a, b) => {
+    const ta = order[a.communityId] ?? 0;
+    const tb = order[b.communityId] ?? 0;
+    return tb - ta;
+  });
+};
+
 export const SELECTED_COMMUNITY_UPDATED_EVENT = 'selectedCommunityUpdated';
 
 export const notifySelectedCommunityUpdated = () => {
