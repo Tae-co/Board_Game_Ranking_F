@@ -5,9 +5,11 @@ export const radlandsSchema = {
   type: 'radlands',
 };
 
-export const RadlandsTable = ({ players, onTotalsChange, handleChange, readOnly }) => {
+export const RadlandsTable = ({ players, scores, onTotalsChange, handleChange, readOnly, t }) => {
   const [pA, pB] = players;
-  const [result, setResult] = useState(null); // 'a' | 'tie' | 'b'
+  const [result, setResult] = useState(() => {
+    try { return JSON.parse(scores?.['_data']?.['all'])?.result ?? null; } catch { return null; }
+  });
 
   const select = (r) => {
     if (readOnly) return;
@@ -50,9 +52,9 @@ export const RadlandsTable = ({ players, onTotalsChange, handleChange, readOnly 
         <span>⚔️ {pB?.nickname}</span>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        {btn(pA?.nickname + ' 승리', 'a')}
-        {btn('무승부', 'tie')}
-        {btn(pB?.nickname + ' 승리', 'b')}
+        {btn(`${pA?.nickname} ${t('scoreSheet', 'wins')}`, 'a')}
+        {btn(t('scoreSheet', 'draw'), 'tie')}
+        {btn(`${pB?.nickname} ${t('scoreSheet', 'wins')}`, 'b')}
       </div>
     </div>
   );

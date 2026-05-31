@@ -64,4 +64,6 @@ export default {
   heroPlaceholder: '영웅 이름 입력',
   mode1v1: '1 vs 1',
   teamMode2v2: '2 vs 2 팀전',
+  wins: '승리',
+  draw: '무승부',
 };
