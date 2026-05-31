@@ -100,7 +100,7 @@ const ScoreSheet = () => {
     setScores(prev => ({ ...prev, [catKey]: { ...prev[catKey], [memberId]: value } }));
   };
 
-  const isRoundBased = currentSchema?.type === 'uno' || currentSchema?.type === 'rummikub' || currentSchema?.type === 'dicethrone' || currentSchema?.type === 'saboteur';
+  const isRoundBased = currentSchema?.type === 'uno' || currentSchema?.type === 'rummikub' || currentSchema?.type === 'dicethrone' || currentSchema?.type === 'saboteur' || currentSchema?.type === 'radlands';
   const lowestWins = !!currentSchema?.lowestWins;
 
   const totals = useMemo(() => {
@@ -186,6 +186,10 @@ const ScoreSheet = () => {
       }));
     } else if (isRoundBased) {
       // 라운드 기반: roundTotals로 placement 계산, 전체 게임 데이터 scoresJson 전달
+      if (currentSchema?.type === 'radlands' && Object.keys(roundTotals).length === 0) {
+        alert('승패를 선택해주세요.');
+        return;
+      }
       const placements = calcPlacements();
       const roundData = scores["_data"]?.["all"] || null;
       participants = players.map(p => ({
