@@ -64,4 +64,6 @@ export default {
   heroPlaceholder: 'Enter hero name',
   mode1v1: '1 vs 1',
   teamMode2v2: '2 vs 2 Team',
+  wins: 'Wins',
+  draw: 'Draw',
 };

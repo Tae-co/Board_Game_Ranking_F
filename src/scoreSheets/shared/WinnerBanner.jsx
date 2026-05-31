@@ -69,10 +69,16 @@ const WinnerBanner = ({ schema, duelWinnerId, duelFellowshipId, duelWinCondition
       return (
         <div style={{ margin: '16px 16px 0', background: 'var(--th-text-sub)', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
           <span style={{ fontSize: 28 }}>🤝</span>
-          <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>무승부 / Draw</div>
+          <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>{t('scoreSheet', 'draw')}</div>
         </div>
       );
     }
+    return (
+      <div style={{ margin: '16px 16px 0', background: 'var(--th-primary)', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
+        <span style={{ fontSize: 28 }}>⚔️</span>
+        <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>{`${winnerNickname} ${t('scoreSheet', 'wins')}`}</div>
+      </div>
+    );
   }
 
   if (!Object.values(totals).some(v => v > 0)) return null;
