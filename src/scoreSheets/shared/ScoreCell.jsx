@@ -12,8 +12,8 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = f
     const { onChange: oc, cat: c, memberId: mid } = stateRef.current;
     const parsed = parseInt(inputVal, 10);
     if (!isNaN(parsed)) {
-      const min = c.allowNegative ? -50 : 0;
-      const clamped = Math.min(50, Math.max(min, parsed));
+      const min = c.allowNegative ? -100 : 0;
+      const clamped = Math.min(100, Math.max(min, parsed));
       oc(c.key, mid, clamped);
     }
     setEditing(false);
