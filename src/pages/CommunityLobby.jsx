@@ -10,7 +10,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
-import { setSelectedCommunity, setMyCommunity, removeMyCommunity } from '../utils/storage';
+import { setSelectedCommunity, setMyCommunity, removeMyCommunity, recordCommunityVisit, sortByRecentVisit } from '../utils/storage';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -67,6 +67,7 @@ const CommunityLobby = () => {
   });
 
   const handleEnterCommunity = (community) => {
+    recordCommunityVisit(community.communityId);
     const isAdmin = (community.admins ?? []).some(a => a.memberId === Number(userId));
     setSelectedCommunity({
       communityId: community.communityId,
@@ -247,7 +248,7 @@ const CommunityLobby = () => {
           </p>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
-            {joinedCommunities.map((community) => {
+            {sortByRecentVisit(joinedCommunities).map((community) => {
               const isAdmin = (community.admins ?? []).some(a => a.memberId === Number(userId));
               return (
                 <CommunityCard
@@ -326,7 +327,7 @@ const CommunityLobby = () => {
               paddingBottom: '4px', marginBottom: '28px',
             }}
           >
-            {myCommunities.map((community) => (
+            {sortByRecentVisit(myCommunities).map((community) => (
               <CommunityCard
                 key={community.communityId}
                 community={community}
