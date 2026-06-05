@@ -1,6 +1,8 @@
 import { cl } from './scoreUtils';
 
-const WinnerBanner = ({ schema, duelWinnerId, duelFellowshipId, duelWinCondition, players, totals, winnerId, winnerNickname, t, lang }) => {
+const TEAM_LABELS = [null, 'A', 'B', 'C', 'D'];
+
+const WinnerBanner = ({ schema, duelWinnerId, duelFellowshipId, duelWinCondition, players, totals, winnerId, winnerNickname, scores, t, lang }) => {
   if (schema?.type === 'duel') {
     if (!duelWinnerId) return null;
     const fellowshipPlayer = players.find(p => p.memberId === duelFellowshipId) || players[0];
@@ -61,7 +63,7 @@ const WinnerBanner = ({ schema, duelWinnerId, duelFellowshipId, duelWinCondition
     );
   }
 
-  if (schema?.type === 'radlands') {
+  if (schema?.type === 'radlands' || schema?.type === 'dicethrone') {
     const vals = Object.values(totals);
     if (!vals.length) return null;
     const isTie = vals.every(v => v === vals[0]);
@@ -72,6 +74,19 @@ const WinnerBanner = ({ schema, duelWinnerId, duelFellowshipId, duelWinCondition
           <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>{t('scoreSheet', 'draw')}</div>
         </div>
       );
+    }
+    // dicethrone 팀 모드: "A팀 wins"
+    if (schema?.type === 'dicethrone') {
+      const saved = (() => { try { return JSON.parse(scores?.['_data']?.['all']) ?? {}; } catch { return {}; } })();
+      if (saved.mode === 'team' && saved.winningTeam != null) {
+        const label = TEAM_LABELS[saved.winningTeam];
+        return (
+          <div style={{ margin: '16px 16px 0', background: 'var(--th-primary)', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>
+            <span style={{ fontSize: 28 }}>🛡️</span>
+            <div style={{ fontWeight: 900, fontSize: 18, color: '#fff' }}>{`${t('scoreSheet', 'teamPrefix')}${label} ${t('scoreSheet', 'wins')}`}</div>
+          </div>
+        );
+      }
     }
     return (
       <div style={{ margin: '16px 16px 0', background: 'var(--th-primary)', borderRadius: 14, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.15)' }}>

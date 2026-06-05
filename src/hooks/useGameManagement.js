@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAccessToken } from '../api/axios';
 import { getAdminGames, createAdminGame, updateAdminGame, deleteAdminGame } from '../api/services/admin';
 
@@ -7,7 +8,7 @@ const GAMES_PER_PAGE = 6;
 
 export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSchema, loadFromGame }, t) => {
   const location = useLocation();
-  const [games, setGames] = useState([]);
+  const queryClient = useQueryClient();
   const [form, setForm] = useState({ name: '', minPlayers: 2, maxPlayers: 6, imageUrl: '' });
   const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -16,16 +17,11 @@ export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSche
   const [showForm, setShowForm] = useState(false);
   const [gamePage, setGamePage] = useState(location.state?.returnPage ?? 0);
 
-  const fetchGames = async () => {
-    try {
-      const data = await getAdminGames();
-      setGames(data);
-    } catch {
-      alert(t('admin', 'loadFailed'));
-    }
-  };
-
-  useEffect(() => { fetchGames(); }, []);
+  const { data: games = [] } = useQuery({
+    queryKey: ['adminGames'],
+    queryFn: getAdminGames,
+    staleTime: 1000 * 60 * 5,
+  });
 
   const handleSubmit = async () => {
     if (!form.name.trim()) { alert(t('admin', 'gameNamePlaceholder')); return; }
@@ -66,7 +62,8 @@ export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSche
       resetSchema();
       setShowForm(false);
       setGamePage(0);
-      await fetchGames();
+      queryClient.invalidateQueries({ queryKey: ['adminGames'] });
+      queryClient.invalidateQueries({ queryKey: ['games'] });
     } catch {
       alert(t('admin', 'saveFailed'));
     } finally {
@@ -103,7 +100,8 @@ export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSche
     try {
       await deleteAdminGame(game.id);
       setGamePage(0);
-      await fetchGames();
+      queryClient.invalidateQueries({ queryKey: ['adminGames'] });
+      queryClient.invalidateQueries({ queryKey: ['games'] });
     } catch {
       alert(t('admin', 'deleteFailed'));
     }
@@ -123,7 +121,7 @@ export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSche
     games, form, setForm, editingId, isSubmitting,
     imageFile, imagePreview, showForm, setShowForm,
     gamePage, setGamePage, GAMES_PER_PAGE,
-    fetchGames, handleSubmit, handleImageChange,
+    handleSubmit, handleImageChange,
     handleEdit, handleDelete, handleCancelForm,
   };
 };
