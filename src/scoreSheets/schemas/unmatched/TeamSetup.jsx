@@ -23,7 +23,7 @@ const TeamSetup = ({ players, availableModes, gameMode, setGameMode, teamAssign,
     )}
 
     {players.map((p) => (
-      <div key={p.memberId} style={{ marginBottom: 16, padding: '14px 16px', borderRadius: 14, border: '1px solid var(--th-border)', background: 'var(--th-card)' }}>
+      <div key={p.memberId} style={{ marginBottom: 16, padding: '14px 16px', borderRadius: 14, border: '1px solid var(--th-border)', background: 'var(--th-card)', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
           <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--th-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14 }}>
             {p.nickname[0]}
@@ -57,7 +57,7 @@ const TeamSetup = ({ players, availableModes, gameMode, setGameMode, teamAssign,
           <div style={{ fontSize: 11, color: 'var(--th-text-sub)', marginBottom: 6 }}>{t('scoreSheet', 'initialHp')}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <button onClick={() => setSetupHp(prev => ({ ...prev, [p.memberId]: Math.max(1, (prev[p.memberId] ?? 16) - 1) }))} style={{ width: 36, height: 36, borderRadius: 8, border: 'none', cursor: 'pointer', background: '#fee2e2', color: '#dc2626', fontWeight: 800, fontSize: 16 }}>−</button>
-            <input type="text" inputMode="numeric" pattern="[0-9]*" value={setupHp[p.memberId] ?? 16} onChange={(e) => { const v = Math.max(1, Math.min(HP_MAX, Number(e.target.value) || 1)); setSetupHp(prev => ({ ...prev, [p.memberId]: v })); }} style={{ flex: 1, textAlign: 'center', padding: '8px 4px', borderRadius: 8, fontSize: 18, fontWeight: 900, border: '1px solid var(--th-border)', background: 'var(--th-bg)', color: 'var(--th-text)', outline: 'none' }} />
+            <input type="text" inputMode="numeric" pattern="[0-9]*" value={setupHp[p.memberId] ?? 16} onChange={(e) => { const v = Math.max(1, Math.min(HP_MAX, Number(e.target.value) || 1)); setSetupHp(prev => ({ ...prev, [p.memberId]: v })); }} style={{ flex: 1, minWidth: 0, textAlign: 'center', padding: '8px 4px', borderRadius: 8, fontSize: 18, fontWeight: 900, border: '1px solid var(--th-border)', background: 'var(--th-bg)', color: 'var(--th-text)', outline: 'none' }} />
             <button onClick={() => setSetupHp(prev => ({ ...prev, [p.memberId]: Math.min(HP_MAX, (prev[p.memberId] ?? 16) + 1) }))} style={{ width: 36, height: 36, borderRadius: 8, border: 'none', cursor: 'pointer', background: '#dcfce7', color: '#16a34a', fontWeight: 800, fontSize: 16 }}>+</button>
           </div>
         </div>

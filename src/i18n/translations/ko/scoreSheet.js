@@ -52,6 +52,8 @@ export default {
   danger: '⚠️ 위험',
   hpRanking: '현재 HP 순위',
   rankSuffix: '위',
+  solo: '솔로',
+  team: '팀',
   freeForAll: '개인전',
   teamMode: '팀전',
   teamLabel: '팀',
