@@ -186,7 +186,7 @@ const ScoreSheet = () => {
       }));
     } else if (isRoundBased) {
       // 라운드 기반: roundTotals로 placement 계산, 전체 게임 데이터 scoresJson 전달
-      if (currentSchema?.type === 'radlands' && Object.keys(roundTotals).length === 0) {
+      if ((currentSchema?.type === 'radlands' || currentSchema?.type === 'dicethrone') && Object.keys(roundTotals).length === 0) {
         alert('승패를 선택해주세요.');
         return;
       }
@@ -348,6 +348,7 @@ const ScoreSheet = () => {
         totals={totals}
         winnerId={winnerId}
         winnerNickname={winnerNickname}
+        scores={scores}
         t={t}
         lang={lang}
       />

@@ -1,21 +1,14 @@
-import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { getAdminMembers } from '../../api/services/admin';
 
 const AdminMembersTab = () => {
   const { t } = useLanguage();
-  const [members, setMembers] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-
-  // 탭이 처음 렌더링될 때 한 번만 로드
-  if (!loaded && !isLoading) {
-    setIsLoading(true);
-    getAdminMembers()
-      .then(data => { setMembers(data || []); setLoaded(true); })
-      .catch(() => {})
-      .finally(() => setIsLoading(false));
-  }
+  const { data: members = [], isLoading } = useQuery({
+    queryKey: ['adminMembers'],
+    queryFn: () => getAdminMembers(),
+    staleTime: 1000 * 60 * 5,
+  });
 
   return (
     <div>
