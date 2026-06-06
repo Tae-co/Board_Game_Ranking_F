@@ -22,6 +22,8 @@ export const usePresence = (memberId, roomId) => {
     const client = new Client({
       brokerURL: getWsBrokerUrl(),
       reconnectDelay: 5000,
+      heartbeatIncoming: 10000,
+      heartbeatOutgoing: 10000,
       onConnect: () => {
         client.subscribe(`/topic/room/${roomId}/presence`, (msg) => {
           setOnlineIds(new Set(JSON.parse(msg.body)));
