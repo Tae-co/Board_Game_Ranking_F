@@ -605,7 +605,7 @@ const Invite = () => {
 
       {/* Sticky Start Game Button */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
-        <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px 28px' }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px calc(28px + env(safe-area-inset-bottom))' }}>
           {selectedPlayers.size > maxPlayers && (
             <p style={{ textAlign: 'center', fontSize: '12px', color: '#ef4444', margin: '0 0 6px' }}>
               {t('gameSelect', 'maxPlayersError').replace('{n}', maxPlayers)}

@@ -5,7 +5,7 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { setAccessToken, ensureToken } from './api/axios';
-import { AUTH_CHANGED_EVENT, getStoredAuth, saveAuthSession } from './auth/storage';
+import { AUTH_CHANGED_EVENT, enforceSessionExpiry, getStoredAuth, saveAuthSession } from './auth/storage';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
 
@@ -101,6 +101,24 @@ function App() {
   useEffect(() => {
     // 앱 시작 시 저장된 refresh token으로 access token 복구 (Admin.jsx와 동일한 promise 공유)
     ensureToken();
+
+    // 앱을 오래 켜둔 채 세션이 만료되는 경우 대비 - 복귀 시점에 확인해 바로 로그아웃
+    const checkSession = () => {
+      if (enforceSessionExpiry()) setAccessToken(null);
+    };
+
+    if (Capacitor.isNativePlatform()) {
+      const handler = CapApp.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) checkSession();
+      });
+      return () => { handler.then(h => h.remove()); };
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') checkSession();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   return (

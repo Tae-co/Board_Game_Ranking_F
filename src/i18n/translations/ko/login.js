@@ -27,6 +27,7 @@ export default {
   otpFailed: '인증번호가 올바르지 않습니다.',
   registerFailed: '회원가입에 실패했습니다.',
   generalError: '처리 중 오류가 발생했습니다.',
+  sessionExpired: '로그인이 만료되었어요. 다시 로그인해주세요.',
   nicknameMinError: '닉네임은 2자 이상이어야 합니다.',
   nicknameTakenError: '이미 사용 중인 닉네임입니다.',
   passwordMinError: '비밀번호는 6자 이상이어야 합니다.',

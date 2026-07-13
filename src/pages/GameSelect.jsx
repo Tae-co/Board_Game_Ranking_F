@@ -213,7 +213,7 @@ const GameSelect = () => {
 
       {/* Sticky Bottom Button */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
-      <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px 24px' }}>
+      <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px calc(24px + env(safe-area-inset-bottom))' }}>
         {currentGame && selectedPlayers.size > currentGame.maxPlayers && (
           <p style={{ textAlign: 'center', fontSize: '12px', color: '#dc2626', marginBottom: '8px' }}>
             {t('gameSelect', 'maxPlayersError').replace('{n}', currentGame.maxPlayers)}

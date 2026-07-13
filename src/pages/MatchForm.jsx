@@ -460,7 +460,7 @@ const MatchForm = () => {
       </div>
 
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
-        <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px 24px' }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px calc(24px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || !allFilled}

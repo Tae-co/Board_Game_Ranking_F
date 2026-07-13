@@ -1,8 +1,9 @@
+import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { setAccessToken } from '../api/axios';
-import { saveAuthSession } from '../auth/storage';
+import { consumeSessionExpired, saveAuthSession } from '../auth/storage';
 import { appleLogin } from '../api/services/auth';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -16,6 +17,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useLanguage();
+  const [sessionExpired] = useState(consumeSessionExpired);
   const googleAuthUrl = `${import.meta.env.VITE_API_URL}/auth/google`;
   const googleNativeAuthUrl = 'https://meeple-production.up.railway.app/api/auth/google/native/login';
 
@@ -96,6 +98,16 @@ const Login = () => {
 
         {/* Buttons */}
         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {sessionExpired && (
+            <div style={{
+              borderRadius: '10px', padding: '12px', fontSize: '12px',
+              backgroundColor: '#FDECEA', color: '#B3261E',
+              border: '1px solid #F7CFCB', lineHeight: 1.6,
+            }}>
+              {t('login', 'sessionExpired')}
+            </div>
+          )}
+
           {isWebView && (
             <div style={{
               borderRadius: '10px', padding: '12px', fontSize: '12px',
