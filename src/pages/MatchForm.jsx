@@ -292,7 +292,7 @@ const MatchForm = () => {
   const rankEmojis = ['🥇', '🥈', '🥉'];
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 88 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(88px + env(safe-area-inset-bottom))' }}>
 
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: '1px solid var(--th-border)' }}>
         <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
@@ -460,7 +460,7 @@ const MatchForm = () => {
       </div>
 
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
-        <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px 24px' }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px calc(24px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting || !allFilled}

@@ -225,7 +225,7 @@ const Ranking = () => {
   }, [rankings]);
 
   return (
-    <div style={{ backgroundColor: V('--th-bg'), minHeight: '100vh', paddingBottom: 100, fontFamily: "'Pretendard', sans-serif" }}>
+    <div style={{ backgroundColor: V('--th-bg'), minHeight: '100vh', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: "'Pretendard', sans-serif" }}>
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
@@ -411,7 +411,7 @@ const Ranking = () => {
 
       {/* Bottom Button */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20, background: 'linear-gradient(to top, var(--th-bg) 70%, transparent)' }}>
-        <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 32px' }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px calc(32px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={() => navigate(`/invite/${roomId}`)}
             style={{

@@ -267,7 +267,7 @@ const ScoreSheet = () => {
   const winnerNickname = players.find(p => p.memberId === winnerId)?.nickname;
 
   return (
-    <div style={{ fontFamily: "'Pretendard', sans-serif", background: "var(--th-bg)", minHeight: "100vh", paddingBottom: 100, maxWidth: '375px', margin: '0 auto' }}>
+    <div style={{ fontFamily: "'Pretendard', sans-serif", background: "var(--th-bg)", minHeight: "100vh", paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', maxWidth: '375px', margin: '0 auto' }}>
 
       {/* Header */}
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--th-nav-bg)", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid var(--th-border)" }}>
@@ -356,7 +356,7 @@ const ScoreSheet = () => {
       {/* Bottom Fixed Button */}
       {!readOnly && !previewMode && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20, background: 'linear-gradient(to top, var(--th-bg) 70%, transparent)' }}>
-          <div style={{ maxWidth: 375, margin: '0 auto', padding: '20px 16px 32px' }}>
+          <div style={{ maxWidth: 375, margin: '0 auto', padding: '20px 16px calc(32px + env(safe-area-inset-bottom))' }}>
             <button
               onClick={handleSubmit}
               disabled={isSubmitting}

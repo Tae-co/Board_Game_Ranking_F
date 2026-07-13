@@ -3,7 +3,7 @@ import { Pencil, Check } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
 import { V } from '../../utils/cssUtils';
 
-const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId }) => {
+const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge }) => {
   const touchStartX = useRef(null);
   return (
   <>
@@ -12,7 +12,7 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
       backgroundColor: V('--th-card'), borderRadius: 8,
       border: '1px solid var(--th-border)',
     }}>
-      {!!onToggle && <div style={{ width: 20, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0, textAlign: 'center' }}>SEL</div>}
+      {!!onToggle && <div style={{ width: 22, flexShrink: 0 }} />}
       <div style={{ width: 24, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0 }}>RANK</div>
       <div style={{ width: 28, flexShrink: 0 }} />
       <div style={{ flex: 1, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>PLAYER</div>
@@ -58,16 +58,19 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
             {selectable && (
               isSelected ? (
                 <div style={{
-                  width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+                  width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
                   backgroundColor: 'var(--th-primary)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  animation: nudge === 'deselect' ? 'select-pulse 0.5s ease-in-out 2' : undefined,
                 }}>
-                  <Check style={{ color: '#fff', width: 12, height: 12 }} />
+                  <Check style={{ color: '#fff', width: 13, height: 13 }} />
                 </div>
               ) : (
                 <div style={{
-                  width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
-                  border: `1.5px solid var(--th-border)`,
+                  width: 22, height: 22, borderRadius: '50%', flexShrink: 0,
+                  border: `2px solid var(--th-primary)`,
+                  backgroundColor: 'color-mix(in srgb, var(--th-primary) 10%, transparent)',
+                  animation: nudge === 'select' ? 'select-pulse 0.5s ease-in-out 2' : undefined,
                 }} />
               )
             )}

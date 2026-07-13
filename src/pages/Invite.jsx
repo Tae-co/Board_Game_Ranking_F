@@ -55,6 +55,8 @@ const Invite = () => {
   const communityTimezone = REGION_TIMEZONE[getSelectedCommunity()?.region] || undefined;
 
   const [selectedPlayers, setSelectedPlayers] = useState(new Set());
+  const [nudge, setNudge] = useState(null); // null | 'select' | 'deselect'
+  const rankingListRef = useRef(null);
   const [showSettings, setShowSettings] = useState(false);
   const [editRoomName, setEditRoomName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -201,6 +203,22 @@ const Invite = () => {
   const canStart = selectedPlayers.size >= minPlayers && selectedPlayers.size <= maxPlayers;
   const isLoading = activeTab === 'matches' ? isMatchesLoading : (membersLoading || isRankingLoading);
 
+  const overMax = selectedPlayers.size > maxPlayers;
+
+  // The button must never claim a state it isn't in: a label promising "start"
+  // while the button refuses to act is what left users stuck (see startNeedMore).
+  const startLabel = canStart
+    ? t('gameSelect', 'startReady').replace('{n}', selectedPlayers.size)
+    : overMax
+      ? t('gameSelect', 'startOverMax')
+          .replace('{n}', selectedPlayers.size - maxPlayers)
+          .replace('{max}', maxPlayers)
+      : selectedPlayers.size === 0
+        ? t('gameSelect', 'startPrompt')
+        : t('gameSelect', 'startNeedMore')
+            .replace('{n}', minPlayers - selectedPlayers.size)
+            .replace('{min}', minPlayers);
+
   const togglePlayer = (memberId) => {
     setSelectedPlayers(prev => {
       const next = new Set(prev);
@@ -212,7 +230,17 @@ const Invite = () => {
   const handleTabChange = (tab) => { setActiveTab(tab); setPage(0); };
 
   const handleStartGame = () => {
-    if (!canStart) return;
+    if (!canStart) {
+      if (activeTab !== 'group') handleTabChange('group');
+      // Point at the rows the user must act on: too few → the empty ones,
+      // too many → the ones already picked.
+      setNudge(overMax ? 'deselect' : 'select');
+      setTimeout(() => setNudge(null), 1400);
+      requestAnimationFrame(() => {
+        rankingListRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      return;
+    }
     navigate(`/score-sheet/${roomInfo.boardGameId}`, {
       state: {
         roomId,
@@ -347,7 +375,7 @@ const Invite = () => {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
 
       {/* Header */}
       <div style={{
@@ -585,19 +613,22 @@ const Invite = () => {
                   </button>
                 )}
               </div>
-              <RankingTable
-                pagedRankings={pagedRankings}
-                page={page}
-                setPage={setPage}
-                totalPages={totalPages}
-                myUserId={userId}
-                isHost={isHost}
-                onEditRating={handleOpenRatingEdit}
-                PAGE_SIZE={PAGE_SIZE}
-                selectedPlayers={selectedPlayers}
-                onToggle={togglePlayer}
-                highlightMemberId={searchResult?.memberId}
-              />
+              <div ref={rankingListRef}>
+                <RankingTable
+                  pagedRankings={pagedRankings}
+                  page={page}
+                  setPage={setPage}
+                  totalPages={totalPages}
+                  myUserId={userId}
+                  isHost={isHost}
+                  onEditRating={handleOpenRatingEdit}
+                  PAGE_SIZE={PAGE_SIZE}
+                  selectedPlayers={selectedPlayers}
+                  onToggle={togglePlayer}
+                  highlightMemberId={searchResult?.memberId}
+                  nudge={nudge}
+                />
+              </div>
             </>
           )}
         </div>
@@ -605,32 +636,24 @@ const Invite = () => {
 
       {/* Sticky Start Game Button */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
-        <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px 28px' }}>
-          {selectedPlayers.size > maxPlayers && (
-            <p style={{ textAlign: 'center', fontSize: '12px', color: '#ef4444', margin: '0 0 6px' }}>
-              {t('gameSelect', 'maxPlayersError').replace('{n}', maxPlayers)}
-            </p>
-          )}
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px calc(28px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={handleStartGame}
-            disabled={!canStart}
             style={{
               width: '100%', padding: '15px', borderRadius: '50px',
-              cursor: canStart ? 'pointer' : 'not-allowed',
+              cursor: 'pointer',
               background: canStart
                 ? 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)'
-                : V('--th-border'),
+                : overMax ? '#ef4444' : V('--th-border'),
               border: 'none',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
               boxShadow: canStart ? '0 4px 16px rgba(107, 92, 231, 0.4)' : 'none',
               transition: 'all 0.2s',
             }}
           >
-            <Play style={{ color: '#FFFFFF', width: 18, height: 18, fill: '#FFFFFF' }} />
+            {canStart && <Play style={{ color: '#FFFFFF', width: 18, height: 18, fill: '#FFFFFF' }} />}
             <span style={{ fontWeight: '700', fontSize: '15px', color: '#FFFFFF' }}>
-              {selectedPlayers.size > 0
-                ? `${selectedPlayers.size}${t('gameSelect', 'startButton')}`
-                : t('invite', 'startPlaceholder')}
+              {startLabel}
             </span>
           </button>
         </div>

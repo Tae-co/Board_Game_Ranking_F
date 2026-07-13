@@ -18,3 +18,8 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+@keyframes select-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+  50% { transform: scale(1.18); box-shadow: 0 0 0 5px color-mix(in srgb, var(--th-primary) 22%, transparent); }
+}
