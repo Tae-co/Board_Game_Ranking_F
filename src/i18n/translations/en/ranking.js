@@ -27,10 +27,10 @@ export default {
   shareMatch: '🎮 Share Match Result',
   groupLobby: 'Group Lobby',
   startGame: 'Start Game',
-  statsMatches: 'Matches',
+  statsMatches: 'Games',
   statsWins: 'Wins',
-  statsLosses: 'Losses',
-  statsWinRate: 'Win Rate',
+  statsLosses: 'Loss',
+  statsWinRate: 'Rate',
   streakWin: 'W Streak',
   streakLoss: 'L Streak',
 };

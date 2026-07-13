@@ -6,7 +6,8 @@ const StatsCard = ({ myRank, myWinRate, myStreak, streakLoading, myRankPosition,
   if (total === 0) return null;
   const streakColor = myStreak?.isWin ? '#22c55e' : '#ef4444';
   const streakLabel = myStreak ? `${myStreak.count} ${myStreak.isWin ? t('ranking', 'streakWin') : t('ranking', 'streakLoss')}` : null;
-  const labelStyle = { fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap' };
+  // 화면이 좁을수록 라벨을 줄인다. overflow 처리는 어떤 기기에서도 옆 칸을 침범하지 않게 하는 안전장치
+  const labelStyle = { fontSize: 'clamp(9px, 2.4vw, 11px)', fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
   const valueStyle = { fontSize: 15, fontWeight: 900 };
   const itemStyle = { flex: 1, minWidth: 0 };
   return (

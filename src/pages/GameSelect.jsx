@@ -66,7 +66,7 @@ const GameSelect = () => {
   const isDisabled = selectedPlayers.size < 2 || (currentGame && selectedPlayers.size > currentGame.maxPlayers);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 80 }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
