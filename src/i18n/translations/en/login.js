@@ -27,6 +27,7 @@ export default {
   otpFailed: 'Incorrect verification code.',
   registerFailed: 'Registration failed.',
   generalError: 'An error occurred.',
+  sessionExpired: 'Your session has expired. Please sign in again.',
   nicknameMinError: 'Nickname must be at least 2 characters.',
   nicknameTakenError: 'This nickname is already taken.',
   passwordMinError: 'Password must be at least 6 characters.',
