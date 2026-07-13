@@ -7,7 +7,11 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean:macos": "find android ios -name '* 2*' -not -path '*/.gradle/*' -not -path '*/.git/*' -print0 | xargs -0 rm -rf 2>/dev/null; git restore android/gradlew 2>/dev/null; echo 'macOS duplicates cleaned'",
+    "sync:android": "npm run clean:macos && npx cap sync android && npm run clean:macos",
+    "sync:ios": "npm run clean:macos && npx cap sync ios && npm run clean:macos",
+    "sync": "npm run clean:macos && npx cap sync && npm run clean:macos"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",

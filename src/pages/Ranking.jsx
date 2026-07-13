@@ -411,7 +411,7 @@ const Ranking = () => {
 
       {/* Bottom Button */}
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20, background: 'linear-gradient(to top, var(--th-bg) 70%, transparent)' }}>
-        <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 32px' }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px calc(32px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={() => navigate(`/invite/${roomId}`)}
             style={{
