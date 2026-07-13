@@ -39,7 +39,7 @@ const Profile = () => {
   }, [profileData]);
 
   const currentNickname = profileData?.nickname || getNickname() || '';
-  const maxRating = Math.round(profileData?.overallRating ?? 1500);
+  const maxRating = Math.round(profileData?.overallRating ?? 500);
   const tier = getTierFromRating(maxRating);
   const tierStyle = getTierBg(tier.label);
 
