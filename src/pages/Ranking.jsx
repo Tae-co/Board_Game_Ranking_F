@@ -225,7 +225,7 @@ const Ranking = () => {
   }, [rankings]);
 
   return (
-    <div style={{ backgroundColor: V('--th-bg'), minHeight: '100vh', paddingBottom: 100, fontFamily: "'Pretendard', sans-serif" }}>
+    <div style={{ backgroundColor: V('--th-bg'), minHeight: '100vh', paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', fontFamily: "'Pretendard', sans-serif" }}>
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
