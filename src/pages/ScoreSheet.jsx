@@ -2,8 +2,9 @@ import { useState, useMemo } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import NavAvatar from '../components/NavAvatar';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createMatch, updateMatch } from '../api/services/matches';
+import { getGame } from '../api/services/games';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
 import FlatTable from '../scoreSheets/tables/FlatTable';
@@ -13,6 +14,20 @@ import { getAllCategories } from '../scoreSheets/shared/scoreUtils';
 import { ScienceModal } from '../scoreSheets/shared/ScoreCell';
 import WinnerBanner from '../scoreSheets/shared/WinnerBanner';
 import RankInputTable from '../scoreSheets/components/RankInputTable';
+
+// DB에 저장된 스키마(JSON)를 렌더링 가능한 스키마로 변환.
+// simple은 TableComponent가 없다 → RankInputTable(순위 입력)이 그려진다.
+const parseSchema = (raw) => {
+  if (!raw) return null;
+  try {
+    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    if (parsed.type === 'flat') return { ...parsed, TableComponent: FlatTable };
+    if (parsed.type === 'sectioned') return { ...parsed, TableComponent: SectionedTable };
+    if (parsed.type === 'conditional') return { ...parsed, TableComponent: ConditionTable };
+    if (parsed.type === 'simple') return { ...parsed, TableComponent: null };
+  } catch { /* 깨진 스키마는 없는 것으로 취급 */ }
+  return null;
+};
 
 const ScoreSheet = () => {
   const { boardGameId: boardGameIdStr } = useParams();
@@ -43,7 +58,22 @@ const ScoreSheet = () => {
   // 라운드 기반 게임(UNO, 루미큐브)의 totals를 테이블에서 받아옴
   const [roundTotals, setRoundTotals] = useState({});
 
+  // 스키마를 boardGameId로 직접 가져온다. 호출부(초대/랭킹/매치수정)가 schemaJson을 넘겨주지
+  // 않아도 커스텀 점수판이 그려지고, 초대 링크로 들어온 비(非)커뮤니티 멤버도 점수판을 볼 수 있다.
+  const { data: fetchedGame, isLoading: isGameLoading, isError: isGameError, refetch: refetchGame } = useQuery({
+    queryKey: ['game', boardGameId],
+    queryFn: () => getGame(boardGameId),
+    enabled: Number.isFinite(boardGameId) && boardGameId > 0,
+    staleTime: 1000 * 60 * 30,
+  });
+
   const currentSchema = useMemo(() => {
+    const dbSchema = parseSchema(schemaJson ?? fetchedGame?.schemaJson);
+
+    // 커스텀 게임은 항상 자기 스키마를 쓴다.
+    // (이름이 기존 게임과 겹쳐도 — 예: "UNO 하우스룰" — 코드 스키마에 덮이지 않도록)
+    if (fetchedGame?.communityId != null) return dbSchema;
+
     const normalizedGameName = gameName.toLowerCase();
 
     // 1. 코드 기반 스키마 (카탄, 우노 등)
@@ -54,18 +84,12 @@ const ScoreSheet = () => {
     if (codeSchema) return codeSchema;
 
     // 2. DB 기반 스키마 (어드민에서 등록한 flat/sectioned 게임)
-    if (schemaJson) {
-      try {
-        const parsed = typeof schemaJson === 'string' ? JSON.parse(schemaJson) : schemaJson;
-        if (parsed.type === 'flat') return { ...parsed, TableComponent: FlatTable };
-        if (parsed.type === 'sectioned') return { ...parsed, TableComponent: SectionedTable };
-        if (parsed.type === 'conditional') return { ...parsed, TableComponent: ConditionTable };
-      } catch {}
-    }
+    // 3. 없으면 null → 점수판 준비 안됨 UI
+    return dbSchema;
+  }, [boardGameId, gameName, schemaJson, fetchedGame]);
 
-    // 3. null → 점수판 준비 안됨 UI
-    return null;
-  }, [boardGameId, gameName, schemaJson]);
+  // 순위만 입력하는 게임(simple)은 점수 입력 없이 곧바로 순위 모드로 동작한다.
+  const isRankOnly = currentSchema?.type === 'simple';
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
@@ -175,7 +199,7 @@ const ScoreSheet = () => {
           won: p.memberId === duelWinnerId,
         }),
       }));
-    } else if (rankMode) {
+    } else if (rankMode || isRankOnly) {
       // 순위 직접 입력 모드: rankInputs에서 placement 사용
       const allFilled = players.every(p => rankInputs[p.memberId]);
       if (!allFilled) { alert('모든 플레이어의 순위를 선택해주세요.'); return; }
@@ -246,6 +270,29 @@ const ScoreSheet = () => {
         <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
           {t('scoreSheet', 'goBack')}
         </button>
+      </div>
+    );
+  }
+
+  // 스키마를 아직 못 가져왔으면 "준비 안됨" 화면이 잠깐 스치는 걸 막는다
+  if (!currentSchema && isGameLoading) return null;
+
+  // 게임을 못 불러온 것(네트워크·서버 오류)과 점수판이 정말 없는 것은 다르다.
+  // 전자를 "준비 안됨"으로 표시하면 사용자가 다시 시도할 방법이 없다.
+  if (!currentSchema && isGameError) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)", padding: 24, textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📡</div>
+        <p style={{ color: "var(--th-text)", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{t('scoreSheet', 'loadFailed')}</p>
+        <p style={{ color: "var(--th-text-sub)", fontSize: 13, marginBottom: 24 }}>{t('scoreSheet', 'loadFailedDesc')}</p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => refetchGame()} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
+            {t('scoreSheet', 'retry')}
+          </button>
+          <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-card)", color: "var(--th-text)", border: "1px solid var(--th-border)", cursor: "pointer", fontWeight: 700 }}>
+            {t('scoreSheet', 'goBack')}
+          </button>
+        </div>
       </div>
     );
   }

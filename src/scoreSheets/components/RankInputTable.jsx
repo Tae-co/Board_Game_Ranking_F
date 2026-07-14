@@ -16,8 +16,9 @@ const RankInputTable = ({ players, rankInputs, onChange, readOnly }) => {
 
   return (
     <div style={{ padding: "8px 0" }}>
-      {players.map((player) => {
+      {players.map((player, idx) => {
         const selected = rankInputs[player.memberId] || "";
+        const isLast = idx === players.length - 1;
         return (
           <div
             key={player.memberId}
@@ -26,7 +27,8 @@ const RankInputTable = ({ players, rankInputs, onChange, readOnly }) => {
               alignItems: "center",
               justifyContent: "space-between",
               padding: "12px 16px",
-              borderBottom: "1px solid var(--th-border)",
+              // 마지막 행에도 밑줄을 그으면 카드 테두리와 겹쳐 선이 두 줄로 보인다
+              borderBottom: isLast ? "none" : "1px solid var(--th-border)",
             }}
           >
             <span style={{ fontSize: 14, fontWeight: 600, color: "var(--th-text)" }}>
