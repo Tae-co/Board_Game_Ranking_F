@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Plus } from 'lucide-react';
+import { ArrowLeft, Search, Plus, Trash2 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createRoom } from '../api/services/rooms';
-import { getGames } from '../api/services/games';
+import { getGames, deleteGame } from '../api/services/games';
 import CustomGameBuilder from '../components/lobby/CustomGameBuilder';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -24,6 +24,7 @@ const CreateGroup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
+  const [deletingGameId, setDeletingGameId] = useState(null);
   const PAGE_SIZE = 15;
 
   // 커뮤니티별로 목록이 다르므로 캐시 키에 communityId를 포함한다
@@ -55,6 +56,21 @@ const CreateGroup = () => {
 
   // 커스텀 점수판은 커뮤니티 어드민만 만들 수 있다 (백엔드도 동일하게 막는다)
   const canCreateGame = isCommunityAdmin && !!communityId;
+
+  const handleDeleteGame = async (game) => {
+    if (!window.confirm(t('lobby', 'customDeleteConfirm').replace('{n}', game.name))) return;
+    setDeletingGameId(game.id);
+    try {
+      await deleteGame(game.id);
+      if (selectedGameId === game.id) setSelectedGameId(null);
+      await queryClient.invalidateQueries({ queryKey: ['games', communityId] });
+    } catch (err) {
+      // 방이나 플레이 기록이 있으면 백엔드가 409로 막는다 — 그 이유를 그대로 보여준다
+      alert(err?.response?.data?.message || t('lobby', 'customDeleteFailed'));
+    } finally {
+      setDeletingGameId(null);
+    }
+  };
 
   const handleCreate = async () => {
     if (!roomName.trim() || !selectedGameId) return;
@@ -160,34 +176,55 @@ const CreateGroup = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
             {pagedGames.map((game) => {
               const selected = selectedGameId === game.id;
+              // 커스텀 게임(communityId 있음)만 커뮤니티 어드민이 지울 수 있다
+              const canDelete = canCreateGame && game.communityId != null;
               return (
-                <button
-                  key={game.id}
-                  onClick={() => setSelectedGameId(game.id)}
-                  style={{
-                    borderRadius: '12px', overflow: 'hidden', cursor: 'pointer',
-                    border: `2px solid ${selected ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                    backgroundColor: V('--th-card'),
-                    transition: 'border-color 0.2s',
-                  }}
-                >
-                  {game.imageUrl ? (
-                    <img src={game.imageUrl} alt={game.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
-                  ) : (
-                    <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>
-                      🎲
-                    </div>
+                <div key={game.id} style={{ position: 'relative' }}>
+                  <button
+                    onClick={() => setSelectedGameId(game.id)}
+                    style={{
+                      width: '100%', display: 'block',
+                      borderRadius: '12px', overflow: 'hidden', cursor: 'pointer',
+                      border: `2px solid ${selected ? 'var(--th-primary)' : 'var(--th-border)'}`,
+                      backgroundColor: V('--th-card'),
+                      transition: 'border-color 0.2s',
+                    }}
+                  >
+                    {game.imageUrl ? (
+                      <img src={game.imageUrl} alt={game.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
+                    ) : (
+                      <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>
+                        🎲
+                      </div>
+                    )}
+                    <p style={{
+                      fontSize: '11px', padding: '6px 4px', textAlign: 'center',
+                      color: selected ? V('--th-primary') : V('--th-text'),
+                      fontWeight: selected ? '700' : '400',
+                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                      margin: 0,
+                    }}>
+                      {game.name}
+                    </p>
+                  </button>
+
+                  {canDelete && (
+                    <button
+                      onClick={() => handleDeleteGame(game)}
+                      disabled={deletingGameId === game.id}
+                      aria-label={`${game.name} 삭제`}
+                      style={{
+                        position: 'absolute', top: 4, right: 4,
+                        width: 22, height: 22, borderRadius: '50%',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', padding: 0,
+                        cursor: deletingGameId === game.id ? 'wait' : 'pointer',
+                      }}
+                    >
+                      <Trash2 style={{ width: 12, height: 12, color: '#fff' }} />
+                    </button>
                   )}
-                  <p style={{
-                    fontSize: '11px', padding: '6px 4px', textAlign: 'center',
-                    color: selected ? V('--th-primary') : V('--th-text'),
-                    fontWeight: selected ? '700' : '400',
-                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                    margin: 0,
-                  }}>
-                    {game.name}
-                  </p>
-                </button>
+                </div>
               );
             })}
           </div>

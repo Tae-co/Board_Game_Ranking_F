@@ -5,6 +5,11 @@ import StorageImage from '../StorageImage';
 const GameCard = ({ gameInfo }) => {
   const [imgLoaded, setImgLoaded] = useState(false);
 
+  // 사진 없이 만든 커스텀 점수판은 imageUrl이 빈 문자열이라 onLoad가 영영 안 온다.
+  // 이걸 로딩 중으로 취급하면 shimmer가 무한히 돌기 때문에, 아예 사진 없는 카드로 그린다.
+  const hasImage = !!gameInfo?.imageUrl;
+  const ready = !!gameInfo && (imgLoaded || !hasImage);
+
   return (
     <div style={{
       borderRadius: '18px', overflow: 'hidden',
@@ -13,7 +18,7 @@ const GameCard = ({ gameInfo }) => {
       boxShadow: '0 4px 20px rgba(107,92,231,0.18)',
       backgroundColor: 'var(--th-card)',
     }}>
-      {(!gameInfo || !imgLoaded) && (
+      {!ready && (
         <div style={{
           position: 'absolute', inset: 0,
           background: 'linear-gradient(90deg, var(--th-card) 25%, var(--th-bg-deep) 50%, var(--th-card) 75%)',
@@ -23,23 +28,34 @@ const GameCard = ({ gameInfo }) => {
       )}
       {gameInfo && (
         <>
-          <StorageImage
-            src={gameInfo.imageUrl}
-            alt={gameInfo.name}
-            onLoad={() => setImgLoaded(true)}
-            transform={{ width: 780, height: 480, quality: 72 }}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
-          />
+          {hasImage ? (
+            <StorageImage
+              src={gameInfo.imageUrl}
+              alt={gameInfo.name}
+              onLoad={() => setImgLoaded(true)}
+              transform={{ width: 780, height: 480, quality: 72 }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s' }}
+            />
+          ) : (
+            <div style={{
+              position: 'absolute', inset: 0,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              fontSize: 64,
+            }}>
+              🎲
+            </div>
+          )}
           <div style={{
             position: 'absolute', inset: 0,
             background: 'linear-gradient(to top, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.1) 55%, transparent 100%)',
-            opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s',
+            opacity: ready ? 1 : 0, transition: 'opacity 0.3s',
           }} />
           <div style={{
             position: 'absolute', bottom: 0, left: 0, right: 0,
             padding: '16px 18px',
             display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
-            opacity: imgLoaded ? 1 : 0, transition: 'opacity 0.3s',
+            opacity: ready ? 1 : 0, transition: 'opacity 0.3s',
           }}>
             <div>
               <p style={{ fontSize: '22px', fontWeight: '800', color: '#fff', margin: '0 0 5px', letterSpacing: '0.02em' }}>

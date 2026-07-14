@@ -10,6 +10,9 @@ const PALETTE = ['#1d4ed8', '#0f766e', '#7c3aed', '#b91c1c', '#c2410c', '#0369a1
 // 항목 하나에 총점을 적는 경우가 있어서 상한을 100 → 999로 올려둔다 (ScoreCell의 maxScore)
 const MAX_SCORE = 999;
 
+// 점수판의 카테고리 열은 좁아서, 길면 두 줄로 넘어가 표가 어긋난다
+const CATEGORY_MAX_LENGTH = 8;
+
 const newCategory = () => ({ uid: Math.random().toString(36).slice(2, 8), label: '', negative: false });
 
 const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) => {
@@ -253,17 +256,26 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
               {categories.map((cat, idx) => (
                 <div key={cat.uid} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <input
-                    type="text"
-                    value={cat.label}
-                    onChange={(e) => updateCategory(cat.uid, { label: e.target.value })}
-                    placeholder={t('lobby', 'customCategoryPlaceholder')}
-                    style={{
-                      flex: 1, minWidth: 0, padding: '10px 12px', borderRadius: 10,
-                      backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                      color: V('--th-text'), fontSize: 14, outline: 'none', boxSizing: 'border-box',
-                    }}
-                  />
+                  <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={cat.label}
+                      maxLength={CATEGORY_MAX_LENGTH}
+                      onChange={(e) => updateCategory(cat.uid, { label: e.target.value.slice(0, CATEGORY_MAX_LENGTH) })}
+                      placeholder={t('lobby', 'customCategoryPlaceholder')}
+                      style={{
+                        width: '100%', padding: '10px 34px 10px 12px', borderRadius: 10,
+                        backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+                        color: V('--th-text'), fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                      }}
+                    />
+                    <span style={{
+                      position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
+                      fontSize: 11, color: V('--th-text-sub'), pointerEvents: 'none',
+                    }}>
+                      {cat.label.length}/{CATEGORY_MAX_LENGTH}
+                    </span>
+                  </div>
                   <button
                     onClick={() => updateCategory(cat.uid, { negative: !cat.negative })}
                     title={t('lobby', 'customNegativeHint')}

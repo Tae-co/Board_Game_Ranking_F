@@ -58,4 +58,6 @@ export default {
   customNameRequired: '게임 이름을 입력해주세요.',
   customCategoryRequired: '항목 이름을 모두 입력해주세요.',
   customCreateFailed: '점수판 생성에 실패했습니다.',
+  customDeleteConfirm: "'{n}' 점수판을 삭제할까요?",
+  customDeleteFailed: '점수판 삭제에 실패했습니다.',
 };

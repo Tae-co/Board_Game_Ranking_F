@@ -58,4 +58,6 @@ export default {
   customNameRequired: 'Please enter a game name.',
   customCategoryRequired: 'Please fill in every category name.',
   customCreateFailed: 'Failed to create the score sheet.',
+  customDeleteConfirm: "Delete the '{n}' score sheet?",
+  customDeleteFailed: 'Failed to delete the score sheet.',
 };
