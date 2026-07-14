@@ -12,8 +12,10 @@ const ScoreCell = ({ cat, memberId, value, onChange, onOpenScience, readOnly = f
     const { onChange: oc, cat: c, memberId: mid } = stateRef.current;
     const parsed = parseInt(inputVal, 10);
     if (!isNaN(parsed)) {
-      const min = c.allowNegative ? -100 : 0;
-      const clamped = Math.min(100, Math.max(min, parsed));
+      // 기본 상한은 100. 사용자가 만든 점수판은 항목 하나에 총점을 적기도 해서 maxScore로 올려 받는다.
+      const max = c.maxScore ?? 100;
+      const min = c.allowNegative ? -max : 0;
+      const clamped = Math.min(max, Math.max(min, parsed));
       oc(c.key, mid, clamped);
     }
     setEditing(false);
