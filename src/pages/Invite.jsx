@@ -6,7 +6,7 @@ import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating } from '../api/services/rooms';
-import { getGames } from '../api/services/games';
+import { getGame } from '../api/services/games';
 import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -108,13 +108,14 @@ const Invite = () => {
 
   const isHost = members.find(m => m.memberId === userId)?.isHost ?? false;
 
-  const { data: games = [] } = useQuery({
-    queryKey: ['games'],
-    queryFn: getGames,
+  // 방의 게임을 id로 직접 가져온다. 커뮤니티 목록을 거치지 않으므로
+  // 초대 링크로 들어온 비(非)커뮤니티 멤버도 커스텀 게임 정보를 볼 수 있다.
+  const { data: gameInfo = null } = useQuery({
+    queryKey: ['game', roomInfo.boardGameId],
+    queryFn: () => getGame(roomInfo.boardGameId),
     enabled: !!roomInfo.boardGameId,
     staleTime: 1000 * 60 * 30,
   });
-  const gameInfo = games.find(g => g.id === roomInfo.boardGameId) ?? null;
 
   const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
     queryKey: ['rankings', roomId],

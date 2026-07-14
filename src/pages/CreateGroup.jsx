@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search } from 'lucide-react';
+import { ArrowLeft, Search, Plus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createRoom } from '../api/services/rooms';
+import { getGames } from '../api/services/games';
+import CustomGameBuilder from '../components/lobby/CustomGameBuilder';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import { getNickname } from '../auth/storage';
@@ -12,18 +14,22 @@ const CreateGroup = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const communityId = getSelectedCommunity()?.communityId ?? null;
+  const selectedCommunity = getSelectedCommunity();
+  const communityId = selectedCommunity?.communityId ?? null;
+  const isCommunityAdmin = selectedCommunity?.isAdmin ?? false;
 
   const [roomName, setRoomName] = useState('');
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [gameSearch, setGameSearch] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const PAGE_SIZE = 15;
 
+  // 커뮤니티별로 목록이 다르므로 캐시 키에 communityId를 포함한다
   const { data: games = [] } = useQuery({
-    queryKey: ['games'],
-    queryFn: () => import('../api/services/games').then(m => m.getGames()),
+    queryKey: ['games', communityId],
+    queryFn: () => getGames(communityId),
     staleTime: 1000 * 60 * 30,
   });
 
@@ -38,6 +44,17 @@ const CreateGroup = () => {
     setGameSearch(value);
     setCurrentPage(1);
   };
+
+  const handleGameCreated = (game) => {
+    queryClient.invalidateQueries({ queryKey: ['games', communityId] });
+    setIsBuilderOpen(false);
+    setGameSearch('');
+    setCurrentPage(1);
+    setSelectedGameId(game.id);
+  };
+
+  // 커스텀 점수판은 커뮤니티 어드민만 만들 수 있다 (백엔드도 동일하게 막는다)
+  const canCreateGame = isCommunityAdmin && !!communityId;
 
   const handleCreate = async () => {
     if (!roomName.trim() || !selectedGameId) return;
@@ -175,6 +192,34 @@ const CreateGroup = () => {
             })}
           </div>
 
+          {/* 목록에 없는 게임: 직접 점수판 만들기 */}
+          {canCreateGame && (
+            <>
+              {filteredGames.length === 0 && (
+                <p style={{
+                  textAlign: 'center', fontSize: '13px', color: V('--th-text-sub'),
+                  margin: '20px 0 12px',
+                }}>
+                  {t('lobby', 'noGameResult')}
+                </p>
+              )}
+              <button
+                onClick={() => setIsBuilderOpen(true)}
+                style={{
+                  width: '100%', marginTop: '12px', padding: '12px', borderRadius: '12px',
+                  backgroundColor: 'transparent', border: `1px dashed var(--th-border)`,
+                  color: V('--th-primary'), fontSize: '13px', fontWeight: '600', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
+                }}
+              >
+                <Plus style={{ width: 16, height: 16 }} />
+                {gameSearch.trim()
+                  ? t('lobby', 'customGameCreate').replace('{n}', gameSearch.trim())
+                  : t('lobby', 'customGameCreateEmpty')}
+              </button>
+            </>
+          )}
+
           {/* Pagination */}
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '16px' }}>
@@ -215,6 +260,15 @@ const CreateGroup = () => {
           </button>
         </div>
       </div>
+
+      {isBuilderOpen && (
+        <CustomGameBuilder
+          initialName={gameSearch.trim()}
+          communityId={communityId}
+          onCancel={() => setIsBuilderOpen(false)}
+          onCreated={handleGameCreated}
+        />
+      )}
     </div>
   );
 };
