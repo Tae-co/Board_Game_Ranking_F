@@ -1,9 +1,8 @@
-import { useState } from 'react';
-import { X, Plus, Trophy, Hash } from 'lucide-react';
-import { createGame } from '../../api/services/games';
+import { useRef, useState } from 'react';
+import { X, Plus, Trophy, Hash, ImagePlus } from 'lucide-react';
+import { createGame, uploadGameImage } from '../../api/services/games';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { V } from '../../utils/cssUtils';
-import { getAuthUserId } from '../../auth/storage';
 
 // 항목 색상은 사용자에게 묻지 않고 순서대로 배정한다
 const PALETTE = ['#1d4ed8', '#0f766e', '#7c3aed', '#b91c1c', '#c2410c', '#0369a1', '#4d7c0f', '#a21caf'];
@@ -20,6 +19,24 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
   const [scoreType, setScoreType] = useState(null); // 'simple' | 'flat'
   const [categories, setCategories] = useState([newCategory(), newCategory()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+  const fileInputRef = useRef(null);
+
+  const handlePickImage = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert(t('lobby', 'customImageOnly')); return; }
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const clearImage = () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const updateCategory = (uid, patch) =>
     setCategories(prev => prev.map(c => (c.uid === uid ? { ...c, ...patch } : c)));
@@ -51,11 +68,15 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
 
     setIsSubmitting(true);
     try {
+      // 사진은 선택사항. 업로드가 실패하면 게임도 만들지 않는다.
+      const imageUrl = imageFile ? await uploadGameImage(imageFile, Number(communityId)) : '';
+
+      // memberId는 보내지 않는다. 백엔드가 JWT 토큰에서 꺼낸다.
       const game = await createGame({
         name: name.trim(),
         communityId: Number(communityId),
-        memberId: Number(getAuthUserId()),
         schemaJson: buildSchemaJson(),
+        imageUrl,
       });
       onCreated(game);
     } catch (err) {
@@ -106,6 +127,49 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
             color: V('--th-text'), fontSize: 15, outline: 'none', boxSizing: 'border-box',
           }}
         />
+
+        {/* Thumbnail (optional) */}
+        <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
+          {t('lobby', 'customImage')}
+        </p>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handlePickImage}
+          style={{ display: 'none' }}
+        />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            style={{
+              width: 72, height: 72, borderRadius: 12, flexShrink: 0, cursor: 'pointer',
+              backgroundColor: V('--th-card'), overflow: 'hidden', padding: 0,
+              border: `1px ${imagePreview ? 'solid' : 'dashed'} var(--th-border)`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            {imagePreview
+              ? <img src={imagePreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <ImagePlus style={{ width: 22, height: 22, color: V('--th-text-sub') }} />}
+          </button>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: 0, fontSize: 12, color: V('--th-text-sub'), lineHeight: 1.4 }}>
+              {t('lobby', 'customImageHint')}
+            </p>
+            {imagePreview && (
+              <button
+                onClick={clearImage}
+                style={{
+                  marginTop: 6, padding: 0, background: 'none', border: 'none', cursor: 'pointer',
+                  fontSize: 12, fontWeight: 600, color: '#ef4444',
+                }}
+              >
+                {t('lobby', 'customImageRemove')}
+              </button>
+            )}
+          </div>
+        </div>
 
         {/* Score type */}
         <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
