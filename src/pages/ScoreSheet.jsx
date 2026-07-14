@@ -60,7 +60,7 @@ const ScoreSheet = () => {
 
   // 스키마를 boardGameId로 직접 가져온다. 호출부(초대/랭킹/매치수정)가 schemaJson을 넘겨주지
   // 않아도 커스텀 점수판이 그려지고, 초대 링크로 들어온 비(非)커뮤니티 멤버도 점수판을 볼 수 있다.
-  const { data: fetchedGame, isLoading: isGameLoading } = useQuery({
+  const { data: fetchedGame, isLoading: isGameLoading, isError: isGameError, refetch: refetchGame } = useQuery({
     queryKey: ['game', boardGameId],
     queryFn: () => getGame(boardGameId),
     enabled: Number.isFinite(boardGameId) && boardGameId > 0,
@@ -276,6 +276,26 @@ const ScoreSheet = () => {
 
   // 스키마를 아직 못 가져왔으면 "준비 안됨" 화면이 잠깐 스치는 걸 막는다
   if (!currentSchema && isGameLoading) return null;
+
+  // 게임을 못 불러온 것(네트워크·서버 오류)과 점수판이 정말 없는 것은 다르다.
+  // 전자를 "준비 안됨"으로 표시하면 사용자가 다시 시도할 방법이 없다.
+  if (!currentSchema && isGameError) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)", padding: 24, textAlign: "center" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>📡</div>
+        <p style={{ color: "var(--th-text)", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{t('scoreSheet', 'loadFailed')}</p>
+        <p style={{ color: "var(--th-text-sub)", fontSize: 13, marginBottom: 24 }}>{t('scoreSheet', 'loadFailedDesc')}</p>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={() => refetchGame()} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
+            {t('scoreSheet', 'retry')}
+          </button>
+          <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-card)", color: "var(--th-text)", border: "1px solid var(--th-border)", cursor: "pointer", fontWeight: 700 }}>
+            {t('scoreSheet', 'goBack')}
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentSchema) {
     return (

@@ -68,4 +68,7 @@ export default {
   teamMode2v2: '2 vs 2 팀전',
   wins: '승리',
   draw: '무승부',
+  loadFailed: '점수판을 불러오지 못했어요.',
+  loadFailedDesc: '네트워크 상태를 확인하고 다시 시도해주세요.',
+  retry: '다시 시도',
 };

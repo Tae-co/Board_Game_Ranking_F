@@ -68,4 +68,7 @@ export default {
   teamMode2v2: '2 vs 2 Team',
   wins: 'Wins',
   draw: 'Draw',
+  loadFailed: "Couldn't load the score sheet.",
+  loadFailedDesc: 'Check your connection and try again.',
+  retry: 'Retry',
 };

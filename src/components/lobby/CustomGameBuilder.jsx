@@ -21,6 +21,8 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [minPlayers, setMinPlayers] = useState(2);
+  const [maxPlayers, setMaxPlayers] = useState(8);
   const fileInputRef = useRef(null);
 
   const handlePickImage = (e) => {
@@ -60,6 +62,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
 
   const handleCreate = async () => {
     if (!name.trim()) { alert(t('lobby', 'customNameRequired')); return; }
+    if (minPlayers < 1 || maxPlayers < minPlayers) { alert(t('lobby', 'customPlayersInvalid')); return; }
     if (scoreType === 'flat') {
       const filled = categories.filter(c => c.label.trim());
       if (filled.length === 0) { alert(t('lobby', 'customCategoryRequired')); return; }
@@ -77,6 +80,8 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
         communityId: Number(communityId),
         schemaJson: buildSchemaJson(),
         imageUrl,
+        minPlayers,
+        maxPlayers,
       });
       onCreated(game);
     } catch (err) {
@@ -170,6 +175,39 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
             )}
           </div>
         </div>
+
+        {/* Player count */}
+        <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
+          {t('lobby', 'customPlayers')}
+        </p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+          {[
+            { key: 'min', value: minPlayers, set: setMinPlayers, label: t('lobby', 'customMinPlayers') },
+            { key: 'max', value: maxPlayers, set: setMaxPlayers, label: t('lobby', 'customMaxPlayers') },
+          ].map((f) => (
+            <div key={f.key} style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: 11, color: V('--th-text-sub'), marginBottom: 4 }}>
+                {f.label}
+              </label>
+              <input
+                type="number"
+                inputMode="numeric"
+                min={1}
+                max={20}
+                value={f.value}
+                onChange={(e) => f.set(Math.max(1, Math.min(20, Number(e.target.value) || 1)))}
+                style={{
+                  width: '100%', padding: '10px 12px', borderRadius: 10,
+                  backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+                  color: V('--th-text'), fontSize: 14, outline: 'none', boxSizing: 'border-box',
+                }}
+              />
+            </div>
+          ))}
+        </div>
+        <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 24px' }}>
+          {t('lobby', 'customPlayersHint')}
+        </p>
 
         {/* Score type */}
         <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
