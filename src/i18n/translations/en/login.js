@@ -1,7 +1,6 @@
 export default {
   title: 'Yada Rank',
   subtitle: 'Experience board gaming through a lens of pure elegance.',
-  adminLogin: 'Admin Login',
   sessionExpired: 'Your session has expired. Please sign in again.',
   or: 'or',
   appleLogin: 'Continue with Apple',

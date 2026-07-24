@@ -18,7 +18,6 @@ const MatchForm = lazy(() => import('./pages/MatchForm'));
 const ScoreSheet = lazy(() => import('./pages/ScoreSheet'));
 const Ranking = lazy(() => import('./pages/Ranking'));
 const Profile = lazy(() => import('./pages/Profile'));
-const AdminLogin = lazy(() => import('./pages/AdminLogin'));
 const Admin = lazy(() => import('./pages/Admin'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
 const JoinByQR = lazy(() => import('./pages/JoinByQR'));
@@ -156,10 +155,8 @@ function App() {
             {/* OAuth2 콜백 */}
             <Route path="/oauth-callback" element={<OAuthCallback />} />
 
-            {/* 관리자 */}
-            <Route path="/admin-login" element={isAdmin ? <Navigate to="/admin" replace /> : isAuthenticated ? <Navigate to="/community" replace /> : <AdminLogin />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/admin/login" replace />} />
+            {/* 관리자 (소셜 계정 role=ADMIN 만 접근. 별도 로그인 없이 소셜 로그인으로 진입) */}
+            <Route path="/admin" element={isAdmin ? <Admin /> : <Navigate to="/login" replace />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
