@@ -1,7 +1,6 @@
 export default {
   title: 'Yada Rank',
   subtitle: '친구들과 보드게임 랭킹을 기록해보세요',
-  adminLogin: '관리자 로그인',
   sessionExpired: '로그인이 만료되었어요. 다시 로그인해주세요.',
   or: '또는',
   appleLogin: 'Apple로 시작하기',

@@ -15,7 +15,7 @@ const Admin = () => {
   const handleLogout = () => {
     setAccessToken(null);
     clearAuthSession();
-    window.location.replace('/admin-login');
+    window.location.replace('/login');
   };
 
   const tabs = [
