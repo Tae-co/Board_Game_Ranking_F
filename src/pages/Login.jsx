@@ -189,22 +189,6 @@ const Login = () => {
           </button>
         </div>
 
-        {/* Admin link */}
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <button
-            onClick={() => navigate('/admin-login')}
-            style={{
-              fontSize: '12px', color: V('--th-primary'),
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontWeight: '600', letterSpacing: '0.5px',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            {t('login', 'adminLogin').toUpperCase()}
-          </button>
-        </div>
-
         {/* Terms notice */}
         <p style={{ fontSize: '10px', color: V('--th-text-sub'), marginTop: '32px', textAlign: 'center', lineHeight: 1.8, letterSpacing: '0.3px' }}>
           BY CONTINUING, YOU AGREE TO OUR{' '}
