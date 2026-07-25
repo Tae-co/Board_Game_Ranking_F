@@ -5,7 +5,6 @@ import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { setAccessToken, ensureToken } from './api/axios';
-import { exchangeOAuthCode } from './api/services/auth';
 import { AUTH_CHANGED_EVENT, enforceSessionExpiry, getStoredAuth, saveAuthSession } from './auth/storage';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
@@ -61,16 +60,17 @@ function App() {
     const handler = CapApp.addListener('appUrlOpen', async ({ url }) => {
       if (!url.includes('oauth-callback')) return;
       await Browser.close();
-      // 딥링크에는 토큰이 없고 1회용 code만 있다 — 교환해서 토큰을 받는다 (#12).
-      const code = new URL(url).searchParams.get('code');
-      if (!code) return;
-      try {
-        const { token, userId, nickname, role, refreshToken } = await exchangeOAuthCode(code);
+      // 네이티브는 딥링크 토큰 방식 유지 (#12는 웹 전용, 백엔드 참고).
+      const urlObj = new URL(url);
+      const token = urlObj.searchParams.get('token');
+      const userId = urlObj.searchParams.get('userId');
+      const nickname = urlObj.searchParams.get('nickname');
+      const role = urlObj.searchParams.get('role');
+      const refreshToken = urlObj.searchParams.get('refreshToken');
+      if (token && userId) {
         setAccessToken(token);
         saveAuthSession({ userId, nickname, role, refreshToken });
         setAuthState(getStoredAuth());
-      } catch {
-        // 교환 실패(만료·재사용): 로그인 화면 유지
       }
     });
     return () => { handler.then(h => h.remove()); };
