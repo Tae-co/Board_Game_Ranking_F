@@ -60,6 +60,7 @@ function App() {
     const handler = CapApp.addListener('appUrlOpen', async ({ url }) => {
       if (!url.includes('oauth-callback')) return;
       await Browser.close();
+      // 네이티브는 딥링크 토큰 방식 유지 (#12는 웹 전용, 백엔드 참고).
       const urlObj = new URL(url);
       const token = urlObj.searchParams.get('token');
       const userId = urlObj.searchParams.get('userId');
