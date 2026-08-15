@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { X, Plus, Minus, Trophy, Hash, ImagePlus } from 'lucide-react';
+import { X, Plus, Minus, Trophy, Hash, Swords, ImagePlus } from 'lucide-react';
 import { createGame, uploadGameImage } from '../../api/services/games';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { V } from '../../utils/cssUtils';
@@ -19,7 +19,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
   const { t } = useLanguage();
 
   const [name, setName] = useState(initialName ?? '');
-  const [scoreType, setScoreType] = useState(null); // 'simple' | 'flat'
+  const [scoreType, setScoreType] = useState(null); // 'simple' | 'flat' | 'outcome'
   const [categories, setCategories] = useState([newCategory(), newCategory()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
@@ -47,8 +47,8 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
     setCategories(prev => prev.map(c => (c.uid === uid ? { ...c, ...patch } : c)));
 
   const buildSchemaJson = () => {
-    if (scoreType === 'simple') {
-      return JSON.stringify({ name: name.trim(), type: 'simple' });
+    if (scoreType === 'simple' || scoreType === 'outcome') {
+      return JSON.stringify({ name: name.trim(), type: scoreType });
     }
     return JSON.stringify({
       name: name.trim(),
@@ -249,10 +249,11 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
         <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
           {t('lobby', 'customScoreType')}
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
           {[
             { key: 'simple', Icon: Trophy, label: t('lobby', 'customTypeSimple'), desc: t('lobby', 'customTypeSimpleDesc') },
             { key: 'flat', Icon: Hash, label: t('lobby', 'customTypeFlat'), desc: t('lobby', 'customTypeFlatDesc') },
+            { key: 'outcome', Icon: Swords, label: t('lobby', 'customTypeOutcome'), desc: t('lobby', 'customTypeOutcomeDesc') },
           ].map((opt) => {
             const selected = scoreType === opt.key;
             return (
@@ -260,7 +261,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
                 key={opt.key}
                 onClick={() => setScoreType(opt.key)}
                 style={{
-                  textAlign: 'left', padding: '14px 12px', borderRadius: 12, cursor: 'pointer',
+                  textAlign: 'left', padding: '14px 10px', borderRadius: 12, cursor: 'pointer',
                   backgroundColor: V('--th-card'),
                   border: `2px solid ${selected ? 'var(--th-primary)' : 'var(--th-border)'}`,
                 }}
