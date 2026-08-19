@@ -14,9 +14,10 @@ import { getAllCategories } from '../scoreSheets/shared/scoreUtils';
 import { ScienceModal } from '../scoreSheets/shared/ScoreCell';
 import WinnerBanner from '../scoreSheets/shared/WinnerBanner';
 import RankInputTable from '../scoreSheets/components/RankInputTable';
+import WinDrawLossTable, { OUTCOME_TIER } from '../scoreSheets/components/WinDrawLossTable';
 
 // DB에 저장된 스키마(JSON)를 렌더링 가능한 스키마로 변환.
-// simple은 TableComponent가 없다 → RankInputTable(순위 입력)이 그려진다.
+// simple/outcome은 TableComponent가 없다 → 순위 입력 / 승무패 입력이 그려진다.
 const parseSchema = (raw) => {
   if (!raw) return null;
   try {
@@ -25,6 +26,7 @@ const parseSchema = (raw) => {
     if (parsed.type === 'sectioned') return { ...parsed, TableComponent: SectionedTable };
     if (parsed.type === 'conditional') return { ...parsed, TableComponent: ConditionTable };
     if (parsed.type === 'simple') return { ...parsed, TableComponent: null };
+    if (parsed.type === 'outcome') return { ...parsed, TableComponent: null };
   } catch { /* 깨진 스키마는 없는 것으로 취급 */ }
   return null;
 };
@@ -90,6 +92,10 @@ const ScoreSheet = () => {
 
   // 순위만 입력하는 게임(simple)은 점수 입력 없이 곧바로 순위 모드로 동작한다.
   const isRankOnly = currentSchema?.type === 'simple';
+
+  // 승/무/패만 입력하는 게임(outcome). 저장된 매치를 열면 이전 선택을 복원한다.
+  const isOutcomeOnly = currentSchema?.type === 'outcome';
+  const [outcomeInputs, setOutcomeInputs] = useState(() => savedScores?.outcome ?? {});
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
@@ -198,6 +204,31 @@ const ScoreSheet = () => {
           win_condition: duelWinCondition,
           won: p.memberId === duelWinnerId,
         }),
+      }));
+    } else if (isOutcomeOnly) {
+      // 승=1티어, 무=2티어, 패=3티어로 줄 세운 뒤 같은 티어끼리 동순위로 묶는다.
+      // 동순위 다음 사람은 인원수만큼 건너뛴다 (승/무/무/패 → 1, 2, 2, 4).
+      if (!players.every(p => outcomeInputs[p.memberId])) {
+        alert(t('scoreSheet', 'outcomeRequired'));
+        return;
+      }
+      const sorted = [...players].sort(
+        (a, b) => OUTCOME_TIER[outcomeInputs[a.memberId]] - OUTCOME_TIER[outcomeInputs[b.memberId]]
+      );
+      const placements = {};
+      let currentRank = 1;
+      for (let i = 0; i < sorted.length; i++) {
+        if (i > 0 && outcomeInputs[sorted[i].memberId] === outcomeInputs[sorted[i - 1].memberId]) {
+          placements[sorted[i].memberId] = placements[sorted[i - 1].memberId];
+        } else {
+          placements[sorted[i].memberId] = currentRank;
+        }
+        currentRank++;
+      }
+      participants = players.map(p => ({
+        memberId: p.memberId,
+        placement: placements[p.memberId],
+        scoresJson: JSON.stringify({ outcome: outcomeInputs[p.memberId] }),
       }));
     } else if (rankMode || isRankOnly) {
       // 순위 직접 입력 모드: rankInputs에서 placement 사용
@@ -353,7 +384,14 @@ const ScoreSheet = () => {
 
       {/* 테이블 */}
       <div style={{ margin: currentSchema?.supportsRankMode && !readOnly ? "0 16px" : "16px 16px 0", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
-        {(rankMode || !TableComponent) ? (
+        {isOutcomeOnly ? (
+          <WinDrawLossTable
+            players={players}
+            outcomeInputs={outcomeInputs}
+            onChange={(memberId, outcome) => setOutcomeInputs(prev => ({ ...prev, [memberId]: outcome }))}
+            readOnly={readOnly}
+          />
+        ) : (rankMode || !TableComponent) ? (
           <RankInputTable
             players={players}
             rankInputs={rankInputs}
