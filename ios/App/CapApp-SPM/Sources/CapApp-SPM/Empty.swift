@@ -1,0 +1,1 @@
+// Capacitor SPM placeholder
