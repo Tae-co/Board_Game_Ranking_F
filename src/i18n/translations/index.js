@@ -9,6 +9,7 @@ import koRanking from './ko/ranking';
 import koProfile from './ko/profile';
 import koCommunity from './ko/community';
 import koAdmin from './ko/admin';
+import koSeason from './ko/season';
 
 import enCommon from './en/common';
 import enLogin from './en/login';
@@ -21,6 +22,7 @@ import enRanking from './en/ranking';
 import enProfile from './en/profile';
 import enCommunity from './en/community';
 import enAdmin from './en/admin';
+import enSeason from './en/season';
 
 const translations = {
   ko: {
@@ -35,6 +37,7 @@ const translations = {
     profile: koProfile,
     community: koCommunity,
     admin: koAdmin,
+    season: koSeason,
   },
   en: {
     common: enCommon,
@@ -48,6 +51,7 @@ const translations = {
     profile: enProfile,
     community: enCommunity,
     admin: enAdmin,
+    season: enSeason,
   },
 };
 

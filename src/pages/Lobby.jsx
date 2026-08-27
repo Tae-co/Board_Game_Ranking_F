@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Users, Copy, CheckCheck, Settings } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Plus, Trophy, Users, Copy, CheckCheck, Settings } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { QRCodeSVG } from 'qrcode.react';
@@ -273,6 +273,37 @@ const Lobby = () => {
               Ready to manage your collectives<br/>today?
             </p>
           </div>
+        )}
+
+        {/* 시즌 결산 — 커뮤니티 모드에서만 */}
+        {communityId && (
+          <button
+            onClick={() => navigate('/season')}
+            style={{
+              width: '100%', marginBottom: '24px', padding: '16px 18px',
+              borderRadius: '16px', cursor: 'pointer', textAlign: 'left',
+              backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+              display: 'flex', alignItems: 'center', gap: '14px',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+            }}
+          >
+            <div style={{
+              width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
+              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Trophy size={19} color="#fff" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontWeight: '700', fontSize: '14px', color: V('--th-text'), marginBottom: '3px' }}>
+                {t('season', 'entryTitle')}
+              </div>
+              <div style={{ fontSize: '11px', color: V('--th-text-sub') }}>
+                {t('season', 'entryDesc')}
+              </div>
+            </div>
+            <ChevronRight size={18} color="var(--th-text-sub)" />
+          </button>
         )}
 
         {/* Action Buttons — 커뮤니티 모드에서는 숨김 */}

@@ -26,6 +26,7 @@ const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
 const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
 const CommunityMemberManage = lazy(() => import('./pages/CommunityMemberManage'));
+const SeasonSummary = lazy(() => import('./pages/SeasonSummary'));
 
 const RouteFallback = () => (
   <div
@@ -149,6 +150,7 @@ function App() {
             <Route path="/match-form/:roomId" element={isAuthenticated ? <MatchForm /> : <Navigate to="/login" replace />} />
             <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
             <Route path="/ranking/:roomId" element={isAuthenticated ? <Ranking /> : <Navigate to="/login" replace />} />
+            <Route path="/season" element={isAuthenticated ? <SeasonSummary /> : <Navigate to="/login" replace />} />
 
             {/* QR 코드 초대 링크 */}
             <Route path="/join" element={<JoinByQR />} />
