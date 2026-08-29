@@ -55,11 +55,14 @@ const SeasonSummary = () => {
 
   const shareText = useMemo(() => {
     if (!summary) return '';
-    return fill(t('season', 'shareText'), {
+    const base = fill(t('season', 'shareText'), {
       community: summary.communityName,
       month: Number(summary.period.split('-')[1]),
-      code: summary.inviteCode ?? '',
     });
+    if (!summary.inviteCode) return base;
+    // 코드를 손으로 옮겨 적지 않고 링크 한 번으로 참여하도록 (/join이 코드를 받아 처리)
+    const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
+    return `${base}\n${appUrl}/join?code=${summary.inviteCode}`;
   }, [summary, t]);
 
   const renderCard = async () => {

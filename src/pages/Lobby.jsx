@@ -8,9 +8,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { joinRoom, getMyRooms, getCommunityRooms } from '../api/services/rooms';
 import { getGames } from '../api/services/games';
 import { getCommunityMembers } from '../api/services/communities';
+import { getSeasonPeriods } from '../api/services/seasons';
 import { clearAuthSession, getAuthUserId, getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
+import { findFreshRecap, periodMonthLabel } from '../utils/seasonUtils';
 import { V } from '../utils/cssUtils';
 import RoomCard from '../components/lobby/RoomCard';
 import JoinCodeSheet from '../components/lobby/JoinCodeSheet';
@@ -21,7 +23,7 @@ const DiceLogo = () => (
 
 const Lobby = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const [showJoinSheet, setShowJoinSheet] = useState(false);
   const [joinCode, setJoinCode] = useState('');
@@ -72,6 +74,16 @@ const Lobby = () => {
     enabled: !!communityId,
     staleTime: 1000 * 30,
   });
+
+  // 월초에 지난달 결산이 있으면 로비 배너를 축하 상태로 승격한다.
+  const { data: seasonPeriods = [] } = useQuery({
+    queryKey: ['seasonPeriods', communityId],
+    queryFn: () => getSeasonPeriods(communityId),
+    enabled: !!communityId,
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const freshRecapPeriod = findFreshRecap(seasonPeriods);
 
   const handleEnterRoom = async (room) => {
     if (communityId && !room.isMember) {
@@ -275,34 +287,52 @@ const Lobby = () => {
           </div>
         )}
 
-        {/* 시즌 결산 — 커뮤니티 모드에서만 */}
+        {/* 시즌 결산 — 커뮤니티 모드에서만. 월초에 지난달 결산이 있으면 승격 상태로 뜬다.
+            공유자가 많을수록 카드가 많이 나가므로 어드민만이 아니라 멤버 전원에게 보인다. */}
         {communityId && (
           <button
             onClick={() => navigate('/season')}
             style={{
               width: '100%', marginBottom: '24px', padding: '16px 18px',
               borderRadius: '16px', cursor: 'pointer', textAlign: 'left',
-              backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
               display: 'flex', alignItems: 'center', gap: '14px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              ...(freshRecapPeriod ? {
+                background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                border: '1px solid transparent',
+                boxShadow: '0 4px 16px rgba(107,92,231,0.3)',
+              } : {
+                backgroundColor: V('--th-card'),
+                border: `1px solid var(--th-border)`,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              }),
             }}
           >
             <div style={{
               width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
-              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              background: freshRecapPeriod
+                ? 'rgba(255,255,255,0.18)'
+                : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
               <Trophy size={19} color="#fff" />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: '700', fontSize: '14px', color: V('--th-text'), marginBottom: '3px' }}>
-                {t('season', 'entryTitle')}
+              <div style={{
+                fontWeight: '700', fontSize: '14px', marginBottom: '3px',
+                color: freshRecapPeriod ? '#fff' : V('--th-text'),
+              }}>
+                {freshRecapPeriod
+                  ? `🎉 ${t('season', 'recapReady').replace('{month}', periodMonthLabel(freshRecapPeriod, lang))}`
+                  : t('season', 'entryTitle')}
               </div>
-              <div style={{ fontSize: '11px', color: V('--th-text-sub') }}>
-                {t('season', 'entryDesc')}
+              <div style={{
+                fontSize: '11px',
+                color: freshRecapPeriod ? 'rgba(255,255,255,0.75)' : V('--th-text-sub'),
+              }}>
+                {freshRecapPeriod ? t('season', 'recapReadyDesc') : t('season', 'entryDesc')}
               </div>
             </div>
-            <ChevronRight size={18} color="var(--th-text-sub)" />
+            <ChevronRight size={18} color={freshRecapPeriod ? 'rgba(255,255,255,0.8)' : 'var(--th-text-sub)'} />
           </button>
         )}
 

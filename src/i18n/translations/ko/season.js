@@ -18,5 +18,7 @@ export default {
   saveImage: '이미지 저장',
   sharing: '카드 만드는 중...',
   shareFailed: '카드를 만들지 못했습니다. 다시 시도해주세요.',
-  shareText: '{community} {month}월 결산이 나왔어요! 초대코드 {code}',
+  shareText: '{community} {month}월 결산이 나왔어요!',
+  recapReady: '{month}월 결산이 나왔어요',
+  recapReadyDesc: '탭해서 우리 모임 한 달을 확인하세요',
 };

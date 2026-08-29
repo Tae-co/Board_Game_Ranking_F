@@ -18,5 +18,7 @@ export default {
   saveImage: 'Save Image',
   sharing: 'Building card...',
   shareFailed: 'Could not build the card. Please try again.',
-  shareText: '{community} {month} recap is out! Invite code {code}',
+  shareText: '{community} {month} recap is out!',
+  recapReady: 'Your {month} recap is ready',
+  recapReadyDesc: 'Tap to see how the month went',
 };
