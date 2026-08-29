@@ -99,6 +99,16 @@ const Lobby = () => {
     setShowQrPopup(true);
   };
 
+  // 게임방 3개까지 무료. 방 생성은 운영자가 게임 전후에 혼자 하는 행동이라
+  // 여기서 막혀도 테이블에 앉은 사람들에겐 보이지 않는다.
+  const handleCreateRoom = () => {
+    if (rooms.length >= FREE_LIMITS.rooms) {
+      openPaywall(GATE.ROOM_LIMIT);
+      return;
+    }
+    navigate('/create-group');
+  };
+
   const handleEnterRoom = async (room) => {
     if (communityId && !room.isMember) {
       try {
@@ -426,7 +436,7 @@ const Lobby = () => {
             {/* 커뮤니티 모드 + Admin: 그룹 생성 버튼 */}
             {communityId && isAdmin && (
               <button
-                onClick={() => navigate('/create-group')}
+                onClick={handleCreateRoom}
                 style={{
                   width: 32, height: 32, borderRadius: '50%',
                   background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',

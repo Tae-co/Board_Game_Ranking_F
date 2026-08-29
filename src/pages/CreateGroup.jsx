@@ -5,9 +5,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createRoom } from '../api/services/rooms';
 import { getGames, deleteGame } from '../api/services/games';
 import CustomGameBuilder from '../components/lobby/CustomGameBuilder';
-import PaywallSheet from '../components/paywall/PaywallSheet';
-import { usePaywall } from '../hooks/usePaywall';
-import { GATE, FREE_LIMITS } from '../constants/gates';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import { getNickname } from '../auth/storage';
@@ -27,7 +24,6 @@ const CreateGroup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
-  const { activeGate, openPaywall, closePaywall, track } = usePaywall();
   const [deletingGameId, setDeletingGameId] = useState(null);
   const PAGE_SIZE = 15;
 
@@ -37,9 +33,6 @@ const CreateGroup = () => {
     queryFn: () => getGames(communityId),
     staleTime: 1000 * 60 * 30,
   });
-
-  // 공식 게임은 communityId가 null. 커스텀만 무료 한도에 센다.
-  const customGameCount = games.filter(g => g.communityId != null).length;
 
   const filteredGames = gameSearch
     ? games.filter(g => g.name.toLowerCase().includes(gameSearch.toLowerCase()))
@@ -100,10 +93,6 @@ const CreateGroup = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
-
-      {activeGate && (
-        <PaywallSheet gateKey={activeGate} onClose={closePaywall} onTrack={track} />
-      )}
 
 
       {/* Header */}
@@ -253,11 +242,7 @@ const CreateGroup = () => {
                 </p>
               )}
               <button
-                onClick={() =>
-                  customGameCount >= FREE_LIMITS.customSheets
-                    ? openPaywall(GATE.CUSTOM_SHEET_LIMIT)
-                    : setIsBuilderOpen(true)
-                }
+                onClick={() => setIsBuilderOpen(true)}
                 style={{
                   width: '100%', marginTop: '12px', padding: '12px', borderRadius: '12px',
                   backgroundColor: 'transparent', border: `1px dashed var(--th-border)`,

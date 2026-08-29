@@ -7,20 +7,17 @@ import { V } from '../../utils/cssUtils';
 /**
  * 페이크 도어 페이월. 실제 결제는 없고 "관심 등록"까지만 받는다.
  *
- * 운영 축 항목과 랭킹 축 항목을 섞어서 한 리스트로 보여준다. 어느 쪽을 보고
- * 눌렀는지가 "랭킹이 유료 상품인가"에 대한 답이다 — plan-monetization.md 전제 3.
- * 항목 순서를 축끼리 묶지 않는 게 핵심이라 아래 배열 순서를 바꾸지 말 것.
+ * 전부 규모가 커졌을 때 운영자가 혼자 감당하는 것들이다. 랭킹·기록·점수판은
+ * 여기에 올리지 않는다 — 유료 상품이 아니라 사람을 다시 오게 만드는 엔진이다.
+ * attendance/dues는 아직 코드가 없다. 어느 쪽에 손이 가는지 재는 항목이다.
  */
 const FEATURES = [
-  { key: 'seasonRanking', gate: null },
   { key: 'unlimitedMembers', gate: GATE.MEMBER_LIMIT },
-  { key: 'unlimitedSheets', gate: GATE.CUSTOM_SHEET_LIMIT },
-  { key: 'attendance', gate: null },
-  { key: 'recapShare', gate: GATE.SEASON_RECAP_SHARE },
-  { key: 'dues', gate: null },
-  { key: 'exportRecords', gate: GATE.RECORD_EXPORT },
-  { key: 'coAdmin', gate: GATE.CO_ADMIN },
+  { key: 'multipleRooms', gate: GATE.ROOM_LIMIT },
   { key: 'multipleCommunities', gate: GATE.SECOND_COMMUNITY },
+  { key: 'coAdmin', gate: GATE.CO_ADMIN },
+  { key: 'attendance', gate: null },
+  { key: 'dues', gate: null },
 ];
 
 const PaywallSheet = ({ gateKey, onClose, onTrack }) => {
@@ -96,6 +93,14 @@ const PaywallSheet = ({ gateKey, onClose, onTrack }) => {
             );
           })}
         </div>
+
+        {/* 랭킹이 유료가 아니라는 걸 페이월 안에서 못박는다 */}
+        <p style={{
+          margin: '0 0 16px', fontSize: 12, color: V('--th-text-sub'),
+          textAlign: 'center', lineHeight: 1.5,
+        }}>
+          {t('paywall', 'freeForever')}
+        </p>
 
         {registered ? (
           <div style={{
