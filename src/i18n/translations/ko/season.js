@@ -12,6 +12,7 @@ export default {
   awardBiggestClimb: '최대 상승폭',
   awardDarkHorse: '다크호스',
   winsUnit: '{count}승',
+  winsUnitOne: '{count}승',
   gameTops: '게임별 1위',
   inviteCode: '초대코드',
   share: '결산 카드 공유',

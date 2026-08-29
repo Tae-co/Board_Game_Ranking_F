@@ -12,6 +12,7 @@ export default {
   awardBiggestClimb: 'Biggest Climb',
   awardDarkHorse: 'Dark Horse',
   winsUnit: '{count} wins',
+  winsUnitOne: '{count} win',
   gameTops: 'Top Player by Game',
   inviteCode: 'Invite Code',
   share: 'Share Recap Card',

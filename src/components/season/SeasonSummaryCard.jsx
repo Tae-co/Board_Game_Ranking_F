@@ -27,7 +27,8 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
 
   const formatAwardValue = (award) => {
     if (award.type === 'MOST_WINS') {
-      return fill(t('season', 'winsUnit'), { count: award.value });
+      const key = award.value === 1 ? 'winsUnitOne' : 'winsUnit';
+      return fill(t('season', key), { count: award.value });
     }
     const rounded = Math.round(award.value);
     return `${rounded >= 0 ? '+' : ''}${rounded}`;
