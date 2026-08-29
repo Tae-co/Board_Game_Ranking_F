@@ -11,6 +11,9 @@ import { V } from '../utils/cssUtils';
 import { REGION_NAMES } from '../constants/regions';
 import { getAuthUserId } from '../auth/storage';
 import { getMyCommunity, setMyCommunity, removeMyCommunity, getSelectedCommunity, setSelectedCommunity, removeSelectedCommunity, notifySelectedCommunityUpdated } from '../utils/storage';
+import PaywallSheet from '../components/paywall/PaywallSheet';
+import { usePaywall } from '../hooks/usePaywall';
+import { GATE } from '../constants/gates';
 
 const REGIONS = [...REGION_NAMES, 'Other'];
 
@@ -49,6 +52,7 @@ const CommunitySettings = () => {
   const [name, setName] = useState('');
   const [region, setRegion] = useState('South Korea');
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const { activeGate, openPaywall, closePaywall, track } = usePaywall();
   const [searchQuery, setSearchQuery] = useState('');
   const [adminPage, setAdminPage] = useState(0);
   const ADMIN_PER_PAGE = 10;
@@ -103,15 +107,15 @@ const CommunitySettings = () => {
   }, [detail, userId]);
 
   const toggleAdmin = (memberId) => {
+    // 추가만 Pro 게이트. 해제는 그대로 둔다 — 이미 붙은 관리자를 인질로 잡지 않는다.
+    if (!selectedIds.has(memberId)) {
+      openPaywall(GATE.CO_ADMIN);
+      return;
+    }
     adminsTouched.current = true;
     setSelectedIds((prev) => {
       const next = new Set(prev);
-      if (next.has(memberId)) {
-        next.delete(memberId);
-      } else {
-        if (next.size >= 4) return prev; // 생성자 포함 최대 5명
-        next.add(memberId);
-      }
+      next.delete(memberId);
       return next;
     });
   };
@@ -200,6 +204,11 @@ const CommunitySettings = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
+
+      {activeGate && (
+        <PaywallSheet gateKey={activeGate} onClose={closePaywall} onTrack={track} />
+      )}
+
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>

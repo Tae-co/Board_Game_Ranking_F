@@ -13,6 +13,9 @@ import { clearAuthSession, getAuthUserId, getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { findFreshRecap, periodMonthLabel } from '../utils/seasonUtils';
+import PaywallSheet from '../components/paywall/PaywallSheet';
+import { usePaywall } from '../hooks/usePaywall';
+import { GATE, FREE_LIMITS } from '../constants/gates';
 import { V } from '../utils/cssUtils';
 import RoomCard from '../components/lobby/RoomCard';
 import JoinCodeSheet from '../components/lobby/JoinCodeSheet';
@@ -44,6 +47,7 @@ const Lobby = () => {
   const communityInviteCode = selectedCommunity?.inviteCode ?? null;
   const [codeCopied, setCodeCopied] = useState(false);
   const [showQrPopup, setShowQrPopup] = useState(false);
+  const { activeGate, openPaywall, closePaywall, track } = usePaywall();
   const [roomPage, setRoomPage] = useState(0);
   const [memberPage, setMemberPage] = useState(0);
 
@@ -84,6 +88,16 @@ const Lobby = () => {
   });
 
   const freshRecapPeriod = findFreshRecap(seasonPeriods);
+
+  // 8명 초과부터 초대가 Pro. 참가자의 join이 아니라 운영자가 코드를 여는 쪽을 막는다
+  // — join을 막으면 게임 중에 새 사람 앞에서 게이트가 터진다.
+  const handleInvite = () => {
+    if (communityMembers.length >= FREE_LIMITS.members) {
+      openPaywall(GATE.MEMBER_LIMIT);
+      return;
+    }
+    setShowQrPopup(true);
+  };
 
   const handleEnterRoom = async (room) => {
     if (communityId && !room.isMember) {
@@ -129,6 +143,10 @@ const Lobby = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
+
+      {activeGate && (
+        <PaywallSheet gateKey={activeGate} onClose={closePaywall} onTrack={track} />
+      )}
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
@@ -230,7 +248,7 @@ const Lobby = () => {
                   border: '1px solid rgba(255,255,255,0.12)',
                 }}>
                   <button
-                    onClick={() => setShowQrPopup(true)}
+                    onClick={handleInvite}
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer', padding: 0,
                       display: 'flex', alignItems: 'center', gap: '5px',

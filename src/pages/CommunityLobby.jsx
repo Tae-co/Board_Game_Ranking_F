@@ -11,6 +11,9 @@ import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
 import { setSelectedCommunity, setMyCommunity, removeMyCommunity, recordCommunityVisit, sortByRecentVisit } from '../utils/storage';
+import PaywallSheet from '../components/paywall/PaywallSheet';
+import { usePaywall } from '../hooks/usePaywall';
+import { GATE, FREE_LIMITS } from '../constants/gates';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -31,6 +34,7 @@ const CommunityLobby = () => {
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
   const [pendingJoinCode, setPendingJoinCode] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
+  const { activeGate, openPaywall, closePaywall, track } = usePaywall();
 
   useEffect(() => {
     if (showJoinInput) {
@@ -116,6 +120,10 @@ const CommunityLobby = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 40 }}>
+
+      {activeGate && (
+        <PaywallSheet gateKey={activeGate} onClose={closePaywall} onTrack={track} />
+      )}
 
       {/* 커뮤니티 참가 확인 팝업 */}
       {showJoinConfirm && (
@@ -270,7 +278,11 @@ const CommunityLobby = () => {
           </p>
           {myCommunities.length > 0 && (
             <button
-              onClick={() => navigate('/create-community')}
+              onClick={() =>
+                myCommunities.length >= FREE_LIMITS.communities
+                  ? openPaywall(GATE.SECOND_COMMUNITY)
+                  : navigate('/create-community')
+              }
               style={{
                 width: 32, height: 32, borderRadius: '50%',
                 background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
