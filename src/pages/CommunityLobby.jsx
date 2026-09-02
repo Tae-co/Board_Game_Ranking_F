@@ -159,7 +159,8 @@ const CommunityLobby = () => {
             <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: '0 0 8px' }}>
               {t('community', 'joinFailedTitle')}
             </p>
-            <p style={{ fontSize: '13.5px', color: V('--th-text-sub'), margin: '0 0 22px', lineHeight: 1.6 }}>
+            {/* 서버 메시지의 줄바꿈을 살린다 — 문장이 붙어서 읽히면 안 된다 */}
+            <p style={{ fontSize: '13.5px', color: V('--th-text-sub'), margin: '0 0 22px', lineHeight: 1.6, whiteSpace: 'pre-line' }}>
               {joinError}
             </p>
             <button
