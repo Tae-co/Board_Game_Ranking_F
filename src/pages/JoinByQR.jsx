@@ -6,6 +6,7 @@ import { joinCommunity } from '../api/services/communities';
 import { getAuthUserId } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import { joinErrorMessage } from '../utils/joinErrorMessage';
 
 const JoinByQR = () => {
   const [searchParams] = useSearchParams();
@@ -42,7 +43,7 @@ const JoinByQR = () => {
       navigate('/community');
     } catch (e) {
       // 자동으로 넘기지 않는다. 정원 초과 같은 안내는 읽을 시간이 필요하다.
-      setError(e?.response?.data?.message || t('community', 'invalidCode'));
+      setError(joinErrorMessage(e, t));
     } finally {
       setJoining(false);
     }

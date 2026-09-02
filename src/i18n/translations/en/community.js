@@ -42,6 +42,7 @@ export default {
   noJoinedCommunities: 'No joined communities yet',
   joinCommunity: 'Join a Community',
   joinFailedTitle: "Couldn't join",
+  joinFullMessage: 'This group is full ({count}/{limit}).\nAsk the organizer to make room.',
   enterInviteCode: 'Enter invite code (e.g. AB12CD)',
   joinWithCodeBtn: 'Join',
   invalidCode: 'Invalid invite code.',

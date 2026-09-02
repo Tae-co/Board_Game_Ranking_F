@@ -42,6 +42,8 @@ export default {
   noJoinedCommunities: '참가한 커뮤니티가 없습니다',
   joinCommunity: '커뮤니티 참가하기',
   joinFailedTitle: '참가하지 못했어요',
+  // 줄바꿈은 팝업이 whiteSpace: pre-line으로 살린다
+  joinFullMessage: '이 모임은 인원이 가득 찼어요 ({count}/{limit}).\n모임장에게 문의해 주세요.',
   enterInviteCode: '초대 코드 입력 (예: AB12CD)',
   joinWithCodeBtn: '참가',
   invalidCode: '유효하지 않은 초대 코드입니다.',

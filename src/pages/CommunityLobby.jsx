@@ -8,6 +8,7 @@ import { CommunityCardSkeleton } from '../components/Skeleton';
 import { joinCommunity, getMyCommunities, getJoinedCommunities } from '../api/services/communities';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import { joinErrorMessage } from '../utils/joinErrorMessage';
 import CommunityCard from '../components/community/CommunityCard';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
 import { setSelectedCommunity, setMyCommunity, removeMyCommunity, recordCommunityVisit, sortByRecentVisit } from '../utils/storage';
@@ -104,7 +105,7 @@ const CommunityLobby = () => {
       setPendingJoinCode('');
       queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
     } catch (e) {
-      setJoinError(e.response?.data?.message || t('community', 'invalidCode'));
+      setJoinError(joinErrorMessage(e, t));
     } finally {
       setJoinLoading(false);
     }
