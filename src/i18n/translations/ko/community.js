@@ -41,6 +41,7 @@ export default {
   joinedCommunities: '참가한 커뮤니티',
   noJoinedCommunities: '참가한 커뮤니티가 없습니다',
   joinCommunity: '커뮤니티 참가하기',
+  joinFailedTitle: '참가하지 못했어요',
   enterInviteCode: '초대 코드 입력 (예: AB12CD)',
   joinWithCodeBtn: '참가',
   invalidCode: '유효하지 않은 초대 코드입니다.',

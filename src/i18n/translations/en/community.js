@@ -41,6 +41,7 @@ export default {
   joinedCommunities: 'Joined Community',
   noJoinedCommunities: 'No joined communities yet',
   joinCommunity: 'Join a Community',
+  joinFailedTitle: "Couldn't join",
   enterInviteCode: 'Enter invite code (e.g. AB12CD)',
   joinWithCodeBtn: 'Join',
   invalidCode: 'Invalid invite code.',

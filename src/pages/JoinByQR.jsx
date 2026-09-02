@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { joinCommunity } from '../api/services/communities';
 import { getAuthUserId } from '../auth/storage';
@@ -40,9 +41,8 @@ const JoinByQR = () => {
       queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
       navigate('/community');
     } catch (e) {
-      const msg = e?.response?.data?.message || '커뮤니티 참여에 실패했습니다.';
-      setError(msg);
-      setTimeout(() => navigate('/community'), 2000);
+      // 자동으로 넘기지 않는다. 정원 초과 같은 안내는 읽을 시간이 필요하다.
+      setError(e?.response?.data?.message || t('community', 'invalidCode'));
     } finally {
       setJoining(false);
     }
@@ -54,8 +54,36 @@ const JoinByQR = () => {
 
   if (error) {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, backgroundColor: V('--th-bg'), color: V('--th-text') }}>
-        <p style={{ color: '#dc2626' }}>{error}</p>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20, backgroundColor: V('--th-bg') }}>
+        <div style={{
+          backgroundColor: V('--th-card'), borderRadius: '20px',
+          padding: '28px 24px', width: '100%', maxWidth: '320px',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.2)', textAlign: 'center',
+        }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: '50%', margin: '0 auto 16px',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backgroundColor: 'rgba(239,68,68,0.12)',
+          }}>
+            <AlertCircle size={26} color="#ef4444" />
+          </div>
+          <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: '0 0 8px' }}>
+            {t('community', 'joinFailedTitle')}
+          </p>
+          <p style={{ fontSize: '13.5px', color: V('--th-text-sub'), margin: '0 0 22px', lineHeight: 1.6 }}>
+            {error}
+          </p>
+          <button
+            onClick={() => navigate('/community')}
+            style={{
+              width: '100%', padding: '13px', borderRadius: '12px', border: 'none',
+              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              color: '#fff', fontSize: '15px', fontWeight: '700', cursor: 'pointer',
+            }}
+          >
+            {t('common', 'confirm')}
+          </button>
+        </div>
       </div>
     );
   }

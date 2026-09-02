@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Shield } from 'lucide-react';
+import { Plus, Shield, AlertCircle } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { CommunityCardSkeleton } from '../components/Skeleton';
@@ -128,6 +128,54 @@ const CommunityLobby = () => {
       )}
 
       {/* 커뮤니티 참가 확인 팝업 */}
+      {/* 참가 실패 안내. 인라인 문구로는 안 보인다 — handleJoin이 코드 입력 시트를
+          먼저 닫아버려서, 그 안에 있는 에러 문구가 렌더될 자리가 사라진다.
+          정원 초과가 여기로 온다: "이 모임은 인원이 가득 찼어요 (8/8)". */}
+      {joinError && !showJoinInput && (
+        <div
+          onClick={() => setJoinError('')}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: V('--th-card'), borderRadius: '20px',
+              padding: '28px 24px', width: '100%', maxWidth: '320px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)', textAlign: 'center',
+            }}
+          >
+            <div style={{
+              width: 52, height: 52, borderRadius: '50%', margin: '0 auto 16px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: 'rgba(239,68,68,0.12)',
+            }}>
+              <AlertCircle size={26} color="#ef4444" />
+            </div>
+            <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: '0 0 8px' }}>
+              {t('community', 'joinFailedTitle')}
+            </p>
+            <p style={{ fontSize: '13.5px', color: V('--th-text-sub'), margin: '0 0 22px', lineHeight: 1.6 }}>
+              {joinError}
+            </p>
+            <button
+              onClick={() => setJoinError('')}
+              style={{
+                width: '100%', padding: '13px', borderRadius: '12px', border: 'none',
+                background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                color: '#fff', fontSize: '15px', fontWeight: '700', cursor: 'pointer',
+              }}
+            >
+              {t('common', 'confirm')}
+            </button>
+          </div>
+        </div>
+      )}
+
       {showJoinConfirm && (
         <div
           onClick={handleJoinCancel}
