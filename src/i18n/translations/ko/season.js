@@ -20,6 +20,8 @@ export default {
   sharing: '카드 만드는 중...',
   shareFailed: '카드를 만들지 못했습니다. 다시 시도해주세요.',
   shareText: '{community} {month}월 결산이 나왔어요!',
-  recapReady: '{month}월 결산이 나왔어요',
+  // {month}에는 periodMonthLabel의 결과('8월')가 들어온다 — 여기에 '월'을 또 붙이면 "8월월"이 된다.
+  // shareText의 {month}는 숫자(8)를 받으므로 그쪽은 '월'이 필요하다. 둘이 다르다.
+  recapReady: '{month} 결산이 나왔어요',
   recapReadyDesc: '탭해서 우리 모임 한 달을 확인하세요',
 };

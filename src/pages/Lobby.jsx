@@ -94,13 +94,29 @@ const Lobby = () => {
   const freshRecapPeriod = findFreshRecap(seasonPeriods);
 
   // 8명 초과부터 초대가 Pro. 참가자의 join이 아니라 운영자가 코드를 여는 쪽을 막는다
-  // — join을 막으면 게임 중에 새 사람 앞에서 게이트가 터진다.
+  // — join을 막으면 게임 중에 새 사람 앞에서 게이트가 터진다 (실제 인원 초과는 서버가 막는다).
+  //
+  // 초대 관련 동작은 전부 이 판정 하나를 공유한다. 코드를 누르면 페이월이 뜨는데
+  // 바로 옆 복사 아이콘은 그냥 복사되면 같은 자리에서 동작이 갈린다.
+  const inviteBlocked =
+    !proActive && !subLoading && communityMembers.length >= FREE_LIMITS.members;
+
   const handleInvite = () => {
-    if (!proActive && !subLoading && communityMembers.length >= FREE_LIMITS.members) {
+    if (inviteBlocked) {
       openPaywall(GATE.MEMBER_LIMIT);
       return;
     }
     setShowQrPopup(true);
+  };
+
+  const handleCopyCode = () => {
+    if (inviteBlocked) {
+      openPaywall(GATE.MEMBER_LIMIT);
+      return;
+    }
+    navigator.clipboard.writeText(communityInviteCode);
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
   };
 
   // 게임방 3개까지 무료. 방 생성은 운영자가 게임 전후에 혼자 하는 행동이라
@@ -274,11 +290,7 @@ const Lobby = () => {
                     </span>
                   </button>
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(communityInviteCode);
-                      setCodeCopied(true);
-                      setTimeout(() => setCodeCopied(false), 2000);
-                    }}
+                    onClick={handleCopyCode}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0 2px 4px', display: 'flex', alignItems: 'center' }}
                   >
                     {codeCopied
@@ -658,11 +670,7 @@ const Lobby = () => {
               {communityInviteCode}
             </div>
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(communityInviteCode);
-                setCodeCopied(true);
-                setTimeout(() => setCodeCopied(false), 2000);
-              }}
+              onClick={handleCopyCode}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
                 padding: '12px 28px', borderRadius: '14px', border: 'none', cursor: 'pointer',
