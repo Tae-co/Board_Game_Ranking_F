@@ -2,19 +2,11 @@ export default {
   title: 'Organizer Pro',
   subtitle: 'The bigger the group, the more the organizer does alone. We take that over.',
 
-  reason_MEMBER_LIMIT: 'Free communities are capped at 8 members',
-  reason_ROOM_LIMIT: 'Free plan includes 3 game rooms',
-  reason_SECOND_COMMUNITY: 'Free plan includes one community',
+  reason_MEMBER_LIMIT: 'Free communities are capped at {n} members',
+  reason_ROOM_LIMIT: 'Free plan includes {n} game rooms',
+  reason_SECOND_COMMUNITY: 'Free plan includes {n} community',
   reason_CO_ADMIN: 'Co-admins are a Pro feature',
-  reason_CUSTOM_SHEET: 'Free plan includes 3 custom score sheets',
-
-  unlimitedMembers: 'Unlimited members',
-  multipleRooms: 'Unlimited game rooms',
-  multipleCommunities: 'Run multiple communities',
-  coAdmin: 'Add co-admins',
-  customSheets: 'More custom score sheets',
-  attendance: 'Attendance / who is coming this week',
-  dues: 'Dues ledger',
+  reason_CUSTOM_SHEET: 'Free plan includes {n} custom score sheets',
 
   priceHint: '{price} billed yearly · 2 months free',
 

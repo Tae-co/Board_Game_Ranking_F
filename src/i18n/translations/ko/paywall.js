@@ -3,19 +3,11 @@ export default {
   subtitle: '모임이 커질수록 운영자 혼자 하는 일이 늘어납니다. 그걸 대신합니다.',
 
   // 게이트별 "왜 막혔는지"
-  reason_MEMBER_LIMIT: '무료 커뮤니티는 8명까지예요',
-  reason_ROOM_LIMIT: '무료로는 게임방 3개까지예요',
-  reason_SECOND_COMMUNITY: '무료로는 커뮤니티 1개를 만들 수 있어요',
+  reason_MEMBER_LIMIT: '무료 커뮤니티는 참석자 {n}명까지예요',
+  reason_ROOM_LIMIT: '무료로는 게임방 {n}개까지예요',
+  reason_SECOND_COMMUNITY: '무료로는 커뮤니티 {n}개까지 만들 수 있어요',
   reason_CO_ADMIN: '공동 관리자는 Pro 기능이에요',
-  reason_CUSTOM_SHEET: '무료로는 커스텀 점수판 3개까지예요',
-
-  unlimitedMembers: '참석자 수 무제한',
-  multipleRooms: '게임방 무제한',
-  multipleCommunities: '커뮤니티 여러 개 운영',
-  coAdmin: '공동 관리자 추가',
-  customSheets: '커스텀 점수판 더 만들기',
-  attendance: '출석 체크 / 이번 주 참석 인원 파악',
-  dues: '회비 납부 장부',
+  reason_CUSTOM_SHEET: '무료로는 커스텀 점수판 {n}개까지예요',
 
   priceHint: '연간 결제 시 {price} · 2개월 무료',
 

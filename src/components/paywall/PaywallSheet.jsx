@@ -1,7 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { Check, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { GATE_ACTION } from '../../constants/gates';
 import { BILLING, PLANS, PRO_FEATURES, formatPrice } from '../../constants/subscription';
+import PlanComparisonTable from '../shared/PlanComparisonTable';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { V } from '../../utils/cssUtils';
 
@@ -52,9 +53,11 @@ const PaywallSheet = ({ gateKey, onClose, onTrack }) => {
           </button>
         </div>
 
-        {/* 왜 막혔는지를 먼저 말한다. 게이트마다 문구가 다르다. */}
+        {/* 왜 막혔는지를 먼저 말한다. 한도 숫자는 FREE_LIMITS에서 채운다 — 문구에 박아두면 거짓말이 된다. */}
         <p style={{ fontSize: 13, color: V('--th-text-sub'), margin: '0 0 6px' }}>
-          {t('paywall', `reason_${gateKey}`)}
+          {fill(t('paywall', `reason_${gateKey}`), {
+            n: PRO_FEATURES.find((f) => f.gate === gateKey)?.free ?? '',
+          })}
         </p>
         <h3 style={{ fontSize: 20, fontWeight: 800, color: V('--th-text'), margin: '0 0 6px' }}>
           {t('paywall', 'title')}
@@ -81,29 +84,9 @@ const PaywallSheet = ({ gateKey, onClose, onTrack }) => {
           })}
         </p>
 
+        {/* 막힌 지점을 표에서 짚어준다 */}
         <div style={{ marginBottom: 18 }}>
-          {PRO_FEATURES.map((f) => {
-            const highlighted = f.gate === gateKey;
-            return (
-              <div
-                key={f.key}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '11px 12px', marginBottom: 8, borderRadius: 12,
-                  backgroundColor: highlighted ? 'rgba(var(--th-primary-rgb), 0.1)' : V('--th-bg'),
-                  border: `1px solid ${highlighted ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                }}
-              >
-                <Check size={16} color={highlighted ? 'var(--th-primary)' : 'var(--th-text-sub)'} />
-                <span style={{
-                  fontSize: 14, fontWeight: highlighted ? 700 : 500,
-                  color: highlighted ? V('--th-primary') : V('--th-text'),
-                }}>
-                  {t('paywall', f.key)}
-                </span>
-              </div>
-            );
-          })}
+          <PlanComparisonTable highlightGate={gateKey} />
         </div>
 
         {/* 랭킹이 유료가 아니라는 걸 페이월 안에서 못박는다 */}

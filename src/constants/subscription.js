@@ -6,6 +6,8 @@
  * 범위가 소모임보다 좁고, 심리적 1만원선 아래다. 바꿀 땐 이 파일만 고친다.
  */
 
+import { GATE, FREE_LIMITS } from './gates';
+
 export const BILLING = {
   MONTHLY: 'MONTHLY',
   YEARLY: 'YEARLY',
@@ -19,17 +21,21 @@ export const PLANS = {
 
 /**
  * 페이월 시트와 구독 안내 페이지가 **같은 목록**을 쓴다. 두 곳에 따로 두면
- * 한쪽만 고쳐져서 어긋난다. gate가 null인 둘은 아직 코드가 0줄인 항목으로,
- * 어느 쪽에 손이 가는지 재는 미끼다 (문서 A-8).
+ * 한쪽만 고쳐져서 어긋난다.
+ *
+ * `free`가 숫자면 "무료 N개 → Pro 무제한", null이면 "무료 ✕ → Pro ✓"로 그린다.
+ * 숫자는 FREE_LIMITS에서 가져온다 — 화면에 하드코딩하면 한도를 바꿀 때 문구가 거짓말이 된다.
+ *
+ * gate가 null인 둘은 아직 코드가 0줄인 항목으로, 어느 쪽에 손이 가는지 재는 미끼다 (문서 A-8).
  */
 export const PRO_FEATURES = [
-  { key: 'unlimitedMembers', gate: 'MEMBER_LIMIT' },
-  { key: 'multipleRooms', gate: 'ROOM_LIMIT' },
-  { key: 'multipleCommunities', gate: 'SECOND_COMMUNITY' },
-  { key: 'coAdmin', gate: 'CO_ADMIN' },
-  { key: 'customSheets', gate: 'CUSTOM_SHEET' },
-  { key: 'attendance', gate: null },
-  { key: 'dues', gate: null },
+  { key: 'members', gate: GATE.MEMBER_LIMIT, free: FREE_LIMITS.members, unit: 'people' },
+  { key: 'rooms', gate: GATE.ROOM_LIMIT, free: FREE_LIMITS.rooms, unit: 'count' },
+  { key: 'communities', gate: GATE.SECOND_COMMUNITY, free: FREE_LIMITS.communities, unit: 'count' },
+  { key: 'customSheets', gate: GATE.CUSTOM_SHEET, free: FREE_LIMITS.customSheets, unit: 'count' },
+  { key: 'coAdmin', gate: GATE.CO_ADMIN, free: null },
+  { key: 'attendance', gate: null, free: null },
+  { key: 'dues', gate: null, free: null },
 ];
 
 export const formatPrice = (amount, lang) =>

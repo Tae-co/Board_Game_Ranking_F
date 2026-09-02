@@ -2,15 +2,17 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Crown, X } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
+import PlanComparisonTable from '../components/shared/PlanComparisonTable';
 import { useSubscription } from '../hooks/useSubscription';
 import { getMyCommunity } from '../utils/storage';
-import { BILLING, PLANS, PRO_FEATURES, addMonths, formatDate, formatPrice } from '../constants/subscription';
+import { BILLING, PLANS, addMonths, formatDate, formatPrice } from '../constants/subscription';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 
 const fill = (template, vars) => template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
 
-const FREE_KEYS = ['freeScoring', 'freeHistory', 'freeSeason', 'freeCustom'];
+// 커스텀 점수판은 3개 한도가 생겨 비교표로 옮겼다 — 여기는 진짜 무제한인 것만 남긴다
+const FREE_KEYS = ['freeScoring', 'freeHistory', 'freeSeason'];
 
 /**
  * 모임장 Pro 구독 안내. **결제 로직 없음 — 목업이다.**
@@ -188,28 +190,12 @@ const Subscription = () => {
           })}
         </div>
 
-        {/* Pro로 열리는 것 */}
+        {/* 무료/Pro 비교. 숫자를 그대로 보여준다 */}
         <p style={{ fontSize: 13, fontWeight: 700, color: V('--th-text'), margin: '0 0 12px' }}>
           {t('subscription', 'featuresTitle')}
         </p>
-        <div style={{
-          backgroundColor: V('--th-card'), borderRadius: 18,
-          border: `1px solid var(--th-border)`, padding: '6px 16px', marginBottom: 24,
-        }}>
-          {PRO_FEATURES.map((f, i) => (
-            <div
-              key={f.key}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 11, padding: '13px 0',
-                borderBottom: i < PRO_FEATURES.length - 1 ? `1px solid var(--th-border)` : 'none',
-              }}
-            >
-              <Check size={17} color="var(--th-primary)" strokeWidth={2.5} style={{ flexShrink: 0 }} />
-              <span style={{ fontSize: 14, color: V('--th-text'), fontWeight: 500 }}>
-                {t('paywall', f.key)}
-              </span>
-            </div>
-          ))}
+        <div style={{ marginBottom: 24 }}>
+          <PlanComparisonTable />
         </div>
 
         {/* 안 잠기는 것. 잠기는 것보다 이쪽이 더 중요하다 (문서 A-7) */}
