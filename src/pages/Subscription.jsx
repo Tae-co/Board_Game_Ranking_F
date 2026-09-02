@@ -29,10 +29,22 @@ const Subscription = () => {
   const plan = PLANS[billing];
   const isCurrentPlan = active && subscription?.billing === billing;
 
-  const handleConfirm = () => {
-    subscribe(billing);
-    setConfirming(false);
-    setDone(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleConfirm = async () => {
+    if (submitting) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      await subscribe(billing);
+      setConfirming(false);
+      setDone(true);
+    } catch (e) {
+      setError(e?.response?.data?.message || t('subscription', 'subscribeFailed'));
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   /* ── 구독 완료 ───────────────────────────────────────────── */
@@ -291,10 +303,15 @@ const Subscription = () => {
               {t('subscription', 'confirmCancelAnytime')}
             </p>
 
+            {error && (
+              <p style={{ margin: '0 0 10px', fontSize: 12.5, color: '#EF4444', textAlign: 'center' }}>{error}</p>
+            )}
             <button
               onClick={handleConfirm}
+              disabled={submitting}
               style={{
-                width: '100%', padding: '16px', borderRadius: 50, border: 'none', cursor: 'pointer',
+                width: '100%', padding: '16px', borderRadius: 50, border: 'none',
+                cursor: submitting ? 'default' : 'pointer', opacity: submitting ? 0.6 : 1,
                 background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
                 color: '#fff', fontSize: 16, fontWeight: 700,
               }}

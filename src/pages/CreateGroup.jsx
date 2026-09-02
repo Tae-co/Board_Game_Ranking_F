@@ -30,7 +30,7 @@ const CreateGroup = () => {
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [deletingGameId, setDeletingGameId] = useState(null);
   const { activeGate, openPaywall, closePaywall, track } = usePaywall();
-  const { active: proActive } = useSubscription();
+  const { active: proActive, isLoading: subLoading } = useSubscription();
   const PAGE_SIZE = 15;
 
   // 커뮤니티별로 목록이 다르므로 캐시 키에 communityId를 포함한다
@@ -68,7 +68,7 @@ const CreateGroup = () => {
   const customSheetCount = games.filter((g) => g.communityId != null).length;
 
   const handleOpenBuilder = () => {
-    if (!proActive && customSheetCount >= FREE_LIMITS.customSheets) {
+    if (!proActive && !subLoading && customSheetCount >= FREE_LIMITS.customSheets) {
       openPaywall(GATE.CUSTOM_SHEET);
       return;
     }

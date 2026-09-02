@@ -69,4 +69,5 @@ export default {
   seePlans: 'See plans',
 
   prototypeNotice: 'Prototype — nothing is actually charged.',
+  subscribeFailed: "Couldn't start the subscription. Please try again.",
 };

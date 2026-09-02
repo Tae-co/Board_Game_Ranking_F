@@ -69,4 +69,5 @@ export default {
   seePlans: '플랜 보기',
 
   prototypeNotice: '프로토타입입니다. 실제로 결제되지 않아요.',
+  subscribeFailed: '구독 처리에 실패했어요. 잠시 후 다시 시도해 주세요.',
 };

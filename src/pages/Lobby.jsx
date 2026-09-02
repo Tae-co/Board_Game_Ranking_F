@@ -49,7 +49,9 @@ const Lobby = () => {
   const [codeCopied, setCodeCopied] = useState(false);
   const [showQrPopup, setShowQrPopup] = useState(false);
   const { activeGate, openPaywall, closePaywall, track } = usePaywall();
-  const { active: proActive } = useSubscription();
+  // 구독 조회가 끝나기 전에는 게이트를 열어둔다. 로딩 중 false를 그대로 쓰면
+  // 돈 낸 사람이 페이월을 보게 된다 — 무료 사용자가 잠깐 통과하는 쪽이 낫다.
+  const { active: proActive, isLoading: subLoading } = useSubscription();
   const [roomPage, setRoomPage] = useState(0);
   const [memberPage, setMemberPage] = useState(0);
 
@@ -94,7 +96,7 @@ const Lobby = () => {
   // 8명 초과부터 초대가 Pro. 참가자의 join이 아니라 운영자가 코드를 여는 쪽을 막는다
   // — join을 막으면 게임 중에 새 사람 앞에서 게이트가 터진다.
   const handleInvite = () => {
-    if (!proActive && communityMembers.length >= FREE_LIMITS.members) {
+    if (!proActive && !subLoading && communityMembers.length >= FREE_LIMITS.members) {
       openPaywall(GATE.MEMBER_LIMIT);
       return;
     }
@@ -104,7 +106,7 @@ const Lobby = () => {
   // 게임방 3개까지 무료. 방 생성은 운영자가 게임 전후에 혼자 하는 행동이라
   // 여기서 막혀도 테이블에 앉은 사람들에겐 보이지 않는다.
   const handleCreateRoom = () => {
-    if (!proActive && rooms.length >= FREE_LIMITS.rooms) {
+    if (!proActive && !subLoading && rooms.length >= FREE_LIMITS.rooms) {
       openPaywall(GATE.ROOM_LIMIT);
       return;
     }

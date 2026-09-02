@@ -36,7 +36,7 @@ const CommunityLobby = () => {
   const [pendingJoinCode, setPendingJoinCode] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
   const { activeGate, openPaywall, closePaywall, track } = usePaywall();
-  const { active: proActive } = useSubscription();
+  const { active: proActive, isLoading: subLoading } = useSubscription();
 
   useEffect(() => {
     if (showJoinInput) {
@@ -281,7 +281,7 @@ const CommunityLobby = () => {
           {myCommunities.length > 0 && (
             <button
               onClick={() =>
-                !proActive && myCommunities.length >= FREE_LIMITS.communities
+                !proActive && !subLoading && myCommunities.length >= FREE_LIMITS.communities
                   ? openPaywall(GATE.SECOND_COMMUNITY)
                   : navigate('/create-community')
               }

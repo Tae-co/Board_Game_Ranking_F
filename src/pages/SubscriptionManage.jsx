@@ -166,7 +166,7 @@ const SubscriptionManage = () => {
 
         {canceled ? (
           <button
-            onClick={resume}
+            onClick={() => { resume(); }}
             style={{
               width: '100%', padding: '15px', borderRadius: 50, border: 'none', cursor: 'pointer',
               background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
@@ -238,7 +238,7 @@ const SubscriptionManage = () => {
               {t('subscription', 'cancelConfirmKeep')}
             </button>
             <button
-              onClick={() => { cancel(); setConfirmingCancel(false); }}
+              onClick={async () => { setConfirmingCancel(false); await cancel(); }}
               style={{
                 width: '100%', padding: '14px', borderRadius: 50, cursor: 'pointer',
                 backgroundColor: 'transparent', border: 'none',
