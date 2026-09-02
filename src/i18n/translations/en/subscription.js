@@ -20,7 +20,7 @@ export default {
   feat_members: 'Members',
   feat_rooms: 'Game rooms',
   feat_communities: 'Communities',
-  feat_customSheets: 'Custom score sheets',
+  feat_customSheets: 'Custom sheets',
   feat_coAdmin: 'Co-admins',
   feat_attendance: 'Attendance',
   feat_dues: 'Dues ledger',
