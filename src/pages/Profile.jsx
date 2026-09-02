@@ -6,7 +6,7 @@ import { setAccessToken } from '../api/axios';
 import { updateProfileImage as updateProfileImageApi, updateNickname as updateNicknameApi, deleteMember } from '../api/services/members';
 import { uploadProfileImage } from '../api/uploadImage';
 import { clearAuthSession, getAuthUserId, getNickname, setNickname as persistNickname } from '../auth/storage';
-import { setProfileImage, getMyCommunity } from '../utils/storage';
+import { setProfileImage } from '../utils/storage';
 import { useSubscription } from '../hooks/useSubscription';
 import { BILLING, PLANS, formatDate, formatPrice } from '../constants/subscription';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -23,10 +23,8 @@ const Profile = () => {
   const queryClient = useQueryClient();
   const userId = getAuthUserId();
 
-  // 구독은 커뮤니티당이라 프로필에서도 "내가 운영하는 커뮤니티"의 구독을 보여준다.
-  // 운영하는 커뮤니티가 없으면 애초에 살 물건이 아니므로 카드를 띄우지 않는다.
-  const myCommunity = getMyCommunity();
-  const { active: proActive, canceled, expiresAt } = useSubscription(myCommunity?.communityId ?? null);
+  // 구독은 계정 단위라 프로필이 자연스러운 자리다. 커뮤니티와 무관하게 항상 띄운다.
+  const { active: proActive, canceled, expiresAt } = useSubscription();
 
   const { data: profileData } = useQuery({
     queryKey: ['profile', userId],
@@ -392,47 +390,44 @@ const Profile = () => {
           </div>
         )}
 
-        {/* 모임장 Pro. 구독 중이면 상태를, 아니면 가격을 보여준다.
-            운영하는 커뮤니티가 없으면 살 물건이 아니라 아예 안 띄운다. */}
-        {myCommunity && (
-          <button
-            onClick={() => navigate('/subscription/manage')}
-            style={{
-              width: '100%', display: 'flex', alignItems: 'center', gap: 13,
-              borderRadius: 18, padding: '17px 18px', cursor: 'pointer', textAlign: 'left',
-              background: proActive
-                ? 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)'
-                : V('--th-card'),
-              border: proActive ? 'none' : `1px solid var(--th-border)`,
-              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-            }}
-          >
-            <div style={{
-              width: 38, height: 38, borderRadius: 12, flexShrink: 0,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backgroundColor: proActive ? 'rgba(255,255,255,0.2)' : V('--th-bg-deep'),
+        {/* 모임장 Pro. 구독 중이면 상태를, 아니면 가격을 보여준다. */}
+        <button
+          onClick={() => navigate('/subscription/manage')}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: 13,
+            borderRadius: 18, padding: '17px 18px', cursor: 'pointer', textAlign: 'left',
+            background: proActive
+              ? 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)'
+              : V('--th-card'),
+            border: proActive ? 'none' : `1px solid var(--th-border)`,
+            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+          }}
+        >
+          <div style={{
+            width: 38, height: 38, borderRadius: 12, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backgroundColor: proActive ? 'rgba(255,255,255,0.2)' : V('--th-bg-deep'),
+          }}>
+            <Crown size={19} color={proActive ? '#fff' : 'var(--th-text-sub)'} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              margin: '0 0 3px', fontSize: 14, fontWeight: 700,
+              color: proActive ? '#fff' : V('--th-text'),
             }}>
-              <Crown size={19} color={proActive ? '#fff' : 'var(--th-text-sub)'} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{
-                margin: '0 0 3px', fontSize: 14, fontWeight: 700,
-                color: proActive ? '#fff' : V('--th-text'),
-              }}>
-                {t('subscription', 'title')}
-              </p>
-              <p style={{
-                margin: 0, fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                color: proActive ? 'rgba(255,255,255,0.85)' : V('--th-text-sub'),
-              }}>
-                {proActive
-                  ? `${myCommunity.name} · ${t('subscription', canceled ? 'expiresOn' : 'nextBilling')} ${formatDate(expiresAt, lang)}`
-                  : `${t('subscription', 'statusNone')} · ${t('subscription', 'fromPrice').replace('{price}', formatPrice(PLANS[BILLING.MONTHLY].price, lang))}`}
-              </p>
-            </div>
-            <ChevronRight size={18} color={proActive ? 'rgba(255,255,255,0.9)' : 'var(--th-text-sub)'} />
-          </button>
-        )}
+              {t('subscription', 'title')}
+            </p>
+            <p style={{
+              margin: 0, fontSize: 12.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+              color: proActive ? 'rgba(255,255,255,0.85)' : V('--th-text-sub'),
+            }}>
+              {proActive
+                ? `${t('subscription', canceled ? 'statusCanceled' : 'statusActive')} · ${t('subscription', canceled ? 'expiresOn' : 'nextBilling')} ${formatDate(expiresAt, lang)}`
+                : `${t('subscription', 'statusNone')} · ${t('subscription', 'fromPrice').replace('{price}', formatPrice(PLANS[BILLING.MONTHLY].price, lang))}`}
+            </p>
+          </div>
+          <ChevronRight size={18} color={proActive ? 'rgba(255,255,255,0.9)' : 'var(--th-text-sub)'} />
+        </button>
 
         {/* Account Settings */}
         <div>

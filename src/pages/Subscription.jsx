@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, Crown, X } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import PlanComparisonTable from '../components/shared/PlanComparisonTable';
 import { useSubscription } from '../hooks/useSubscription';
-import { getMyCommunity } from '../utils/storage';
 import { BILLING, PLANS, addMonths, formatDate, formatPrice } from '../constants/subscription';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -21,22 +20,11 @@ const FREE_KEYS = ['freeScoring', 'freeHistory', 'freeSeason'];
 const Subscription = () => {
   const navigate = useNavigate();
   const { t, lang } = useLanguage();
-  // 구독은 모임장이 자기 커뮤니티에 거는 것이라 myCommunity를 쓴다.
-  // 구독 관리 화면도 같은 키를 봐야 한다 — selectedCommunity(=지금 보고 있는 커뮤니티)와
-  // 섞으면 구독해놓고 "구독 중이 아니에요"가 뜬다.
-  const communityId = getMyCommunity()?.communityId ?? null;
-
-  const { active, subscription, subscribe } = useSubscription(communityId);
+  const { active, subscription, subscribe } = useSubscription();
 
   const [billing, setBilling] = useState(subscription?.billing ?? BILLING.MONTHLY);
   const [confirming, setConfirming] = useState(false);
   const [done, setDone] = useState(false);
-
-  // 관리 중인 커뮤니티가 없으면 구독을 저장할 곳이 없다.
-  // 막지 않으면 저장은 no-op인데 완료 화면만 떠서 "구독했는데 구독 중이 아님"이 된다.
-  useEffect(() => {
-    if (!communityId) navigate('/community', { replace: true });
-  }, [communityId, navigate]);
 
   const plan = PLANS[billing];
   const isCurrentPlan = active && subscription?.billing === billing;

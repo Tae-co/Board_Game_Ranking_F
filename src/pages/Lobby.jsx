@@ -16,6 +16,7 @@ import { findFreshRecap, periodMonthLabel } from '../utils/seasonUtils';
 import PaywallSheet from '../components/paywall/PaywallSheet';
 import { usePaywall } from '../hooks/usePaywall';
 import { GATE, FREE_LIMITS } from '../constants/gates';
+import { useSubscription } from '../hooks/useSubscription';
 import { V } from '../utils/cssUtils';
 import RoomCard from '../components/lobby/RoomCard';
 import JoinCodeSheet from '../components/lobby/JoinCodeSheet';
@@ -48,6 +49,7 @@ const Lobby = () => {
   const [codeCopied, setCodeCopied] = useState(false);
   const [showQrPopup, setShowQrPopup] = useState(false);
   const { activeGate, openPaywall, closePaywall, track } = usePaywall();
+  const { active: proActive } = useSubscription();
   const [roomPage, setRoomPage] = useState(0);
   const [memberPage, setMemberPage] = useState(0);
 
@@ -92,7 +94,7 @@ const Lobby = () => {
   // 8명 초과부터 초대가 Pro. 참가자의 join이 아니라 운영자가 코드를 여는 쪽을 막는다
   // — join을 막으면 게임 중에 새 사람 앞에서 게이트가 터진다.
   const handleInvite = () => {
-    if (communityMembers.length >= FREE_LIMITS.members) {
+    if (!proActive && communityMembers.length >= FREE_LIMITS.members) {
       openPaywall(GATE.MEMBER_LIMIT);
       return;
     }
@@ -102,7 +104,7 @@ const Lobby = () => {
   // 게임방 3개까지 무료. 방 생성은 운영자가 게임 전후에 혼자 하는 행동이라
   // 여기서 막혀도 테이블에 앉은 사람들에겐 보이지 않는다.
   const handleCreateRoom = () => {
-    if (rooms.length >= FREE_LIMITS.rooms) {
+    if (!proActive && rooms.length >= FREE_LIMITS.rooms) {
       openPaywall(GATE.ROOM_LIMIT);
       return;
     }

@@ -14,6 +14,7 @@ import { setSelectedCommunity, setMyCommunity, removeMyCommunity, recordCommunit
 import PaywallSheet from '../components/paywall/PaywallSheet';
 import { usePaywall } from '../hooks/usePaywall';
 import { GATE, FREE_LIMITS } from '../constants/gates';
+import { useSubscription } from '../hooks/useSubscription';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -35,6 +36,7 @@ const CommunityLobby = () => {
   const [pendingJoinCode, setPendingJoinCode] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
   const { activeGate, openPaywall, closePaywall, track } = usePaywall();
+  const { active: proActive } = useSubscription();
 
   useEffect(() => {
     if (showJoinInput) {
@@ -279,7 +281,7 @@ const CommunityLobby = () => {
           {myCommunities.length > 0 && (
             <button
               onClick={() =>
-                myCommunities.length >= FREE_LIMITS.communities
+                !proActive && myCommunities.length >= FREE_LIMITS.communities
                   ? openPaywall(GATE.SECOND_COMMUNITY)
                   : navigate('/create-community')
               }

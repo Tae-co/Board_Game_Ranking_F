@@ -54,7 +54,7 @@ const CommunitySettings = () => {
   const [region, setRegion] = useState('South Korea');
   const [selectedIds, setSelectedIds] = useState(new Set());
   const { activeGate, openPaywall, closePaywall, track } = usePaywall();
-  const { active: proActive } = useSubscription(communityId);
+  const { active: proActive } = useSubscription();
   const [searchQuery, setSearchQuery] = useState('');
   const [adminPage, setAdminPage] = useState(0);
   const ADMIN_PER_PAGE = 10;
@@ -110,7 +110,7 @@ const CommunitySettings = () => {
 
   const toggleAdmin = (memberId) => {
     // 추가만 Pro 게이트. 해제는 그대로 둔다 — 이미 붙은 관리자를 인질로 잡지 않는다.
-    if (!selectedIds.has(memberId)) {
+    if (!proActive && !selectedIds.has(memberId)) {
       openPaywall(GATE.CO_ADMIN);
       return;
     }

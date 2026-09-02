@@ -80,25 +80,31 @@ export const notifySelectedCommunityUpdated = () => {
 /**
  * 모임장 Pro 구독 (UI 프로토타입 — 실제 결제 없음).
  *
- * 과금 단위가 커뮤니티당이라 커뮤니티별로 저장한다 (문서: "과금 단위 = 커뮤니티(그룹)당").
- * 형태: { [communityId]: { billing, startedAt, canceledAt } }
+ * **계정(memberId) 단위다.** 커뮤니티 단위로 잡으면 "Pro = 커뮤니티 무제한"이라는
+ * 약속과 모순이고(커뮤니티마다 돈을 내는데 무제한일 수 없다), 아직 존재하지 않는
+ * 2번째 커뮤니티의 구독을 어디에 매달지도 정의되지 않는다.
+ *
+ * 키를 memberId로 두는 이유: 한 기기에서 계정을 바꿔 로그인해도
+ * 남의 구독 상태가 새어 보이지 않는다.
+ *
+ * 형태: { [memberId]: { billing, startedAt, canceledAt } }
  * canceledAt이 있으면 해지 예약 상태 — 남은 기간까지는 계속 이용한다.
  */
-const SUBSCRIPTION_KEY = 'proSubscriptions';
+const SUBSCRIPTION_KEY = 'proSubscriptionsByMember';
 
 const readSubscriptions = () => {
   try { return JSON.parse(localStorage.getItem(SUBSCRIPTION_KEY)) || {}; } catch { return {}; }
 };
 
-export const getSubscription = (communityId) => {
-  if (communityId == null) return null;
-  return readSubscriptions()[communityId] ?? null;
+export const getSubscription = (memberId) => {
+  if (memberId == null) return null;
+  return readSubscriptions()[memberId] ?? null;
 };
 
-export const setSubscription = (communityId, subscription) => {
-  if (communityId == null) return;
+export const setSubscription = (memberId, subscription) => {
+  if (memberId == null) return;
   const all = readSubscriptions();
-  if (subscription == null) delete all[communityId];
-  else all[communityId] = subscription;
+  if (subscription == null) delete all[memberId];
+  else all[memberId] = subscription;
   localStorage.setItem(SUBSCRIPTION_KEY, JSON.stringify(all));
 };

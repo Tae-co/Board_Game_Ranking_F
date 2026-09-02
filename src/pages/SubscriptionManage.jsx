@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CreditCard, Crown } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import { useSubscription } from '../hooks/useSubscription';
-import { getMyCommunity } from '../utils/storage';
 import { BILLING, formatDate, formatPrice } from '../constants/subscription';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -20,11 +19,7 @@ const SubscriptionManage = () => {
   const navigate = useNavigate();
   const { t, lang } = useLanguage();
 
-  // Subscription.jsx와 반드시 같은 키를 봐야 한다
-  const community = getMyCommunity();
-  const communityId = community?.communityId ?? null;
-
-  const { subscription, plan, active, canceled, expiresAt, cancel, resume } = useSubscription(communityId);
+  const { subscription, plan, active, canceled, expiresAt, cancel, resume } = useSubscription();
   const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   const header = (
@@ -117,9 +112,6 @@ const SubscriptionManage = () => {
               {t('subscription', yearly ? 'perYear' : 'perMonth')}
             </span>
           </p>
-          {community?.name && (
-            <p style={{ margin: 0, fontSize: 13, opacity: 0.85 }}>{community.name}</p>
-          )}
         </div>
 
         {/* 해지 예약 안내 */}
