@@ -27,6 +27,7 @@ export const PRO_FEATURES = [
   { key: 'multipleRooms', gate: 'ROOM_LIMIT' },
   { key: 'multipleCommunities', gate: 'SECOND_COMMUNITY' },
   { key: 'coAdmin', gate: 'CO_ADMIN' },
+  { key: 'customSheets', gate: 'CUSTOM_SHEET' },
   { key: 'attendance', gate: null },
   { key: 'dues', gate: null },
 ];

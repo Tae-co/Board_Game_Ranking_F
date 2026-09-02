@@ -6,11 +6,13 @@ export default {
   reason_ROOM_LIMIT: 'Free plan includes 3 game rooms',
   reason_SECOND_COMMUNITY: 'Free plan includes one community',
   reason_CO_ADMIN: 'Co-admins are a Pro feature',
+  reason_CUSTOM_SHEET: 'Free plan includes 3 custom score sheets',
 
   unlimitedMembers: 'Unlimited members',
   multipleRooms: 'Unlimited game rooms',
   multipleCommunities: 'Run multiple communities',
   coAdmin: 'Add co-admins',
+  customSheets: 'More custom score sheets',
   attendance: 'Attendance / who is coming this week',
   dues: 'Dues ledger',
 

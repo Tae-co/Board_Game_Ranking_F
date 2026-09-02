@@ -7,11 +7,13 @@ export default {
   reason_ROOM_LIMIT: '무료로는 게임방 3개까지예요',
   reason_SECOND_COMMUNITY: '무료로는 커뮤니티 1개를 만들 수 있어요',
   reason_CO_ADMIN: '공동 관리자는 Pro 기능이에요',
+  reason_CUSTOM_SHEET: '무료로는 커스텀 점수판 3개까지예요',
 
   unlimitedMembers: '참석자 수 무제한',
   multipleRooms: '게임방 무제한',
   multipleCommunities: '커뮤니티 여러 개 운영',
   coAdmin: '공동 관리자 추가',
+  customSheets: '커스텀 점수판 더 만들기',
   attendance: '출석 체크 / 이번 주 참석 인원 파악',
   dues: '회비 납부 장부',
 

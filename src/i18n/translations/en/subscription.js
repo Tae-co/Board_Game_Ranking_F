@@ -15,7 +15,7 @@ export default {
   freeScoring: 'Score entry and rating updates',
   freeHistory: 'Match history (it never disappears, even unsubscribed)',
   freeSeason: 'Season recaps and share cards',
-  freeCustom: 'Unlimited custom score sheets',
+  freeCustom: 'Up to 3 custom score sheets',
 
   subscribeCta: 'Subscribe',
   confirmTitle: 'Confirm subscription',
@@ -36,6 +36,7 @@ export default {
   currentPlan: 'Current plan',
   statusActive: 'Active',
   statusNone: 'Free',
+  fromPrice: 'From {price}/mo',
   statusCanceled: 'Cancels at period end',
   nextBilling: 'Next charge',
   expiresOn: 'Access until',

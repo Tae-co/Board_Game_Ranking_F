@@ -5,6 +5,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createRoom } from '../api/services/rooms';
 import { getGames, deleteGame } from '../api/services/games';
 import CustomGameBuilder from '../components/lobby/CustomGameBuilder';
+import PaywallSheet from '../components/paywall/PaywallSheet';
+import { usePaywall } from '../hooks/usePaywall';
+import { GATE, FREE_LIMITS } from '../constants/gates';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import { getNickname } from '../auth/storage';
@@ -25,6 +28,7 @@ const CreateGroup = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [deletingGameId, setDeletingGameId] = useState(null);
+  const { activeGate, openPaywall, closePaywall, track } = usePaywall();
   const PAGE_SIZE = 15;
 
   // 커뮤니티별로 목록이 다르므로 캐시 키에 communityId를 포함한다
@@ -56,6 +60,18 @@ const CreateGroup = () => {
 
   // 커스텀 점수판은 커뮤니티 어드민만 만들 수 있다 (백엔드도 동일하게 막는다)
   const canCreateGame = isCommunityAdmin && !!communityId;
+
+  // communityId가 있는 게임이 이 커뮤니티의 커스텀 점수판이다 (공식 게임은 null).
+  // 세션 중이 아니라 방 만들기 단계라 게이트를 걸어도 성역을 침범하지 않는다.
+  const customSheetCount = games.filter((g) => g.communityId != null).length;
+
+  const handleOpenBuilder = () => {
+    if (customSheetCount >= FREE_LIMITS.customSheets) {
+      openPaywall(GATE.CUSTOM_SHEET);
+      return;
+    }
+    setIsBuilderOpen(true);
+  };
 
   const handleDeleteGame = async (game) => {
     if (!window.confirm(t('lobby', 'customDeleteConfirm').replace('{n}', game.name))) return;
@@ -94,6 +110,9 @@ const CreateGroup = () => {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
 
+      {activeGate && (
+        <PaywallSheet gateKey={activeGate} onClose={closePaywall} onTrack={track} />
+      )}
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
@@ -242,7 +261,7 @@ const CreateGroup = () => {
                 </p>
               )}
               <button
-                onClick={() => setIsBuilderOpen(true)}
+                onClick={handleOpenBuilder}
                 style={{
                   width: '100%', marginTop: '12px', padding: '12px', borderRadius: '12px',
                   backgroundColor: 'transparent', border: `1px dashed var(--th-border)`,

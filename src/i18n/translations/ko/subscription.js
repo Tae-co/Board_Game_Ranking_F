@@ -15,7 +15,7 @@ export default {
   freeScoring: '점수 입력 · 랭킹 계산',
   freeHistory: '기록 조회 (구독을 끊어도 안 사라집니다)',
   freeSeason: '시즌 결산 · 공유 카드',
-  freeCustom: '커스텀 점수판 무제한',
+  freeCustom: '커스텀 점수판 3개까지',
 
   subscribeCta: '구독하기',
   confirmTitle: '구독 내용 확인',
@@ -36,6 +36,7 @@ export default {
   currentPlan: '이용 중인 플랜',
   statusActive: '이용 중',
   statusNone: '무료',
+  fromPrice: '월 {price}부터',
   statusCanceled: '해지 예약됨',
   nextBilling: '다음 결제일',
   expiresOn: '이용 종료일',
