@@ -15,9 +15,7 @@ export default {
   attendance: '출석 체크 / 이번 주 참석 인원 파악',
   dues: '회비 납부 장부',
 
-  registerInterest: '관심 등록하기',
-  registered: '관심이 등록되었어요',
-  registeredDesc: '준비되면 가장 먼저 알려드릴게요',
-  notForSaleYet: '아직 판매하지 않는 기능입니다. 관심 등록만 받고 있어요.',
+  priceHint: '연간 결제 시 {price} · 2개월 무료',
+
   freeForever: '점수 입력·랭킹·기록 조회는 계속 무료예요.',
 };

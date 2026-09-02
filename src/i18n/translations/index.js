@@ -11,6 +11,7 @@ import koCommunity from './ko/community';
 import koAdmin from './ko/admin';
 import koSeason from './ko/season';
 import koPaywall from './ko/paywall';
+import koSubscription from './ko/subscription';
 
 import enCommon from './en/common';
 import enLogin from './en/login';
@@ -25,6 +26,7 @@ import enCommunity from './en/community';
 import enAdmin from './en/admin';
 import enSeason from './en/season';
 import enPaywall from './en/paywall';
+import enSubscription from './en/subscription';
 
 const translations = {
   ko: {
@@ -41,6 +43,7 @@ const translations = {
     admin: koAdmin,
     season: koSeason,
     paywall: koPaywall,
+    subscription: koSubscription,
   },
   en: {
     common: enCommon,
@@ -56,6 +59,7 @@ const translations = {
     admin: enAdmin,
     season: enSeason,
     paywall: enPaywall,
+    subscription: enSubscription,
   },
 };
 

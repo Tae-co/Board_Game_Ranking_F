@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Camera, Search, Check, Trash2, Copy, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Camera, Search, Check, Trash2, Copy, CheckCheck, Crown, ChevronRight } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { getCommunity, getCommunityMembers, updateCommunity, deleteCommunity } from '../api/services/communities';
 import { uploadImage } from '../api/uploadImage';
@@ -14,6 +14,7 @@ import { getMyCommunity, setMyCommunity, removeMyCommunity, getSelectedCommunity
 import PaywallSheet from '../components/paywall/PaywallSheet';
 import { usePaywall } from '../hooks/usePaywall';
 import { GATE } from '../constants/gates';
+import { useSubscription } from '../hooks/useSubscription';
 
 const REGIONS = [...REGION_NAMES, 'Other'];
 
@@ -53,6 +54,7 @@ const CommunitySettings = () => {
   const [region, setRegion] = useState('South Korea');
   const [selectedIds, setSelectedIds] = useState(new Set());
   const { activeGate, openPaywall, closePaywall, track } = usePaywall();
+  const { active: proActive } = useSubscription(communityId);
   const [searchQuery, setSearchQuery] = useState('');
   const [adminPage, setAdminPage] = useState(0);
   const ADMIN_PER_PAGE = 10;
@@ -318,6 +320,36 @@ const CommunitySettings = () => {
             </div>
           </div>
         )}
+
+        {/* 구독 관리 진입점. 과금 단위가 커뮤니티당이라 커뮤니티 설정 안에 둔다. */}
+        <button
+          onClick={() => navigate('/subscription/manage')}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', gap: '12px',
+            backgroundColor: V('--th-card'), borderRadius: '20px',
+            border: `1px solid var(--th-border)`, padding: '18px 20px',
+            marginBottom: '20px', cursor: 'pointer', textAlign: 'left',
+          }}
+        >
+          <div style={{
+            width: 38, height: 38, borderRadius: 12, flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: proActive
+              ? 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)'
+              : V('--th-bg-deep'),
+          }}>
+            <Crown size={19} color={proActive ? '#fff' : 'var(--th-text-sub)'} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ margin: '0 0 2px', fontSize: '14px', fontWeight: '700', color: V('--th-text') }}>
+              {t('subscription', 'title')}
+            </p>
+            <p style={{ margin: 0, fontSize: '12.5px', color: proActive ? V('--th-primary') : V('--th-text-sub'), fontWeight: proActive ? 700 : 500 }}>
+              {t('subscription', proActive ? 'statusActive' : 'statusNone')}
+            </p>
+          </div>
+          <ChevronRight size={19} color="var(--th-text-sub)" />
+        </button>
 
         {/* Basic info card */}
         <div style={{

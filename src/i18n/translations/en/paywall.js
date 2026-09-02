@@ -14,9 +14,7 @@ export default {
   attendance: 'Attendance / who is coming this week',
   dues: 'Dues ledger',
 
-  registerInterest: 'Register interest',
-  registered: 'Interest registered',
-  registeredDesc: "We'll let you know first when it's ready",
-  notForSaleYet: 'Not on sale yet. We are only collecting interest.',
+  priceHint: '{price} billed yearly · 2 months free',
+
   freeForever: 'Scoring, rankings and history stay free.',
 };

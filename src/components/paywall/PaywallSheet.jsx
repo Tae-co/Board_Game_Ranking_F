@@ -1,35 +1,29 @@
-import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Check, X } from 'lucide-react';
-import { GATE, GATE_ACTION } from '../../constants/gates';
+import { GATE_ACTION } from '../../constants/gates';
+import { BILLING, PLANS, PRO_FEATURES, formatPrice } from '../../constants/subscription';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { V } from '../../utils/cssUtils';
 
+const fill = (template, vars) => template.replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? '');
+
 /**
- * 페이크 도어 페이월. 실제 결제는 없고 "관심 등록"까지만 받는다.
+ * 게이트에 막혔을 때 뜨는 시트. **결제 로직은 없다 — 구독 페이지도 목업이다.**
  *
  * 전부 규모가 커졌을 때 운영자가 혼자 감당하는 것들이다. 랭킹·기록·점수판은
  * 여기에 올리지 않는다 — 유료 상품이 아니라 사람을 다시 오게 만드는 엔진이다.
- * attendance/dues는 아직 코드가 없다. 어느 쪽에 손이 가는지 재는 항목이다.
+ *
+ * 목록은 구독 안내 페이지와 PRO_FEATURES를 공유한다. 두 곳에 따로 두면 어긋난다.
  */
-const FEATURES = [
-  { key: 'unlimitedMembers', gate: GATE.MEMBER_LIMIT },
-  { key: 'multipleRooms', gate: GATE.ROOM_LIMIT },
-  { key: 'multipleCommunities', gate: GATE.SECOND_COMMUNITY },
-  { key: 'coAdmin', gate: GATE.CO_ADMIN },
-  { key: 'attendance', gate: null },
-  { key: 'dues', gate: null },
-];
-
 const PaywallSheet = ({ gateKey, onClose, onTrack }) => {
-  const { t } = useLanguage();
-  const [registered, setRegistered] = useState(false);
+  const navigate = useNavigate();
+  const { t, lang } = useLanguage();
 
-  const handleInterest = () => {
+  // 게이트에서 구독 페이지로 넘어간 것 자체가 지불 의사 신호다 (전환율 = INTEREST / HIT)
+  const handleSubscribe = () => {
     onTrack?.(gateKey, GATE_ACTION.INTEREST);
-    setRegistered(true);
+    navigate('/subscription');
   };
-
-  const reasonKey = `reason_${gateKey}`;
 
   return (
     <div
@@ -60,17 +54,35 @@ const PaywallSheet = ({ gateKey, onClose, onTrack }) => {
 
         {/* 왜 막혔는지를 먼저 말한다. 게이트마다 문구가 다르다. */}
         <p style={{ fontSize: 13, color: V('--th-text-sub'), margin: '0 0 6px' }}>
-          {t('paywall', reasonKey)}
+          {t('paywall', `reason_${gateKey}`)}
         </p>
         <h3 style={{ fontSize: 20, fontWeight: 800, color: V('--th-text'), margin: '0 0 6px' }}>
           {t('paywall', 'title')}
         </h3>
-        <p style={{ fontSize: 13, color: V('--th-text-sub'), margin: '0 0 20px', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 13, color: V('--th-text-sub'), margin: '0 0 18px', lineHeight: 1.5 }}>
           {t('paywall', 'subtitle')}
         </p>
 
-        <div style={{ marginBottom: 20 }}>
-          {FEATURES.map((f) => {
+        {/* 가격 */}
+        <div style={{
+          display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6,
+          marginBottom: 4,
+        }}>
+          <span style={{ fontSize: 26, fontWeight: 800, color: V('--th-text') }}>
+            {formatPrice(PLANS[BILLING.MONTHLY].price, lang)}
+          </span>
+          <span style={{ fontSize: 14, fontWeight: 600, color: V('--th-text-sub') }}>
+            {t('subscription', 'perMonth')}
+          </span>
+        </div>
+        <p style={{ margin: '0 0 18px', fontSize: 12, color: V('--th-primary'), textAlign: 'center', fontWeight: 600 }}>
+          {fill(t('paywall', 'priceHint'), {
+            price: formatPrice(PLANS[BILLING.YEARLY].price, lang),
+          })}
+        </p>
+
+        <div style={{ marginBottom: 18 }}>
+          {PRO_FEATURES.map((f) => {
             const highlighted = f.gate === gateKey;
             return (
               <div
@@ -102,34 +114,19 @@ const PaywallSheet = ({ gateKey, onClose, onTrack }) => {
           {t('paywall', 'freeForever')}
         </p>
 
-        {registered ? (
-          <div style={{
-            padding: '15px', borderRadius: 50, textAlign: 'center',
-            backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
-          }}>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: V('--th-text') }}>
-              {t('paywall', 'registered')}
-            </p>
-            <p style={{ margin: '4px 0 0', fontSize: 12, color: V('--th-text-sub') }}>
-              {t('paywall', 'registeredDesc')}
-            </p>
-          </div>
-        ) : (
-          <button
-            onClick={handleInterest}
-            style={{
-              width: '100%', padding: '15px', borderRadius: 50, border: 'none', cursor: 'pointer',
-              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-              color: '#fff', fontSize: 15, fontWeight: 700,
-            }}
-          >
-            {t('paywall', 'registerInterest')}
-          </button>
-        )}
+        <button
+          onClick={handleSubscribe}
+          style={{
+            width: '100%', padding: '15px', borderRadius: 50, border: 'none', cursor: 'pointer',
+            background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+            color: '#fff', fontSize: 15, fontWeight: 700,
+          }}
+        >
+          {t('subscription', 'subscribeCta')}
+        </button>
 
-        {/* 아직 파는 물건이 아니라는 걸 분명히 한다 (앱 심사 대응 겸) */}
         <p style={{ margin: '12px 0 0', fontSize: 11, color: V('--th-text-sub'), textAlign: 'center', lineHeight: 1.5 }}>
-          {t('paywall', 'notForSaleYet')}
+          {t('subscription', 'prototypeNotice')}
         </p>
       </div>
     </div>
