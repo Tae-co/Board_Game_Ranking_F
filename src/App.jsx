@@ -6,6 +6,8 @@ import { App as CapApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { setAccessToken, ensureToken } from './api/axios';
 import { AUTH_CHANGED_EVENT, enforceSessionExpiry, getStoredAuth, saveAuthSession } from './auth/storage';
+import { EVENTS, logEvent } from './api/services/events';
+import { useRouteTracking } from './hooks/useRouteTracking';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
 
@@ -26,6 +28,12 @@ const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
 const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
 const CommunityMemberManage = lazy(() => import('./pages/CommunityMemberManage'));
+
+// 라우트 진입 계측. useLocation을 쓰므로 BrowserRouter 안에 있어야 한다.
+const RouteTracker = () => {
+  useRouteTracking();
+  return null;
+};
 
 const RouteFallback = () => (
   <div
@@ -99,6 +107,11 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // 이게 없으면 "앱은 열었는데 아무것도 안 한 유저"가 어떤 테이블에도 안 남는다.
+    logEvent(EVENTS.APP_OPENED);
+  }, []);
+
+  useEffect(() => {
     // 앱 시작 시 저장된 refresh token으로 access token 복구 (Admin.jsx와 동일한 promise 공유)
     ensureToken();
 
@@ -125,6 +138,7 @@ function App() {
     <ThemeProvider>
     <LanguageProvider>
     <BrowserRouter>
+      <RouteTracker />
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0,
         height: 'env(safe-area-inset-top)',
