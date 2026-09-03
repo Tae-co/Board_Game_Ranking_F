@@ -3,7 +3,7 @@ import { App as CapApp } from '@capacitor/app';
 import api from '../axios';
 import { getAnonId } from '../../utils/storage';
 
-// 백엔드 EventName enum과 1:1로 맞춘다. 여기 없는 이름은 서버가 400으로 거절한다.
+// 백엔드 EventName enum과 1:1로 맞춘다. 여기 없는 이름은 서버가 202로 받고 조용히 버린다.
 export const EVENTS = Object.freeze({
   COMMUNITY_CREATE_STARTED: 'COMMUNITY_CREATE_STARTED',
   COMMUNITY_CREATE_COMPLETED: 'COMMUNITY_CREATE_COMPLETED',
