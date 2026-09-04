@@ -4,6 +4,7 @@ import { ArrowLeft, Check, Search, Users } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { getRoom, getRoomMembers } from '../api/services/rooms';
 import { getGames } from '../api/services/games';
+import { useSelectedCommunity } from '../hooks/useSelectedCommunity';
 import { useLanguage } from '../i18n/LanguageContext';
 import { usePresence } from '../hooks/usePresence';
 import { V } from '../utils/cssUtils';
@@ -11,6 +12,8 @@ import { getNickname, getAuthUserId } from '../auth/storage';
 
 const GameSelect = () => {
   const { roomId } = useParams();
+  const { selectedCommunity } = useSelectedCommunity();
+  const communityId = selectedCommunity?.communityId ?? null;
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -24,8 +27,10 @@ const GameSelect = () => {
   });
 
   const { data: games = [] } = useQuery({
-    queryKey: ['games'],
-    queryFn: getGames,
+    // 커스텀 게임이 빠지면 currentGame이 undefined가 되어 인원 제한 검증과
+    // 게임 이름이 통째로 사라진다.
+    queryKey: ['games', communityId],
+    queryFn: () => getGames(communityId),
     staleTime: 1000 * 60 * 30,
   });
 

@@ -275,7 +275,7 @@ const ScoreSheet = () => {
       setIsSubmitting(true);
       const res = editMatchId
         ? await updateMatch(editMatchId, { boardGameId, roomId, participants })
-        : await createMatch({ boardGameId, roomId, participants }, 'score_sheet');
+        : await createMatch({ boardGameId, roomId, participants });
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['rankings', String(roomId)] }),
         queryClient.invalidateQueries({ queryKey: ['matches', String(roomId)] }),

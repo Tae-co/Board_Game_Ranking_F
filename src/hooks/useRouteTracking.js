@@ -11,9 +11,8 @@ import { EVENTS, logEvent } from '../api/services/events';
 const ROUTE_EVENTS = [
   [/^\/create-community$/, () => ({ eventName: EVENTS.COMMUNITY_CREATE_STARTED })],
   [/^\/create-group$/, () => ({ eventName: EVENTS.ROOM_CREATE_STARTED })],
-  [/^\/match-form\/(\d+)$/, m => ({ eventName: EVENTS.MATCH_FORM_OPENED, roomId: Number(m[1]) })],
-  [/^\/ranking\/(\d+)$/, m => ({ eventName: EVENTS.RANKING_VIEWED, roomId: Number(m[1]) })],
-  [/^\/invite\/(\d+)$/, m => ({ eventName: EVENTS.INVITE_SCREEN_OPENED, roomId: Number(m[1]) })],
+  // 경로 이름은 /invite지만 실제로는 그룹 로비다 — 랭킹·매치기록·기록 시작이 다 여기 있다.
+  [/^\/invite\/(\d+)$/, m => ({ eventName: EVENTS.GROUP_LOBBY_OPENED, roomId: Number(m[1]) })],
   [/^\/join$/, () => ({ eventName: EVENTS.INVITE_LANDING_OPENED })],
 ];
 

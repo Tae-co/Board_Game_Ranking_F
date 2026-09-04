@@ -16,9 +16,7 @@ import './App.css';
 const Login = lazy(() => import('./pages/Login'));
 const Lobby = lazy(() => import('./pages/Lobby'));
 const Invite = lazy(() => import('./pages/Invite'));
-const MatchForm = lazy(() => import('./pages/MatchForm'));
 const ScoreSheet = lazy(() => import('./pages/ScoreSheet'));
-const Ranking = lazy(() => import('./pages/Ranking'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
@@ -192,9 +190,7 @@ function App() {
             <Route path="/community-members" element={isAuthenticated ? <CommunityMemberManage /> : <Navigate to="/login" replace />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
             <Route path="/invite/:roomId" element={isAuthenticated ? <Invite /> : <Navigate to="/login" replace />} />
-            <Route path="/match-form/:roomId" element={isAuthenticated ? <MatchForm /> : <Navigate to="/login" replace />} />
             <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
-            <Route path="/ranking/:roomId" element={isAuthenticated ? <Ranking /> : <Navigate to="/login" replace />} />
 
             {/* QR 코드 초대 링크 */}
             <Route path="/join" element={<JoinByQR />} />
