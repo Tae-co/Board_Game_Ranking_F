@@ -1,4 +1,5 @@
 import api from '../axios';
+import { EVENTS, logEvent } from './events';
 
 export const getRoom = (roomId) => api.get(`/rooms/${roomId}`).then(r => r.data);
 export const getRoomMembers = (roomId) => api.get(`/rooms/${roomId}/members`).then(r => r.data || []);
@@ -6,7 +7,14 @@ export const getMyRooms = (userId) => api.get(`/rooms/my/${userId}`).then(r => r
 export const getCommunityRooms = (communityId, userId) =>
   api.get(`/communities/${communityId}/rooms?memberId=${userId}`).then(r => r.data);
 
-export const createRoom = (payload) => api.post('/rooms', payload).then(r => r.data);
+export const createRoom = (payload) => api.post('/rooms', payload).then(r => {
+  logEvent(EVENTS.ROOM_CREATE_COMPLETED, {
+    roomId: r.data?.roomId,
+    boardGameId: r.data?.boardGameId,
+    communityId: payload?.communityId,
+  });
+  return r.data;
+});
 export const joinRoom = (inviteCode) =>
   api.post('/rooms/join', { inviteCode });
 export const deleteRoom = (roomId) => api.delete(`/rooms/${roomId}`);

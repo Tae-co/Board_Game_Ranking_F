@@ -60,8 +60,11 @@ const Lobby = () => {
   });
 
   const { data: games = [] } = useQuery({
-    queryKey: ['games'],
-    queryFn: getGames,
+    // queryFn에 함수를 그대로 넘기면 react-query 컨텍스트가 communityId 자리로 들어가
+    // /games?communityId[client]=[object Object] 같은 요청이 나간다.
+    // 이 쿼리는 커뮤니티 미선택일 때만 돈다(386줄) — 그때 communityId는 null이다.
+    queryKey: ['games', communityId],
+    queryFn: () => getGames(communityId),
     enabled: !communityId,
     staleTime: 1000 * 60 * 30,
   });

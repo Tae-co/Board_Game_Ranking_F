@@ -17,6 +17,7 @@ import RoomSettingsOverlay from '../components/invite/RoomSettingsOverlay';
 import GameCard from '../components/invite/GameCard';
 import StatsCard from '../components/ranking/StatsCard';
 import MatchCard from '../components/ranking/MatchCard';
+import { EVENTS, logEvent } from '../api/services/events';
 import PodiumRanking from '../components/ranking/PodiumRanking';
 import RankingTable from '../components/ranking/RankingTable';
 import RatingEditModal from '../components/ranking/RatingEditModal';
@@ -303,8 +304,12 @@ const Invite = () => {
 
   const openSettings = () => { setEditRoomName(roomName); setShowSettings(true); };
 
-  const nativeShare = (title, text) => {
-    if (navigator.share) navigator.share({ title, text }).catch(() => {});
+  // 바이럴 퍼널의 시작점. 그룹 로비 진입이 아니라 "실제로 공유 시트를 띄웠다"만 센다.
+  // navigator.share가 없는 환경에서는 사용자에게도 아무 일이 없으므로 찍지 않는다.
+  const nativeShare = (title, text, kind) => {
+    if (!navigator.share) return;
+    logEvent(EVENTS.INVITE_SHARED, { roomId: Number(roomId), props: { kind } });
+    navigator.share({ title, text }).catch(() => {});
   };
 
   const shareMyRank = useCallback(() => {
@@ -314,6 +319,7 @@ const Invite = () => {
     nativeShare(
       `🏆 ${nickname}의 ${gameName} 랭킹`,
       `${myRankPosition}위 · 레이팅 ${Math.round(myRank.rating)} · 승률 ${myWinRate}% (${myRank.winCount}승 ${myRank.loseCount}패)\n\nYadaRank에서 보드게임 랭킹 관리 중 👉 yadarank.com`,
+      'my_rank',
     );
   }, [myRank, myRankPosition, gameInfo, roomInfo, myWinRate]);
 
@@ -327,6 +333,7 @@ const Invite = () => {
     nativeShare(
       `🎮 ${gameName} 한판 결과!`,
       `${lines}\n\nYadaRank에서 보드게임 랭킹을 기록 중이에요 👉 yadarank.com`,
+      'match_result',
     );
   }, [matchResult, gameInfo, roomInfo]);
 

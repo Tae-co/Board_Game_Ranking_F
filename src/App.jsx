@@ -6,6 +6,8 @@ import { App as CapApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { setAccessToken, ensureToken } from './api/axios';
 import { AUTH_CHANGED_EVENT, enforceSessionExpiry, getStoredAuth, saveAuthSession } from './auth/storage';
+import { EVENTS, logEvent, startNewSession } from './api/services/events';
+import { useRouteTracking } from './hooks/useRouteTracking';
 import { LanguageProvider } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
 
@@ -14,9 +16,7 @@ import './App.css';
 const Login = lazy(() => import('./pages/Login'));
 const Lobby = lazy(() => import('./pages/Lobby'));
 const Invite = lazy(() => import('./pages/Invite'));
-const MatchForm = lazy(() => import('./pages/MatchForm'));
 const ScoreSheet = lazy(() => import('./pages/ScoreSheet'));
-const Ranking = lazy(() => import('./pages/Ranking'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
@@ -26,6 +26,12 @@ const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
 const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
 const CommunityMemberManage = lazy(() => import('./pages/CommunityMemberManage'));
+
+// 라우트 진입 계측. useLocation을 쓰므로 BrowserRouter 안에 있어야 한다.
+const RouteTracker = ({ isAuthenticated }) => {
+  useRouteTracking(isAuthenticated);
+  return null;
+};
 
 const RouteFallback = () => (
   <div
@@ -99,6 +105,43 @@ function App() {
   }, []);
 
   useEffect(() => {
+    // 이게 없으면 "앱은 열었는데 아무것도 안 한 유저"가 어떤 테이블에도 안 남는다.
+    // pages.dev 로드는 곧 app.yadarank.com으로 리다이렉트되므로 여기서 찍으면 두 번이 된다.
+    if (window.location.hostname.includes('pages.dev')) return;
+    logEvent(EVENTS.APP_OPENED);
+  }, []);
+
+  useEffect(() => {
+    // 마운트에서만 찍으면 백그라운드 복귀가 통째로 빠진다 — iOS는 복귀 시 리마운트하지 않는다.
+    // 30분 이상 비활성이면 새 세션으로 본다 (GA4와 같은 기준).
+    const SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+    let hiddenAt = null;
+
+    const onHidden = () => { hiddenAt = Date.now(); };
+    const onVisible = () => {
+      if (hiddenAt === null) return;
+      const awayMs = Date.now() - hiddenAt;
+      hiddenAt = null;
+      if (awayMs < SESSION_TIMEOUT_MS) return;
+      startNewSession();
+      logEvent(EVENTS.APP_OPENED);
+    };
+
+    if (Capacitor.isNativePlatform()) {
+      const handler = CapApp.addListener('appStateChange', ({ isActive }) => {
+        if (isActive) onVisible(); else onHidden();
+      });
+      return () => { handler.then(h => h.remove()); };
+    }
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') onVisible(); else onHidden();
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
+
+  useEffect(() => {
     // 앱 시작 시 저장된 refresh token으로 access token 복구 (Admin.jsx와 동일한 promise 공유)
     ensureToken();
 
@@ -125,6 +168,7 @@ function App() {
     <ThemeProvider>
     <LanguageProvider>
     <BrowserRouter>
+      <RouteTracker isAuthenticated={isAuthenticated} />
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0,
         height: 'env(safe-area-inset-top)',
@@ -146,9 +190,7 @@ function App() {
             <Route path="/community-members" element={isAuthenticated ? <CommunityMemberManage /> : <Navigate to="/login" replace />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
             <Route path="/invite/:roomId" element={isAuthenticated ? <Invite /> : <Navigate to="/login" replace />} />
-            <Route path="/match-form/:roomId" element={isAuthenticated ? <MatchForm /> : <Navigate to="/login" replace />} />
             <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
-            <Route path="/ranking/:roomId" element={isAuthenticated ? <Ranking /> : <Navigate to="/login" replace />} />
 
             {/* QR 코드 초대 링크 */}
             <Route path="/join" element={<JoinByQR />} />
