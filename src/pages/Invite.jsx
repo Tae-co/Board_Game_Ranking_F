@@ -396,7 +396,9 @@ const Invite = () => {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: activeTab === 'group'
+      ? 'calc(100px + env(safe-area-inset-bottom))'
+      : 'calc(28px + env(safe-area-inset-bottom))' }}>
 
       {/* Header */}
       <div style={{
@@ -655,7 +657,8 @@ const Invite = () => {
         </div>
       </div>
 
-      {/* Sticky Start Game Button */}
+      {/* Sticky Start Game Button — 플레이어를 고르는 그룹 랭킹 탭에서만 쓴다 */}
+      {activeTab === 'group' && (
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
         <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px calc(28px + env(safe-area-inset-bottom))' }}>
           <button
@@ -679,6 +682,7 @@ const Invite = () => {
           </button>
         </div>
       </div>
+      )}
 
       {showSettings && (
         <RoomSettingsOverlay
