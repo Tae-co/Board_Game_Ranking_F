@@ -1,12 +1,13 @@
 import api from '../axios';
 import { EVENTS, logEvent } from './events';
 
-// SCORE_SHEET_OPENED의 짝. 둘의 비가 게임별 점수판 이탈률이 된다.
-export const createMatch = (payload) => api.post('/matches', payload).then(r => {
+// 분자. source가 없으면 분모를 고를 수 없다 — 점수판 제출의 분모는 SCORE_SHEET_OPENED,
+// 매치폼 제출의 분모는 MATCH_FORM_OPENED다. 둘을 섞으면 이탈률이 100%를 넘을 수 있다.
+export const createMatch = (payload, source) => api.post('/matches', payload).then(r => {
   logEvent(EVENTS.MATCH_SUBMITTED, {
     roomId: payload?.roomId,
     boardGameId: payload?.boardGameId,
-    props: { playerCount: payload?.participants?.length },
+    props: { playerCount: payload?.participants?.length, source },
   });
   return r.data;
 });

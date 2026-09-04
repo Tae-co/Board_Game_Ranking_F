@@ -229,7 +229,7 @@ const MatchForm = () => {
           boardGameId: gameId,
           roomId: Number(roomId),
           participants: playerDetails.map(p => ({ memberId: p.memberId, placement: placements[p.memberId] })),
-        });
+        }, 'match_form');
         queryClient.invalidateQueries({ queryKey: ['rankings'] });
         queryClient.invalidateQueries({ queryKey: ['rooms'] });
         queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
@@ -251,7 +251,7 @@ const MatchForm = () => {
         boardGameId: gameId,
         roomId: Number(roomId),
         participants: playerDetails.map(p => ({ memberId: p.memberId, placement: placements[p.memberId] })),
-      });
+      }, 'match_form');
       queryClient.invalidateQueries({ queryKey: ['rankings'] });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
