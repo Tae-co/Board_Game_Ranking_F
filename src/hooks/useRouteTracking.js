@@ -27,6 +27,10 @@ export const useRouteTracking = (isAuthenticated) => {
     // 화면이다. /join과 /login은 로그인 전이 정상이라 예외로 둔다.
     if (!isAuthenticated && pathname !== '/join' && pathname !== '/login') return;
 
+    // 이미 로그인한 사용자가 /login에 들어오면 App이 곧바로 /community로 돌려보낸다 —
+    // 로그인 화면을 본 적이 없으니 퍼널 분모에 넣으면 안 된다.
+    if (pathname === '/login' && isAuthenticated) return;
+
     if (lastPath.current === pathname) return;
     lastPath.current = pathname;
 

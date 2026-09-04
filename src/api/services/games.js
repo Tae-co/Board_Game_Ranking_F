@@ -1,4 +1,5 @@
 import api, { getAccessToken } from '../axios';
+import { EVENTS, logEvent } from './events';
 
 // communityId를 주면 공식 게임 + 그 커뮤니티의 커스텀 게임을 함께 받는다.
 export const getGames = (communityId) =>
