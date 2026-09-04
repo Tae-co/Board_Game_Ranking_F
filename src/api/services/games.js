@@ -7,7 +7,14 @@ export const getGames = (communityId) =>
 export const getGame = (boardGameId) =>
   api.get(`/games/${boardGameId}`).then(r => r.data);
 
-export const createGame = (payload) => api.post('/games', payload).then(r => r.data);
+// 유저가 직접 만든 점수판 목록이 곧 "다음에 기본 제공할 게임" 후보다.
+export const createGame = (payload) => api.post('/games', payload).then(r => {
+  logEvent(EVENTS.CUSTOM_GAME_CREATED, {
+    boardGameId: r.data?.boardGameId,
+    communityId: payload?.communityId,
+  });
+  return r.data;
+});
 
 // 커스텀 점수판 삭제. 방이나 플레이 기록이 있으면 백엔드가 409로 막는다.
 export const deleteGame = (boardGameId) => api.delete(`/games/${boardGameId}`).then(r => r.data);

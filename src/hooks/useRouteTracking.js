@@ -9,6 +9,7 @@ import { EVENTS, logEvent } from '../api/services/events';
 // 미리보기가 들어오는데(location.state로만 구분된다) 그것들은 제출로 이어지지 않아
 // 이탈률의 분모를 오염시킨다. 라우트 훅은 state를 볼 수 없다.
 const ROUTE_EVENTS = [
+  [/^\/login$/, () => ({ eventName: EVENTS.LOGIN_STARTED })],
   [/^\/create-community$/, () => ({ eventName: EVENTS.COMMUNITY_CREATE_STARTED })],
   [/^\/create-group$/, () => ({ eventName: EVENTS.ROOM_CREATE_STARTED })],
   // 경로 이름은 /invite지만 실제로는 그룹 로비다 — 랭킹·매치기록·기록 시작이 다 여기 있다.
@@ -23,8 +24,8 @@ export const useRouteTracking = (isAuthenticated) => {
 
   useEffect(() => {
     // 보호된 라우트는 비인증이면 App이 곧바로 /login으로 돌려보낸다 — 사용자가 본 적 없는
-    // 화면이다. /join만 로그인 전 유입 측정이 목적이라 예외로 둔다.
-    if (!isAuthenticated && pathname !== '/join') return;
+    // 화면이다. /join과 /login은 로그인 전이 정상이라 예외로 둔다.
+    if (!isAuthenticated && pathname !== '/join' && pathname !== '/login') return;
 
     if (lastPath.current === pathname) return;
     lastPath.current = pathname;

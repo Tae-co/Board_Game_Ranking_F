@@ -20,4 +20,6 @@ export default {
   shareLink: '링크 공유',
   shared: '공유됨!',
   shareText: '에 초대합니다!',
+  shareCopied: '복사됨',
+  shareUnavailable: '이 브라우저에서는 공유를 지원하지 않습니다.',
 };

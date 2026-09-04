@@ -3,6 +3,7 @@ export default {
   groupTab: '그룹 랭킹',
   globalTab: '전체 랭킹',
   matchResult: '방금 매치 결과',
+  shareResult: '결과 공유',
   wins: '승',
   losses: '패',
   winRate: '승률',

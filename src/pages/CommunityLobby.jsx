@@ -6,6 +6,7 @@ import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { CommunityCardSkeleton } from '../components/Skeleton';
 import { joinCommunity, getMyCommunities, getJoinedCommunities } from '../api/services/communities';
+import { EVENTS, logEvent } from '../api/services/events';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
@@ -226,7 +227,7 @@ const CommunityLobby = () => {
             {t('community', 'joinedCommunities')}
           </p>
           <button
-            onClick={() => { setJoinCode(''); setJoinError(''); setShowJoinInput(true); }}
+            onClick={() => { logEvent(EVENTS.COMMUNITY_JOIN_STARTED); setJoinCode(''); setJoinError(''); setShowJoinInput(true); }}
             style={{
               width: 32, height: 32, borderRadius: '50%',
               background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',

@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { usePresence } from '../hooks/usePresence';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Play, Share2, Search, X } from 'lucide-react';
+import { ArrowLeft, Play, Share2, Search, X, CheckCheck } from 'lucide-react';
+import { Share } from '@capacitor/share';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -70,6 +71,7 @@ const Invite = () => {
   const MATCH_PAGE_SIZE = 5;
   const MAX_MATCH_PAGES = 10;
   const touchStartX = useRef(null);
+  const [sharedCopiedKind, setSharedCopiedKind] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef(null);
@@ -317,12 +319,34 @@ const Invite = () => {
 
   const openSettings = () => { setEditRoomName(roomName); setShowSettings(true); };
 
-  // 바이럴 퍼널의 시작점. 그룹 로비 진입이 아니라 "실제로 공유 시트를 띄웠다"만 센다.
-  // navigator.share가 없는 환경에서는 사용자에게도 아무 일이 없으므로 찍지 않는다.
-  const nativeShare = (title, text, kind) => {
-    if (!navigator.share) return;
+  // 바이럴 퍼널의 시작점. 그룹 로비 진입이 아니라 "실제로 공유를 시도했다"만 센다.
+  //
+  // @capacitor/share는 네이티브에선 OS 공유 시트를, 웹에선 navigator.share를 쓴다.
+  // 예전에는 navigator.share가 없으면 그냥 return해서 버튼이 죽어 있었다 — 안드로이드
+  // WebView는 Web Share API를 구현하지 않아서 앱 유저가 눌러도 아무 일이 없었다.
+  // 공유 시트가 없는 환경에서는 클립보드로 떨어뜨린다.
+  //
+  // 계측은 분기보다 앞에 둔다. 뒤에 두면 공유 시트가 없는 플랫폼의 시도가 통째로 빠져
+  // 바이럴 퍼널이 iOS 유저만의 것처럼 보인다.
+  const nativeShare = async (title, text, kind) => {
     logEvent(EVENTS.INVITE_SHARED, { roomId: Number(roomId), props: { kind } });
-    navigator.share({ title, text }).catch(() => {});
+
+    let canShare = false;
+    try { canShare = (await Share.canShare()).value; } catch { canShare = false; }
+
+    if (canShare) {
+      // 사용자가 시트를 닫은 것도 reject다. 폴백으로 떨어뜨리면 취소가 곧 복사가 된다.
+      await Share.share({ title, text }).catch(() => {});
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${title}\n${text}`);
+      setSharedCopiedKind(kind);
+      setTimeout(() => setSharedCopiedKind(null), 2000);
+    } catch {
+      alert(t('invite', 'shareUnavailable'));
+    }
   };
 
   const shareMyRank = useCallback(() => {
@@ -452,7 +476,9 @@ const Invite = () => {
                   onClick={shareMyRank}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: V('--th-text-sub'), display: 'flex', alignItems: 'center' }}
                 >
-                  <Share2 style={{ width: 18, height: 18 }} />
+                  {sharedCopiedKind === 'my_rank'
+                    ? <CheckCheck style={{ width: 18, height: 18 }} color="#22c55e" />
+                    : <Share2 style={{ width: 18, height: 18 }} />}
                 </button>
               )}
               <button
@@ -511,8 +537,12 @@ const Invite = () => {
                       border: '1px solid var(--th-primary)', cursor: 'pointer',
                     }}
                   >
-                    <Share2 size={13} color="var(--th-primary)" />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--th-primary)' }}>결과 공유</span>
+                    {sharedCopiedKind === 'match_result'
+                      ? <CheckCheck size={13} color="#22c55e" />
+                      : <Share2 size={13} color="var(--th-primary)" />}
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--th-primary)' }}>
+                      {sharedCopiedKind === 'match_result' ? t('invite', 'shareCopied') : t('ranking', 'shareResult')}
+                    </span>
                   </button>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
