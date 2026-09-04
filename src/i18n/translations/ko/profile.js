@@ -39,4 +39,9 @@ export default {
   feedbackPlaceholder: '자유롭게 의견을 남겨주세요 :)',
   feedbackSubmit: '이메일로 보내기',
   feedbackButton: '피드백 / 버그 신고',
+  deleteAccount: '회원 탈퇴',
+  deleteAccountDesc: '탈퇴 시 모든 게임 기록과 랭킹이 삭제됩니다.',
+  deleteAccountProcessing: '탈퇴 처리 중...',
+  deleteAccountConfirm: '정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.',
+  deleteAccountFailed: '탈퇴에 실패했습니다.',
 };
