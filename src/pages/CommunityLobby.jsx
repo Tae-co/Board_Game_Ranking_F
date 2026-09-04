@@ -328,16 +328,21 @@ const CommunityLobby = () => {
               paddingBottom: '4px', marginBottom: '28px',
             }}
           >
-            {sortByRecentVisit(myCommunities).map((community) => (
-              <CommunityCard
-                key={community.communityId}
-                community={community}
-                onEnter={handleEnterCommunity}
-                onManage={handleManage}
-                isCarousel
-                t={t}
-              />
-            ))}
+            {sortByRecentVisit(myCommunities).map((community) => {
+              // 참가한 커뮤니티 쪽과 같은 기준으로 판정한다. 무조건 달아주면 어드민에서
+              // 내려간 사람에게도 관리 버튼이 보이고, 눌러야 서버가 403으로 막는다.
+              const isAdmin = (community.admins ?? []).some(a => a.memberId === Number(userId));
+              return (
+                <CommunityCard
+                  key={community.communityId}
+                  community={community}
+                  onEnter={handleEnterCommunity}
+                  onManage={isAdmin ? handleManage : undefined}
+                  isCarousel
+                  t={t}
+                />
+              );
+            })}
           </div>
         )}
 

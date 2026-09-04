@@ -295,11 +295,15 @@ const CommunitySettings = () => {
                 {detail.inviteCode}
               </span>
               <button
-                onClick={() => {
+                onClick={async () => {
                   logEvent(EVENTS.INVITE_SHARED, { communityId, props: { kind: 'invite_code' } });
-                  navigator.clipboard.writeText(detail.inviteCode);
-                  setCodeCopied(true);
-                  setTimeout(() => setCodeCopied(false), 2000);
+                  try {
+                    await navigator.clipboard.writeText(detail.inviteCode);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  } catch {
+                    alert(t('invite', 'shareUnavailable'));
+                  }
                 }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
               >
