@@ -1,4 +1,5 @@
 import api, { getAccessToken } from '../axios';
+import { EVENTS, logEvent } from './events';
 
 // communityId를 주면 공식 게임 + 그 커뮤니티의 커스텀 게임을 함께 받는다.
 export const getGames = (communityId) =>
@@ -7,7 +8,17 @@ export const getGames = (communityId) =>
 export const getGame = (boardGameId) =>
   api.get(`/games/${boardGameId}`).then(r => r.data);
 
-export const createGame = (payload) => api.post('/games', payload).then(r => r.data);
+// 유저가 직접 만든 점수판 목록이 곧 "다음에 기본 제공할 게임" 후보다.
+export const createGame = (payload) => api.post('/games', payload).then(r => {
+  // 이 응답의 식별자 필드는 boardGameId가 아니라 id다 (rooms·communities와 다르다).
+  // boardGameId로 읽으면 board_game_id가 NULL로 저장돼서 "어떤 게임을 직접 만드는가"를
+  // 볼 수 없다 — 이 이벤트를 넣은 이유가 통째로 사라진다.
+  logEvent(EVENTS.CUSTOM_GAME_CREATED, {
+    boardGameId: r.data?.id,
+    communityId: payload?.communityId,
+  });
+  return r.data;
+});
 
 // 커스텀 점수판 삭제. 방이나 플레이 기록이 있으면 백엔드가 409로 막는다.
 export const deleteGame = (boardGameId) => api.delete(`/games/${boardGameId}`).then(r => r.data);

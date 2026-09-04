@@ -28,3 +28,7 @@ dist-ssr
 # iCloud가 Desktop을 동기화하면서 만드는 충돌 복사본 ("config 2.xml", "app-release 3.aab")
 # 빌드 산출물 디렉터리는 xattr com.apple.fileprovider.ignore#P 로도 제외해 두었다
 * [0-9].*
+
+# 네이티브 빌드 산출물 (xcarchive/IPA, Xcode 빌드 디렉터리, Gradle 홈 캐시)
+build/
+android/.gradle-home/

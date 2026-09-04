@@ -1,8 +1,12 @@
 import { Users } from 'lucide-react';
 import StorageImage from '../StorageImage';
 import { V } from '../../utils/cssUtils';
+import { useLanguage } from '../../i18n/LanguageContext';
 
-const RoomCard = ({ room, imageUrl, isMember, communityId, onClick }) => (
+const RoomCard = ({ room, imageUrl, isMember, communityId, onClick }) => {
+  const { t } = useLanguage();
+
+  return (
   <div
     onClick={onClick}
     style={{
@@ -36,14 +40,15 @@ const RoomCard = ({ room, imageUrl, isMember, communityId, onClick }) => (
       <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
         <Users style={{ width: 10, height: 10, color: V('--th-text-sub') }} />
         <span style={{ fontSize: '10px', color: V('--th-text-sub'), fontWeight: '500' }}>
-          {room.memberCount ?? '—'}명
+          {t('lobby', 'roomMemberCount').replace('{n}', room.memberCount ?? '—')}
         </span>
         {communityId && isMember && (
-          <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-primary)' }}>· 참가중</span>
+          <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-primary)' }}>· {t('lobby', 'roomJoined')}</span>
         )}
       </div>
     </div>
   </div>
-);
+  );
+};
 
 export default RoomCard;

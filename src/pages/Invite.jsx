@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { usePresence } from '../hooks/usePresence';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Play, Share2, Search, X } from 'lucide-react';
+import { ArrowLeft, Play, Share2, Search, X, CheckCheck } from 'lucide-react';
+import { Share } from '@capacitor/share';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,6 +18,7 @@ import RoomSettingsOverlay from '../components/invite/RoomSettingsOverlay';
 import GameCard from '../components/invite/GameCard';
 import StatsCard from '../components/ranking/StatsCard';
 import MatchCard from '../components/ranking/MatchCard';
+import { EVENTS, logEvent } from '../api/services/events';
 import PodiumRanking from '../components/ranking/PodiumRanking';
 import RankingTable from '../components/ranking/RankingTable';
 import RatingEditModal from '../components/ranking/RatingEditModal';
@@ -67,7 +69,9 @@ const Invite = () => {
   const [page, setPage] = useState(location.state?.matchPage ?? 0);
   const PAGE_SIZE = 7;
   const MATCH_PAGE_SIZE = 5;
+  const MAX_MATCH_PAGES = 10;
   const touchStartX = useRef(null);
+  const [sharedCopiedKind, setSharedCopiedKind] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const searchInputRef = useRef(null);
@@ -131,11 +135,23 @@ const Invite = () => {
   const allMatches = roomInfo.boardGameId
     ? allMatchesRaw.filter(m => m.boardGameId === roomInfo.boardGameId)
     : allMatchesRaw;
-  const pagedMatches = useMemo(
-    () => allMatches.slice(page * MATCH_PAGE_SIZE, (page + 1) * MATCH_PAGE_SIZE),
-    [allMatches, page],
+  // 매치기록은 최신 10페이지까지만 보여준다. 기록이 쌓일수록 페이지가 무한정 늘어나는 걸 막는다.
+  // 서버 데이터는 그대로 둔다 — 실제로 지우면 MatchService가 레이팅을 재계산해서 점수가 바뀐다.
+  const visibleMatches = useMemo(
+    () => allMatches.slice(0, MATCH_PAGE_SIZE * MAX_MATCH_PAGES),
+    [allMatches],
   );
-  const totalMatchPages = useMemo(() => Math.ceil(allMatches.length / MATCH_PAGE_SIZE), [allMatches.length]);
+
+  const totalMatchPages = useMemo(
+    () => Math.ceil(visibleMatches.length / MATCH_PAGE_SIZE),
+    [visibleMatches.length],
+  );
+
+  // 기록이 줄어 현재 페이지가 범위를 벗어나면 마지막 페이지를 보여준다
+  const pagedMatches = useMemo(() => {
+    const safePage = Math.min(page, Math.max(0, totalMatchPages - 1));
+    return visibleMatches.slice(safePage * MATCH_PAGE_SIZE, (safePage + 1) * MATCH_PAGE_SIZE);
+  }, [visibleMatches, page, totalMatchPages]);
 
   const myRank = useMemo(() => rankings.find(r => r.memberId === userId), [rankings, userId]);
   const myRankPosition = useMemo(() => {
@@ -303,8 +319,34 @@ const Invite = () => {
 
   const openSettings = () => { setEditRoomName(roomName); setShowSettings(true); };
 
-  const nativeShare = (title, text) => {
-    if (navigator.share) navigator.share({ title, text }).catch(() => {});
+  // 바이럴 퍼널의 시작점. 그룹 로비 진입이 아니라 "실제로 공유를 시도했다"만 센다.
+  //
+  // @capacitor/share는 네이티브에선 OS 공유 시트를, 웹에선 navigator.share를 쓴다.
+  // 예전에는 navigator.share가 없으면 그냥 return해서 버튼이 죽어 있었다 — 안드로이드
+  // WebView는 Web Share API를 구현하지 않아서 앱 유저가 눌러도 아무 일이 없었다.
+  // 공유 시트가 없는 환경에서는 클립보드로 떨어뜨린다.
+  //
+  // 계측은 분기보다 앞에 둔다. 뒤에 두면 공유 시트가 없는 플랫폼의 시도가 통째로 빠져
+  // 바이럴 퍼널이 iOS 유저만의 것처럼 보인다.
+  const nativeShare = async (title, text, kind) => {
+    logEvent(EVENTS.INVITE_SHARED, { roomId: Number(roomId), props: { kind } });
+
+    let canShare = false;
+    try { canShare = (await Share.canShare()).value; } catch { canShare = false; }
+
+    if (canShare) {
+      // 사용자가 시트를 닫은 것도 reject다. 폴백으로 떨어뜨리면 취소가 곧 복사가 된다.
+      await Share.share({ title, text }).catch(() => {});
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(`${title}\n${text}`);
+      setSharedCopiedKind(kind);
+      setTimeout(() => setSharedCopiedKind(null), 2000);
+    } catch {
+      alert(t('invite', 'shareUnavailable'));
+    }
   };
 
   const shareMyRank = useCallback(() => {
@@ -314,6 +356,7 @@ const Invite = () => {
     nativeShare(
       `🏆 ${nickname}의 ${gameName} 랭킹`,
       `${myRankPosition}위 · 레이팅 ${Math.round(myRank.rating)} · 승률 ${myWinRate}% (${myRank.winCount}승 ${myRank.loseCount}패)\n\nYadaRank에서 보드게임 랭킹 관리 중 👉 yadarank.com`,
+      'my_rank',
     );
   }, [myRank, myRankPosition, gameInfo, roomInfo, myWinRate]);
 
@@ -327,6 +370,7 @@ const Invite = () => {
     nativeShare(
       `🎮 ${gameName} 한판 결과!`,
       `${lines}\n\nYadaRank에서 보드게임 랭킹을 기록 중이에요 👉 yadarank.com`,
+      'match_result',
     );
   }, [matchResult, gameInfo, roomInfo]);
 
@@ -376,7 +420,9 @@ const Invite = () => {
   }, []);
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: activeTab === 'group'
+      ? 'calc(100px + env(safe-area-inset-bottom))'
+      : 'calc(28px + env(safe-area-inset-bottom))' }}>
 
       {/* Header */}
       <div style={{
@@ -430,7 +476,9 @@ const Invite = () => {
                   onClick={shareMyRank}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: V('--th-text-sub'), display: 'flex', alignItems: 'center' }}
                 >
-                  <Share2 style={{ width: 18, height: 18 }} />
+                  {sharedCopiedKind === 'my_rank'
+                    ? <CheckCheck style={{ width: 18, height: 18 }} color="#22c55e" />
+                    : <Share2 style={{ width: 18, height: 18 }} />}
                 </button>
               )}
               <button
@@ -489,8 +537,12 @@ const Invite = () => {
                       border: '1px solid var(--th-primary)', cursor: 'pointer',
                     }}
                   >
-                    <Share2 size={13} color="var(--th-primary)" />
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--th-primary)' }}>결과 공유</span>
+                    {sharedCopiedKind === 'match_result'
+                      ? <CheckCheck size={13} color="#22c55e" />
+                      : <Share2 size={13} color="var(--th-primary)" />}
+                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--th-primary)' }}>
+                      {sharedCopiedKind === 'match_result' ? t('invite', 'shareCopied') : t('ranking', 'shareResult')}
+                    </span>
                   </button>
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -635,7 +687,8 @@ const Invite = () => {
         </div>
       </div>
 
-      {/* Sticky Start Game Button */}
+      {/* Sticky Start Game Button — 플레이어를 고르는 그룹 랭킹 탭에서만 쓴다 */}
+      {activeTab === 'group' && (
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
         <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px calc(28px + env(safe-area-inset-bottom))' }}>
           <button
@@ -659,6 +712,7 @@ const Invite = () => {
           </button>
         </div>
       </div>
+      )}
 
       {showSettings && (
         <RoomSettingsOverlay

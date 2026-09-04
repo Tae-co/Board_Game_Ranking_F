@@ -62,4 +62,6 @@ export default {
   customCreateFailed: 'Failed to create the score sheet.',
   customDeleteConfirm: "Delete the '{n}' score sheet?",
   customDeleteFailed: 'Failed to delete the score sheet.',
+  roomMemberCount: '{n}',
+  roomJoined: 'Joined',
 };
