@@ -14,6 +14,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import RoomCard from '../components/lobby/RoomCard';
 import JoinCodeSheet from '../components/lobby/JoinCodeSheet';
+import { EVENTS, logEvent } from '../api/services/events';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -41,6 +42,23 @@ const Lobby = () => {
   const isAdmin = selectedCommunity?.isAdmin ?? false;
   const communityInviteCode = selectedCommunity?.inviteCode ?? null;
   const [codeCopied, setCodeCopied] = useState(false);
+
+  // 초대코드 복사가 초대 퍼널의 진짜 첫 칸이다 — /join 랜딩으로 이어지는 경로는
+  // 랭킹 자랑(INVITE_SHARED kind=my_rank)이 아니라 이 코드다. 여기가 비어 있으면
+  // 신규 유입이 없을 때 "초대를 안 보낸 건지, 보냈는데 안 연 건지"를 구분할 수 없다.
+  const copyInviteCode = async () => {
+    if (!communityInviteCode) return;
+    logEvent(EVENTS.INVITE_SHARED, { communityId, props: { kind: 'invite_code' } });
+    // navigator.clipboard는 보안 컨텍스트에서만 존재한다 — 없으면 throw해서
+    // "복사됨" 표시조차 안 뜨고 사용자는 왜 안 되는지 알 수 없다.
+    try {
+      await navigator.clipboard.writeText(communityInviteCode);
+      setCodeCopied(true);
+      setTimeout(() => setCodeCopied(false), 2000);
+    } catch {
+      alert(t('invite', 'shareUnavailable'));
+    }
+  };
   const [showQrPopup, setShowQrPopup] = useState(false);
   const [roomPage, setRoomPage] = useState(0);
   const [memberPage, setMemberPage] = useState(0);
@@ -233,11 +251,7 @@ const Lobby = () => {
                     </span>
                   </button>
                   <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(communityInviteCode);
-                      setCodeCopied(true);
-                      setTimeout(() => setCodeCopied(false), 2000);
-                    }}
+                    onClick={copyInviteCode}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '2px 0 2px 4px', display: 'flex', alignItems: 'center' }}
                   >
                     {codeCopied
@@ -407,7 +421,7 @@ const Lobby = () => {
                         key={i}
                         onClick={() => setRoomPage(i)}
                         style={{
-                          width: 30, height: 30, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                          width: 30, height: 30, borderRadius: '50%', cursor: 'pointer',
                           fontSize: '13px', fontWeight: '700',
                           backgroundColor: roomPage === i ? 'var(--th-primary)' : 'var(--th-card)',
                           color: roomPage === i ? '#fff' : V('--th-text-sub'),
@@ -568,11 +582,7 @@ const Lobby = () => {
               {communityInviteCode}
             </div>
             <button
-              onClick={() => {
-                navigator.clipboard.writeText(communityInviteCode);
-                setCodeCopied(true);
-                setTimeout(() => setCodeCopied(false), 2000);
-              }}
+              onClick={copyInviteCode}
               style={{
                 display: 'flex', alignItems: 'center', gap: '8px',
                 padding: '12px 28px', borderRadius: '14px', border: 'none', cursor: 'pointer',

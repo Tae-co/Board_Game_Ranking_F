@@ -106,7 +106,7 @@ export const SplendorDuelTable = ({
                 disabled={readOnly}
                 style={{
                   display: "flex", alignItems: "center", gap: 12,
-                  padding: "12px 14px", borderRadius: 12, border: "none",
+                  padding: "12px 14px", borderRadius: 12,
                   cursor: readOnly ? "default" : "pointer", textAlign: "left",
                   background: isSelected ? wc.color : "var(--th-card)",
                   border: `2px solid ${isSelected ? wc.color : "var(--th-border)"}`,

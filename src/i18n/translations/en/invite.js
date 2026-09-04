@@ -20,4 +20,6 @@ export default {
   shareLink: 'Share Link',
   shared: 'Shared!',
   shareText: '— Join us!',
+  shareCopied: 'Copied',
+  shareUnavailable: 'Sharing is not supported in this browser.',
 };
