@@ -68,6 +68,7 @@ const Invite = () => {
   const [page, setPage] = useState(location.state?.matchPage ?? 0);
   const PAGE_SIZE = 7;
   const MATCH_PAGE_SIZE = 5;
+  const MAX_MATCH_PAGES = 10;
   const touchStartX = useRef(null);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -132,11 +133,23 @@ const Invite = () => {
   const allMatches = roomInfo.boardGameId
     ? allMatchesRaw.filter(m => m.boardGameId === roomInfo.boardGameId)
     : allMatchesRaw;
-  const pagedMatches = useMemo(
-    () => allMatches.slice(page * MATCH_PAGE_SIZE, (page + 1) * MATCH_PAGE_SIZE),
-    [allMatches, page],
+  // 매치기록은 최신 10페이지까지만 보여준다. 기록이 쌓일수록 페이지가 무한정 늘어나는 걸 막는다.
+  // 서버 데이터는 그대로 둔다 — 실제로 지우면 MatchService가 레이팅을 재계산해서 점수가 바뀐다.
+  const visibleMatches = useMemo(
+    () => allMatches.slice(0, MATCH_PAGE_SIZE * MAX_MATCH_PAGES),
+    [allMatches],
   );
-  const totalMatchPages = useMemo(() => Math.ceil(allMatches.length / MATCH_PAGE_SIZE), [allMatches.length]);
+
+  const totalMatchPages = useMemo(
+    () => Math.ceil(visibleMatches.length / MATCH_PAGE_SIZE),
+    [visibleMatches.length],
+  );
+
+  // 기록이 줄어 현재 페이지가 범위를 벗어나면 마지막 페이지를 보여준다
+  const pagedMatches = useMemo(() => {
+    const safePage = Math.min(page, Math.max(0, totalMatchPages - 1));
+    return visibleMatches.slice(safePage * MATCH_PAGE_SIZE, (safePage + 1) * MATCH_PAGE_SIZE);
+  }, [visibleMatches, page, totalMatchPages]);
 
   const myRank = useMemo(() => rankings.find(r => r.memberId === userId), [rankings, userId]);
   const myRankPosition = useMemo(() => {
