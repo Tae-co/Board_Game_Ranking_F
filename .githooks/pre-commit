@@ -1,0 +1,9 @@
+#!/bin/sh
+# capacitor.config.json의 라이브 리로드용 server 블록이 커밋되는 것을 막는다.
+# 이 설정이 릴리즈 빌드에 섞이면 앱이 localhost를 로드해 빈 화면이 된다.
+git diff --cached --name-only | grep -q '^capacitor\.config\.json$' || exit 0
+git show :capacitor.config.json | grep -q '"server"' || exit 0
+
+echo "✖ capacitor.config.json에 \"server\" 블록(라이브 리로드 설정)이 스테이징돼 있습니다."
+echo "  제거하고 커밋하세요. 의도한 커밋이면: git commit --no-verify"
+exit 1
