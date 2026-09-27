@@ -273,6 +273,20 @@ const Invite = () => {
 
   const handleTabChange = (tab) => { setActiveTab(tab); setPage(0); };
 
+  // "기록은 영원히 남는다"를 실제로 쓰는지 보려면 지난 시즌을 조회한 순간을 세야 한다 (§10).
+  const handlePastSeasonViewed = useCallback((seasonKey) => {
+    logEvent(EVENTS.SEASON_PAST_VIEWED, { roomId: Number(roomId), props: { season_key: seasonKey } });
+  }, [roomId]);
+
+  // 리셋 직후 안내에서 지난 시즌으로 넘어가는 것도 결과 열람이다.
+  const handleViewPastSeason = () => {
+    logEvent(EVENTS.SEASON_RESULT_OPENED, {
+      roomId: Number(roomId),
+      props: { season_key: latestSeasonKey },
+    });
+    handleTabChange('season');
+  };
+
   const handleStartGame = () => {
     if (!canStart) {
       if (activeTab !== 'group') handleTabChange('group');
@@ -595,6 +609,7 @@ const Invite = () => {
               region={communityRegion}
               myRankPosition={myRankPosition}
               myScore={myRank?.rating}
+              onPastSeasonViewed={handlePastSeasonViewed}
               t={t}
               lang={lang}
             />
@@ -671,7 +686,7 @@ const Invite = () => {
                 region={communityRegion}
                 compact
                 justReset={justReset}
-                onViewPastSeason={() => handleTabChange('season')}
+                onViewPastSeason={handleViewPastSeason}
                 t={t}
                 lang={lang}
               />

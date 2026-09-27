@@ -338,7 +338,17 @@ const Lobby = () => {
             공유자가 많을수록 카드가 많이 나가므로 어드민만이 아니라 멤버 전원에게 보인다. */}
         {communityId && (
           <button
-            onClick={() => navigate('/season')}
+            onClick={() => {
+              // 결산이 나와 있을 때 배너로 들어간 것만 "결과 열람"이다. 평상시 진입까지
+              // 세면 열람률(§10)의 분자가 부풀어 배너 승격이 먹혔는지 알 수 없게 된다.
+              if (freshRecapPeriod) {
+                logEvent(EVENTS.SEASON_RESULT_OPENED, {
+                  communityId,
+                  props: { season_key: freshRecapPeriod },
+                });
+              }
+              navigate('/season');
+            }}
             style={{
               width: '100%', marginBottom: '24px', padding: '16px 18px',
               borderRadius: '16px', cursor: 'pointer', textAlign: 'left',

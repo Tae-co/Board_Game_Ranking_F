@@ -19,6 +19,10 @@ export const EVENTS = Object.freeze({
   INVITE_SHARED: 'INVITE_SHARED',
   INVITE_LANDING_OPENED: 'INVITE_LANDING_OPENED',
   APP_OPENED: 'APP_OPENED',
+  // 시즌제 (plan-season-reset §10). SEASON_ROLLED_OVER는 서버만 남긴다 —
+  // 프론트가 관측할 수 없는 사건이고, 리셋 지표의 분모라 위조되면 안 된다.
+  SEASON_RESULT_OPENED: 'SEASON_RESULT_OPENED',
+  SEASON_PAST_VIEWED: 'SEASON_PAST_VIEWED',
 });
 
 // 세션 = 앱이 로드된 한 번, 또는 오래 백그라운드에 있다가 돌아온 뒤(App.jsx).

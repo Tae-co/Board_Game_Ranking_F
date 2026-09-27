@@ -6,6 +6,7 @@ import html2canvas from 'html2canvas';
 import NavAvatar from '../components/NavAvatar';
 import SeasonSummaryCard from '../components/season/SeasonSummaryCard';
 import { getSeasonPeriods, getSeasonSummary } from '../api/services/seasons';
+import { EVENTS, logEvent } from '../api/services/events';
 import { useSelectedCommunity } from '../hooks/useSelectedCommunity';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -79,6 +80,8 @@ const SeasonSummary = () => {
 
   const handleShare = async () => {
     if (!cardRef.current || busy) return;
+    // 시상대가 유통을 늘렸는지 보려면 결산 카드 공유를 다른 공유와 구분해야 한다 (§10).
+    logEvent(EVENTS.INVITE_SHARED, { communityId, props: { kind: 'season_card' } });
     setBusy(true);
     setShareError('');
     try {
