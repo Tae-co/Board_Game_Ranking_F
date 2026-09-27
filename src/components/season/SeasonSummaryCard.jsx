@@ -13,11 +13,20 @@ const AWARD_META = {
   DARK_HORSE: { emoji: '🐎', labelKey: 'awardDarkHorse', accent: '#818CF8' },
 };
 
+// 시상대 색. 카드는 html2canvas로 이미지가 되므로 테마 변수를 쓸 수 없다.
+const PODIUM_EMOJI = { 1: '🥇', 2: '🥈', 3: '🥉' };
+const PODIUM_ACCENT = { 1: '#FFD700', 2: '#C8C8D4', 3: '#D4936A' };
+const PODIUM_TINT = { 1: 'rgba(255,215,0,0.10)', 2: 'rgba(200,200,212,0.08)', 3: 'rgba(212,147,106,0.08)' };
+const PODIUM_EDGE = { 1: 'rgba(255,215,0,0.35)', 2: 'rgba(200,200,212,0.28)', 3: 'rgba(212,147,106,0.28)' };
+
 const fill = (template, vars) =>
   template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '');
 
 const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
   const { t, lang } = useLanguage();
+
+  // 결산 브랜치 시절 응답에는 podium이 없다 — 옛 캐시로 렌더될 때 터지지 않게 기본값을 둔다.
+  const podium = summary.podium ?? [];
 
   const [year, month] = summary.period.split('-');
   const monthLabel = lang === 'ko'
@@ -76,6 +85,45 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
       <div style={{ display: 'flex', gap: 8, padding: '14px 20px 4px' }}>
         <Stat value={summary.totalMatches} label={t('season', 'matchesLabel')} />
         <Stat value={summary.totalPlayers} label={t('season', 'playersLabel')} />
+      </div>
+
+      {/* Podium — 시상대는 수상 3종 위에 온다. 순위가 카드의 머리기사이기 때문이다 (기획 §6).
+          참가자 3명 미만이면 서버가 빈 목록을 주고, 그때는 시상 조건을 한 줄로 알린다 (§4). */}
+      <div style={{ padding: '10px 20px 0' }}>
+        {podium.length > 0 ? (
+          <div style={{ display: 'flex', gap: 8 }}>
+            {podium.map((entry) => (
+              <div
+                key={`${entry.rank}-${entry.memberId}`}
+                style={{
+                  flex: 1, minWidth: 0, textAlign: 'center',
+                  padding: '10px 6px', borderRadius: 12,
+                  backgroundColor: PODIUM_TINT[entry.rank] || 'rgba(255,255,255,0.05)',
+                  border: `1px solid ${PODIUM_EDGE[entry.rank] || 'rgba(255,255,255,0.07)'}`,
+                }}
+              >
+                <div style={{ fontSize: 17, lineHeight: 1.1 }}>{PODIUM_EMOJI[entry.rank]}</div>
+                <p style={{
+                  margin: '4px 0 0', fontSize: 12, fontWeight: 700, color: '#fff',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {entry.nickname}
+                </p>
+                <p style={{ margin: '1px 0 0', fontSize: 13, fontWeight: 800, color: PODIUM_ACCENT[entry.rank] }}>
+                  {Math.round(entry.displayScore).toLocaleString()}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{
+            margin: 0, padding: '9px 12px', borderRadius: 10, textAlign: 'center',
+            fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)',
+            backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)',
+          }}>
+            {t('season', 'awardNeedsPlayers')}
+          </p>
+        )}
       </div>
 
       {/* Awards */}

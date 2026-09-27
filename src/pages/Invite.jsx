@@ -5,7 +5,7 @@ import { ArrowLeft, Play, Share2, Search, X } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating } from '../api/services/rooms';
+import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, getRoomSeasons, getSeasonPodium } from '../api/services/rooms';
 import { getGame } from '../api/services/games';
 import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -20,6 +20,8 @@ import MatchCard from '../components/ranking/MatchCard';
 import PodiumRanking from '../components/ranking/PodiumRanking';
 import RankingTable from '../components/ranking/RankingTable';
 import RatingEditModal from '../components/ranking/RatingEditModal';
+import SeasonTab from '../components/season/SeasonTab';
+import SeasonHeader from '../components/season/SeasonHeader';
 
 const buildSavedScores = (participants) => {
   const first = participants.find(p => p.scoresJson);
@@ -48,11 +50,12 @@ const Invite = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const userId = Number(getAuthUserId());
   const matchResult = location.state?.matchResult || null;
-  const communityTimezone = REGION_TIMEZONE[getSelectedCommunity()?.region] || undefined;
+  const communityRegion = getSelectedCommunity()?.region;
+  const communityTimezone = REGION_TIMEZONE[communityRegion] || undefined;
 
   const [selectedPlayers, setSelectedPlayers] = useState(new Set());
   const [nudge, setNudge] = useState(null); // null | 'select' | 'deselect'
@@ -122,6 +125,30 @@ const Invite = () => {
     queryFn: () => getRoomRankings(roomId),
     staleTime: 1000 * 60 * 3,
   });
+
+  // 금관(직전 시즌 1위). 시즌 목록의 첫 항목이 곧 마지막으로 끝난 시즌이므로 날짜 계산이 필요 없고,
+  // 다음 시즌이 끝나면 목록의 첫 항목이 바뀌어 금관이 저절로 옮겨간다 (기획 §4의 "다음 시즌 종료까지").
+  const { data: closedSeasons = [] } = useQuery({
+    queryKey: ['roomSeasons', roomId],
+    queryFn: () => getRoomSeasons(roomId),
+    staleTime: 1000 * 60 * 10,
+  });
+  const latestSeasonKey = closedSeasons[0]?.seasonKey;
+  const { data: latestPodium = [] } = useQuery({
+    queryKey: ['seasonPodium', roomId, latestSeasonKey],
+    queryFn: () => getSeasonPodium(roomId, latestSeasonKey),
+    enabled: !!latestSeasonKey,
+    staleTime: 1000 * 60 * 10,
+  });
+  // 리셋 직후 = 마감된 시즌이 있는데 이번 시즌 경기가 아직 0판. 한 판이라도 하면 저절로 사라진다.
+  const justReset = closedSeasons.length > 0
+    && rankings.length > 0
+    && rankings.every(r => (r.playCount ?? 0) === 0);
+
+  const championIds = useMemo(
+    () => new Set(latestPodium.filter(e => e.rank === 1).map(e => e.memberId)),
+    [latestPodium],
+  );
 
   const { data: allMatchesRaw = [], isLoading: isMatchesLoading, refetch: refetchMatches } = useQuery({
     queryKey: ['matches', roomId],
@@ -457,6 +484,7 @@ const Invite = () => {
               {[
                 { key: 'group', label: t('ranking', 'groupTab') },
                 { key: 'matches', label: t('ranking', 'matchesTab') },
+                { key: 'season', label: t('season', 'seasonTab') },
               ].map(tab => (
                 <button
                   key={tab.key}
@@ -508,7 +536,17 @@ const Invite = () => {
           )}
 
           {/* Content */}
-          {isLoading ? (
+          {activeTab === 'season' ? (
+            <SeasonTab
+              roomId={roomId}
+              userId={userId}
+              region={communityRegion}
+              myRankPosition={myRankPosition}
+              myScore={myRank?.rating}
+              t={t}
+              lang={lang}
+            />
+          ) : isLoading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 8 }}>
               {[0, 1, 2, 3].map(i => <RankRowSkeleton key={i} />)}
             </div>
@@ -577,6 +615,14 @@ const Invite = () => {
             </div>
           ) : (
             <>
+              <SeasonHeader
+                region={communityRegion}
+                compact
+                justReset={justReset}
+                onViewPastSeason={() => handleTabChange('season')}
+                t={t}
+                lang={lang}
+              />
               {rankings.length >= 1 && (
                 <PodiumRanking rankings={rankings} myUserId={userId} />
               )}
@@ -628,6 +674,8 @@ const Invite = () => {
                   onToggle={togglePlayer}
                   highlightMemberId={searchResult?.memberId}
                   nudge={nudge}
+                  championIds={championIds}
+                  scoreLabel={t('season', 'seasonScore')}
                 />
               </div>
             </>

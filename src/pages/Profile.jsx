@@ -13,6 +13,7 @@ import { TierBadge } from '../components/TierBadge';
 import { V } from '../utils/cssUtils';
 import { getErrorMessage, getTierFromRating, getTierBg } from '../utils/tierUtils';
 import FeedbackModal from '../components/shared/FeedbackModal';
+import TrophyShelf from '../components/season/TrophyShelf';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -30,6 +31,13 @@ const Profile = () => {
     queryKey: ['memberStats', userId],
     queryFn: () => import('../api/services/members').then(m => m.getMemberStats(userId)),
     staleTime: 1000 * 60 * 5,
+  });
+
+  // 트로피 선반 — 시상 자격을 통과한 1~3위만 서버가 준다. 없으면 선반 자체를 숨긴다.
+  const { data: trophies = [] } = useQuery({
+    queryKey: ['trophies', userId],
+    queryFn: () => import('../api/services/members').then(m => m.getMemberTrophies(userId)),
+    staleTime: 1000 * 60 * 10,
   });
 
   useEffect(() => {
@@ -323,6 +331,12 @@ const Profile = () => {
             <TierBadge tier={tier} size="lg" />
           </div>
 
+          {trophies.length > 0 && (
+            <div style={{ width: '100%' }}>
+              <TrophyShelf trophies={trophies} lang={lang} t={t} />
+            </div>
+          )}
+
           {/* Nickname edit (toggle) */}
           {showNicknameEdit && (
             <div style={{ width: '100%' }}>
@@ -365,7 +379,7 @@ const Profile = () => {
             {[
               { label: 'WINS', value: stats.totalWin ?? 0, color: V('--th-text') },
               { label: 'LOSSES', value: stats.totalLose ?? 0, color: V('--th-text') },
-              { label: 'BEST ELO', value: maxRating.toLocaleString(), color: 'var(--th-primary)' },
+              { label: t('season', 'totalBest'), value: maxRating.toLocaleString(), color: 'var(--th-primary)' },
             ].map(({ label, value, color }) => (
               <div key={label} style={{
                 borderRadius: 16, padding: '16px 8px',
