@@ -23,7 +23,7 @@ export default {
 
   // ── 시즌 리셋 (plan-season-reset §9) ──
   seasonTab: '시즌',
-  currentSeason: '{month}월 시즌',
+  currentSeason: '{month} 시즌',
   daysLeft: 'D-{n}',
   lastDay: '오늘 마감',
   seasonScore: '시즌 점수',
@@ -42,7 +42,7 @@ export default {
   noTrophies: '아직 트로피가 없어요',
   awardNeedsPlayers: '참가자 3명 이상부터 시상',
   scoreTrend: '내 점수 추이',
-  seasonEnded: '{month}월 시즌 종료',
+  seasonEnded: '{month} 시즌 종료',
   seasonEndedDesc: '결과 보기',
   seasonStarting: '{date} 시즌제가 시작됩니다',
   seasonStartingDesc: '지금 점수는 기록으로 남습니다',

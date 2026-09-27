@@ -33,29 +33,35 @@ const SeasonTrend = ({ history, lang, t }) => {
         {t('season', 'scoreTrend')}
       </div>
 
-      <svg
-        viewBox={`0 0 100 ${HEIGHT}`}
-        preserveAspectRatio="none"
-        style={{ width: '100%', height: HEIGHT, display: 'block', overflow: 'visible' }}
-      >
-        <polyline
-          points={points.map((p, i) => `${xOf(i)},${yOf(p.displayScore)}`).join(' ')}
-          fill="none"
-          stroke="var(--th-primary)"
-          strokeWidth="1"
-          vectorEffect="non-scaling-stroke"
-        />
-        {points.map((p, i) => (
-          <circle
-            key={p.seasonKey}
-            cx={xOf(i)}
-            cy={yOf(p.displayScore)}
-            r="2.5"
-            fill="var(--th-primary)"
+      {/* 가로로 늘린 viewBox라 선은 괜찮지만 원은 타원이 된다 — 점은 SVG 밖에서 찍는다. */}
+      <div style={{ position: 'relative', height: HEIGHT }}>
+        <svg
+          viewBox={`0 0 100 ${HEIGHT}`}
+          preserveAspectRatio="none"
+          style={{ width: '100%', height: HEIGHT, display: 'block' }}
+        >
+          <polyline
+            points={points.map((p, i) => `${xOf(i)},${yOf(p.displayScore)}`).join(' ')}
+            fill="none"
+            stroke="var(--th-primary)"
+            strokeWidth="1"
             vectorEffect="non-scaling-stroke"
           />
+        </svg>
+        {points.map((p, i) => (
+          <div
+            key={p.seasonKey}
+            style={{
+              position: 'absolute',
+              left: `${xOf(i)}%`,
+              top: yOf(p.displayScore),
+              width: 7, height: 7, borderRadius: '50%',
+              backgroundColor: 'var(--th-primary)',
+              transform: 'translate(-50%, -50%)',
+            }}
+          />
         ))}
-      </svg>
+      </div>
 
       <div style={{ display: 'flex', marginTop: 6 }}>
         {points.map((p) => (
