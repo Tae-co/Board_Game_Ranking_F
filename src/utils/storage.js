@@ -76,3 +76,20 @@ export const SELECTED_COMMUNITY_UPDATED_EVENT = 'selectedCommunityUpdated';
 export const notifySelectedCommunityUpdated = () => {
   window.dispatchEvent(new Event(SELECTED_COMMUNITY_UPDATED_EVENT));
 };
+
+const ANON_ID_KEY = 'anonId';
+
+// 로그인 전(초대 링크 랜딩)과 로그인 후를 잇는 기기 단위 ID.
+// randomUUID는 보안 컨텍스트에서만 있으므로(LAN 라이브리로드 등) 폴백을 둔다.
+export const getAnonId = () => {
+  try {
+    let id = localStorage.getItem(ANON_ID_KEY);
+    if (!id) {
+      id = crypto?.randomUUID?.() ?? `a-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      localStorage.setItem(ANON_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return null;
+  }
+};

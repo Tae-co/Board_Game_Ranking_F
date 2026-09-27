@@ -132,7 +132,7 @@ const Profile = () => {
 
   const handleDeleteAccount = async () => {
     if (isDeletingAccount) return;
-    if (!window.confirm('정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.')) return;
+    if (!window.confirm(t('profile', 'deleteAccountConfirm'))) return;
     setIsDeletingAccount(true);
     try {
       await deleteMember(userId);
@@ -141,7 +141,7 @@ const Profile = () => {
       clearAuthSession();
       window.location.replace('/login');
     } catch (err) {
-      alert(getErrorMessage(err, '탈퇴에 실패했습니다.'));
+      alert(getErrorMessage(err, t('profile', 'deleteAccountFailed')));
       setIsDeletingAccount(false);
     }
   };
@@ -469,9 +469,9 @@ const Profile = () => {
 
         {/* Delete Account */}
         <div style={{ borderRadius: 18, padding: '16px 18px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 6 }}>회원 탈퇴</div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 6 }}>{t('profile', 'deleteAccount')}</div>
           <p style={{ fontSize: 12, color: V('--th-text-sub'), margin: '0 0 12px' }}>
-            탈퇴 시 모든 게임 기록과 랭킹이 삭제됩니다.
+            {t('profile', 'deleteAccountDesc')}
           </p>
           <button
             onClick={handleDeleteAccount}
@@ -482,7 +482,7 @@ const Profile = () => {
               opacity: isDeletingAccount ? 0.6 : 1, cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
             }}
           >
-            {isDeletingAccount ? '탈퇴 처리 중...' : '회원 탈퇴'}
+            {isDeletingAccount ? t('profile', 'deleteAccountProcessing') : t('profile', 'deleteAccount')}
           </button>
         </div>
 

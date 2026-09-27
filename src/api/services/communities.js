@@ -1,4 +1,5 @@
 import api from '../axios';
+import { EVENTS, logEvent } from './events';
 
 export const getMyCommunities = (userId) =>
   api.get(`/communities/my/list/${userId}`).then(r => r.data);
@@ -9,11 +10,17 @@ export const getCommunity = (communityId) =>
 export const getCommunityMembers = (communityId) =>
   api.get(`/communities/${communityId}/members`).then(r => r.data);
 
-export const createCommunity = (payload) => api.post('/communities', payload).then(r => r.data);
+export const createCommunity = (payload) => api.post('/communities', payload).then(r => {
+  logEvent(EVENTS.COMMUNITY_CREATE_COMPLETED, { communityId: r.data?.communityId });
+  return r.data;
+});
 export const updateCommunity = (communityId, payload) =>
   api.patch(`/communities/${communityId}`, payload).then(r => r.data);
 export const deleteCommunity = (communityId) => api.delete(`/communities/${communityId}`);
 export const joinCommunity = (inviteCode) =>
-  api.post('/communities/join', { inviteCode });
+  api.post('/communities/join', { inviteCode }).then(r => {
+    logEvent(EVENTS.COMMUNITY_JOIN_COMPLETED, { communityId: r.data?.communityId });
+    return r;
+  });
 export const kickCommunityMember = (communityId, memberId) =>
   api.delete(`/communities/${communityId}/members/${memberId}`);

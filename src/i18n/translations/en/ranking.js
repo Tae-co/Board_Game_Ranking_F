@@ -3,6 +3,7 @@ export default {
   groupTab: 'Group Ranking',
   globalTab: 'Global Ranking',
   matchResult: 'Last Match Result',
+  shareResult: 'Share',
   wins: 'W',
   losses: 'L',
   winRate: 'Win Rate',

@@ -39,4 +39,9 @@ export default {
   feedbackPlaceholder: 'Leave your thoughts freely :)',
   feedbackSubmit: 'Send via Email',
   feedbackButton: 'Feedback / Bug Report',
+  deleteAccount: 'Delete Account',
+  deleteAccountDesc: 'All your game records and rankings will be permanently deleted.',
+  deleteAccountProcessing: 'Deleting...',
+  deleteAccountConfirm: 'Are you sure you want to delete your account?\nAll data will be erased and cannot be recovered.',
+  deleteAccountFailed: 'Failed to delete the account.',
 };

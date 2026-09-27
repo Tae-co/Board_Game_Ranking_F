@@ -11,7 +11,9 @@
     "clean:macos": "find android ios -name '* 2*' -not -path '*/.gradle/*' -not -path '*/.git/*' -print0 | xargs -0 rm -rf 2>/dev/null; git restore android/gradlew 2>/dev/null; echo 'macOS duplicates cleaned'",
     "sync:android": "npm run clean:macos && npx cap sync android && npm run clean:macos",
     "sync:ios": "npm run clean:macos && npx cap sync ios && npm run clean:macos",
-    "sync": "npm run clean:macos && npx cap sync && npm run clean:macos"
+    "sync": "npm run clean:macos && npx cap sync && npm run clean:macos",
+    "release:android": "sh scripts/release.sh android",
+    "release:ios": "sh scripts/release.sh ios"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.1",
@@ -21,6 +23,7 @@
     "@capacitor/core": "^8.3.1",
     "@capacitor/ios": "^8.3.1",
     "@capacitor/keyboard": "^8.0.3",
+    "@capacitor/share": "^8.0.1",
     "@radix-ui/react-slot": "^1.2.4",
     "@stomp/stompjs": "^7.3.0",
     "@tanstack/react-query": "^5.90.21",

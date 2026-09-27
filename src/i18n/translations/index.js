@@ -3,7 +3,6 @@ import koLogin from './ko/login';
 import koLobby from './ko/lobby';
 import koInvite from './ko/invite';
 import koGameSelect from './ko/gameSelect';
-import koMatchForm from './ko/matchForm';
 import koScoreSheet from './ko/scoreSheet';
 import koRanking from './ko/ranking';
 import koProfile from './ko/profile';
@@ -16,7 +15,6 @@ import enLogin from './en/login';
 import enLobby from './en/lobby';
 import enInvite from './en/invite';
 import enGameSelect from './en/gameSelect';
-import enMatchForm from './en/matchForm';
 import enScoreSheet from './en/scoreSheet';
 import enRanking from './en/ranking';
 import enProfile from './en/profile';
@@ -31,7 +29,6 @@ const translations = {
     lobby: koLobby,
     invite: koInvite,
     gameSelect: koGameSelect,
-    matchForm: koMatchForm,
     scoreSheet: koScoreSheet,
     ranking: koRanking,
     profile: koProfile,
@@ -45,7 +42,6 @@ const translations = {
     lobby: enLobby,
     invite: enInvite,
     gameSelect: enGameSelect,
-    matchForm: enMatchForm,
     scoreSheet: enScoreSheet,
     ranking: enRanking,
     profile: enProfile,

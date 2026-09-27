@@ -153,7 +153,7 @@ const CommunityMemberManage = () => {
                     key={i}
                     onClick={() => setPage(i)}
                     style={{
-                      width: 36, height: 36, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                      width: 36, height: 36, borderRadius: '50%', cursor: 'pointer',
                       fontSize: '14px', fontWeight: '700',
                       backgroundColor: page === i ? 'var(--th-primary)' : V('--th-card'),
                       color: page === i ? '#fff' : V('--th-text-sub'),

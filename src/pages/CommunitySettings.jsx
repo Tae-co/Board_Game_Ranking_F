@@ -11,6 +11,7 @@ import { V } from '../utils/cssUtils';
 import { REGION_NAMES } from '../constants/regions';
 import { getAuthUserId } from '../auth/storage';
 import { getMyCommunity, setMyCommunity, removeMyCommunity, getSelectedCommunity, setSelectedCommunity, removeSelectedCommunity, notifySelectedCommunityUpdated } from '../utils/storage';
+import { EVENTS, logEvent } from '../api/services/events';
 
 const REGIONS = [...REGION_NAMES, 'Other'];
 
@@ -294,10 +295,15 @@ const CommunitySettings = () => {
                 {detail.inviteCode}
               </span>
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(detail.inviteCode);
-                  setCodeCopied(true);
-                  setTimeout(() => setCodeCopied(false), 2000);
+                onClick={async () => {
+                  logEvent(EVENTS.INVITE_SHARED, { communityId, props: { kind: 'invite_code' } });
+                  try {
+                    await navigator.clipboard.writeText(detail.inviteCode);
+                    setCodeCopied(true);
+                    setTimeout(() => setCodeCopied(false), 2000);
+                  } catch {
+                    alert(t('invite', 'shareUnavailable'));
+                  }
                 }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
               >

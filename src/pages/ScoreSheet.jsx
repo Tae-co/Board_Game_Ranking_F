@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import NavAvatar from '../components/NavAvatar';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createMatch, updateMatch } from '../api/services/matches';
+import { EVENTS, logEvent } from '../api/services/events';
 import { getGame } from '../api/services/games';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
@@ -39,6 +40,13 @@ const ScoreSheet = () => {
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null, backState = null, previewMode = false, schemaJson = null } = location.state || {};
+
+  // 이탈률의 분모. "기록하려고 열었다"만 세어야 한다 — 수정·읽기전용·미리보기는
+  // MATCH_SUBMITTED로 이어지지 않으므로 분모에 들어가면 이탈로 잘못 잡힌다.
+  useEffect(() => {
+    if (readOnly || previewMode || editMatchId) return;
+    logEvent(EVENTS.SCORE_SHEET_OPENED, { boardGameId, roomId });
+  }, [boardGameId, roomId, readOnly, previewMode, editMatchId]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scienceModal, setScienceModal] = useState(null);

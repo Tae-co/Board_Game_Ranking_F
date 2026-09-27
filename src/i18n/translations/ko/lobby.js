@@ -62,4 +62,6 @@ export default {
   customCreateFailed: '점수판 생성에 실패했습니다.',
   customDeleteConfirm: "'{n}' 점수판을 삭제할까요?",
   customDeleteFailed: '점수판 삭제에 실패했습니다.',
+  roomMemberCount: '{n}명',
+  roomJoined: '참가중',
 };
