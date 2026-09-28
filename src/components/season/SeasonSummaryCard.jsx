@@ -1,18 +1,25 @@
 import { forwardRef } from 'react';
+import { Flame, TrendingUp, Trophy } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { V } from '../../utils/cssUtils';
 
 /**
  * 공유용 결산 카드. 화면 테마를 그대로 따르고, 공유 이미지도 캡처한 사람의 테마로 나간다.
- * 히어로만은 이미지 위 어두운 그라데이션이라 테마와 무관하게 흰 글씨다.
  */
 const CARD_WIDTH = 340;
 
+// 히어로 이미지가 아래 본문(카드색)으로 이어지도록 카드색으로 페이드한다. 글씨는 페이드된 아래쪽에 앉는다.
+const HERO_FADE = {
+  dark: 'linear-gradient(to top, rgba(26,26,46,1) 0%, rgba(26,26,46,0.45) 60%, rgba(26,26,46,0.1) 100%)',
+  light: 'linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0.05) 100%)',
+};
+
+// 이모지는 기기 폰트에 따라 ? 상자로 깨진다 — SVG 아이콘으로 그린다.
 const AWARD_META = {
-  MOST_WINS: { emoji: '🏆', labelKey: 'awardMostWins' },
-  LONGEST_STREAK: { emoji: '🔥', labelKey: 'awardLongestStreak' },
-  DARK_HORSE: { emoji: '🐎', labelKey: 'awardDarkHorse' },
+  MOST_WINS: { Icon: Trophy, labelKey: 'awardMostWins' },
+  LONGEST_STREAK: { Icon: Flame, labelKey: 'awardLongestStreak' },
+  DARK_HORSE: { Icon: TrendingUp, labelKey: 'awardDarkHorse' },
 };
 
 // 강조색은 다크 배경 기준으로 고른 색이라 흰 카드 위에선 안 읽힌다 — 라이트용으로 한 톤 진하게 둔다.
@@ -70,7 +77,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
       }}
     >
       {/* Hero */}
-      <div style={{ position: 'relative', height: 132, backgroundColor: '#2a1f6e' }}>
+      <div style={{ position: 'relative', height: 132, backgroundColor: V('--th-card') }}>
         {summary.communityImageUrl ? (
           <img
             src={summary.communityImageUrl}
@@ -83,13 +90,13 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
         )}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'linear-gradient(to top, rgba(10,10,20,0.92) 0%, rgba(10,10,20,0.35) 60%, rgba(10,10,20,0.1) 100%)',
+          background: HERO_FADE[tone],
         }} />
         <div style={{ position: 'absolute', left: 20, right: 20, bottom: 14 }}>
-          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: 'rgba(255,255,255,0.6)' }}>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: V('--th-text-sub') }}>
             {monthLabel.toUpperCase()}
           </p>
-          <p style={{ margin: '4px 0 0', fontSize: 23, fontWeight: 800, color: '#fff', letterSpacing: '-0.3px' }}>
+          <p style={{ margin: '4px 0 0', fontSize: 23, fontWeight: 800, color: V('--th-text'), letterSpacing: '-0.3px' }}>
             {summary.communityName}
           </p>
         </div>
@@ -163,7 +170,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                 border: `1px solid var(--th-border)`,
               }}
             >
-              <span style={{ fontSize: 17, lineHeight: 1 }}>{meta.emoji}</span>
+              <meta.Icon size={18} color={AWARD_ACCENT[tone][award.type]} strokeWidth={2.4} style={{ flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: V('--th-text-sub') }}>
                   {t('season', meta.labelKey)}
