@@ -1,21 +1,29 @@
 import { forwardRef } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { useTheme } from '../../theme/ThemeContext';
+import { V } from '../../utils/cssUtils';
 
 /**
- * 공유용 결산 카드. html2canvas로 이미지화되므로 테마 변수를 쓰지 않고
- * 리터럴 색상만 사용한다 (라이트/다크 어디서 캡처해도 같은 이미지가 나오도록).
+ * 공유용 결산 카드. 화면 테마를 그대로 따르고, 공유 이미지도 캡처한 사람의 테마로 나간다.
+ * 히어로만은 이미지 위 어두운 그라데이션이라 테마와 무관하게 흰 글씨다.
  */
 const CARD_WIDTH = 340;
 
 const AWARD_META = {
-  MOST_WINS: { emoji: '🏆', labelKey: 'awardMostWins', accent: '#FBBF24' },
-  LONGEST_STREAK: { emoji: '🔥', labelKey: 'awardLongestStreak', accent: '#F87171' },
-  DARK_HORSE: { emoji: '🐎', labelKey: 'awardDarkHorse', accent: '#818CF8' },
+  MOST_WINS: { emoji: '🏆', labelKey: 'awardMostWins' },
+  LONGEST_STREAK: { emoji: '🔥', labelKey: 'awardLongestStreak' },
+  DARK_HORSE: { emoji: '🐎', labelKey: 'awardDarkHorse' },
 };
 
-// 시상대 색. 카드는 html2canvas로 이미지가 되므로 테마 변수를 쓸 수 없다.
-const PODIUM_EMOJI = { 1: '🥇', 2: '🥈', 3: '🥉' };
-const PODIUM_ACCENT = { 1: '#FFD700', 2: '#C8C8D4', 3: '#D4936A' };
+// 강조색은 다크 배경 기준으로 고른 색이라 흰 카드 위에선 안 읽힌다 — 라이트용으로 한 톤 진하게 둔다.
+const AWARD_ACCENT = {
+  dark: { MOST_WINS: '#FBBF24', LONGEST_STREAK: '#F87171', DARK_HORSE: '#818CF8' },
+  light: { MOST_WINS: '#D97706', LONGEST_STREAK: '#DC2626', DARK_HORSE: '#4F46E5' },
+};
+const PODIUM_ACCENT = {
+  dark: { 1: '#FFD700', 2: '#C8C8D4', 3: '#D4936A' },
+  light: { 1: '#B7791F', 2: '#6B7280', 3: '#A0522D' },
+};
 const PODIUM_TINT = { 1: 'rgba(255,215,0,0.10)', 2: 'rgba(200,200,212,0.08)', 3: 'rgba(212,147,106,0.08)' };
 const PODIUM_EDGE = { 1: 'rgba(255,215,0,0.35)', 2: 'rgba(200,200,212,0.28)', 3: 'rgba(212,147,106,0.28)' };
 
@@ -24,6 +32,8 @@ const fill = (template, vars) =>
 
 const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
   const { t, lang } = useLanguage();
+  const { themeKey } = useTheme();
+  const tone = themeKey === 'ledger' ? 'dark' : 'light';
 
   // 결산 브랜치 시절 응답에는 podium이 없다 — 옛 캐시로 렌더될 때 터지지 않게 기본값을 둔다.
   const podium = summary.podium ?? [];
@@ -53,9 +63,10 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
         width: CARD_WIDTH,
         borderRadius: 20,
         overflow: 'hidden',
-        backgroundColor: '#141426',
+        backgroundColor: V('--th-card'),
+        border: `1px solid var(--th-border)`,
         fontFamily: 'inherit',
-        boxShadow: '0 8px 32px rgba(0,0,0,0.25)',
+        boxShadow: tone === 'dark' ? '0 8px 32px rgba(0,0,0,0.25)' : '0 8px 24px rgba(17,24,39,0.08)',
       }}
     >
       {/* Hero */}
@@ -105,14 +116,22 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                   border: `1px solid ${PODIUM_EDGE[entry.rank] || 'rgba(255,255,255,0.07)'}`,
                 }}
               >
-                <div style={{ fontSize: 17, lineHeight: 1.1 }}>{PODIUM_EMOJI[entry.rank]}</div>
+                {/* 모임 시상대는 사람마다 최고 점수를 낸 방이 다르다 — 어느 방 점수인지 밝힌다.
+                    방이 지워졌으면 이름이 없지만 칸 높이는 맞춘다. */}
                 <p style={{
-                  margin: '4px 0 0', fontSize: 12, fontWeight: 700, color: '#fff',
+                  margin: 0, minHeight: 14, fontSize: 10, fontWeight: 700, lineHeight: '14px',
+                  color: V('--th-text-sub'),
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {entry.roomName}
+                </p>
+                <p style={{
+                  margin: '4px 0 0', fontSize: 12, fontWeight: 700, color: V('--th-text'),
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   {entry.nickname}
                 </p>
-                <p style={{ margin: '1px 0 0', fontSize: 13, fontWeight: 800, color: PODIUM_ACCENT[entry.rank] }}>
+                <p style={{ margin: '1px 0 0', fontSize: 13, fontWeight: 800, color: PODIUM_ACCENT[tone][entry.rank] }}>
                   {Math.round(entry.displayScore).toLocaleString()}
                 </p>
               </div>
@@ -121,8 +140,8 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
         ) : (
           <p style={{
             margin: 0, padding: '9px 12px', borderRadius: 10, textAlign: 'center',
-            fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.45)',
-            backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)',
+            fontSize: 11, fontWeight: 600, color: V('--th-text-sub'),
+            backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
           }}>
             {t('season', 'awardNeedsPlayers')}
           </p>
@@ -140,23 +159,23 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 12px', marginBottom: 8,
-                borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.05)',
-                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: 12, backgroundColor: V('--th-bg'),
+                border: `1px solid var(--th-border)`,
               }}
             >
               <span style={{ fontSize: 17, lineHeight: 1 }}>{meta.emoji}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: 'rgba(255,255,255,0.45)' }}>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: V('--th-text-sub') }}>
                   {t('season', meta.labelKey)}
                 </p>
                 <p style={{
-                  margin: '2px 0 0', fontSize: 15, fontWeight: 700, color: '#fff',
+                  margin: '2px 0 0', fontSize: 15, fontWeight: 700, color: V('--th-text'),
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   {award.nickname}
                 </p>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 800, color: meta.accent, flexShrink: 0 }}>
+              <span style={{ fontSize: 15, fontWeight: 800, color: AWARD_ACCENT[tone][award.type], flexShrink: 0 }}>
                 {formatAwardValue(award)}
               </span>
             </div>
@@ -167,18 +186,18 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
       {/* Footer — 초대코드가 카드에 각인되어 나간다 */}
       <div style={{
         marginTop: 10, padding: '12px 20px 14px',
-        borderTop: '1px solid rgba(255,255,255,0.08)',
+        borderTop: `1px solid var(--th-border)`,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
-        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.45)' }}>
+        <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', color: V('--th-text-sub') }}>
           YADA RANK
         </span>
         {summary.inviteCode && (
           <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: 'rgba(255,255,255,0.4)' }}>
+            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: V('--th-text-sub') }}>
               {t('season', 'inviteCode').toUpperCase()}
             </span>
-            <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 800, color: '#fff', letterSpacing: '0.1em' }}>
+            <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 800, color: V('--th-text'), letterSpacing: '0.1em' }}>
               {summary.inviteCode}
             </span>
           </span>
@@ -191,10 +210,10 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
 const Stat = ({ value, label }) => (
   <div style={{
     flex: 1, borderRadius: 12, padding: '10px 12px',
-    backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)',
+    backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
   }}>
-    <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#fff', lineHeight: 1.1 }}>{value}</p>
-    <p style={{ margin: '2px 0 0', fontSize: 10, fontWeight: 600, color: 'rgba(255,255,255,0.45)' }}>{label}</p>
+    <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: V('--th-text'), lineHeight: 1.1 }}>{value}</p>
+    <p style={{ margin: '2px 0 0', fontSize: 10, fontWeight: 600, color: V('--th-text-sub') }}>{label}</p>
   </div>
 );
 
