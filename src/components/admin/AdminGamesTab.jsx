@@ -4,6 +4,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { useSchemaBuilder } from '../../hooks/useSchemaBuilder';
 import { useGameManagement } from '../../hooks/useGameManagement';
 import AdminSchemaBuilder from './AdminSchemaBuilder';
+import GameImageFallback from '../shared/GameImageFallback';
 
 const AdminGamesTab = () => {
   const navigate = useNavigate();
@@ -103,7 +104,7 @@ const AdminGamesTab = () => {
               <div key={game.id} className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0">
-                    {game.imageUrl ? <img src={game.imageUrl} alt={game.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xl" style={{ backgroundColor: 'var(--th-bg)' }}>🎲</div>}
+                    {game.imageUrl ? <img src={game.imageUrl} alt={game.name} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center" style={{ backgroundColor: 'var(--th-bg)' }}><GameImageFallback size={32} /></div>}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="truncate" style={{ color: 'var(--th-text)' }}>{game.name}</p>

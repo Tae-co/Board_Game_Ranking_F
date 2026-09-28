@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react';
 import StorageImage from '../StorageImage';
+import GameImageFallback from '../shared/GameImageFallback';
 import { V } from '../../utils/cssUtils';
 import { useLanguage } from '../../i18n/LanguageContext';
 
@@ -26,7 +27,7 @@ const RoomCard = ({ room, imageUrl, isMember, communityId, onClick }) => {
       {imageUrl ? (
         <StorageImage src={imageUrl} alt={room.roomName} loading="lazy" decoding="async" transform={{ width: 160, height: 160, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
       ) : (
-        <span style={{ fontSize: '28px' }}>🎲</span>
+        <GameImageFallback size={44} />
       )}
     </div>
     <div style={{ padding: '8px 8px 10px', flex: 1 }}>
