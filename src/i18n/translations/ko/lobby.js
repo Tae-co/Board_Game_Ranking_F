@@ -36,7 +36,7 @@ export default {
   customGameTitle: '점수판 만들기',
   customNamePlaceholder: '게임 이름',
   customImage: '사진 (선택)',
-  customImageHint: '게임 사진을 넣으면 목록에서 알아보기 쉬워요. 안 넣으면 🎲로 표시됩니다.',
+  customImageHint: '게임 사진을 넣으면 목록에서 알아보기 쉬워요. 안 넣으면 앱 로고로 표시됩니다.',
   customImageRemove: '사진 빼기',
   customImageOnly: '이미지 파일만 넣을 수 있어요.',
   customPlayers: '인원',

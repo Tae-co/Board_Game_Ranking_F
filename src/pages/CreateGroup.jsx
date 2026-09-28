@@ -7,6 +7,7 @@ import { getGames, deleteGame } from '../api/services/games';
 import CustomGameBuilder from '../components/lobby/CustomGameBuilder';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import GameImageFallback from '../components/shared/GameImageFallback';
 import { getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 
@@ -193,8 +194,8 @@ const CreateGroup = () => {
                     {game.imageUrl ? (
                       <img src={game.imageUrl} alt={game.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
                     ) : (
-                      <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>
-                        🎲
+                      <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <GameImageFallback size={44} />
                       </div>
                     )}
                     <p style={{
