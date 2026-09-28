@@ -9,7 +9,7 @@ const CARD_WIDTH = 340;
 
 const AWARD_META = {
   MOST_WINS: { emoji: '🏆', labelKey: 'awardMostWins', accent: '#FBBF24' },
-  BIGGEST_CLIMB: { emoji: '📈', labelKey: 'awardBiggestClimb', accent: '#34D399' },
+  LONGEST_STREAK: { emoji: '🔥', labelKey: 'awardLongestStreak', accent: '#F87171' },
   DARK_HORSE: { emoji: '🐎', labelKey: 'awardDarkHorse', accent: '#818CF8' },
 };
 
@@ -38,6 +38,9 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
     if (award.type === 'MOST_WINS') {
       const key = award.value === 1 ? 'winsUnitOne' : 'winsUnit';
       return fill(t('season', key), { count: award.value });
+    }
+    if (award.type === 'LONGEST_STREAK') {
+      return fill(t('season', 'streakUnit'), { count: award.value });
     }
     const rounded = Math.round(award.value);
     return `${rounded >= 0 ? '+' : ''}${rounded}`;
@@ -83,8 +86,8 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
 
       {/* Totals */}
       <div style={{ display: 'flex', gap: 8, padding: '14px 20px 4px' }}>
-        <Stat value={summary.totalMatches} label={t('season', 'matchesLabel')} />
-        <Stat value={summary.totalPlayers} label={t('season', 'playersLabel')} />
+        <Stat value={summary.totalRooms} label={t('season', 'roomsLabel')} />
+        <Stat value={summary.totalMembers} label={t('season', 'membersLabel')} />
       </div>
 
       {/* Podium — 시상대는 수상 3종 위에 온다. 순위가 카드의 머리기사이기 때문이다 (기획 §6).
@@ -160,37 +163,6 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
           );
         })}
       </div>
-
-      {/* Game tops */}
-      {summary.gameTops.length > 0 && (
-        <div style={{ padding: '6px 20px 4px' }}>
-          <p style={{ margin: '0 0 8px', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.4)' }}>
-            {t('season', 'gameTops').toUpperCase()}
-          </p>
-          {summary.gameTops.slice(0, 5).map((top) => (
-            <div
-              key={top.boardGameId}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '5px 0' }}
-            >
-              <span style={{
-                flex: 1, minWidth: 0, fontSize: 12, color: 'rgba(255,255,255,0.62)',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {top.boardGameName}
-              </span>
-              <span style={{
-                maxWidth: 110, fontSize: 12, fontWeight: 700, color: '#fff',
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {top.nickname}
-              </span>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#FBBF24', flexShrink: 0, width: 34, textAlign: 'right' }}>
-                {top.wins}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
 
       {/* Footer — 초대코드가 카드에 각인되어 나간다 */}
       <div style={{
