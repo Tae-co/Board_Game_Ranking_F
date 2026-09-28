@@ -1,5 +1,5 @@
-import { Crown } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
+import MedalBadge from '../shared/MedalBadge';
 import { V } from '../../utils/cssUtils';
 import { formatDate, formatTime, ordinalSuffix } from '../../utils/dateUtils';
 
@@ -37,8 +37,10 @@ const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit,
           {visibleParticipants.map((p, i) => (
             <div key={p.memberId} style={{ marginLeft: i === 0 ? 0 : -10, zIndex: visibleParticipants.length - i, position: 'relative' }}>
               <InitialAvatar nickname={p.nickname} profileImage={p.profileImage} size={36} fontSize={14} />
-              {p.placement === 1 && (
-                <Crown size={14} color="#F59E0B" fill="#FFD700" strokeWidth={2.2} style={{ position: 'absolute', top: -8, left: -2 }} />
+              {p.placement >= 1 && p.placement <= 3 && (
+                <div style={{ position: 'absolute', top: -8, left: -4, lineHeight: 0 }}>
+                  <MedalBadge place={p.placement} size={18} />
+                </div>
               )}
             </div>
           ))}
