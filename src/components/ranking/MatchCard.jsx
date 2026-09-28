@@ -1,3 +1,4 @@
+import { Crown } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
 import { V } from '../../utils/cssUtils';
 import { formatDate, formatTime, ordinalSuffix } from '../../utils/dateUtils';
@@ -37,7 +38,7 @@ const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit,
             <div key={p.memberId} style={{ marginLeft: i === 0 ? 0 : -10, zIndex: visibleParticipants.length - i, position: 'relative' }}>
               <InitialAvatar nickname={p.nickname} profileImage={p.profileImage} size={36} fontSize={14} />
               {p.placement === 1 && (
-                <div style={{ position: 'absolute', top: -8, left: -2, fontSize: 13, lineHeight: 1 }}>👑</div>
+                <Crown size={14} color="#F59E0B" fill="#FFD700" strokeWidth={2.2} style={{ position: 'absolute', top: -8, left: -2 }} />
               )}
             </div>
           ))}

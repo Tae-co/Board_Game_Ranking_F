@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { Pencil, Check } from 'lucide-react';
+import { Pencil, Check, Crown } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
 import { V } from '../../utils/cssUtils';
 
@@ -84,7 +84,7 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
             <InitialAvatar nickname={rank.nickname} profileImage={rank.profileImage} size={28} fontSize={11} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: isMe || isSelected ? 700 : 500, color: isMe || isSelected ? 'var(--th-primary)' : V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {championIds?.has(rank.memberId) && <span style={{ marginRight: 3 }}>👑</span>}
+                {championIds?.has(rank.memberId) && <Crown size={13} color="#F59E0B" fill="#FFD700" strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: '-2px' }} />}
                 {rank.nickname}
               </div>
               {isUnranked ? (
