@@ -1,3 +1,4 @@
+import { PartyPopper } from 'lucide-react';
 import { V } from '../../utils/cssUtils';
 import { fill, periodMonthLabel, seasonProgress } from '../../utils/seasonUtils';
 
@@ -23,8 +24,9 @@ const SeasonHeader = ({ region, myRankPosition, myScore, compact = false, justRe
           backgroundColor: 'color-mix(in srgb, var(--th-primary) 8%, transparent)',
           border: `1px solid color-mix(in srgb, var(--th-primary) 35%, transparent)`,
         }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: V('--th-text') }}>
-            🎉 {monthLabel} · {t('season', 'newSeasonStarted')}
+          <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 700, color: V('--th-text') }}>
+            <PartyPopper size={14} color={V('--th-primary')} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+            {monthLabel} · {t('season', 'newSeasonStarted')}
           </span>
           <button
             onClick={onViewPastSeason}
