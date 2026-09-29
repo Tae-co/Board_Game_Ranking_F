@@ -1,5 +1,5 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
@@ -31,6 +31,14 @@ const SeasonSummary = lazy(() => import('./pages/SeasonSummary'));
 // 라우트 진입 계측. useLocation을 쓰므로 BrowserRouter 안에 있어야 한다.
 const RouteTracker = ({ isAuthenticated }) => {
   useRouteTracking(isAuthenticated);
+  return null;
+};
+
+// SPA라 페이지를 바꿔도 window 스크롤이 그대로 남는다 — 경로가 바뀌면 맨 위에서 시작한다.
+// pathname만 본다: 같은 페이지 안의 쿼리/state 변경(탭 등)은 스크롤을 건드리지 않는다.
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 };
 
@@ -170,6 +178,7 @@ function App() {
     <LanguageProvider>
     <BrowserRouter>
       <RouteTracker isAuthenticated={isAuthenticated} />
+      <ScrollToTop />
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0,
         height: 'env(safe-area-inset-top)',
