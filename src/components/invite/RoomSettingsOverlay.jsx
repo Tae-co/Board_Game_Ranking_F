@@ -21,12 +21,12 @@ const RoomSettingsOverlay = ({
     position: 'fixed', top: 0, bottom: 0, left: '50%', transform: 'translateX(-50%)',
     width: '100%', maxWidth: '390px', zIndex: 100,
     backgroundColor: V('--th-bg'),
-    overflowY: 'auto', paddingBottom: 100,
+    overflowY: 'auto', display: 'flex', flexDirection: 'column',
   }}>
     {/* Header */}
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      padding: 'calc(16px + env(safe-area-inset-top)) 20px 16px', position: 'sticky', top: 0, zIndex: 10,
+      padding: 'calc(16px + env(safe-area-inset-top)) 20px 16px', position: 'sticky', top: 0, zIndex: 10, flexShrink: 0,
       backgroundColor: V('--th-nav-bg'),
       borderBottom: `1px solid var(--th-border)`,
     }}>
@@ -37,7 +37,7 @@ const RoomSettingsOverlay = ({
       <NavAvatar />
     </div>
 
-    <div style={{ padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div style={{ padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '20px', flex: '1 0 auto' }}>
       {isHost && <>
       {/* Group Identity */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -121,8 +121,8 @@ const RoomSettingsOverlay = ({
       </div>
     </div>
 
-    {/* Bottom Buttons */}
-    <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '390px', padding: '12px 20px calc(28px + env(safe-area-inset-bottom))', backgroundColor: V('--th-bg'), display: 'flex', flexDirection: 'column', gap: '10px' }}>
+    {/* Bottom Buttons — sticky라서 버튼 개수가 달라져도 목록 끝을 가리지 않는다 */}
+    <div style={{ position: 'sticky', bottom: 0, zIndex: 10, flexShrink: 0, boxSizing: 'border-box', width: '100%', padding: '12px 20px calc(28px + env(safe-area-inset-bottom))', backgroundColor: V('--th-bg'), display: 'flex', flexDirection: 'column', gap: '10px' }}>
       {onLeaveRoom && (
         <button onClick={onLeaveRoom} style={{ width: '100%', padding: '14px', borderRadius: '50px', backgroundColor: 'transparent', color: V('--th-text-sub'), border: `1.5px solid var(--th-border)`, cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>{t('invite', 'leaveRoomButton')}</button>
       )}
