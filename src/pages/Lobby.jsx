@@ -4,8 +4,8 @@ import { ArrowLeft, ChevronRight, Plus, Trophy, Users, Copy, CheckCheck, Setting
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { QRCodeSVG } from 'qrcode.react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { joinRoom, getMyRooms, getCommunityRooms } from '../api/services/rooms';
+import { useQuery } from '@tanstack/react-query';
+import { getRoomByInviteCode, getMyRooms, getCommunityRooms } from '../api/services/rooms';
 import { getGames } from '../api/services/games';
 import { getCommunityMembers } from '../api/services/communities';
 import { getSeasonPeriods, getSeasonStatus } from '../api/services/seasons';
@@ -25,7 +25,6 @@ const DiceLogo = () => (
 const Lobby = () => {
   const navigate = useNavigate();
   const { t, lang } = useLanguage();
-  const queryClient = useQueryClient();
   const [showJoinSheet, setShowJoinSheet] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
@@ -115,13 +114,8 @@ const Lobby = () => {
     staleTime: 1000 * 60 * 30,
   });
 
-  const handleEnterRoom = async (room) => {
-    if (communityId && !room.isMember) {
-      try {
-        await joinRoom(room.inviteCode);
-        queryClient.invalidateQueries({ queryKey: ['communityRooms', communityId, userId] });
-      } catch { /* 이미 멤버인 경우 무시 */ }
-    }
+  // 참가는 방 화면의 참가하기 버튼에서 한다. 여기서는 들어가기만 한다.
+  const handleEnterRoom = (room) => {
     navigate(`/invite/${room.roomId}`);
   };
 
@@ -129,11 +123,10 @@ const Lobby = () => {
     if (!joinCode.trim()) return;
     setIsJoining(true);
     try {
-      await joinRoom(joinCode.trim());
+      const room = await getRoomByInviteCode(joinCode.trim());
       setJoinCode('');
       setShowJoinSheet(false);
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      navigate(`/invite/${room.roomId}`);
     } catch {
       alert(t('lobby', 'joinFailed'));
     } finally {
