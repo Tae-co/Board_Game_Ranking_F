@@ -783,10 +783,10 @@ const Invite = () => {
             style={{
               width: '100%', padding: '15px', borderRadius: '50px',
               cursor: isJoiningRoom ? 'not-allowed' : 'pointer',
-              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
               border: 'none',
               opacity: isJoiningRoom ? 0.7 : 1,
-              boxShadow: '0 4px 16px rgba(107, 92, 231, 0.4)',
+              boxShadow: '0 4px 16px rgba(34, 197, 94, 0.4)',
             }}
           >
             <span style={{ fontWeight: '700', fontSize: '15px', color: '#FFFFFF' }}>
