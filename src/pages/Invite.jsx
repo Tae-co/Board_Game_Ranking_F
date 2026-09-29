@@ -24,6 +24,7 @@ import RankingTable from '../components/ranking/RankingTable';
 import RatingEditModal from '../components/ranking/RatingEditModal';
 import SeasonTab from '../components/season/SeasonTab';
 import SeasonHeader from '../components/season/SeasonHeader';
+import { currentSeasonKey } from '../utils/seasonUtils';
 
 const buildSavedScores = (participants) => {
   const first = participants.find(p => p.scoresJson);
@@ -159,9 +160,12 @@ const Invite = () => {
     queryFn: () => getRoomMatches(roomId),
     staleTime: 1000 * 60 * 1,
   });
-  const allMatches = roomInfo.boardGameId
-    ? allMatchesRaw.filter(m => m.boardGameId === roomInfo.boardGameId)
-    : allMatchesRaw;
+  // 매치기록도 시즌과 함께 새로 시작한다. DB는 그대로 두고 이번 시즌(region 타임존 기준 이번 달) 경기만 보여준다.
+  // 지난 시즌 기록은 시즌 탭의 결산으로 본다.
+  const seasonKey = currentSeasonKey(communityRegion);
+  const allMatches = allMatchesRaw.filter(m =>
+    (!roomInfo.boardGameId || m.boardGameId === roomInfo.boardGameId)
+    && currentSeasonKey(communityRegion, new Date(m.playedAt)) === seasonKey);
   // 매치기록은 최신 10페이지까지만 보여준다. 기록이 쌓일수록 페이지가 무한정 늘어나는 걸 막는다.
   // 서버 데이터는 그대로 둔다 — 실제로 지우면 MatchService가 레이팅을 재계산해서 점수가 바뀐다.
   const visibleMatches = useMemo(
