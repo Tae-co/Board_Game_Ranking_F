@@ -6,7 +6,7 @@ import { Share } from '@capacitor/share';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, getRoomSeasons, getSeasonPodium } from '../api/services/rooms';
+import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, getRoomSeasons, getSeasonPodium } from '../api/services/rooms';
 import { getGame } from '../api/services/games';
 import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -115,6 +115,8 @@ const Invite = () => {
   }, [onlineIds, members, membersLoading, refetchMembers]);
 
   const isHost = members.find(m => m.memberId === userId)?.isHost ?? false;
+  const isMember = members.some(m => m.memberId === userId);
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
 
   // 방의 게임을 id로 직접 가져온다. 커뮤니티 목록을 거치지 않으므로
   // 초대 링크로 들어온 비(非)커뮤니티 멤버도 커스텀 게임 정보를 볼 수 있다.
@@ -312,13 +314,26 @@ const Invite = () => {
     });
   };
 
+  const handleJoinRoom = async () => {
+    setIsJoiningRoom(true);
+    try {
+      await joinRoom(roomInfo.inviteCode);
+      queryClient.invalidateQueries({ queryKey: ['roomMembers', roomId] });
+      queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+    } catch { alert(t('invite', 'joinFailed')); }
+    setIsJoiningRoom(false);
+  };
+
   const handleLeaveRoom = async () => {
     if (!window.confirm(t('invite', 'leaveConfirm'))) return;
     try {
       await leaveRoom(roomId, userId);
       const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
       queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
-      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, removeRoom);
+      // 커뮤니티 방은 나가도 목록에 남아야 다시 참가할 수 있다.
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
       navigate('/lobby');
     } catch { alert(t('invite', 'leaveFailed')); }
   };
@@ -529,11 +544,11 @@ const Invite = () => {
                 </button>
               )}
               <button
-                onClick={isHost ? openSettings : undefined}
+                onClick={openSettings}
                 style={{
                   background: 'none', border: 'none', padding: '4px', display: 'flex', alignItems: 'center',
-                  cursor: isHost ? 'pointer' : 'default',
-                  color: isHost ? V('--th-text-sub') : 'color-mix(in srgb, var(--th-text-sub) 40%, transparent)',
+                  cursor: 'pointer',
+                  color: V('--th-text-sub'),
                 }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -744,7 +759,7 @@ const Invite = () => {
                   onEditRating={handleOpenRatingEdit}
                   PAGE_SIZE={PAGE_SIZE}
                   selectedPlayers={selectedPlayers}
-                  onToggle={togglePlayer}
+                  onToggle={isMember ? togglePlayer : undefined}
                   highlightMemberId={searchResult?.memberId}
                   nudge={nudge}
                   championIds={championIds}
@@ -756,10 +771,29 @@ const Invite = () => {
         </div>
       </div>
 
-      {/* Sticky Start Game Button — 플레이어를 고르는 그룹 랭킹 탭에서만 쓴다 */}
-      {activeTab === 'group' && (
+      {/* Sticky Start Game Button — 플레이어를 고르는 그룹 랭킹 탭에서만 쓴다.
+          아직 참가하지 않은 사람에겐 같은 자리에 참가하기 버튼을 보여준다. 멤버 로딩 중엔 어느 쪽인지 모르니 비워둔다. */}
+      {activeTab === 'group' && !membersLoading && (
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
         <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px calc(28px + env(safe-area-inset-bottom))' }}>
+          {!isMember ? (
+          <button
+            onClick={handleJoinRoom}
+            disabled={isJoiningRoom || !roomInfo.inviteCode}
+            style={{
+              width: '100%', padding: '15px', borderRadius: '50px',
+              cursor: isJoiningRoom ? 'not-allowed' : 'pointer',
+              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              border: 'none',
+              opacity: isJoiningRoom ? 0.7 : 1,
+              boxShadow: '0 4px 16px rgba(107, 92, 231, 0.4)',
+            }}
+          >
+            <span style={{ fontWeight: '700', fontSize: '15px', color: '#FFFFFF' }}>
+              {isJoiningRoom ? '...' : t('invite', 'joinRoom')}
+            </span>
+          </button>
+          ) : (
           <button
             onClick={handleStartGame}
             style={{
@@ -779,6 +813,7 @@ const Invite = () => {
               {startLabel}
             </span>
           </button>
+          )}
         </div>
       </div>
       )}
@@ -788,6 +823,8 @@ const Invite = () => {
           onClose={() => setShowSettings(false)}
           onSave={handleSaveSettings}
           onDeleteRoom={handleDeleteRoom}
+          onLeaveRoom={isMember ? handleLeaveRoom : undefined}
+          isHost={isHost}
           editRoomName={editRoomName}
           setEditRoomName={setEditRoomName}
           members={members}

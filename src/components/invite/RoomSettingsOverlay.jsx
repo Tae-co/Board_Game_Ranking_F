@@ -8,7 +8,7 @@ import { getAvatarColorById as getAvatarColor } from '../../utils/avatarUtils';
 const PER_PAGE = 10;
 
 const RoomSettingsOverlay = ({
-  onClose, onSave, onDeleteRoom,
+  onClose, onSave, onDeleteRoom, onLeaveRoom, isHost,
   editRoomName, setEditRoomName,
   members, userId,
   saving, onKickMember, navigate, t,
@@ -33,11 +33,12 @@ const RoomSettingsOverlay = ({
       <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}>
         <ArrowLeft style={{ width: 24, height: 24 }} />
       </button>
-      <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>Manage Group</h1>
+      <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>{isHost ? 'Manage Group' : t('invite', 'members')}</h1>
       <NavAvatar />
     </div>
 
     <div style={{ padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      {isHost && <>
       {/* Group Identity */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <h2 style={{ fontSize: '22px', fontWeight: '800', color: V('--th-text'), margin: 0 }}>Group identity</h2>
@@ -55,6 +56,7 @@ const RoomSettingsOverlay = ({
           style={{ width: '100%', padding: '13px 16px', borderRadius: '12px', border: `1px solid var(--th-border)`, backgroundColor: V('--th-bg'), color: V('--th-text'), fontSize: '15px', fontWeight: '600', outline: 'none', boxSizing: 'border-box' }}
         />
       </div>
+      </>}
 
       {/* Members */}
       <div>
@@ -73,7 +75,7 @@ const RoomSettingsOverlay = ({
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {pagedMembers.map((member) => {
             const isMe = member.memberId === userId;
-            const canKick = !isMe && !member.isHost;
+            const canKick = isHost && !isMe && !member.isHost;
             return (
               <div key={member.memberId} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 8px', borderBottom: `1px solid var(--th-border)` }}>
                 <div style={{ flexShrink: 0, width: 44, height: 44 }}>
@@ -121,10 +123,15 @@ const RoomSettingsOverlay = ({
 
     {/* Bottom Buttons */}
     <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '390px', padding: '12px 20px calc(28px + env(safe-area-inset-bottom))', backgroundColor: V('--th-bg'), display: 'flex', flexDirection: 'column', gap: '10px' }}>
+      {onLeaveRoom && (
+        <button onClick={onLeaveRoom} style={{ width: '100%', padding: '14px', borderRadius: '50px', backgroundColor: 'transparent', color: V('--th-text-sub'), border: `1.5px solid var(--th-border)`, cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>{t('invite', 'leaveRoomButton')}</button>
+      )}
+      {isHost && <>
       <button onClick={onDeleteRoom} style={{ width: '100%', padding: '14px', borderRadius: '50px', backgroundColor: 'transparent', color: '#ef4444', border: '1.5px solid #ef4444', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>Delete Group</button>
       <button onClick={onSave} disabled={saving || !editRoomName.trim()} style={{ width: '100%', padding: '15px', borderRadius: '50px', cursor: saving ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)', border: 'none', opacity: saving ? 0.7 : 1, fontSize: '15px', fontWeight: '700', color: '#FFFFFF', boxShadow: '0 4px 16px rgba(107, 92, 231, 0.4)' }}>
         {saving ? 'Saving...' : 'Save the change'}
       </button>
+      </>}
     </div>
   </div>
   );

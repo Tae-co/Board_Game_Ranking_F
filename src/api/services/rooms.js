@@ -3,6 +3,8 @@ import { EVENTS, logEvent } from './events';
 
 export const getRoom = (roomId) => api.get(`/rooms/${roomId}`).then(r => r.data);
 export const getRoomMembers = (roomId) => api.get(`/rooms/${roomId}/members`).then(r => r.data || []);
+export const getRoomByInviteCode = (inviteCode) =>
+  api.get(`/rooms/code/${encodeURIComponent(inviteCode)}`).then(r => r.data);
 export const getMyRooms = (userId) => api.get(`/rooms/my/${userId}`).then(r => r.data);
 export const getCommunityRooms = (communityId, userId) =>
   api.get(`/communities/${communityId}/rooms?memberId=${userId}`).then(r => r.data);
