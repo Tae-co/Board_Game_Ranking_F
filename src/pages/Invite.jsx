@@ -327,7 +327,10 @@ const Invite = () => {
   };
 
   const handleLeaveRoom = async () => {
-    if (!window.confirm(t('invite', 'leaveConfirm'))) return;
+    // 호스트가 나가면 백엔드가 방장을 넘기거나(멤버가 남을 때) 방을 지운다(혼자일 때).
+    const confirmKey = !isHost ? 'leaveConfirm'
+      : members.length <= 1 ? 'leaveConfirmHostAlone' : 'leaveConfirmHost';
+    if (!window.confirm(t('invite', confirmKey))) return;
     try {
       await leaveRoom(roomId, userId);
       const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
