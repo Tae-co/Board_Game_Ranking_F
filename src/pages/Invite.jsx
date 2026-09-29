@@ -334,6 +334,9 @@ const Invite = () => {
       queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
       // 커뮤니티 방은 나가도 목록에 남아야 다시 참가할 수 있다.
       queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      // 다시 들어왔을 때 캐시된 목록에 내가 멤버로 남아 있지 않도록 비운다.
+      queryClient.removeQueries({ queryKey: ['roomMembers', roomId] });
+      queryClient.removeQueries({ queryKey: ['rankings', roomId] });
       navigate('/lobby');
     } catch { alert(t('invite', 'leaveFailed')); }
   };
