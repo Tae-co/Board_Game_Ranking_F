@@ -41,6 +41,7 @@ export default {
   trophyShelf: '트로피',
   noTrophies: '아직 트로피가 없어요',
   awardNeedsPlayers: '참가자 3명 이상부터 시상',
+  podiumPending: '시즌 진행 중 · {date}에 시상대 확정',
   scoreTrend: '내 점수 추이',
   seasonEnded: '{month} 시즌 종료',
   seasonEndedDesc: '결과 보기',

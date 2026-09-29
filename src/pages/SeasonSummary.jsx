@@ -10,6 +10,7 @@ import { EVENTS, logEvent } from '../api/services/events';
 import { useSelectedCommunity } from '../hooks/useSelectedCommunity';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import { currentSeasonKey, nextResetDateLabel } from '../utils/seasonUtils';
 
 const fill = (template, vars) =>
   template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '');
@@ -181,7 +182,13 @@ const SeasonSummary = () => {
         ) : summary ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <SeasonSummaryCard ref={cardRef} summary={summary} />
+              <SeasonSummaryCard
+                ref={cardRef}
+                summary={summary}
+                podiumOpensOn={summary.period === currentSeasonKey(selectedCommunity?.region)
+                  ? nextResetDateLabel(selectedCommunity?.region, lang)
+                  : null}
+              />
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>

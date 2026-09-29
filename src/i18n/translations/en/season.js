@@ -41,6 +41,7 @@ export default {
   trophyShelf: 'Trophies',
   noTrophies: 'No trophies yet',
   awardNeedsPlayers: 'Awards need 3+ players',
+  podiumPending: 'Season in progress · podium set on {date}',
   scoreTrend: 'My score trend',
   seasonEnded: '{month} season ended',
   seasonEndedDesc: 'See the results',
