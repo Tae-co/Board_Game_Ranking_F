@@ -37,7 +37,8 @@ const PODIUM_EDGE = { 1: 'rgba(255,215,0,0.35)', 2: 'rgba(200,200,212,0.28)', 3:
 const fill = (template, vars) =>
   template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '');
 
-const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
+// podiumOpensOn: 진행 중인 시즌이면 시상대가 확정되는 날짜 라벨, 끝난 시즌이면 null
+const SeasonSummaryCard = forwardRef(({ summary, podiumOpensOn = null }, ref) => {
   const { t, lang } = useLanguage();
   const { themeKey } = useTheme();
   const tone = themeKey === 'ledger' ? 'dark' : 'light';
@@ -109,7 +110,8 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
       </div>
 
       {/* Podium — 시상대는 수상 3종 위에 온다. 순위가 카드의 머리기사이기 때문이다 (기획 §6).
-          참가자 3명 미만이면 서버가 빈 목록을 주고, 그때는 시상 조건을 한 줄로 알린다 (§4). */}
+          참가자 3명 미만이면 서버가 빈 목록을 주고, 그때는 시상 조건을 한 줄로 알린다 (§4).
+          진행 중인 시즌도 빈 목록이다 — 시상대는 마감 스냅샷에서만 나오므로 확정일을 알린다. */}
       <div style={{ padding: '10px 20px 0' }}>
         {podium.length > 0 ? (
           <div style={{ display: 'flex', gap: 8 }}>
@@ -150,7 +152,9 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
             fontSize: 11, fontWeight: 600, color: V('--th-text-sub'),
             backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
           }}>
-            {t('season', 'awardNeedsPlayers')}
+            {podiumOpensOn
+              ? fill(t('season', 'podiumPending'), { date: podiumOpensOn })
+              : t('season', 'awardNeedsPlayers')}
           </p>
         )}
       </div>

@@ -456,6 +456,8 @@ const Invite = () => {
         Array.isArray(old) ? old.filter(m => m.matchId !== matchId) : old
       );
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
+      queryClient.invalidateQueries({ queryKey: ['seasonSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['seasonPeriods'] });
     } catch { alert('삭제에 실패했습니다.'); }
   }, [queryClient, refetchMatches, roomId]);
 
