@@ -29,7 +29,7 @@ const Lobby = () => {
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
   const sheetRef = useRef(null);
-  const nickname = getNickname() || '플레이어';
+  const nickname = getNickname() || t('lobby', 'defaultNickname');
   const userId = getAuthUserId();
   const [selectedCommunity, setSelectedCommunity] = useState(() => getSelectedCommunity());
   useEffect(() => {
@@ -177,7 +177,7 @@ const Lobby = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           {isAdmin && (
             <span style={{ fontSize: '13px', fontWeight: '600', color: 'var(--th-text-sub)' }}>
-              Admin
+              {t('lobby', 'adminBadge')}
             </span>
           )}
           <NavAvatar />
@@ -227,7 +227,7 @@ const Lobby = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: communityInviteCode ? '8px' : 0 }}>
                   <Users style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.8)' }} />
                   <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '500' }}>
-                    {selectedCommunity?.memberCount ?? 0} Members
+                    {t('lobby', 'membersCount').replace('{n}', selectedCommunity?.memberCount ?? 0)}
                   </span>
                 </div>
                 {selectedCommunity?.region && (
@@ -259,7 +259,7 @@ const Lobby = () => {
                       display: 'flex', alignItems: 'center', gap: '5px',
                     }}
                   >
-                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.6)', fontWeight: '700', letterSpacing: '0.08em' }}>CODE</span>
+                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.6)', fontWeight: '700', letterSpacing: '0.08em' }}>{t('lobby', 'codeLabel')}</span>
                     <span style={{ fontFamily: 'monospace', fontSize: '15px', fontWeight: '800', color: '#fff', letterSpacing: '0.1em' }}>
                       {communityInviteCode}
                     </span>
@@ -298,10 +298,10 @@ const Lobby = () => {
               backgroundColor: 'rgba(255,255,255,0.05)',
             }}/>
             <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 6px', letterSpacing: '-0.3px' }}>
-              Hi, {nickname}!
+              {t('lobby', 'heroGreeting').replace('{name}', nickname)}
             </p>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.5 }}>
-              Ready to manage your collectives<br/>today?
+              {t('lobby', 'heroSubLine1')}<br/>{t('lobby', 'heroSubLine2')}
             </p>
           </div>
         )}
@@ -413,7 +413,7 @@ const Lobby = () => {
                   {t('lobby', 'createGroup')}
                 </div>
                 <div style={{ fontSize: '11px', color: V('--th-text-sub') }}>
-                  Start a new circle
+                  {t('lobby', 'createGroupDesc')}
                 </div>
               </div>
             </button>
@@ -442,7 +442,7 @@ const Lobby = () => {
                   {t('lobby', 'joinWithCode')}
                 </div>
                 <div style={{ fontSize: '11px', color: V('--th-text-sub') }}>
-                  Enter a shared ID
+                  {t('lobby', 'joinWithCodeDesc')}
                 </div>
               </div>
             </button>

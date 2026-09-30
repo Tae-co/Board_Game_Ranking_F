@@ -50,6 +50,7 @@ const Profile = () => {
   const maxRating = Math.round(profileData?.overallRating ?? 500);
   const tier = getTierFromRating(maxRating);
   const tierStyle = getTierBg(tier.label);
+  const tierName = t('profile', `tier${tier.label}`);
 
   const [nickname, setNickname] = useState('');
   const [nicknameStatus, setNicknameStatus] = useState(null);
@@ -72,7 +73,7 @@ const Profile = () => {
       setProfileImage(url);
       window.dispatchEvent(new Event('profileImageUpdated'));
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
-    } catch { alert('사진 업로드에 실패했습니다.'); }
+    } catch { alert(t('profile', 'photoUploadFailed')); }
     finally { setIsUploadingPhoto(false); }
   };
 
@@ -84,7 +85,7 @@ const Profile = () => {
       setProfileImage(null);
       window.dispatchEvent(new Event('profileImageUpdated'));
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
-    } catch { alert('기본 프로필로 변경에 실패했습니다.'); }
+    } catch { alert(t('profile', 'photoResetFailed')); }
     finally { setIsUploadingPhoto(false); }
   };
 
@@ -261,7 +262,7 @@ const Profile = () => {
                     }}
                   >
                     <Camera size={15} color={V('--th-primary')} />
-                    사진 변경
+                    {t('profile', 'changePhoto')}
                   </button>
                   {profileData?.profileImage && (
                     <button
@@ -273,7 +274,7 @@ const Profile = () => {
                       }}
                     >
                       <span style={{ fontSize: 15 }}>↩</span>
-                      기본 프로필
+                      {t('profile', 'resetPhoto')}
                     </button>
                   )}
                 </div>
@@ -309,7 +310,7 @@ const Profile = () => {
               {currentNickname}
             </div>
             <div style={{ fontSize: 13, color: V('--th-text-sub') }}>
-              {tier.label.charAt(0) + tier.label.slice(1).toLowerCase()} Member
+              {t('profile', 'tierMember').replace('{tier}', tierName.charAt(0) + tierName.slice(1).toLowerCase())}
             </div>
           </div>
 
@@ -322,10 +323,10 @@ const Profile = () => {
           }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: tierStyle.text, letterSpacing: '0.08em', marginBottom: 3 }}>
-                CURRENT TIER
+                {t('profile', 'currentTier')}
               </div>
               <div style={{ fontSize: 20, fontWeight: 900, color: tierStyle.text }}>
-                {tier.label}
+                {tierName}
               </div>
             </div>
             <TierBadge tier={tier} size="lg" />
@@ -379,7 +380,7 @@ const Profile = () => {
             {[
               { label: 'WINS', value: stats.totalWin ?? 0, color: V('--th-text') },
               { label: 'LOSSES', value: stats.totalLose ?? 0, color: V('--th-text') },
-              { label: t('season', 'totalBest'), value: maxRating.toLocaleString(), color: 'var(--th-primary)' },
+              { label: 'BEST SCORE', value: maxRating.toLocaleString(), color: 'var(--th-primary)' },
             ].map(({ label, value, color }) => (
               <div key={label} style={{
                 borderRadius: 16, padding: '16px 8px',
@@ -402,7 +403,7 @@ const Profile = () => {
         {/* Account Settings */}
         <div>
           <p style={{ fontSize: 14, fontWeight: 800, color: V('--th-text'), margin: '0 0 10px 4px' }}>
-            Account Settings
+            {t('profile', 'accountSettings')}
           </p>
           <div style={{ borderRadius: 18, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
 
@@ -413,10 +414,10 @@ const Profile = () => {
                   ? <Moon size={18} style={{ color: V('--th-primary') }} />
                   : <Sun size={18} style={{ color: V('--th-primary') }} />
                 }
-                <span style={{ fontSize: 14, fontWeight: 600, color: V('--th-text') }}>Theme Mode</span>
+                <span style={{ fontSize: 14, fontWeight: 600, color: V('--th-text') }}>{t('profile', 'themeMode')}</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 13, color: V('--th-text-sub') }}>{themeKey === 'ledger' ? 'Dark' : 'Light'}</span>
+                <span style={{ fontSize: 13, color: V('--th-text-sub') }}>{themeKey === 'ledger' ? t('profile', 'themeDark') : t('profile', 'themeLight')}</span>
                 <button
                   onClick={() => setTheme(themeKey === 'ledger' ? 'default' : 'ledger')}
                   style={{

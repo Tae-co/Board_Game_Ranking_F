@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Users } from 'lucide-react';
 import StorageImage from '../StorageImage';
 import GameImageFallback from '../shared/GameImageFallback';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const GameCard = ({ gameInfo }) => {
+  const { t } = useLanguage();
   const [imgLoaded, setImgLoaded] = useState(false);
 
   // 사진 없이 만든 커스텀 점수판은 imageUrl이 빈 문자열이라 onLoad가 영영 안 온다.
@@ -71,7 +73,7 @@ const GameCard = ({ gameInfo }) => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <Users size={13} color="rgba(255,255,255,0.75)" />
                 <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: '500' }}>
-                  {gameInfo.minPlayers}-{gameInfo.maxPlayers} Players
+                  {t('invite', 'playersRange').replace('{min}', gameInfo.minPlayers).replace('{max}', gameInfo.maxPlayers)}
                 </span>
               </div>
             </div>
@@ -80,7 +82,7 @@ const GameCard = ({ gameInfo }) => {
               color: '#fff', backgroundColor: 'var(--th-primary)',
               padding: '5px 13px', borderRadius: '20px',
             }}>
-              STRATEGY
+              {t('invite', 'genreStrategy')}
             </span>
           </div>
         </>

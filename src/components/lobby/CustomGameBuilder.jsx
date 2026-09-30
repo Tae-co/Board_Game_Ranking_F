@@ -122,7 +122,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
 
         {/* Game name */}
         <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
-          GAME NAME
+          {t('lobby', 'gameNameLabel')}
         </p>
         <input
           type="text"

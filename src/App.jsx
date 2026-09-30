@@ -8,7 +8,7 @@ import { setAccessToken, ensureToken } from './api/axios';
 import { AUTH_CHANGED_EVENT, enforceSessionExpiry, getStoredAuth, saveAuthSession } from './auth/storage';
 import { EVENTS, logEvent, startNewSession } from './api/services/events';
 import { useRouteTracking } from './hooks/useRouteTracking';
-import { LanguageProvider } from './i18n/LanguageContext';
+import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
 
 import './App.css';
@@ -42,7 +42,9 @@ const ScrollToTop = () => {
   return null;
 };
 
-const RouteFallback = () => (
+const RouteFallback = () => {
+  const { t } = useLanguage();
+  return (
   <div
     style={{
       minHeight: '100vh',
@@ -55,9 +57,10 @@ const RouteFallback = () => (
       fontWeight: 600,
     }}
   >
-    Loading...
+    {t('common', 'loading')}
   </div>
-);
+  );
+};
 
 function App() {
   const [authState, setAuthState] = useState(() => getStoredAuth());

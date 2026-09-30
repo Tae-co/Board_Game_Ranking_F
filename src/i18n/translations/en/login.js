@@ -16,4 +16,13 @@ export default {
   featureTrackingDesc: 'Save scores and placements right after each game so your match history builds up naturally.',
   featureRankingTitle: 'See game-by-game rankings',
   featureRankingDesc: 'Check who is strongest at each game with easy-to-read records and tier changes.',
+
+  // ── 하드코딩 문구 이관 ──
+  termsPrefix: 'BY CONTINUING, YOU AGREE TO OUR',
+  terms: 'TERMS',
+  privacy: 'PRIVACY',
+  appleLoginError: 'Apple sign-in error: ',
+  kakaoLoginError: 'Kakao sign-in error: ',
+  googleLoginError: 'Google sign-in error: ',
+  processing: 'Signing in...',
 };
