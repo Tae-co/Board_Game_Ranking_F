@@ -44,4 +44,21 @@ export default {
   deleteAccountProcessing: 'Deleting...',
   deleteAccountConfirm: 'Are you sure you want to delete your account?\nAll data will be erased and cannot be recovered.',
   deleteAccountFailed: 'Failed to delete the account.',
+
+  // ── 하드코딩 문구 이관 ──
+  changePhoto: 'Change photo',
+  resetPhoto: 'Default profile',
+  photoUploadFailed: 'Failed to upload the photo.',
+  photoResetFailed: 'Failed to reset to the default profile.',
+  tierMember: '{tier} Member',
+  currentTier: 'CURRENT TIER',
+  tierBRONZE: 'BRONZE',
+  tierSILVER: 'SILVER',
+  tierGOLD: 'GOLD',
+  tierPLATINUM: 'PLATINUM',
+  tierDIAMOND: 'DIAMOND',
+  accountSettings: 'Account Settings',
+  themeMode: 'Theme Mode',
+  themeDark: 'Dark',
+  themeLight: 'Light',
 };

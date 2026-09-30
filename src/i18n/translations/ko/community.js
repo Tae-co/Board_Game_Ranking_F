@@ -53,4 +53,12 @@ export default {
   joinConfirmTitle: '커뮤니티에 참가하시겠습니까?',
   joinConfirmDesc: '초대 코드',
   joinConfirmButton: '참가하기',
+
+  // ── 하드코딩 문구 이관 ──
+  changePhoto: '사진 변경',
+  manageMembers: '멤버 관리',
+  memberCount: '{n}명',
+  memberKickConfirm: '{n}님을 커뮤니티에서 내보내시겠습니까?',
+  memberKickFailed: '멤버 내보내기에 실패했습니다.',
+  joinFailed: '커뮤니티 참여에 실패했습니다.',
 };

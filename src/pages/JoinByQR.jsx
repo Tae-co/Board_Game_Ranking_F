@@ -40,7 +40,7 @@ const JoinByQR = () => {
       queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
       navigate('/community');
     } catch (e) {
-      const msg = e?.response?.data?.message || '커뮤니티 참여에 실패했습니다.';
+      const msg = e?.response?.data?.message || t('community', 'joinFailed');
       setError(msg);
       setTimeout(() => navigate('/community'), 2000);
     } finally {

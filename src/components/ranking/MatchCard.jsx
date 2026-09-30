@@ -2,8 +2,10 @@ import InitialAvatar from '../shared/InitialAvatar';
 import MedalBadge from '../shared/MedalBadge';
 import { V } from '../../utils/cssUtils';
 import { formatDate, formatTime, ordinalSuffix } from '../../utils/dateUtils';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit, onDelete }) => {
+  const { t, lang } = useLanguage();
   const myParticipant = match.participants?.find(p => p.memberId === myUserId);
   const isVictory = myParticipant?.placement === 1;
   const ratingChange = myParticipant?.ratingChange ?? 0;
@@ -12,14 +14,17 @@ const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit,
   const extraCount = (match.participants?.length || 0) - 3;
   const hasScoreData = match.participants?.some(p => p.scoresJson);
   const resultColor = isVictory ? '#16a34a' : '#dc2626';
-  const resultLabel = isVictory ? 'VICTORY' : `${ordinalSuffix(myParticipant?.placement ?? 0)} PLACE`;
+  const placement = myParticipant?.placement ?? 0;
+  const resultLabel = isVictory
+    ? t('ranking', 'matchVictory')
+    : t('ranking', 'matchPlace').replace('{n}', lang === 'ko' ? placement : ordinalSuffix(placement));
 
   return (
     <div style={{ borderRadius: 16, padding: '14px 16px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between' }}>
         <div>
           <div style={{ fontSize: 13, fontWeight: 700, color: V('--th-text') }}>{formatDate(match.playedAt, communityTimezone)}</div>
-          <div style={{ fontSize: 11, color: V('--th-text-sub'), marginTop: 2 }}>{formatTime(match.playedAt, communityTimezone)} · {match.participants?.length || 0} Players</div>
+          <div style={{ fontSize: 11, color: V('--th-text-sub'), marginTop: 2 }}>{formatTime(match.playedAt, communityTimezone)} · {t('ranking', 'matchPlayers').replace('{n}', match.participants?.length || 0)}</div>
         </div>
         {myParticipant && (
           <div style={{ textAlign: 'right' }}>
@@ -53,15 +58,15 @@ const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit,
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
           {hasScoreData && (
             <button onClick={() => onView(match)} style={{ fontSize: 12, fontWeight: 600, color: V('--th-primary'), background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-              Details ›
+              {t('ranking', 'matchDetails')}
             </button>
           )}
           {isHost && (
             <div style={{ display: 'flex', gap: 8 }}>
               {hasScoreData && (
-                <button onClick={() => onEdit(match)} style={{ fontSize: 10, fontWeight: 600, color: V('--th-text-sub'), background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>수정</button>
+                <button onClick={() => onEdit(match)} style={{ fontSize: 10, fontWeight: 600, color: V('--th-text-sub'), background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{t('common', 'edit')}</button>
               )}
-              <button onClick={() => onDelete(match.matchId)} style={{ fontSize: 10, fontWeight: 600, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>삭제</button>
+              <button onClick={() => onDelete(match.matchId)} style={{ fontSize: 10, fontWeight: 600, color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>{t('common', 'delete')}</button>
             </div>
           )}
         </div>

@@ -16,4 +16,13 @@ export default {
   featureTrackingDesc: '게임이 끝난 뒤 점수와 순위를 바로 남겨서 매치 기록을 차곡차곡 쌓을 수 있어요.',
   featureRankingTitle: '게임별 랭킹 확인',
   featureRankingDesc: '누가 어떤 게임에 강한지, 전적과 티어 변화를 보기 쉽게 확인할 수 있어요.',
+
+  // ── 하드코딩 문구 이관 ──
+  termsPrefix: '계속하면 다음에 동의하게 됩니다:',
+  terms: '이용약관',
+  privacy: '개인정보처리방침',
+  appleLoginError: 'Apple 로그인 오류: ',
+  kakaoLoginError: '카카오 로그인 오류: ',
+  googleLoginError: '구글 로그인 오류: ',
+  processing: '로그인 처리 중...',
 };

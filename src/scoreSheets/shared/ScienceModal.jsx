@@ -14,9 +14,9 @@ export const ScienceModal = ({ onConfirm, onClose }) => {
         <h3 style={{ margin: "0 0 4px", color: "var(--th-text)", fontSize: 18, fontWeight: 800 }}>{`🟢 ${t('scoreSheet', 'scienceTitle')}`}</h3>
         <p style={{ margin: "0 0 20px", color: "var(--th-text-sub)", fontSize: 12 }}>{t('scoreSheet', 'scienceDesc')}</p>
         {[
-          { label: "⚙️ 기어", val: gear, set: setGear },
-          { label: "🧭 컴퍼스", val: compass, set: setCompass },
-          { label: "📋 서판", val: tablet, set: setTablet },
+          { label: t('scoreSheet', 'scienceGear'), val: gear, set: setGear },
+          { label: t('scoreSheet', 'scienceCompass'), val: compass, set: setCompass },
+          { label: t('scoreSheet', 'scienceTablet'), val: tablet, set: setTablet },
         ].map(({ label, val, set }) => (
           <div key={label} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <span style={{ fontWeight: 700, color: "var(--th-text)", fontSize: 14 }}>{label}</span>

@@ -34,4 +34,20 @@ export default {
   statsWinRate: '승률',
   streakWin: '연승',
   streakLoss: '연패',
+
+  // ── 하드코딩 문구 이관 ──
+  matchDeleteConfirm: '정말 삭제하시겠습니까?',
+  matchDeleteFailed: '삭제에 실패했습니다.',
+  matchPlayers: '{n}명',
+  matchDetails: '상세 ›',
+  matchVictory: '승리',
+  matchPlace: '{n}위',
+  colRank: '순위',
+  colPlayer: '플레이어',
+  unranked: '순위 없음',
+  you: '나',
+  winShort: '{n}승',
+  lossShort: '{n}패',
+  statsStreak: '연속',
+  statsRank: '순위',
 };

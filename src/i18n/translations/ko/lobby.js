@@ -64,4 +64,19 @@ export default {
   customDeleteFailed: '점수판 삭제에 실패했습니다.',
   roomMemberCount: '{n}명',
   roomJoined: '참가중',
+
+  // ── 하드코딩 문구 이관 ──
+  gameNameLabel: '게임 이름',
+  groupNameLabel: '방 이름',
+  selectGameLabel: '게임 선택',
+  deleteGameAria: '{n} 삭제',
+  heroGreeting: '안녕하세요, {name}님!',
+  heroSubLine1: '오늘도 모임을',
+  heroSubLine2: '관리해 볼까요?',
+  adminBadge: '관리자',
+  membersCount: '멤버 {n}명',
+  codeLabel: '코드',
+  createGroupDesc: '새 방을 만들어요',
+  joinWithCodeDesc: '공유받은 코드 입력',
+  defaultNickname: '플레이어',
 };
