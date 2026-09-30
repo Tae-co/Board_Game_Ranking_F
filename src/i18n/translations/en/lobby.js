@@ -36,7 +36,7 @@ export default {
   customGameTitle: 'Create Score Sheet',
   customNamePlaceholder: 'Game name',
   customImage: 'Photo (optional)',
-  customImageHint: 'A photo makes the game easier to spot in the list. Without one, it shows as 🎲.',
+  customImageHint: 'A photo makes the game easier to spot in the list. Without one, it shows the app logo.',
   customImageRemove: 'Remove photo',
   customImageOnly: 'Only image files are allowed.',
   customPlayers: 'Players',

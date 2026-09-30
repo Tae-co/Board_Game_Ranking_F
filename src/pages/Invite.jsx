@@ -6,7 +6,7 @@ import { Share } from '@capacitor/share';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating } from '../api/services/rooms';
+import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, getRoomSeasons, getSeasonPodium } from '../api/services/rooms';
 import { getGame } from '../api/services/games';
 import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -22,6 +22,9 @@ import { EVENTS, logEvent } from '../api/services/events';
 import PodiumRanking from '../components/ranking/PodiumRanking';
 import RankingTable from '../components/ranking/RankingTable';
 import RatingEditModal from '../components/ranking/RatingEditModal';
+import SeasonTab from '../components/season/SeasonTab';
+import SeasonHeader from '../components/season/SeasonHeader';
+import { currentSeasonKey } from '../utils/seasonUtils';
 
 const buildSavedScores = (participants) => {
   const first = participants.find(p => p.scoresJson);
@@ -50,11 +53,12 @@ const Invite = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const userId = Number(getAuthUserId());
   const matchResult = location.state?.matchResult || null;
-  const communityTimezone = REGION_TIMEZONE[getSelectedCommunity()?.region] || undefined;
+  const communityRegion = getSelectedCommunity()?.region;
+  const communityTimezone = REGION_TIMEZONE[communityRegion] || undefined;
 
   const [selectedPlayers, setSelectedPlayers] = useState(new Set());
   const [nudge, setNudge] = useState(null); // null | 'select' | 'deselect'
@@ -111,6 +115,8 @@ const Invite = () => {
   }, [onlineIds, members, membersLoading, refetchMembers]);
 
   const isHost = members.find(m => m.memberId === userId)?.isHost ?? false;
+  const isMember = members.some(m => m.memberId === userId);
+  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
 
   // 방의 게임을 id로 직접 가져온다. 커뮤니티 목록을 거치지 않으므로
   // 초대 링크로 들어온 비(非)커뮤니티 멤버도 커스텀 게임 정보를 볼 수 있다.
@@ -127,14 +133,41 @@ const Invite = () => {
     staleTime: 1000 * 60 * 3,
   });
 
+  // 금관(직전 시즌 1위). 시즌 목록의 첫 항목이 곧 마지막으로 끝난 시즌이므로 날짜 계산이 필요 없고,
+  // 다음 시즌이 끝나면 목록의 첫 항목이 바뀌어 금관이 저절로 옮겨간다 (기획 §4의 "다음 시즌 종료까지").
+  const { data: closedSeasons = [] } = useQuery({
+    queryKey: ['roomSeasons', roomId],
+    queryFn: () => getRoomSeasons(roomId),
+    staleTime: 1000 * 60 * 10,
+  });
+  const latestSeasonKey = closedSeasons[0]?.seasonKey;
+  const { data: latestPodium = [] } = useQuery({
+    queryKey: ['seasonPodium', roomId, latestSeasonKey],
+    queryFn: () => getSeasonPodium(roomId, latestSeasonKey),
+    enabled: !!latestSeasonKey,
+    staleTime: 1000 * 60 * 10,
+  });
+  // 리셋 직후 = 마감된 시즌이 있는데 이번 시즌 경기가 아직 0판. 한 판이라도 하면 저절로 사라진다.
+  const justReset = closedSeasons.length > 0
+    && rankings.length > 0
+    && rankings.every(r => (r.playCount ?? 0) === 0);
+
+  const championIds = useMemo(
+    () => new Set(latestPodium.filter(e => e.rank === 1).map(e => e.memberId)),
+    [latestPodium],
+  );
+
   const { data: allMatchesRaw = [], isLoading: isMatchesLoading, refetch: refetchMatches } = useQuery({
     queryKey: ['matches', roomId],
     queryFn: () => getRoomMatches(roomId),
     staleTime: 1000 * 60 * 1,
   });
-  const allMatches = roomInfo.boardGameId
-    ? allMatchesRaw.filter(m => m.boardGameId === roomInfo.boardGameId)
-    : allMatchesRaw;
+  // 매치기록도 시즌과 함께 새로 시작한다. DB는 그대로 두고 이번 시즌(region 타임존 기준 이번 달) 경기만 보여준다.
+  // 지난 시즌 기록은 시즌 탭의 결산으로 본다.
+  const seasonKey = currentSeasonKey(communityRegion);
+  const allMatches = allMatchesRaw.filter(m =>
+    (!roomInfo.boardGameId || m.boardGameId === roomInfo.boardGameId)
+    && currentSeasonKey(communityRegion, new Date(m.playedAt)) === seasonKey);
   // 매치기록은 최신 10페이지까지만 보여준다. 기록이 쌓일수록 페이지가 무한정 늘어나는 걸 막는다.
   // 서버 데이터는 그대로 둔다 — 실제로 지우면 MatchService가 레이팅을 재계산해서 점수가 바뀐다.
   const visibleMatches = useMemo(
@@ -246,6 +279,20 @@ const Invite = () => {
 
   const handleTabChange = (tab) => { setActiveTab(tab); setPage(0); };
 
+  // "기록은 영원히 남는다"를 실제로 쓰는지 보려면 지난 시즌을 조회한 순간을 세야 한다 (§10).
+  const handlePastSeasonViewed = useCallback((seasonKey) => {
+    logEvent(EVENTS.SEASON_PAST_VIEWED, { roomId: Number(roomId), props: { season_key: seasonKey } });
+  }, [roomId]);
+
+  // 리셋 직후 안내에서 지난 시즌으로 넘어가는 것도 결과 열람이다.
+  const handleViewPastSeason = () => {
+    logEvent(EVENTS.SEASON_RESULT_OPENED, {
+      roomId: Number(roomId),
+      props: { season_key: latestSeasonKey },
+    });
+    handleTabChange('season');
+  };
+
   const handleStartGame = () => {
     if (!canStart) {
       if (activeTab !== 'group') handleTabChange('group');
@@ -267,13 +314,32 @@ const Invite = () => {
     });
   };
 
+  const handleJoinRoom = async () => {
+    setIsJoiningRoom(true);
+    try {
+      await joinRoom(roomInfo.inviteCode);
+      queryClient.invalidateQueries({ queryKey: ['roomMembers', roomId] });
+      queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+    } catch { alert(t('invite', 'joinFailed')); }
+    setIsJoiningRoom(false);
+  };
+
   const handleLeaveRoom = async () => {
-    if (!window.confirm(t('invite', 'leaveConfirm'))) return;
+    // 호스트가 나가면 백엔드가 방장을 넘기거나(멤버가 남을 때) 방을 지운다(혼자일 때).
+    const confirmKey = !isHost ? 'leaveConfirm'
+      : members.length <= 1 ? 'leaveConfirmHostAlone' : 'leaveConfirmHost';
+    if (!window.confirm(t('invite', confirmKey))) return;
     try {
       await leaveRoom(roomId, userId);
       const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
       queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
-      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, removeRoom);
+      // 커뮤니티 방은 나가도 목록에 남아야 다시 참가할 수 있다.
+      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      // 다시 들어왔을 때 캐시된 목록에 내가 멤버로 남아 있지 않도록 비운다.
+      queryClient.removeQueries({ queryKey: ['roomMembers', roomId] });
+      queryClient.removeQueries({ queryKey: ['rankings', roomId] });
       navigate('/lobby');
     } catch { alert(t('invite', 'leaveFailed')); }
   };
@@ -411,6 +477,8 @@ const Invite = () => {
         Array.isArray(old) ? old.filter(m => m.matchId !== matchId) : old
       );
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
+      queryClient.invalidateQueries({ queryKey: ['seasonSummary'] });
+      queryClient.invalidateQueries({ queryKey: ['seasonPeriods'] });
     } catch { alert('삭제에 실패했습니다.'); }
   }, [queryClient, refetchMatches, roomId]);
 
@@ -482,11 +550,11 @@ const Invite = () => {
                 </button>
               )}
               <button
-                onClick={isHost ? openSettings : undefined}
+                onClick={openSettings}
                 style={{
                   background: 'none', border: 'none', padding: '4px', display: 'flex', alignItems: 'center',
-                  cursor: isHost ? 'pointer' : 'default',
-                  color: isHost ? V('--th-text-sub') : 'color-mix(in srgb, var(--th-text-sub) 40%, transparent)',
+                  cursor: 'pointer',
+                  color: V('--th-text-sub'),
                 }}
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -505,6 +573,7 @@ const Invite = () => {
               {[
                 { key: 'group', label: t('ranking', 'groupTab') },
                 { key: 'matches', label: t('ranking', 'matchesTab') },
+                { key: 'season', label: t('season', 'seasonTab') },
               ].map(tab => (
                 <button
                   key={tab.key}
@@ -560,7 +629,18 @@ const Invite = () => {
           )}
 
           {/* Content */}
-          {isLoading ? (
+          {activeTab === 'season' ? (
+            <SeasonTab
+              roomId={roomId}
+              userId={userId}
+              region={communityRegion}
+              myRankPosition={myRankPosition}
+              myScore={myRank?.rating}
+              onPastSeasonViewed={handlePastSeasonViewed}
+              t={t}
+              lang={lang}
+            />
+          ) : isLoading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 8 }}>
               {[0, 1, 2, 3].map(i => <RankRowSkeleton key={i} />)}
             </div>
@@ -629,6 +709,14 @@ const Invite = () => {
             </div>
           ) : (
             <>
+              <SeasonHeader
+                region={communityRegion}
+                compact
+                justReset={justReset}
+                onViewPastSeason={handleViewPastSeason}
+                t={t}
+                lang={lang}
+              />
               {rankings.length >= 1 && (
                 <PodiumRanking rankings={rankings} myUserId={userId} />
               )}
@@ -677,9 +765,11 @@ const Invite = () => {
                   onEditRating={handleOpenRatingEdit}
                   PAGE_SIZE={PAGE_SIZE}
                   selectedPlayers={selectedPlayers}
-                  onToggle={togglePlayer}
+                  onToggle={isMember ? togglePlayer : undefined}
                   highlightMemberId={searchResult?.memberId}
                   nudge={nudge}
+                  championIds={championIds}
+                  scoreLabel={t('season', 'seasonScore')}
                 />
               </div>
             </>
@@ -687,10 +777,29 @@ const Invite = () => {
         </div>
       </div>
 
-      {/* Sticky Start Game Button — 플레이어를 고르는 그룹 랭킹 탭에서만 쓴다 */}
-      {activeTab === 'group' && (
+      {/* Sticky Start Game Button — 플레이어를 고르는 그룹 랭킹 탭에서만 쓴다.
+          아직 참가하지 않은 사람에겐 같은 자리에 참가하기 버튼을 보여준다. 멤버 로딩 중엔 어느 쪽인지 모르니 비워둔다. */}
+      {activeTab === 'group' && !membersLoading && (
       <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
         <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px calc(28px + env(safe-area-inset-bottom))' }}>
+          {!isMember ? (
+          <button
+            onClick={handleJoinRoom}
+            disabled={isJoiningRoom || !roomInfo.inviteCode}
+            style={{
+              width: '100%', padding: '15px', borderRadius: '50px',
+              cursor: isJoiningRoom ? 'not-allowed' : 'pointer',
+              background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
+              border: 'none',
+              opacity: isJoiningRoom ? 0.7 : 1,
+              boxShadow: '0 4px 16px rgba(34, 197, 94, 0.4)',
+            }}
+          >
+            <span style={{ fontWeight: '700', fontSize: '15px', color: '#FFFFFF' }}>
+              {isJoiningRoom ? '...' : t('invite', 'joinRoom')}
+            </span>
+          </button>
+          ) : (
           <button
             onClick={handleStartGame}
             style={{
@@ -710,6 +819,7 @@ const Invite = () => {
               {startLabel}
             </span>
           </button>
+          )}
         </div>
       </div>
       )}
@@ -719,6 +829,8 @@ const Invite = () => {
           onClose={() => setShowSettings(false)}
           onSave={handleSaveSettings}
           onDeleteRoom={handleDeleteRoom}
+          onLeaveRoom={isMember ? handleLeaveRoom : undefined}
+          isHost={isHost}
           editRoomName={editRoomName}
           setEditRoomName={setEditRoomName}
           members={members}

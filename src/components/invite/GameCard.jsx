@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Users } from 'lucide-react';
 import StorageImage from '../StorageImage';
+import GameImageFallback from '../shared/GameImageFallback';
 
 const GameCard = ({ gameInfo }) => {
   const [imgLoaded, setImgLoaded] = useState(false);
@@ -41,9 +42,15 @@ const GameCard = ({ gameInfo }) => {
               position: 'absolute', inset: 0,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-              fontSize: 64,
             }}>
-              🎲
+              {/* 보라 배경 위 보라 로고는 안 보여서 로그인 화면처럼 밝은 타일에 얹는다 */}
+              <div style={{
+                width: 92, height: 92, borderRadius: 26,
+                background: '#f3f1ff', border: '1px solid #e0d9ff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <GameImageFallback size={62} />
+              </div>
             </div>
           )}
           <div style={{

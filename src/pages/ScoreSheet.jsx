@@ -283,6 +283,9 @@ const ScoreSheet = () => {
         queryClient.invalidateQueries({ queryKey: ['matches', Number(roomId)] }),
         queryClient.invalidateQueries({ queryKey: ['rooms'] }),
         queryClient.invalidateQueries({ queryKey: ['communityRooms'] }),
+        // 결산의 수상 3종은 경기로 바로 집계된다 — 비우지 않으면 5분간 옛 수상자가 보인다
+        queryClient.invalidateQueries({ queryKey: ['seasonSummary'] }),
+        queryClient.invalidateQueries({ queryKey: ['seasonPeriods'] }),
       ]);
       navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
     } catch (err) {

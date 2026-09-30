@@ -1,9 +1,11 @@
 import { useRef } from 'react';
-import { Pencil, Check } from 'lucide-react';
+import { Pencil, Check, Crown } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
 import { V } from '../../utils/cssUtils';
 
-const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge }) => {
+// championIds = 직전 시즌 1위들(동점 가능). 금관은 1등만 붙인다 — 2·3등까지 달면
+// 테이블이 배지 밭이 되어 정작 현재 순위가 안 읽힌다 (기획 §4).
+const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING' }) => {
   const touchStartX = useRef(null);
   return (
   <>
@@ -16,7 +18,7 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
       <div style={{ width: 24, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0 }}>RANK</div>
       <div style={{ width: 28, flexShrink: 0 }} />
       <div style={{ flex: 1, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>PLAYER</div>
-      <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>RATING</div>
+      <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>{scoreLabel}</div>
     </div>
 
     <div
@@ -31,7 +33,9 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
       }}
     >
       {pagedRankings.map((rank, idx) => {
-        const rankNum = page * PAGE_SIZE + idx + 1;
+        // 서버가 준 순위를 그대로 쓴다. 지난 시즌 스냅샷은 동점에 같은 순위를 주므로
+        // (1, 2, 2, 4) 인덱스로 만들면 틀린다. 현재 랭킹은 서버 순위와 인덱스가 같다.
+        const rankNum = rank.rank ?? (page * PAGE_SIZE + idx + 1);
         const isMe = rank.memberId === myUserId;
         const isUnranked = rank.hasRank === false;
         const isSelected = selectedPlayers?.has(rank.memberId);
@@ -80,6 +84,7 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
             <InitialAvatar nickname={rank.nickname} profileImage={rank.profileImage} size={28} fontSize={11} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: isMe || isSelected ? 700 : 500, color: isMe || isSelected ? 'var(--th-primary)' : V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {championIds?.has(rank.memberId) && <Crown size={13} color="#F59E0B" fill="#FFD700" strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: '-2px' }} />}
                 {rank.nickname}
               </div>
               {isUnranked ? (

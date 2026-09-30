@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Shield } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
+import GameImageFallback from '../components/shared/GameImageFallback';
 import { CommunityCardSkeleton } from '../components/Skeleton';
 import { joinCommunity, getMyCommunities, getJoinedCommunities } from '../api/services/communities';
 import { EVENTS, logEvent } from '../api/services/events';
@@ -427,7 +428,7 @@ const RoomCard = ({ room, manageLabel, activeLabel, inactiveLabel, onManage }) =
           <StorageImage src={room.imageUrl} alt={room.roomName} onError={() => setImgError(true)} transform={{ width: 104, height: 104, quality: 70 }}
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>🎲</div>
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><GameImageFallback size={34} /></div>
         )}
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>

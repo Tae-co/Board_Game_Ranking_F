@@ -1,16 +1,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Users, Copy, CheckCheck, Settings } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Plus, Trophy, Users, Copy, CheckCheck, Settings } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { QRCodeSVG } from 'qrcode.react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { joinRoom, getMyRooms, getCommunityRooms } from '../api/services/rooms';
+import { useQuery } from '@tanstack/react-query';
+import { getRoomByInviteCode, getMyRooms, getCommunityRooms } from '../api/services/rooms';
 import { getGames } from '../api/services/games';
 import { getCommunityMembers } from '../api/services/communities';
+import { getSeasonPeriods, getSeasonStatus } from '../api/services/seasons';
 import { clearAuthSession, getAuthUserId, getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
+import { fill, findFreshRecap, nextResetDateLabel, periodMonthLabel } from '../utils/seasonUtils';
 import { V } from '../utils/cssUtils';
 import RoomCard from '../components/lobby/RoomCard';
 import JoinCodeSheet from '../components/lobby/JoinCodeSheet';
@@ -22,8 +24,7 @@ const DiceLogo = () => (
 
 const Lobby = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
-  const queryClient = useQueryClient();
+  const { t, lang } = useLanguage();
   const [showJoinSheet, setShowJoinSheet] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [isJoining, setIsJoining] = useState(false);
@@ -41,6 +42,7 @@ const Lobby = () => {
   const communityId = selectedCommunity?.communityId ?? null;
   const isAdmin = selectedCommunity?.isAdmin ?? false;
   const communityInviteCode = selectedCommunity?.inviteCode ?? null;
+  const communityRegion = selectedCommunity?.region ?? null;
   const [codeCopied, setCodeCopied] = useState(false);
 
   // 초대코드 복사가 초대 퍼널의 진짜 첫 칸이다 — /join 랜딩으로 이어지는 경로는
@@ -94,13 +96,26 @@ const Lobby = () => {
     staleTime: 1000 * 30,
   });
 
-  const handleEnterRoom = async (room) => {
-    if (communityId && !room.isMember) {
-      try {
-        await joinRoom(room.inviteCode);
-        queryClient.invalidateQueries({ queryKey: ['communityRooms', communityId, userId] });
-      } catch { /* 이미 멤버인 경우 무시 */ }
-    }
+  // 월초에 지난달 결산이 있으면 로비 배너를 축하 상태로 승격한다.
+  const { data: seasonPeriods = [] } = useQuery({
+    queryKey: ['seasonPeriods', communityId],
+    queryFn: () => getSeasonPeriods(communityId),
+    enabled: !!communityId,
+    staleTime: 1000 * 60 * 30,
+  });
+
+  const freshRecapPeriod = findFreshRecap(seasonPeriods);
+
+  // 시즌제 예고 배너 — 첫 롤오버가 일어나기 전에만 띄운다 (§11).
+  const { data: seasonStatus } = useQuery({
+    queryKey: ['seasonStatus', communityId],
+    queryFn: () => getSeasonStatus(communityId),
+    enabled: !!communityId,
+    staleTime: 1000 * 60 * 30,
+  });
+
+  // 참가는 방 화면의 참가하기 버튼에서 한다. 여기서는 들어가기만 한다.
+  const handleEnterRoom = (room) => {
     navigate(`/invite/${room.roomId}`);
   };
 
@@ -108,11 +123,10 @@ const Lobby = () => {
     if (!joinCode.trim()) return;
     setIsJoining(true);
     try {
-      await joinRoom(joinCode.trim());
+      const room = await getRoomByInviteCode(joinCode.trim());
       setJoinCode('');
       setShowJoinSheet(false);
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      navigate(`/invite/${room.roomId}`);
     } catch {
       alert(t('lobby', 'joinFailed'));
     } finally {
@@ -290,6 +304,86 @@ const Lobby = () => {
               Ready to manage your collectives<br/>today?
             </p>
           </div>
+        )}
+
+        {/* 시즌제 예고 (기획 §11) — 첫 리셋 전에만 보인다. 점수가 예고 없이 500으로 사라지면
+            버그로 읽히고 이탈이 된다. 첫 롤오버가 끝나면 hasClosedSeason이 true가 되어 사라진다. */}
+        {communityId && seasonStatus && !seasonStatus.hasClosedSeason && (
+          <div style={{
+            width: '100%', marginBottom: '14px', padding: '13px 16px',
+            borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '12px',
+            backgroundColor: 'color-mix(in srgb, var(--th-primary) 8%, transparent)',
+            border: `1px solid color-mix(in srgb, var(--th-primary) 35%, transparent)`,
+          }}>
+            <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>🗓️</span>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: V('--th-text'), marginBottom: 2 }}>
+                {fill(t('season', 'seasonStarting'), { date: nextResetDateLabel(communityRegion, lang) })}
+              </div>
+              <div style={{ fontSize: 11, color: V('--th-text-sub') }}>
+                {t('season', 'seasonStartingDesc')}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 시즌 결산 — 커뮤니티 모드에서만. 월초에 지난달 결산이 있으면 승격 상태로 뜬다.
+            공유자가 많을수록 카드가 많이 나가므로 어드민만이 아니라 멤버 전원에게 보인다. */}
+        {communityId && (
+          <button
+            onClick={() => {
+              // 결산이 나와 있을 때 배너로 들어간 것만 "결과 열람"이다. 평상시 진입까지
+              // 세면 열람률(§10)의 분자가 부풀어 배너 승격이 먹혔는지 알 수 없게 된다.
+              if (freshRecapPeriod) {
+                logEvent(EVENTS.SEASON_RESULT_OPENED, {
+                  communityId,
+                  props: { season_key: freshRecapPeriod },
+                });
+              }
+              navigate('/season');
+            }}
+            style={{
+              width: '100%', marginBottom: '24px', padding: '16px 18px',
+              borderRadius: '16px', cursor: 'pointer', textAlign: 'left',
+              display: 'flex', alignItems: 'center', gap: '14px',
+              ...(freshRecapPeriod ? {
+                background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                border: '1px solid transparent',
+                boxShadow: '0 4px 16px rgba(107,92,231,0.3)',
+              } : {
+                backgroundColor: V('--th-card'),
+                border: `1px solid var(--th-border)`,
+                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+              }),
+            }}
+          >
+            <div style={{
+              width: 40, height: 40, borderRadius: '12px', flexShrink: 0,
+              background: freshRecapPeriod
+                ? 'rgba(255,255,255,0.18)'
+                : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Trophy size={19} color="#fff" />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                fontWeight: '700', fontSize: '14px', marginBottom: '3px',
+                color: freshRecapPeriod ? '#fff' : V('--th-text'),
+              }}>
+                {freshRecapPeriod
+                  ? `🎉 ${t('season', 'seasonEnded').replace('{month}', periodMonthLabel(freshRecapPeriod, lang))}`
+                  : t('season', 'entryTitle')}
+              </div>
+              <div style={{
+                fontSize: '11px',
+                color: freshRecapPeriod ? 'rgba(255,255,255,0.75)' : V('--th-text-sub'),
+              }}>
+                {freshRecapPeriod ? t('season', 'seasonEndedDesc') : t('season', 'entryDesc')}
+              </div>
+            </div>
+            <ChevronRight size={18} color={freshRecapPeriod ? 'rgba(255,255,255,0.8)' : 'var(--th-text-sub)'} />
+          </button>
         )}
 
         {/* Action Buttons — 커뮤니티 모드에서는 숨김 */}
