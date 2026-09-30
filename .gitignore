@@ -32,3 +32,4 @@ dist-ssr
 # 네이티브 빌드 산출물 (xcarchive/IPA, Xcode 빌드 디렉터리, Gradle 홈 캐시)
 build/
 android/.gradle-home/
+.gstack/
