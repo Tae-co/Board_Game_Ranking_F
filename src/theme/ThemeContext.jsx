@@ -60,7 +60,7 @@ const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
   const [themeKey, setThemeKeyState] = useState(
-    () => localStorage.getItem('theme') || 'ledger'
+    () => localStorage.getItem('theme') || 'default'
   );
 
   useEffect(() => {
