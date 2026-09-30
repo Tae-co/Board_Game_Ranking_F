@@ -44,7 +44,7 @@ export const SplendorDuelTable = ({
   if (!p1 || !p2) {
     return (
       <div style={{ padding: 24, textAlign: "center", color: "var(--th-text-sub)", fontSize: 14 }}>
-        스플렌더 듀얼은 2인 전용 게임입니다.
+        {t('scoreSheet', 'duelTwoPlayersOnly')}
       </div>
     );
   }

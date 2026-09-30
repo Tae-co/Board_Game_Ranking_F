@@ -2,6 +2,9 @@ import api from './axios';
 
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // 4MB hard cap
 
+// code는 common 번역 키다. 화면에서 t('common', err.code)로 사용자 언어에 맞춰 띄운다.
+const uploadError = (code) => Object.assign(new Error(code), { code });
+
 const compressImage = (file, maxWidth = 800, quality = 0.7) =>
   new Promise((resolve, reject) => {
     const img = new Image();
@@ -11,11 +14,11 @@ const compressImage = (file, maxWidth = 800, quality = 0.7) =>
       // HEIC 등 canvas가 처리 못하는 포맷은 업로드 거부
       const type = file.type.toLowerCase();
       if (type === 'image/heic' || type === 'image/heif' || type === '') {
-        reject(new Error('지원하지 않는 이미지 형식입니다. JPEG 또는 PNG 파일을 사용해 주세요.'));
+        reject(uploadError('imageUnsupportedFormat'));
         return;
       }
       if (file.size > MAX_UPLOAD_BYTES) {
-        reject(new Error(`파일 크기가 너무 큽니다 (최대 4MB). 더 작은 이미지를 사용해 주세요.`));
+        reject(uploadError('imageTooLarge'));
       } else {
         resolve(file);
       }
@@ -32,7 +35,7 @@ const compressImage = (file, maxWidth = 800, quality = 0.7) =>
         canvas.toBlob((blob) => {
           if (!blob) {
             if (file.size > MAX_UPLOAD_BYTES) {
-              reject(new Error(`파일 크기가 너무 큽니다 (최대 4MB). 더 작은 이미지를 사용해 주세요.`));
+              reject(uploadError('imageTooLarge'));
             } else {
               resolve(file);
             }

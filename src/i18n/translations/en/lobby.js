@@ -64,4 +64,19 @@ export default {
   customDeleteFailed: 'Failed to delete the score sheet.',
   roomMemberCount: '{n}',
   roomJoined: 'Joined',
+
+  // ── 하드코딩 문구 이관 ──
+  gameNameLabel: 'GAME NAME',
+  groupNameLabel: 'GROUP NAME',
+  selectGameLabel: 'SELECT GAME',
+  deleteGameAria: 'Delete {n}',
+  heroGreeting: 'Hi, {name}!',
+  heroSubLine1: 'Ready to manage your collectives',
+  heroSubLine2: 'today?',
+  adminBadge: 'Admin',
+  membersCount: '{n} Members',
+  codeLabel: 'CODE',
+  createGroupDesc: 'Start a new circle',
+  joinWithCodeDesc: 'Enter a shared ID',
+  defaultNickname: 'Player',
 };

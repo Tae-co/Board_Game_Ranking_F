@@ -75,7 +75,7 @@ const CommunitySettings = () => {
       const url = await uploadImage(file, detail?.imageUrl);
       setUploadedImageUrl(url);
     } catch (err) {
-      alert(err?.message || '이미지 업로드에 실패했습니다.');
+      alert(err?.code ? t('common', err.code) : t('common', 'imageUploadFailed'));
       setImagePreview(detail?.imageUrl || null);
     } finally {
       setIsUploading(false);
@@ -262,7 +262,7 @@ const CommunitySettings = () => {
             )}
           </div>
           <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', textAlign: 'center', margin: 0 }}>
-            {imagePreview ? t('community', 'changePhoto') || '사진 변경' : t('community', 'uploadPhoto')}
+            {imagePreview ? t('community', 'changePhoto') : t('community', 'uploadPhoto')}
           </p>
         </div>
 
@@ -496,7 +496,7 @@ const CommunitySettings = () => {
             marginBottom: '12px',
           }}
         >
-          {isUploading ? '이미지 업로드 중...' : isSubmitting ? t('community', 'saving') : t('community', 'saveChanges')}
+          {isUploading ? t('common', 'imageUploading') : isSubmitting ? t('community', 'saving') : t('community', 'saveChanges')}
         </button>
 
         {/* Delete button */}

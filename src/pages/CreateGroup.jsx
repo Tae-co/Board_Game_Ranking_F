@@ -128,7 +128,7 @@ const CreateGroup = () => {
         {/* Group Name */}
         <div style={{ marginBottom: '28px' }}>
           <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: '10px' }}>
-            GROUP NAME
+            {t('lobby', 'groupNameLabel')}
           </p>
           <input
             type="text"
@@ -149,7 +149,7 @@ const CreateGroup = () => {
         {/* Select Game */}
         <div>
           <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: '10px' }}>
-            SELECT GAME
+            {t('lobby', 'selectGameLabel')}
           </p>
 
           {/* Search */}
@@ -213,7 +213,7 @@ const CreateGroup = () => {
                     <button
                       onClick={() => handleDeleteGame(game)}
                       disabled={deletingGameId === game.id}
-                      aria-label={`${game.name} 삭제`}
+                      aria-label={t('lobby', 'deleteGameAria').replace('{n}', game.name)}
                       style={{
                         position: 'absolute', top: 4, right: 4,
                         width: 22, height: 22, borderRadius: '50%',

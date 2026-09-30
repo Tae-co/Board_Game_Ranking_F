@@ -2,10 +2,12 @@ import { useRef } from 'react';
 import { Pencil, Check, Crown } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
 import { V } from '../../utils/cssUtils';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 // championIds = 직전 시즌 1위들(동점 가능). 금관은 1등만 붙인다 — 2·3등까지 달면
 // 테이블이 배지 밭이 되어 정작 현재 순위가 안 읽힌다 (기획 §4).
 const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING' }) => {
+  const { t } = useLanguage();
   const touchStartX = useRef(null);
   return (
   <>
@@ -15,9 +17,9 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
       border: '1px solid var(--th-border)',
     }}>
       {!!onToggle && <div style={{ width: 22, flexShrink: 0 }} />}
-      <div style={{ width: 24, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0 }}>RANK</div>
+      <div style={{ width: 24, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase', flexShrink: 0 }}>{t('ranking', 'colRank')}</div>
       <div style={{ width: 28, flexShrink: 0 }} />
-      <div style={{ flex: 1, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>PLAYER</div>
+      <div style={{ flex: 1, fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>{t('ranking', 'colPlayer')}</div>
       <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), textTransform: 'uppercase' }}>{scoreLabel}</div>
     </div>
 
@@ -88,16 +90,16 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                 {rank.nickname}
               </div>
               {isUnranked ? (
-                <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>UNRANKED</div>
+                <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>{t('ranking', 'unranked')}</div>
               ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
-                  {isMe && <span style={{ fontSize: 9, color: 'var(--th-primary)', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>YOU</span>}
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{rank.winCount}W</span>
+                  {isMe && <span style={{ fontSize: 9, color: 'var(--th-primary)', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>{t('ranking', 'you')}</span>}
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{t('ranking', 'winShort').replace('{n}', rank.winCount)}</span>
                   <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626' }}>{rank.loseCount}L</span>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626' }}>{t('ranking', 'lossShort').replace('{n}', rank.loseCount)}</span>
                 </div>
               ) : isMe ? (
-                <div style={{ fontSize: 10, color: 'var(--th-primary)', fontWeight: 700, letterSpacing: '0.05em' }}>YOU</div>
+                <div style={{ fontSize: 10, color: 'var(--th-primary)', fontWeight: 700, letterSpacing: '0.05em' }}>{t('ranking', 'you')}</div>
               ) : null}
             </div>
             {isHost && !isUnranked && (

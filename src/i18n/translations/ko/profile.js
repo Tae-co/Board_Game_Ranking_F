@@ -44,4 +44,21 @@ export default {
   deleteAccountProcessing: '탈퇴 처리 중...',
   deleteAccountConfirm: '정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.',
   deleteAccountFailed: '탈퇴에 실패했습니다.',
+
+  // ── 하드코딩 문구 이관 ──
+  changePhoto: '사진 변경',
+  resetPhoto: '기본 프로필',
+  photoUploadFailed: '사진 업로드에 실패했습니다.',
+  photoResetFailed: '기본 프로필로 변경에 실패했습니다.',
+  tierMember: '{tier} 등급',
+  currentTier: '현재 티어',
+  tierBRONZE: '브론즈',
+  tierSILVER: '실버',
+  tierGOLD: '골드',
+  tierPLATINUM: '플래티넘',
+  tierDIAMOND: '다이아몬드',
+  accountSettings: '계정 설정',
+  themeMode: '테마',
+  themeDark: '다크',
+  themeLight: '라이트',
 };

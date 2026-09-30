@@ -13,7 +13,7 @@ const StatsCard = ({ myRank, myWinRate, myStreak, streakLoading, myRankPosition,
   return (
     <div style={{ display: 'flex', gap: 10, padding: '9px 10px', borderRadius: 12, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
       <div style={{ flexShrink: 0, paddingRight: 10, borderRight: `1px solid var(--th-border)` }}>
-        <div style={labelStyle}>STREAK</div>
+        <div style={labelStyle}>{t('ranking', 'statsStreak')}</div>
         <div style={{ ...valueStyle, color: streakLoading ? V('--th-text-sub') : streakColor }}>
           {streakLoading ? '—' : (streakLabel ?? '—')}
         </div>
@@ -35,7 +35,7 @@ const StatsCard = ({ myRank, myWinRate, myStreak, streakLoading, myRankPosition,
         <div style={{ ...valueStyle, color: V('--th-text') }}>{myWinRate}%</div>
       </div>
       <div style={{ flexShrink: 0, paddingLeft: 14, borderLeft: `1px solid var(--th-border)`, textAlign: 'left' }}>
-        <div style={labelStyle}>RANK</div>
+        <div style={labelStyle}>{t('ranking', 'statsRank')}</div>
         <div style={{ ...valueStyle, color: rankLoading ? V('--th-text-sub') : 'var(--th-primary)' }}>
           {rankLoading ? '—' : (myRankPosition ? `#${myRankPosition}` : '—')}
         </div>

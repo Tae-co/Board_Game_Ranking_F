@@ -34,4 +34,20 @@ export default {
   statsWinRate: 'Rate',
   streakWin: 'W Streak',
   streakLoss: 'L Streak',
+
+  // ── 하드코딩 문구 이관 ──
+  matchDeleteConfirm: 'Delete this match?',
+  matchDeleteFailed: 'Failed to delete the match.',
+  matchPlayers: '{n} Players',
+  matchDetails: 'Details ›',
+  matchVictory: 'VICTORY',
+  matchPlace: '{n} PLACE',
+  colRank: 'RANK',
+  colPlayer: 'PLAYER',
+  unranked: 'UNRANKED',
+  you: 'YOU',
+  winShort: '{n}W',
+  lossShort: '{n}L',
+  statsStreak: 'STREAK',
+  statsRank: 'RANK',
 };

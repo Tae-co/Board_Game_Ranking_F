@@ -42,7 +42,7 @@ const Login = () => {
       saveLoginData(data);
     } catch (e) {
       if (e?.message !== 'cancelled') {
-        alert('Apple 로그인 오류: ' + (e?.message || ''));
+        alert(t('login', 'appleLoginError') + (e?.message || ''));
       }
     }
   };
@@ -52,7 +52,7 @@ const Login = () => {
       try {
         await Browser.open({ url: 'https://meeple-production.up.railway.app/api/auth/kakao/native/login' });
       } catch (e) {
-        alert('카카오 로그인 오류: ' + e.message);
+        alert(t('login', 'kakaoLoginError') + e.message);
       }
       return;
     }
@@ -144,7 +144,7 @@ const Login = () => {
               const redirect = location.state?.redirectAfterLogin;
               if (redirect) sessionStorage.setItem('pendingRedirect', redirect);
               if (Capacitor.isNativePlatform()) {
-                try { await Browser.open({ url: googleNativeAuthUrl }); } catch (e) { alert('구글 로그인 오류: ' + e.message); }
+                try { await Browser.open({ url: googleNativeAuthUrl }); } catch (e) { alert(t('login', 'googleLoginError') + e.message); }
                 return;
               }
               const returnTo = encodeURIComponent(window.location.origin);
@@ -191,13 +191,13 @@ const Login = () => {
 
         {/* Terms notice */}
         <p style={{ fontSize: '10px', color: V('--th-text-sub'), marginTop: '32px', textAlign: 'center', lineHeight: 1.8, letterSpacing: '0.3px' }}>
-          BY CONTINUING, YOU AGREE TO OUR{' '}
-          <span style={{ fontWeight: '600' }}>TERMS</span>
+          {t('login', 'termsPrefix')}{' '}
+          <span style={{ fontWeight: '600' }}>{t('login', 'terms')}</span>
           {' · '}
           <span
             style={{ fontWeight: '600', cursor: 'pointer', textDecoration: 'underline' }}
             onClick={() => Browser.open({ url: 'https://yadarank.com/privacy' })}
-          >PRIVACY</span>
+          >{t('login', 'privacy')}</span>
         </p>
       </div>
     </div>

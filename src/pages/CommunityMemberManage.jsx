@@ -8,11 +8,13 @@ import { getCommunityMembers, kickCommunityMember } from '../api/services/commun
 import { V } from '../utils/cssUtils';
 import { getAuthUserId } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
+import { useLanguage } from '../i18n/LanguageContext';
 const COLORS = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
 const PER_PAGE = 10;
 
 const CommunityMemberManage = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const queryClient = useQueryClient();
   const userId = getAuthUserId();
   const [page, setPage] = useState(0);
@@ -32,7 +34,7 @@ const CommunityMemberManage = () => {
   });
 
   const handleKick = async (member) => {
-    if (!window.confirm(`${member.nickname}님을 커뮤니티에서 내보내시겠습니까?`)) return;
+    if (!window.confirm(t('community', 'memberKickConfirm').replace('{n}', member.nickname))) return;
     try {
       await kickCommunityMember(communityId, member.memberId);
       queryClient.setQueryData(['communityMembers', communityId], (old) =>
@@ -40,7 +42,7 @@ const CommunityMemberManage = () => {
       );
       setPage(0);
     } catch {
-      alert('멤버 내보내기에 실패했습니다.');
+      alert(t('community', 'memberKickFailed'));
     }
   };
 
@@ -68,7 +70,7 @@ const CommunityMemberManage = () => {
               <ArrowLeft size={22} color="var(--th-primary)" />
             </button>
             <span style={{ fontSize: '18px', fontWeight: '700', color: V('--th-primary') }}>
-              멤버 관리
+              {t('community', 'manageMembers')}
             </span>
           </div>
           <NavAvatar size={36} fontSize={14} />
@@ -77,13 +79,13 @@ const CommunityMemberManage = () => {
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px' }}>
         {isLoading ? (
-          <p style={{ fontSize: '14px', color: V('--th-text-sub'), textAlign: 'center', padding: '40px 0' }}>로딩 중...</p>
+          <p style={{ fontSize: '14px', color: V('--th-text-sub'), textAlign: 'center', padding: '40px 0' }}>{t('common', 'loading')}</p>
         ) : (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '16px' }}>
               <Users size={16} color="var(--th-text-sub)" />
               <span style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text-sub') }}>
-                {members.length}명
+                {t('community', 'memberCount').replace('{n}', members.length)}
               </span>
             </div>
 
@@ -125,7 +127,7 @@ const CommunityMemberManage = () => {
                         {member.nickname}
                       </div>
                       {isMe && (
-                        <div style={{ fontSize: '11px', color: V('--th-text-sub'), marginTop: '2px' }}>나</div>
+                        <div style={{ fontSize: '11px', color: V('--th-text-sub'), marginTop: '2px' }}>{t('invite', 'me')}</div>
                       )}
                     </div>
                     {!isMe && (

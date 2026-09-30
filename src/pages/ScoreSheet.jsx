@@ -241,7 +241,7 @@ const ScoreSheet = () => {
     } else if (rankMode || isRankOnly) {
       // 순위 직접 입력 모드: rankInputs에서 placement 사용
       const allFilled = players.every(p => rankInputs[p.memberId]);
-      if (!allFilled) { alert('모든 플레이어의 순위를 선택해주세요.'); return; }
+      if (!allFilled) { alert(t('scoreSheet', 'selectAllRanks')); return; }
       participants = players.map(p => ({
         memberId: p.memberId,
         placement: rankInputs[p.memberId],
@@ -250,7 +250,7 @@ const ScoreSheet = () => {
     } else if (isRoundBased) {
       // 라운드 기반: roundTotals로 placement 계산, 전체 게임 데이터 scoresJson 전달
       if ((currentSchema?.type === 'radlands' || currentSchema?.type === 'dicethrone') && Object.keys(roundTotals).length === 0) {
-        alert('승패를 선택해주세요.');
+        alert(t('scoreSheet', 'selectWinLoss'));
         return;
       }
       const placements = calcPlacements();
@@ -343,8 +343,8 @@ const ScoreSheet = () => {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)", padding: 24, textAlign: "center" }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>🎲</div>
-        <p style={{ color: "var(--th-text)", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>점수판이 아직 준비되지 않았습니다.</p>
-        <p style={{ color: "var(--th-text-sub)", fontSize: 13, marginBottom: 24 }}>관리자에게 문의하세요.</p>
+        <p style={{ color: "var(--th-text)", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{t('scoreSheet', 'schemaNotReady')}</p>
+        <p style={{ color: "var(--th-text-sub)", fontSize: 13, marginBottom: 24 }}>{t('scoreSheet', 'contactAdmin')}</p>
         <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
           {t('scoreSheet', 'goBack')}
         </button>

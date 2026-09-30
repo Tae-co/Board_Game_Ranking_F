@@ -33,7 +33,7 @@ const RoomSettingsOverlay = ({
       <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}>
         <ArrowLeft style={{ width: 24, height: 24 }} />
       </button>
-      <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>{isHost ? 'Manage Group' : t('invite', 'members')}</h1>
+      <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>{isHost ? t('invite', 'manageRoom') : t('invite', 'members')}</h1>
       <NavAvatar />
     </div>
 
@@ -41,15 +41,15 @@ const RoomSettingsOverlay = ({
       {isHost && <>
       {/* Group Identity */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ fontSize: '22px', fontWeight: '800', color: V('--th-text'), margin: 0 }}>Group identity</h2>
+        <h2 style={{ fontSize: '22px', fontWeight: '800', color: V('--th-text'), margin: 0 }}>{t('invite', 'roomIdentity')}</h2>
         <span style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em', padding: '4px 12px', borderRadius: '20px', backgroundColor: 'color-mix(in srgb, var(--th-primary) 12%, transparent)', color: 'var(--th-primary)', border: '1px solid var(--th-primary)' }}>
-          ACTIVE SESSION
+          {t('invite', 'activeSession')}
         </span>
       </div>
 
       {/* Room Name Input */}
       <div>
-        <label style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '0.1em', color: V('--th-text-sub'), display: 'block', marginBottom: '8px' }}>GROUP NAME</label>
+        <label style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '0.1em', color: V('--th-text-sub'), display: 'block', marginBottom: '8px' }}>{t('invite', 'roomNameLabel')}</label>
         <input
           value={editRoomName}
           onChange={(e) => setEditRoomName(e.target.value)}
@@ -87,7 +87,7 @@ const RoomSettingsOverlay = ({
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '15px', fontWeight: isMe ? '700' : '600', color: isMe ? 'var(--th-primary)' : V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{member.nickname}</div>
-                  <div style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.06em', color: member.isHost ? 'var(--th-primary)' : V('--th-text-sub'), marginTop: '1px' }}>{member.isHost ? 'HOST' : 'PLAYER'}</div>
+                  <div style={{ fontSize: '10px', fontWeight: '700', letterSpacing: '0.06em', color: member.isHost ? 'var(--th-primary)' : V('--th-text-sub'), marginTop: '1px' }}>{member.isHost ? t('invite', 'roleHost') : t('invite', 'rolePlayer')}</div>
                 </div>
                 {canKick && (
                   <button onClick={() => onKickMember(member)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px', borderRadius: '8px', flexShrink: 0, color: '#ef4444', display: 'flex', alignItems: 'center' }}>
@@ -127,9 +127,9 @@ const RoomSettingsOverlay = ({
         <button onClick={onLeaveRoom} style={{ width: '100%', padding: '14px', borderRadius: '50px', backgroundColor: 'transparent', color: V('--th-text-sub'), border: `1.5px solid var(--th-border)`, cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>{t('invite', 'leaveRoomButton')}</button>
       )}
       {isHost && <>
-      <button onClick={onDeleteRoom} style={{ width: '100%', padding: '14px', borderRadius: '50px', backgroundColor: 'transparent', color: '#ef4444', border: '1.5px solid #ef4444', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>Delete Group</button>
+      <button onClick={onDeleteRoom} style={{ width: '100%', padding: '14px', borderRadius: '50px', backgroundColor: 'transparent', color: '#ef4444', border: '1.5px solid #ef4444', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>{t('invite', 'deleteRoom')}</button>
       <button onClick={onSave} disabled={saving || !editRoomName.trim()} style={{ width: '100%', padding: '15px', borderRadius: '50px', cursor: saving ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)', border: 'none', opacity: saving ? 0.7 : 1, fontSize: '15px', fontWeight: '700', color: '#FFFFFF', boxShadow: '0 4px 16px rgba(107, 92, 231, 0.4)' }}>
-        {saving ? 'Saving...' : 'Save the change'}
+        {saving ? t('common', 'saving') : t('invite', 'saveChanges')}
       </button>
       </>}
     </div>

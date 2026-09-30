@@ -379,7 +379,7 @@ const Invite = () => {
       queryClient.setQueriesData({ queryKey: ['rooms'] }, updateName);
       queryClient.setQueriesData({ queryKey: ['communityRooms'] }, updateName);
       setShowSettings(false);
-    } catch { alert('방 이름 변경에 실패했습니다.'); }
+    } catch { alert(t('invite', 'renameFailed')); }
     setSaving(false);
   };
 
@@ -417,28 +417,30 @@ const Invite = () => {
 
   const shareMyRank = useCallback(() => {
     if (!myRank || !myRankPosition) return;
-    const gameName = gameInfo?.name || roomInfo?.roomName || '보드게임';
+    const gameName = gameInfo?.name || roomInfo?.roomName || t('invite', 'defaultGameName');
     const nickname = getNickname() || myRank.nickname;
     nativeShare(
-      `🏆 ${nickname}의 ${gameName} 랭킹`,
-      `${myRankPosition}위 · 레이팅 ${Math.round(myRank.rating)} · 승률 ${myWinRate}% (${myRank.winCount}승 ${myRank.loseCount}패)\n\nYadaRank에서 보드게임 랭킹 관리 중 👉 yadarank.com`,
+      t('invite', 'shareMyRankTitle').replace('{nickname}', nickname).replace('{game}', gameName),
+      t('invite', 'shareMyRankText')
+        .replace('{rank}', myRankPosition).replace('{rating}', Math.round(myRank.rating))
+        .replace('{winRate}', myWinRate).replace('{wins}', myRank.winCount).replace('{losses}', myRank.loseCount),
       'my_rank',
     );
-  }, [myRank, myRankPosition, gameInfo, roomInfo, myWinRate]);
+  }, [myRank, myRankPosition, gameInfo, roomInfo, myWinRate, t]);
 
   const shareMatchResult = useCallback(() => {
     if (!matchResult) return;
-    const gameName = gameInfo?.name || roomInfo?.roomName || '보드게임';
+    const gameName = gameInfo?.name || roomInfo?.roomName || t('invite', 'defaultGameName');
     const lines = [...matchResult]
       .sort((a, b) => b.ratingChange - a.ratingChange)
       .map(r => `${r.nickname} ${r.ratingChange >= 0 ? '+' : ''}${Math.round(r.ratingChange)}`)
       .join(' · ');
     nativeShare(
-      `🎮 ${gameName} 한판 결과!`,
-      `${lines}\n\nYadaRank에서 보드게임 랭킹을 기록 중이에요 👉 yadarank.com`,
+      t('invite', 'shareMatchTitle').replace('{game}', gameName),
+      t('invite', 'shareMatchText').replace('{lines}', lines),
       'match_result',
     );
-  }, [matchResult, gameInfo, roomInfo]);
+  }, [matchResult, gameInfo, roomInfo, t]);
 
   const handleUpdateRating = async () => {
     if (!ratingEditModal) return;
@@ -470,7 +472,7 @@ const Invite = () => {
   const handleEditMatch = useCallback((match) => openScoreSheet(match, false), [openScoreSheet]);
 
   const handleDeleteMatch = useCallback(async (matchId) => {
-    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+    if (!window.confirm(t('ranking', 'matchDeleteConfirm'))) return;
     try {
       await deleteMatch(matchId);
       queryClient.setQueryData(['matches', roomId], (old) =>
@@ -479,8 +481,8 @@ const Invite = () => {
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
       queryClient.invalidateQueries({ queryKey: ['seasonSummary'] });
       queryClient.invalidateQueries({ queryKey: ['seasonPeriods'] });
-    } catch { alert('삭제에 실패했습니다.'); }
-  }, [queryClient, refetchMatches, roomId]);
+    } catch { alert(t('ranking', 'matchDeleteFailed')); }
+  }, [queryClient, refetchMatches, roomId, t]);
 
   const handleOpenRatingEdit = useCallback((rank) => {
     setRatingEditModal(rank);
@@ -510,7 +512,7 @@ const Invite = () => {
             <ArrowLeft style={{ width: 24, height: 24 }} />
           </button>
           <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>
-            Group Lobby
+            {t('invite', 'lobbyTitle')}
           </h1>
           <NavAvatar />
         </div>
@@ -646,7 +648,7 @@ const Invite = () => {
             </div>
           ) : activeTab === 'matches' ? (
             <>
-              <div style={{ fontSize: 11, fontWeight: 800, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>RECENT SESSIONS</div>
+              <div style={{ fontSize: 11, fontWeight: 800, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>{t('invite', 'recentSessions')}</div>
               {allMatches.length === 0 ? (
                 <div style={{ borderRadius: 16, padding: 40, border: `2px dashed var(--th-border)`, textAlign: 'center' }}>
                   <div style={{ fontSize: 48, marginBottom: 16 }}>🎲</div>
@@ -732,7 +734,7 @@ const Invite = () => {
                       ref={searchInputRef}
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      placeholder="Enter player's name"
+                      placeholder={t('invite', 'searchPlayerPlaceholder')}
                       style={{
                         flex: 1, background: 'none', border: 'none', outline: 'none',
                         fontSize: 13, fontWeight: 500, color: V('--th-text'),

@@ -1,5 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../../i18n/LanguageContext';
 
 export const saboteurSchema = {
   name: "SABOTEUR",
@@ -13,19 +14,19 @@ const createEmptyRound = (players) => ({
   gold: Object.fromEntries(players.map(p => [p.memberId, ''])),
 });
 
-const RoundCard = ({ round, roundIdx, players, canRemove, readOnly, onRemove, onSetRole, onSetWinner, onSetGold }) => (
+const RoundCard = ({ round, roundIdx, players, canRemove, readOnly, onRemove, onSetRole, onSetWinner, onSetGold, t }) => (
   <div style={{ border: '1px solid var(--th-border)', borderRadius: '12px', padding: '14px', marginBottom: '14px', background: 'var(--th-bg)' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-      <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--th-text)' }}>라운드 {roundIdx + 1}</span>
+      <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--th-text)' }}>{t('scoreSheet', 'sabRound').replace('{n}', roundIdx + 1)}</span>
       {canRemove && (
-        <button onClick={onRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'var(--th-text-sub)', padding: '2px 6px' }}>✕ 삭제</button>
+        <button onClick={onRemove} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '12px', color: 'var(--th-text-sub)', padding: '2px 6px' }}>{t('scoreSheet', 'sabRemove')}</button>
       )}
     </div>
 
     <div style={{ display: 'grid', gridTemplateColumns: '1fr auto auto', gap: '6px', marginBottom: '8px' }}>
-      <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-text-sub)' }}>이름</span>
-      <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-text-sub)', width: 124, textAlign: 'center' }}>역할</span>
-      <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-text-sub)', width: 52, textAlign: 'center' }}>받은 금</span>
+      <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-text-sub)' }}>{t('scoreSheet', 'sabName')}</span>
+      <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-text-sub)', width: 124, textAlign: 'center' }}>{t('scoreSheet', 'sabRole')}</span>
+      <span style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-text-sub)', width: 52, textAlign: 'center' }}>{t('scoreSheet', 'sabGold')}</span>
     </div>
 
     {players.map(p => {
@@ -46,7 +47,7 @@ const RoundCard = ({ round, roundIdx, players, canRemove, readOnly, onRemove, on
                 color: role === 'miner' ? '#B45309' : 'var(--th-text-sub)',
                 opacity: readOnly ? 0.7 : 1,
               }}
-            >⛏️ 광부</button>
+            >{t('scoreSheet', 'sabMiner')}</button>
             <button
               onClick={readOnly ? undefined : () => onSetRole(p.memberId, 'saboteur')}
               disabled={readOnly}
@@ -58,7 +59,7 @@ const RoundCard = ({ round, roundIdx, players, canRemove, readOnly, onRemove, on
                 color: role === 'saboteur' ? '#DC2626' : 'var(--th-text-sub)',
                 opacity: readOnly ? 0.7 : 1,
               }}
-            >💣 사보</button>
+            >{t('scoreSheet', 'sabSaboteur')}</button>
           </div>
           <input
             type="text"
@@ -81,7 +82,7 @@ const RoundCard = ({ round, roundIdx, players, canRemove, readOnly, onRemove, on
     })}
 
     <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid var(--th-border)' }}>
-      <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-text-sub)', marginBottom: '8px' }}>이 라운드 승자</p>
+      <p style={{ fontSize: '10px', fontWeight: '700', color: 'var(--th-text-sub)', marginBottom: '8px' }}>{t('scoreSheet', 'sabRoundWinner')}</p>
       <div style={{ display: 'flex', gap: '8px' }}>
         <button
           onClick={readOnly ? undefined : () => onSetWinner('miner')}
@@ -94,7 +95,7 @@ const RoundCard = ({ round, roundIdx, players, canRemove, readOnly, onRemove, on
             color: round.winner === 'miner' ? '#B45309' : 'var(--th-text-sub)',
             opacity: readOnly ? 0.7 : 1,
           }}
-        >⛏️ 광부팀 승리</button>
+        >{t('scoreSheet', 'sabMinersWin')}</button>
         <button
           onClick={readOnly ? undefined : () => onSetWinner('saboteur')}
           disabled={readOnly}
@@ -106,13 +107,14 @@ const RoundCard = ({ round, roundIdx, players, canRemove, readOnly, onRemove, on
             color: round.winner === 'saboteur' ? '#DC2626' : 'var(--th-text-sub)',
             opacity: readOnly ? 0.7 : 1,
           }}
-        >💣 사보타지 승리</button>
+        >{t('scoreSheet', 'sabSaboteursWin')}</button>
       </div>
     </div>
   </div>
 );
 
 export const SaboteurTable = ({ players, onTotalsChange, readOnly }) => {
+  const { t } = useLanguage();
   const [rounds, setRounds] = useState(() => [createEmptyRound(players)]);
 
   useEffect(() => {
@@ -171,6 +173,7 @@ export const SaboteurTable = ({ players, onTotalsChange, readOnly }) => {
           onSetRole={(memberId, role) => setRoundRole(ridx, memberId, role)}
           onSetWinner={(winner) => setRoundWinner(ridx, winner)}
           onSetGold={(memberId, value) => setRoundGold(ridx, memberId, value)}
+          t={t}
         />
       ))}
 
@@ -183,12 +186,12 @@ export const SaboteurTable = ({ players, onTotalsChange, readOnly }) => {
             fontSize: '14px', fontWeight: '700', color: 'var(--th-text-sub)',
           }}
         >
-          + 라운드 추가
+          {t('scoreSheet', 'sabAddRound')}
         </button>
       )}
 
       <div style={{ borderTop: '1px solid var(--th-border)', paddingTop: '16px' }}>
-        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--th-primary)', letterSpacing: '0.1em', marginBottom: '10px' }}>총 금 합산</p>
+        <p style={{ fontSize: '11px', fontWeight: '700', color: 'var(--th-primary)', letterSpacing: '0.1em', marginBottom: '10px' }}>{t('scoreSheet', 'sabTotalGold')}</p>
         {sortedPlayers.map((p, idx) => {
           const total = totals[p.memberId] || 0;
           return (
@@ -196,10 +199,10 @@ export const SaboteurTable = ({ players, onTotalsChange, readOnly }) => {
               <span style={{ fontSize: '18px', width: 24, textAlign: 'center' }}>
                 {idx < 3
                   ? rankEmojis[idx]
-                  : <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--th-text-sub)' }}>{idx + 1}위</span>}
+                  : <span style={{ fontSize: '12px', fontWeight: '700', color: 'var(--th-text-sub)' }}>{t('scoreSheet', 'sabPlace').replace('{n}', idx + 1)}</span>}
               </span>
               <span style={{ flex: 1, fontSize: '13px', fontWeight: '600', color: 'var(--th-text)' }}>{p.nickname}</span>
-              <span style={{ fontSize: '14px', fontWeight: '700', color: total > 0 ? '#F59E0B' : 'var(--th-text-sub)' }}>💰 {total}금</span>
+              <span style={{ fontSize: '14px', fontWeight: '700', color: total > 0 ? '#F59E0B' : 'var(--th-text-sub)' }}>💰 {t('scoreSheet', 'sabGoldUnit').replace('{n}', total)}</span>
             </div>
           );
         })}

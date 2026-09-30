@@ -53,4 +53,12 @@ export default {
   joinConfirmTitle: 'Join this community?',
   joinConfirmDesc: 'Invite code',
   joinConfirmButton: 'Join',
+
+  // ── 하드코딩 문구 이관 ──
+  changePhoto: 'Change photo',
+  manageMembers: 'Manage Members',
+  memberCount: '{n} members',
+  memberKickConfirm: 'Remove {n} from the community?',
+  memberKickFailed: 'Failed to remove the member.',
+  joinFailed: 'Failed to join the community.',
 };
