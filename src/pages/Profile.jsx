@@ -380,7 +380,7 @@ const Profile = () => {
             {[
               { label: 'WINS', value: stats.totalWin ?? 0, color: V('--th-text') },
               { label: 'LOSSES', value: stats.totalLose ?? 0, color: V('--th-text') },
-              { label: t('season', 'totalBest'), value: maxRating.toLocaleString(), color: 'var(--th-primary)' },
+              { label: 'BEST SCORE', value: maxRating.toLocaleString(), color: 'var(--th-primary)' },
             ].map(({ label, value, color }) => (
               <div key={label} style={{
                 borderRadius: 16, padding: '16px 8px',
