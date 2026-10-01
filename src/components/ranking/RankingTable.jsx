@@ -108,9 +108,9 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                         {i > 0 && <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>}
                         <span style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? '#16a34a' : V('--th-text-sub') }}>
                           {mergeTail && i === placeColumns - 1
-                            ? t('ranking', 'placeShortOrLower').replace('{p}', i + 1)
+                            ? t('ranking', 'placeShortOrLower').replace('{p}', t('ranking', 'placeLabels')[i])
                                 .replace('{n}', rank.placementCounts.slice(i).reduce((a, b) => a + b, 0))
-                            : t('ranking', 'placeShort').replace('{p}', i + 1).replace('{n}', rank.placementCounts[i] ?? 0)}
+                            : t('ranking', 'placeShort').replace('{p}', t('ranking', 'placeLabels')[i]).replace('{n}', rank.placementCounts[i] ?? 0)}
                         </span>
                       </span>
                     ))

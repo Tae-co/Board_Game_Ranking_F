@@ -48,8 +48,9 @@ export default {
   you: 'YOU',
   winShort: '{n}W',
   lossShort: '{n}L',
-  placeShort: '#{p} {n}',
-  placeShortOrLower: '#{p}+ {n}',
+  placeLabels: ['1st', '2nd', '3rd', '4th'],
+  placeShort: '{p} {n}',
+  placeShortOrLower: '{p}+ {n}',
   statsStreak: 'STREAK',
   statsRank: 'RANK',
 };

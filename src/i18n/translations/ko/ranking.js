@@ -48,8 +48,9 @@ export default {
   you: '나',
   winShort: '{n}승',
   lossShort: '{n}패',
-  placeShort: '{p}등 {n}',
-  placeShortOrLower: '{p}등↓ {n}',
+  placeLabels: ['1등', '2등', '3등', '4등'],
+  placeShort: '{p} {n}',
+  placeShortOrLower: '{p}↓ {n}',
   statsStreak: '연속',
   statsRank: '순위',
 };
