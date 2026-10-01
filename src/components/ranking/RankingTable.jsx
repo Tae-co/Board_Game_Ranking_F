@@ -8,7 +8,13 @@ import { useLanguage } from '../../i18n/LanguageContext';
 // 테이블이 배지 밭이 되어 정작 현재 순위가 안 읽힌다 (기획 §4).
 const MAX_PLACE_COLUMNS = 4;
 
-const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING' }) => {
+// 합친 칸(4등+)이 아니라 실제 순위로 평균을 낸다
+const avgPlace = (counts) => {
+  const total = counts.reduce((a, b) => a + b, 0);
+  return (counts.reduce((sum, c, i) => sum + c * (i + 1), 0) / total).toFixed(1);
+};
+
+const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING', showAvgPlace = false }) => {
   const { t } = useLanguage();
   const touchStartX = useRef(null);
   // 순위 분포 칸 수를 표 전체에서 맞춘다. 4인전 방이면 모든 행이 1~4등을 같은 자리에 보여준다
@@ -112,7 +118,14 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                             : t('ranking', 'placeShort').replace('{p}', t('ranking', 'placeLabels')[i]).replace('{n}', rank.placementCounts[i] ?? 0)}
                         </span>
                       </span>
-                    ))
+                    )).concat(showAvgPlace ? [
+                      <span key="avg" style={{ display: 'contents' }}>
+                        <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: V('--th-text') }}>
+                          {t('ranking', 'avgPlaceShort').replace('{n}', avgPlace(rank.placementCounts))}
+                        </span>
+                      </span>,
+                    ] : [])
                   ) : (
                     <>
                       <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{t('ranking', 'winShort').replace('{n}', rank.winCount)}</span>

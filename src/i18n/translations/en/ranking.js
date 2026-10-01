@@ -50,6 +50,7 @@ export default {
   placeLabels: ['1st', '2nd', '3rd', '4th'],
   placeShort: '{p} {n}',
   placeShortOrLower: '{p}+ {n}',
+  avgPlaceShort: 'avg {n}',
   statsStreak: 'STREAK',
   statsRank: 'RANK',
 };

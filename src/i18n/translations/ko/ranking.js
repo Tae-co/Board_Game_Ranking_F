@@ -50,6 +50,7 @@ export default {
   placeLabels: ['1등', '2등', '3등', '4등'],
   placeShort: '{p} {n}',
   placeShortOrLower: '{p}+ {n}',
+  avgPlaceShort: '평균 {n}등',
   statsStreak: '연속',
   statsRank: '순위',
 };
