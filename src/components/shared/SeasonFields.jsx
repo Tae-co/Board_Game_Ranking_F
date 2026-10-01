@@ -6,6 +6,11 @@ const labelStyle = {
   letterSpacing: '0.08em', marginBottom: '10px', display: 'block',
 };
 
+// iOS WebView의 date 입력은 고유 폭이 있어 width:100%를 무시하고 카드 밖으로 튀어나온다 — 네이티브 모양을 끄고 최소 폭을 푼다.
+const dateInputStyle = {
+  display: 'block', minWidth: 0, WebkitAppearance: 'none', appearance: 'none', textAlign: 'left',
+};
+
 const inputStyle = {
   width: '100%', padding: '12px 16px', borderRadius: '12px',
   border: `1px solid ${V('--th-border')}`, backgroundColor: V('--th-card'),
@@ -35,7 +40,7 @@ const SeasonFields = ({ name, setName, endDate, setEndDate, region, t }) => (
         value={endDate}
         min={minEndDate(region)}
         onChange={(e) => setEndDate(e.target.value)}
-        style={inputStyle}
+        style={{ ...inputStyle, ...dateInputStyle }}
       />
       <p style={{ fontSize: '11px', color: V('--th-text-sub'), margin: '6px 0 0', lineHeight: 1.5 }}>
         {t('season', 'seasonEndHint')}
