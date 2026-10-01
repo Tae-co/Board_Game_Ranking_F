@@ -50,7 +50,7 @@ export default {
   lossShort: '{n}패',
   placeLabels: ['1등', '2등', '3등', '4등'],
   placeShort: '{p} {n}',
-  placeShortOrLower: '{p}↓ {n}',
+  placeShortOrLower: '{p}~ {n}',
   statsStreak: '연속',
   statsRank: '순위',
 };
