@@ -294,15 +294,19 @@ const Invite = () => {
   };
 
   // "기록은 영원히 남는다"를 실제로 쓰는지 보려면 지난 시즌을 조회한 순간을 세야 한다 (§10).
-  const handlePastSeasonViewed = useCallback((seasonId) => {
-    logEvent(EVENTS.SEASON_PAST_VIEWED, { roomId: Number(roomId), props: { room_season_id: seasonId } });
+  // season_key는 월간 시절 이벤트(2026-09)와 같은 축으로 묶어 보려고 같이 남긴다 (plan-season-reset §10).
+  const handlePastSeasonViewed = useCallback((seasonId, seasonKey) => {
+    logEvent(EVENTS.SEASON_PAST_VIEWED, {
+      roomId: Number(roomId),
+      props: { room_season_id: seasonId, season_key: seasonKey },
+    });
   }, [roomId]);
 
   // 리셋 직후 안내에서 지난 시즌으로 넘어가는 것도 결과 열람이다.
   const handleViewPastSeason = () => {
     logEvent(EVENTS.SEASON_RESULT_OPENED, {
       roomId: Number(roomId),
-      props: { room_season_id: latestSeasonId },
+      props: { room_season_id: latestSeasonId, season_key: closedSeasons[0]?.seasonKey },
     });
     handleTabChange('season');
   };

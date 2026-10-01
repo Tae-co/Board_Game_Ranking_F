@@ -57,9 +57,10 @@ const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, on
   });
 
   // 지난 시즌을 실제로 조회했을 때만 계측한다 (탭 진입이 아니라 시즌을 고른 시점).
+  const selectedSeasonKey = seasons.find((s) => s.seasonId === selectedSeason)?.seasonKey;
   useEffect(() => {
-    if (selectedSeason) onPastSeasonViewed?.(selectedSeason);
-  }, [selectedSeason, onPastSeasonViewed]);
+    if (selectedSeason) onPastSeasonViewed?.(selectedSeason, selectedSeasonKey);
+  }, [selectedSeason, selectedSeasonKey, onPastSeasonViewed]);
 
   const pagedRanking = useMemo(
     () => pastRanking.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
