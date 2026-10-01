@@ -60,6 +60,5 @@ export default {
   // ── 모임 현황 (최근 30일) ──
   windowLabel: '최근 {days}일 · {from} – {to}',
   windowMatchesLabel: '경기',
-  leaderRecord: '{plays}판 {wins}승',
-  noLeaders: '최근 30일 동안 3판 이상 뛴 사람이 아직 없어요',
+  noLeaders: '아직 3판 이상 뛴 사람이 없어요',
 };

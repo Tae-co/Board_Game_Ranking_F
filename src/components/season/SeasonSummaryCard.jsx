@@ -107,9 +107,8 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
         <Stat value={summary.matchCount} label={t('season', 'windowMatchesLabel')} />
       </div>
 
-      {/* 상위권 — 기간 안 점수 상승 합. 순위가 카드의 머리기사라 수상 3종 위에 온다.
-          방마다 시즌 리셋 시점이 달라서 "지금 점수"가 아니라 상승폭으로 줄 세운다 (§22).
-          3판 이상 뛴 사람이 없으면 서버가 빈 목록을 준다. */}
+      {/* 시상대 — 커뮤니티 방들에서 가장 높은 점수를 가진 3명. 순위가 카드의 머리기사라 수상 3종 위에 온다.
+          그 방·게임에서 3판 이상 뛴 사람이 없으면 서버가 빈 목록을 준다. */}
       <div style={{ padding: '10px 20px 0' }}>
         {leaders.length > 0 ? (
           <div style={{ display: 'flex', gap: 8 }}>
@@ -123,17 +122,22 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                   border: `1px solid ${PODIUM_EDGE[entry.rank] || 'rgba(255,255,255,0.07)'}`,
                 }}
               >
+                {/* 사람마다 최고 점수를 낸 방이 다르다 — 어느 방 점수인지 밝힌다. */}
                 <p style={{
-                  margin: 0, fontSize: 12, fontWeight: 700, color: V('--th-text'),
+                  margin: 0, minHeight: 14, fontSize: 10, fontWeight: 700, lineHeight: '14px',
+                  color: V('--th-text-sub'),
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {entry.roomName}
+                </p>
+                <p style={{
+                  margin: '4px 0 0', fontSize: 12, fontWeight: 700, color: V('--th-text'),
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   {entry.nickname}
                 </p>
                 <p style={{ margin: '1px 0 0', fontSize: 13, fontWeight: 800, color: PODIUM_ACCENT[tone][entry.rank] }}>
-                  {entry.climb >= 0 ? '+' : ''}{Math.round(entry.climb).toLocaleString()}
-                </p>
-                <p style={{ margin: '1px 0 0', fontSize: 10, fontWeight: 600, color: V('--th-text-sub') }}>
-                  {fill(t('season', 'leaderRecord'), { plays: entry.playCount, wins: entry.winCount })}
+                  {Math.round(entry.displayScore).toLocaleString()}
                 </p>
               </div>
             ))}
