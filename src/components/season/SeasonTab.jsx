@@ -8,7 +8,7 @@ import SeasonHeader from './SeasonHeader';
 import SeasonPodium from './SeasonPodium';
 import SeasonTrend from './SeasonTrend';
 import { V } from '../../utils/cssUtils';
-import { fill, periodMonthLabel } from '../../utils/seasonUtils';
+import { fill, seasonLabel } from '../../utils/seasonUtils';
 
 const PAGE_SIZE = 7;
 
@@ -16,12 +16,12 @@ const PAGE_SIZE = 7;
  * 방의 "시즌" 탭 (기획 §6). 네 덩이로 되어 있다.
  *   ① 현재 시즌 진행 상황 — 프론트 계산, 서버 요청 없음
  *   ② 지난 시즌 시상대
- *   ③ 지난 시즌 순위표 + 월 선택
+ *   ③ 지난 시즌 순위표 + 시즌 선택
  *   ④ 시즌별 내 점수 추이 (2시즌 이상일 때만)
  *
  * 마감된 시즌이 하나도 없으면 ①만 남기고 ②③④를 숨긴다 — 첫 시즌에는 그게 정상 화면이다.
  */
-const SeasonTab = ({ roomId, userId, region, myRankPosition, myScore, onPastSeasonViewed, t, lang }) => {
+const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, onPastSeasonViewed, t, lang }) => {
   const [pickedSeason, setPickedSeason] = useState(null);
   const [page, setPage] = useState(0);
 
@@ -33,7 +33,7 @@ const SeasonTab = ({ roomId, userId, region, myRankPosition, myScore, onPastSeas
 
   // 고르지 않았으면 가장 최근에 끝난 시즌. 이펙트로 state를 채우지 않고 파생시킨다 —
   // 목록이 늦게 도착해도 한 번 더 렌더되지 않는다.
-  const selectedSeason = pickedSeason ?? seasons[0]?.seasonKey ?? null;
+  const selectedSeason = pickedSeason ?? seasons[0]?.seasonId ?? null;
 
   const { data: pastRanking = [], isLoading: rankingLoading } = useQuery({
     queryKey: ['seasonRanking', roomId, selectedSeason],
@@ -57,9 +57,10 @@ const SeasonTab = ({ roomId, userId, region, myRankPosition, myScore, onPastSeas
   });
 
   // 지난 시즌을 실제로 조회했을 때만 계측한다 (탭 진입이 아니라 시즌을 고른 시점).
+  const selectedSeasonKey = seasons.find((s) => s.seasonId === selectedSeason)?.seasonKey;
   useEffect(() => {
-    if (selectedSeason) onPastSeasonViewed?.(selectedSeason);
-  }, [selectedSeason, onPastSeasonViewed]);
+    if (selectedSeason) onPastSeasonViewed?.(selectedSeason, selectedSeasonKey);
+  }, [selectedSeason, selectedSeasonKey, onPastSeasonViewed]);
 
   const pagedRanking = useMemo(
     () => pastRanking.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
@@ -67,12 +68,13 @@ const SeasonTab = ({ roomId, userId, region, myRankPosition, myScore, onPastSeas
   );
   const totalPages = Math.ceil(pastRanking.length / PAGE_SIZE);
 
-  const selected = seasons.find((s) => s.seasonKey === selectedSeason);
+  const selected = seasons.find((s) => s.seasonId === selectedSeason);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       {/* ① 현재 시즌 */}
       <SeasonHeader
+        season={season}
         region={region}
         myRankPosition={myRankPosition}
         myScore={myScore}
@@ -125,12 +127,12 @@ const SeasonTab = ({ roomId, userId, region, myRankPosition, myScore, onPastSeas
             </div>
 
             <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 8 }}>
-              {seasons.map((season) => {
-                const active = season.seasonKey === selectedSeason;
+              {seasons.map((past) => {
+                const active = past.seasonId === selectedSeason;
                 return (
                   <button
-                    key={season.seasonKey}
-                    onClick={() => { setPickedSeason(season.seasonKey); setPage(0); }}
+                    key={past.seasonId}
+                    onClick={() => { setPickedSeason(past.seasonId); setPage(0); }}
                     style={{
                       flexShrink: 0, padding: '6px 12px', borderRadius: 999, cursor: 'pointer',
                       fontSize: 12, fontWeight: 700,
@@ -139,7 +141,7 @@ const SeasonTab = ({ roomId, userId, region, myRankPosition, myScore, onPastSeas
                       border: `1px solid ${active ? 'var(--th-primary)' : 'var(--th-border)'}`,
                     }}
                   >
-                    {periodMonthLabel(season.seasonKey, lang)}
+                    {seasonLabel(past, t)}
                   </button>
                 );
               })}
@@ -164,12 +166,13 @@ const SeasonTab = ({ roomId, userId, region, myRankPosition, myScore, onPastSeas
                 onEditRating={undefined}
                 PAGE_SIZE={PAGE_SIZE}
                 scoreLabel={t('season', 'seasonScore')}
+                showAvgPlace
               />
             )}
           </div>
 
           {/* ④ 점수 추이 — 시즌 1개짜리 그래프는 고장으로 보인다 */}
-          {history.length >= 2 && <SeasonTrend history={history} lang={lang} t={t} />}
+          {history.length >= 2 && <SeasonTrend history={history} t={t} />}
         </>
       )}
     </div>

@@ -283,9 +283,11 @@ const ScoreSheet = () => {
         queryClient.invalidateQueries({ queryKey: ['matches', Number(roomId)] }),
         queryClient.invalidateQueries({ queryKey: ['rooms'] }),
         queryClient.invalidateQueries({ queryKey: ['communityRooms'] }),
-        // 결산의 수상 3종은 경기로 바로 집계된다 — 비우지 않으면 5분간 옛 수상자가 보인다
-        queryClient.invalidateQueries({ queryKey: ['seasonSummary'] }),
-        queryClient.invalidateQueries({ queryKey: ['seasonPeriods'] }),
+        // 커뮤니티 현황은 경기로 바로 집계된다 — 비우지 않으면 캐시 동안 옛 순위가 보인다
+        queryClient.invalidateQueries({ queryKey: ['communityStatus'] }),
+        // 종료 시각이 지난 시즌은 경기 등록 직전에 서버가 넘긴다 — 헤더와 지난 시즌 목록을 다시 받는다
+        queryClient.invalidateQueries({ queryKey: ['currentSeason'] }),
+        queryClient.invalidateQueries({ queryKey: ['roomSeasons'] }),
       ]);
       navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
     } catch (err) {

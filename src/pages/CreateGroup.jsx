@@ -8,6 +8,8 @@ import CustomGameBuilder from '../components/lobby/CustomGameBuilder';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import GameImageFallback from '../components/shared/GameImageFallback';
+import SeasonFields from '../components/shared/SeasonFields';
+import { defaultEndDate, isSeasonInputValid } from '../utils/seasonUtils';
 import { getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 
@@ -18,8 +20,11 @@ const CreateGroup = () => {
   const selectedCommunity = getSelectedCommunity();
   const communityId = selectedCommunity?.communityId ?? null;
   const isCommunityAdmin = selectedCommunity?.isAdmin ?? false;
+  const region = selectedCommunity?.region;
 
   const [roomName, setRoomName] = useState('');
+  const [seasonName, setSeasonName] = useState('');
+  const [seasonEndDate, setSeasonEndDate] = useState(() => defaultEndDate(region));
   const [selectedGameId, setSelectedGameId] = useState(null);
   const [gameSearch, setGameSearch] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -73,13 +78,17 @@ const CreateGroup = () => {
     }
   };
 
+  const canCreate = !!roomName.trim() && !!selectedGameId && isSeasonInputValid(seasonName, seasonEndDate, region);
+
   const handleCreate = async () => {
-    if (!roomName.trim() || !selectedGameId) return;
+    if (!canCreate) return;
     setIsSubmitting(true);
     try {
       const res = await createRoom({
         roomName: roomName.trim(),
         boardGameId: selectedGameId,
+        seasonName: seasonName.trim(),
+        seasonEndDate,
         ...(communityId ? { communityId: Number(communityId) } : {}),
       });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
@@ -143,6 +152,18 @@ const CreateGroup = () => {
             }}
             onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
             onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
+          />
+        </div>
+
+        {/* Season — 방마다 시즌을 따로 돌린다 (plan-season-reset §22) */}
+        <div style={{ marginBottom: '28px' }}>
+          <SeasonFields
+            name={seasonName}
+            setName={setSeasonName}
+            endDate={seasonEndDate}
+            setEndDate={setSeasonEndDate}
+            region={region}
+            t={t}
           />
         </div>
 
@@ -286,12 +307,12 @@ const CreateGroup = () => {
         <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px calc(24px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={handleCreate}
-            disabled={isSubmitting || !roomName.trim() || !selectedGameId}
+            disabled={isSubmitting || !canCreate}
             style={{
               width: '100%', padding: '14px', borderRadius: '12px',
               backgroundColor: 'var(--th-primary)', color: '#FFFFFF',
               fontWeight: '700', fontSize: '15px', border: 'none', cursor: 'pointer',
-              opacity: (isSubmitting || !roomName.trim() || !selectedGameId) ? 0.4 : 1,
+              opacity: (isSubmitting || !canCreate) ? 0.4 : 1,
             }}
           >
             {isSubmitting ? t('lobby', 'creating') : t('lobby', 'createRoom')}

@@ -3,9 +3,11 @@ import { Flame, TrendingUp, Trophy } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { V } from '../../utils/cssUtils';
+import { fill, shortDateLabel } from '../../utils/seasonUtils';
 
 /**
- * 공유용 결산 카드. 화면 테마를 그대로 따르고, 공유 이미지도 캡처한 사람의 테마로 나간다.
+ * 공유용 모임 현황 카드 (최근 30일, plan-season-reset §22). 화면 테마를 그대로 따르고,
+ * 공유 이미지도 캡처한 사람의 테마로 나간다.
  */
 const CARD_WIDTH = 340;
 
@@ -34,23 +36,18 @@ const PODIUM_ACCENT = {
 const PODIUM_TINT = { 1: 'rgba(255,215,0,0.10)', 2: 'rgba(200,200,212,0.08)', 3: 'rgba(212,147,106,0.08)' };
 const PODIUM_EDGE = { 1: 'rgba(255,215,0,0.35)', 2: 'rgba(200,200,212,0.28)', 3: 'rgba(212,147,106,0.28)' };
 
-const fill = (template, vars) =>
-  template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '');
-
-// podiumOpensOn: 진행 중인 시즌이면 시상대가 확정되는 날짜 라벨, 끝난 시즌이면 null
-const SeasonSummaryCard = forwardRef(({ summary, podiumOpensOn = null }, ref) => {
+const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
   const { t, lang } = useLanguage();
   const { themeKey } = useTheme();
   const tone = themeKey === 'ledger' ? 'dark' : 'light';
 
-  // 결산 브랜치 시절 응답에는 podium이 없다 — 옛 캐시로 렌더될 때 터지지 않게 기본값을 둔다.
-  const podium = summary.podium ?? [];
+  const leaders = summary.leaders ?? [];
 
-  const [year, month] = summary.period.split('-');
-  const monthLabel = lang === 'ko'
-    ? `${year}년 ${Number(month)}월 결산`
-    : new Date(Number(year), Number(month) - 1)
-        .toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + ' Recap';
+  const windowLabel = fill(t('season', 'windowLabel'), {
+    days: summary.windowDays,
+    from: shortDateLabel(summary.from, lang),
+    to: shortDateLabel(summary.to, lang),
+  });
 
   const formatAwardValue = (award) => {
     if (award.type === 'MOST_WINS') {
@@ -95,7 +92,7 @@ const SeasonSummaryCard = forwardRef(({ summary, podiumOpensOn = null }, ref) =>
         }} />
         <div style={{ position: 'absolute', left: 20, right: 20, bottom: 14 }}>
           <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: V('--th-text-sub') }}>
-            {monthLabel.toUpperCase()}
+            {windowLabel.toUpperCase()}
           </p>
           <p style={{ margin: '4px 0 0', fontSize: 23, fontWeight: 800, color: V('--th-text'), letterSpacing: '-0.3px' }}>
             {summary.communityName}
@@ -107,15 +104,15 @@ const SeasonSummaryCard = forwardRef(({ summary, podiumOpensOn = null }, ref) =>
       <div style={{ display: 'flex', gap: 8, padding: '14px 20px 4px' }}>
         <Stat value={summary.totalRooms} label={t('season', 'roomsLabel')} />
         <Stat value={summary.totalMembers} label={t('season', 'membersLabel')} />
+        <Stat value={summary.matchCount} label={t('season', 'windowMatchesLabel')} />
       </div>
 
-      {/* Podium — 시상대는 수상 3종 위에 온다. 순위가 카드의 머리기사이기 때문이다 (기획 §6).
-          참가자 3명 미만이면 서버가 빈 목록을 주고, 그때는 시상 조건을 한 줄로 알린다 (§4).
-          진행 중인 시즌도 빈 목록이다 — 시상대는 마감 스냅샷에서만 나오므로 확정일을 알린다. */}
+      {/* 시상대 — 커뮤니티 방들에서 가장 높은 점수를 가진 3명. 순위가 카드의 머리기사라 수상 3종 위에 온다.
+          그 방·게임에서 3판 이상 뛴 사람이 없으면 서버가 빈 목록을 준다. */}
       <div style={{ padding: '10px 20px 0' }}>
-        {podium.length > 0 ? (
+        {leaders.length > 0 ? (
           <div style={{ display: 'flex', gap: 8 }}>
-            {podium.map((entry) => (
+            {leaders.map((entry) => (
               <div
                 key={`${entry.rank}-${entry.memberId}`}
                 style={{
@@ -125,8 +122,7 @@ const SeasonSummaryCard = forwardRef(({ summary, podiumOpensOn = null }, ref) =>
                   border: `1px solid ${PODIUM_EDGE[entry.rank] || 'rgba(255,255,255,0.07)'}`,
                 }}
               >
-                {/* 모임 시상대는 사람마다 최고 점수를 낸 방이 다르다 — 어느 방 점수인지 밝힌다.
-                    방이 지워졌으면 이름이 없지만 칸 높이는 맞춘다. */}
+                {/* 사람마다 최고 점수를 낸 방이 다르다 — 어느 방 점수인지 밝힌다. */}
                 <p style={{
                   margin: 0, minHeight: 14, fontSize: 10, fontWeight: 700, lineHeight: '14px',
                   color: V('--th-text-sub'),
@@ -152,9 +148,7 @@ const SeasonSummaryCard = forwardRef(({ summary, podiumOpensOn = null }, ref) =>
             fontSize: 11, fontWeight: 600, color: V('--th-text-sub'),
             backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
           }}>
-            {podiumOpensOn
-              ? fill(t('season', 'podiumPending'), { date: podiumOpensOn })
-              : t('season', 'awardNeedsPlayers')}
+            {t('season', 'noLeaders')}
           </p>
         )}
       </div>

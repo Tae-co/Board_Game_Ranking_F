@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, Pencil, X } from 'lucide-react';
 import StorageImage from '../StorageImage';
 import NavAvatar from '../NavAvatar';
 import { V } from '../../utils/cssUtils';
 import { getAvatarColorById as getAvatarColor } from '../../utils/avatarUtils';
+import { fill, seasonLabel } from '../../utils/seasonUtils';
 
 const PER_PAGE = 10;
 
@@ -12,6 +13,7 @@ const RoomSettingsOverlay = ({
   editRoomName, setEditRoomName,
   members, userId,
   saving, onKickMember, navigate, t,
+  season, onEditSeason,
 }) => {
   const [page, setPage] = useState(0);
   const totalPages = Math.ceil(members.length / PER_PAGE);
@@ -56,6 +58,26 @@ const RoomSettingsOverlay = ({
           style={{ width: '100%', padding: '13px 16px', borderRadius: '12px', border: `1px solid var(--th-border)`, backgroundColor: V('--th-bg'), color: V('--th-text'), fontSize: '15px', fontWeight: '600', outline: 'none', boxSizing: 'border-box' }}
         />
       </div>
+
+      {/* Season — 호스트만 이름·종료일을 바꾼다 (plan-season-reset §22) */}
+      {season && (
+        <div>
+          <label style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '0.1em', color: V('--th-text-sub'), display: 'block', marginBottom: '8px' }}>{t('season', 'currentSeasonLabel')}</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 12px 12px 16px', borderRadius: '12px', border: `1px solid ${V('--th-border')}`, backgroundColor: V('--th-bg') }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{seasonLabel(season, t)}</div>
+              <div style={{ fontSize: '12px', color: V('--th-text-sub'), marginTop: '2px' }}>{fill(t('season', 'endsOn'), { date: season.endDate })}</div>
+            </div>
+            <button
+              onClick={onEditSeason}
+              aria-label={t('season', 'editSeason')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '8px', borderRadius: '8px', flexShrink: 0, color: V('--th-primary'), display: 'flex', alignItems: 'center' }}
+            >
+              <Pencil style={{ width: 18, height: 18 }} />
+            </button>
+          </div>
+        </div>
+      )}
       </>}
 
       {/* Members */}
