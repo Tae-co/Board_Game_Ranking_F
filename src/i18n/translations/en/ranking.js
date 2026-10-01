@@ -48,6 +48,7 @@ export default {
   you: 'YOU',
   winShort: '{n}W',
   lossShort: '{n}L',
+  placeShort: '#{p} {n}',
   statsStreak: 'STREAK',
   statsRank: 'RANK',
 };

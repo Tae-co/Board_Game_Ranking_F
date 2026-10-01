@@ -9,6 +9,8 @@ import { useLanguage } from '../../i18n/LanguageContext';
 const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING' }) => {
   const { t } = useLanguage();
   const touchStartX = useRef(null);
+  // 순위 분포 칸 수를 표 전체에서 맞춘다. 4인전 방이면 모든 행이 1~4등을 같은 자리에 보여준다
+  const placeColumns = Math.max(0, ...pagedRankings.map(r => r.placementCounts?.length ?? 0));
   return (
   <>
     <div style={{
@@ -94,9 +96,23 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
                   {isMe && <span style={{ fontSize: 9, color: 'var(--th-primary)', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>{t('ranking', 'you')}</span>}
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{t('ranking', 'winShort').replace('{n}', rank.winCount)}</span>
-                  <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626' }}>{t('ranking', 'lossShort').replace('{n}', rank.loseCount)}</span>
+                  {rank.placementCounts ? (
+                    // 승/패만 보면 2등 15번과 꼴등 15번이 같은 15패로 보여 점수가 납득되지 않는다
+                    Array.from({ length: placeColumns }, (_, i) => (
+                      <span key={i} style={{ display: 'contents' }}>
+                        {i > 0 && <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>}
+                        <span style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? '#16a34a' : V('--th-text-sub') }}>
+                          {t('ranking', 'placeShort').replace('{p}', i + 1).replace('{n}', rank.placementCounts[i] ?? 0)}
+                        </span>
+                      </span>
+                    ))
+                  ) : (
+                    <>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{t('ranking', 'winShort').replace('{n}', rank.winCount)}</span>
+                      <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626' }}>{t('ranking', 'lossShort').replace('{n}', rank.loseCount)}</span>
+                    </>
+                  )}
                 </div>
               ) : isMe ? (
                 <div style={{ fontSize: 10, color: 'var(--th-primary)', fontWeight: 700, letterSpacing: '0.05em' }}>{t('ranking', 'you')}</div>
