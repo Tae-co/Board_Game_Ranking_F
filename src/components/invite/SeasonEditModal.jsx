@@ -21,7 +21,10 @@ const SeasonEditModal = ({ season, region, onClose, onSave, t }) => {
     setSaving(true);
     setError('');
     try {
-      await onSave({ name: name.trim(), endDate });
+      // 자동 연장 시즌의 "시즌 N"을 그대로 두고 날짜만 바꾸면 이름은 보내지 않는다 — 보내면 지금 화면 언어의
+      // 문구가 이름으로 박혀 다른 언어 사용자에게도 그대로 보인다. 서버는 null이면 이름을 건드리지 않는다.
+      const untouchedAutoName = !season.name && name.trim() === seasonLabel(season, t);
+      await onSave({ name: untouchedAutoName ? null : name.trim(), endDate });
       onClose();
     } catch (err) {
       setError(err?.response?.data?.message || t('season', 'seasonSaveFailed'));
