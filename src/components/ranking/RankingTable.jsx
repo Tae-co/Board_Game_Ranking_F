@@ -100,7 +100,6 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                 <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>{t('ranking', 'unranked')}</div>
               ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
-                  {isMe && <span style={{ fontSize: 9, color: 'var(--th-primary)', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>{t('ranking', 'you')}</span>}
                   {rank.placementCounts ? (
                     // 승/패만 보면 2등 15번과 꼴등 15번이 같은 15패로 보여 점수가 납득되지 않는다
                     Array.from({ length: placeColumns }, (_, i) => (
@@ -122,8 +121,6 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                     </>
                   )}
                 </div>
-              ) : isMe ? (
-                <div style={{ fontSize: 10, color: 'var(--th-primary)', fontWeight: 700, letterSpacing: '0.05em' }}>{t('ranking', 'you')}</div>
               ) : null}
             </div>
             {isHost && !isUnranked && (

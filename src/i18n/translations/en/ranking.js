@@ -45,7 +45,6 @@ export default {
   colRank: 'RANK',
   colPlayer: 'PLAYER',
   unranked: 'UNRANKED',
-  you: 'YOU',
   winShort: '{n}W',
   lossShort: '{n}L',
   placeLabels: ['1st', '2nd', '3rd', '4th'],

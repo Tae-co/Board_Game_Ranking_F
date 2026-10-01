@@ -45,12 +45,11 @@ export default {
   colRank: '순위',
   colPlayer: '플레이어',
   unranked: '순위 없음',
-  you: '나',
   winShort: '{n}승',
   lossShort: '{n}패',
   placeLabels: ['1등', '2등', '3등', '4등'],
   placeShort: '{p} {n}',
-  placeShortOrLower: '{p}~ {n}',
+  placeShortOrLower: '{p}+ {n}',
   statsStreak: '연속',
   statsRank: '순위',
 };
