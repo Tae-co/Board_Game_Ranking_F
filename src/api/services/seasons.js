@@ -1,11 +1,5 @@
 import api from '../axios';
 
-export const getSeasonPeriods = (communityId) =>
-  api.get(`/communities/${communityId}/seasons`).then(r => r.data);
-
-export const getSeasonSummary = (communityId, period) =>
-  api.get(`/communities/${communityId}/seasons/${period}`).then(r => r.data);
-
-// 시즌제 예고 배너를 언제 내릴지 — 첫 롤오버가 일어나면 hasClosedSeason이 true가 된다.
-export const getSeasonStatus = (communityId) =>
-  api.get(`/communities/${communityId}/seasons/status`).then(r => r.data);
+// 커뮤니티 현황 — 최근 30일. 서버가 조회할 때마다 계산한다 (plan-season-reset §22).
+export const getCommunityStatus = (communityId) =>
+  api.get(`/communities/${communityId}/status`).then(r => r.data);

@@ -6,7 +6,7 @@ import { Share } from '@capacitor/share';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, getRoomSeasons, getSeasonPodium } from '../api/services/rooms';
+import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, getRoomSeasons, getSeasonPodium, getCurrentSeason, updateCurrentSeason } from '../api/services/rooms';
 import { getGame } from '../api/services/games';
 import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -24,7 +24,8 @@ import RankingTable from '../components/ranking/RankingTable';
 import RatingEditModal from '../components/ranking/RatingEditModal';
 import SeasonTab from '../components/season/SeasonTab';
 import SeasonHeader from '../components/season/SeasonHeader';
-import { currentSeasonKey } from '../utils/seasonUtils';
+import SeasonEditModal from '../components/invite/SeasonEditModal';
+import { isInSeason } from '../utils/seasonUtils';
 
 const buildSavedScores = (participants) => {
   const first = participants.find(p => p.scoresJson);
@@ -133,6 +134,13 @@ const Invite = () => {
     staleTime: 1000 * 60 * 3,
   });
 
+  // 진행 중 시즌 (이름·기간). 종료 시각이 지났으면 서버가 넘긴 뒤의 시즌을 준다.
+  const { data: currentSeason = null, isLoading: isSeasonLoading } = useQuery({
+    queryKey: ['currentSeason', roomId],
+    queryFn: () => getCurrentSeason(roomId),
+    staleTime: 1000 * 60 * 5,
+  });
+
   // 금관(직전 시즌 1위). 시즌 목록의 첫 항목이 곧 마지막으로 끝난 시즌이므로 날짜 계산이 필요 없고,
   // 다음 시즌이 끝나면 목록의 첫 항목이 바뀌어 금관이 저절로 옮겨간다 (기획 §4의 "다음 시즌 종료까지").
   const { data: closedSeasons = [] } = useQuery({
@@ -140,11 +148,11 @@ const Invite = () => {
     queryFn: () => getRoomSeasons(roomId),
     staleTime: 1000 * 60 * 10,
   });
-  const latestSeasonKey = closedSeasons[0]?.seasonKey;
+  const latestSeasonId = closedSeasons[0]?.seasonId;
   const { data: latestPodium = [] } = useQuery({
-    queryKey: ['seasonPodium', roomId, latestSeasonKey],
-    queryFn: () => getSeasonPodium(roomId, latestSeasonKey),
-    enabled: !!latestSeasonKey,
+    queryKey: ['seasonPodium', roomId, latestSeasonId],
+    queryFn: () => getSeasonPodium(roomId, latestSeasonId),
+    enabled: !!latestSeasonId,
     staleTime: 1000 * 60 * 10,
   });
   // 리셋 직후 = 마감된 시즌이 있는데 이번 시즌 경기가 아직 0판. 한 판이라도 하면 저절로 사라진다.
@@ -162,12 +170,11 @@ const Invite = () => {
     queryFn: () => getRoomMatches(roomId),
     staleTime: 1000 * 60 * 1,
   });
-  // 매치기록도 시즌과 함께 새로 시작한다. DB는 그대로 두고 이번 시즌(region 타임존 기준 이번 달) 경기만 보여준다.
-  // 지난 시즌 기록은 시즌 탭의 결산으로 본다.
-  const seasonKey = currentSeasonKey(communityRegion);
+  // 매치기록도 시즌과 함께 새로 시작한다. DB는 그대로 두고 진행 중 시즌 경기만 보여준다.
+  // 지난 시즌 기록은 시즌 탭에서 본다.
   const allMatches = allMatchesRaw.filter(m =>
     (!roomInfo.boardGameId || m.boardGameId === roomInfo.boardGameId)
-    && currentSeasonKey(communityRegion, new Date(m.playedAt)) === seasonKey);
+    && isInSeason(m.playedAt, currentSeason));
   // 매치기록은 최신 10페이지까지만 보여준다. 기록이 쌓일수록 페이지가 무한정 늘어나는 걸 막는다.
   // 서버 데이터는 그대로 둔다 — 실제로 지우면 MatchService가 레이팅을 재계산해서 점수가 바뀐다.
   const visibleMatches = useMemo(
@@ -251,7 +258,8 @@ const Invite = () => {
   const minPlayers = gameInfo?.minPlayers ?? 2;
   const maxPlayers = gameInfo?.maxPlayers ?? 99;
   const canStart = selectedPlayers.size >= minPlayers && selectedPlayers.size <= maxPlayers;
-  const isLoading = activeTab === 'matches' ? isMatchesLoading : (membersLoading || isRankingLoading);
+  // 매치기록은 시즌 시작일로 거르므로 시즌이 오기 전에 그리면 지난 시즌 경기가 잠깐 보인다.
+  const isLoading = activeTab === 'matches' ? (isMatchesLoading || isSeasonLoading) : (membersLoading || isRankingLoading);
 
   const overMax = selectedPlayers.size > maxPlayers;
 
@@ -279,16 +287,22 @@ const Invite = () => {
 
   const handleTabChange = (tab) => { setActiveTab(tab); setPage(0); };
 
+  const [showSeasonEdit, setShowSeasonEdit] = useState(false);
+  const handleSaveSeason = async (payload) => {
+    const updated = await updateCurrentSeason(roomId, payload);
+    queryClient.setQueryData(['currentSeason', roomId], updated);
+  };
+
   // "기록은 영원히 남는다"를 실제로 쓰는지 보려면 지난 시즌을 조회한 순간을 세야 한다 (§10).
-  const handlePastSeasonViewed = useCallback((seasonKey) => {
-    logEvent(EVENTS.SEASON_PAST_VIEWED, { roomId: Number(roomId), props: { season_key: seasonKey } });
+  const handlePastSeasonViewed = useCallback((seasonId) => {
+    logEvent(EVENTS.SEASON_PAST_VIEWED, { roomId: Number(roomId), props: { room_season_id: seasonId } });
   }, [roomId]);
 
   // 리셋 직후 안내에서 지난 시즌으로 넘어가는 것도 결과 열람이다.
   const handleViewPastSeason = () => {
     logEvent(EVENTS.SEASON_RESULT_OPENED, {
       roomId: Number(roomId),
-      props: { season_key: latestSeasonKey },
+      props: { room_season_id: latestSeasonId },
     });
     handleTabChange('season');
   };
@@ -479,8 +493,7 @@ const Invite = () => {
         Array.isArray(old) ? old.filter(m => m.matchId !== matchId) : old
       );
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
-      queryClient.invalidateQueries({ queryKey: ['seasonSummary'] });
-      queryClient.invalidateQueries({ queryKey: ['seasonPeriods'] });
+      queryClient.invalidateQueries({ queryKey: ['communityStatus'] });
     } catch { alert(t('ranking', 'matchDeleteFailed')); }
   }, [queryClient, refetchMatches, roomId, t]);
 
@@ -635,6 +648,7 @@ const Invite = () => {
             <SeasonTab
               roomId={roomId}
               userId={userId}
+              season={currentSeason}
               region={communityRegion}
               myRankPosition={myRankPosition}
               myScore={myRank?.rating}
@@ -712,6 +726,7 @@ const Invite = () => {
           ) : (
             <>
               <SeasonHeader
+                season={currentSeason}
                 region={communityRegion}
                 compact
                 justReset={justReset}
@@ -840,6 +855,18 @@ const Invite = () => {
           saving={saving}
           onKickMember={handleKickMember}
           navigate={navigate}
+          t={t}
+          season={currentSeason}
+          onEditSeason={() => setShowSeasonEdit(true)}
+        />
+      )}
+
+      {showSeasonEdit && currentSeason && (
+        <SeasonEditModal
+          season={currentSeason}
+          region={communityRegion}
+          onClose={() => setShowSeasonEdit(false)}
+          onSave={handleSaveSeason}
           t={t}
         />
       )}
