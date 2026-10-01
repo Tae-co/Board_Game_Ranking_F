@@ -23,7 +23,7 @@ export default {
   seasonTab: 'Season',
   daysLeft: 'D-{n}',
   lastDay: 'Ends today',
-  seasonScore: 'Season score',
+  seasonScore: 'Score',
   myRankLine: 'You are #{rank} · {score} pts',
   myRankNone: 'No games this season yet',
   pastSeason: 'Past season',

@@ -6,9 +6,22 @@ import { useLanguage } from '../../i18n/LanguageContext';
 
 // championIds = 직전 시즌 1위들(동점 가능). 금관은 1등만 붙인다 — 2·3등까지 달면
 // 테이블이 배지 밭이 되어 정작 현재 순위가 안 읽힌다 (기획 §4).
-const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING' }) => {
+const MAX_PLACE_COLUMNS = 4;
+
+// 합친 칸(4등+)이 아니라 실제 순위로 평균을 낸다
+const avgPlace = (counts) => {
+  const total = counts.reduce((a, b) => a + b, 0);
+  return (counts.reduce((sum, c, i) => sum + c * (i + 1), 0) / total).toFixed(1);
+};
+
+const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING', showAvgPlace = false }) => {
   const { t } = useLanguage();
   const touchStartX = useRef(null);
+  // 순위 분포 칸 수를 표 전체에서 맞춘다. 4인전 방이면 모든 행이 1~4등을 같은 자리에 보여준다
+  const maxPlace = Math.max(0, ...pagedRankings.map(r => r.placementCounts?.length ?? 0));
+  // 5인 이상 게임은 마지막 칸을 'N등 이하'로 합친다. 숨기면 점수를 가장 많이 깎은 하위권이 사라진다
+  const placeColumns = Math.min(maxPlace, MAX_PLACE_COLUMNS);
+  const mergeTail = maxPlace > MAX_PLACE_COLUMNS;
   return (
   <>
     <div style={{
@@ -92,14 +105,36 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               {isUnranked ? (
                 <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>{t('ranking', 'unranked')}</div>
               ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
-                  {isMe && <span style={{ fontSize: 9, color: 'var(--th-primary)', fontWeight: 800, letterSpacing: '0.05em', marginRight: 2 }}>{t('ranking', 'you')}</span>}
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{t('ranking', 'winShort').replace('{n}', rank.winCount)}</span>
-                  <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
-                  <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626' }}>{t('ranking', 'lossShort').replace('{n}', rank.loseCount)}</span>
+                // 좁은 화면에서 4칸 + 평균이 점수 칸을 침범하지 않게 줄바꿈
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 4, rowGap: 0, marginTop: 1 }}>
+                  {rank.placementCounts ? (
+                    // 승/패만 보면 2등 15번과 꼴등 15번이 같은 15패로 보여 점수가 납득되지 않는다
+                    Array.from({ length: placeColumns }, (_, i) => (
+                      <span key={i} style={{ display: 'contents' }}>
+                        {i > 0 && <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>}
+                        <span style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? '#16a34a' : V('--th-text-sub') }}>
+                          {mergeTail && i === placeColumns - 1
+                            ? t('ranking', 'placeShortOrLower').replace('{p}', t('ranking', 'placeLabels')[i])
+                                .replace('{n}', rank.placementCounts.slice(i).reduce((a, b) => a + b, 0))
+                            : t('ranking', 'placeShort').replace('{p}', t('ranking', 'placeLabels')[i]).replace('{n}', rank.placementCounts[i] ?? 0)}
+                        </span>
+                      </span>
+                    )).concat(showAvgPlace ? [
+                      <span key="avg" style={{ display: 'contents' }}>
+                        <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
+                        <span style={{ fontSize: 10, fontWeight: 700, color: V('--th-text') }}>
+                          {t('ranking', 'avgPlaceShort').replace('{n}', avgPlace(rank.placementCounts))}
+                        </span>
+                      </span>,
+                    ] : [])
+                  ) : (
+                    <>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{t('ranking', 'winShort').replace('{n}', rank.winCount)}</span>
+                      <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626' }}>{t('ranking', 'lossShort').replace('{n}', rank.loseCount)}</span>
+                    </>
+                  )}
                 </div>
-              ) : isMe ? (
-                <div style={{ fontSize: 10, color: 'var(--th-primary)', fontWeight: 700, letterSpacing: '0.05em' }}>{t('ranking', 'you')}</div>
               ) : null}
             </div>
             {isHost && !isUnranked && (

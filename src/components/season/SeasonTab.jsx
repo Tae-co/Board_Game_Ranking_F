@@ -166,6 +166,7 @@ const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, on
                 onEditRating={undefined}
                 PAGE_SIZE={PAGE_SIZE}
                 scoreLabel={t('season', 'seasonScore')}
+                showAvgPlace
               />
             )}
           </div>

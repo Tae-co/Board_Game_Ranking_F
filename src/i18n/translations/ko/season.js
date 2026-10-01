@@ -23,7 +23,7 @@ export default {
   seasonTab: '시즌',
   daysLeft: 'D-{n}',
   lastDay: '오늘 마감',
-  seasonScore: '시즌 점수',
+  seasonScore: '점수',
   myRankLine: '내 순위 {rank}위 · {score}점',
   myRankNone: '아직 이번 시즌 기록이 없어요',
   pastSeason: '지난 시즌',
