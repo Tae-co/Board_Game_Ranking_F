@@ -334,7 +334,7 @@ const Profile = () => {
 
           {trophies.length > 0 && (
             <div style={{ width: '100%' }}>
-              <TrophyShelf trophies={trophies} lang={lang} t={t} />
+              <TrophyShelf trophies={trophies} t={t} />
             </div>
           )}
 

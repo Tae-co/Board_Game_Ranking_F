@@ -1,5 +1,5 @@
 import { V } from '../../utils/cssUtils';
-import { periodMonthLabel } from '../../utils/seasonUtils';
+import { seasonLabel } from '../../utils/seasonUtils';
 
 /**
  * 시즌별 내 점수 추이. 점 하나짜리 그래프는 고장으로 보이므로 2시즌 미만이면
@@ -10,7 +10,7 @@ import { periodMonthLabel } from '../../utils/seasonUtils';
 const HEIGHT = 96;
 const MAX_POINTS = 6; // 최근 6시즌. 390px 폭에서 라벨이 겹치지 않는 한계다
 
-const SeasonTrend = ({ history, lang, t }) => {
+const SeasonTrend = ({ history, t }) => {
   const points = history.slice(-MAX_POINTS);
   const scores = points.map((p) => p.displayScore);
   const min = Math.min(...scores);
@@ -50,7 +50,7 @@ const SeasonTrend = ({ history, lang, t }) => {
         </svg>
         {points.map((p, i) => (
           <div
-            key={p.seasonKey}
+            key={p.seasonId}
             style={{
               position: 'absolute',
               left: `${xOf(i)}%`,
@@ -65,12 +65,12 @@ const SeasonTrend = ({ history, lang, t }) => {
 
       <div style={{ display: 'flex', marginTop: 6 }}>
         {points.map((p) => (
-          <div key={p.seasonKey} style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
+          <div key={p.seasonId} style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: V('--th-text') }}>
               {Math.round(p.displayScore).toLocaleString()}
             </div>
-            <div style={{ fontSize: 10, color: V('--th-text-sub') }}>
-              {periodMonthLabel(p.seasonKey, lang)}
+            <div style={{ fontSize: 10, color: V('--th-text-sub'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 2px' }}>
+              {seasonLabel({ name: p.seasonName, seasonNumber: p.seasonNumber }, t)}
             </div>
           </div>
         ))}

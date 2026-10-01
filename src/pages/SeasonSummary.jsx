@@ -5,31 +5,24 @@ import { ArrowLeft, Download, Share2 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import NavAvatar from '../components/NavAvatar';
 import SeasonSummaryCard from '../components/season/SeasonSummaryCard';
-import { getSeasonPeriods, getSeasonSummary } from '../api/services/seasons';
+import { getCommunityStatus } from '../api/services/seasons';
 import { EVENTS, logEvent } from '../api/services/events';
 import { useSelectedCommunity } from '../hooks/useSelectedCommunity';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
-import { currentSeasonKey, nextResetDateLabel } from '../utils/seasonUtils';
+import { fill } from '../utils/seasonUtils';
 
-const fill = (template, vars) =>
-  template.replace(/\{(\w+)\}/g, (_, key) => vars[key] ?? '');
-
-const periodLabel = (period, lang) => {
-  const [year, month] = period.split('-');
-  return lang === 'ko'
-    ? `${Number(month)}월`
-    : new Date(Number(year), Number(month) - 1).toLocaleDateString('en-US', { month: 'short' });
-};
-
+/**
+ * 모임 현황 — 최근 30일 (plan-season-reset §22). 방마다 시즌이 따로 돌아서 커뮤니티는
+ * 시즌 대신 계속 밀려가는 기간으로 본다. 서버가 조회할 때마다 계산한다.
+ */
 const SeasonSummary = () => {
   const navigate = useNavigate();
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { selectedCommunity } = useSelectedCommunity();
   const communityId = selectedCommunity?.communityId ?? null;
 
   const cardRef = useRef(null);
-  const [selectedPeriod, setSelectedPeriod] = useState(null);
   const [busy, setBusy] = useState(false);
   const [shareError, setShareError] = useState('');
 
@@ -37,30 +30,17 @@ const SeasonSummary = () => {
     if (!communityId) navigate('/community', { replace: true });
   }, [communityId, navigate]);
 
-  const { data: periods = [], isLoading: periodsLoading } = useQuery({
-    queryKey: ['seasonPeriods', communityId],
-    queryFn: () => getSeasonPeriods(communityId),
+  // 경기 등록 시 ScoreSheet가 이 키를 비운다. 그 밖의 변화(남이 등록한 경기)는 1분 뒤 다시 받는다.
+  const { data: summary, isLoading: loading } = useQuery({
+    queryKey: ['communityStatus', communityId],
+    queryFn: () => getCommunityStatus(communityId),
     enabled: !!communityId,
-    staleTime: 1000 * 60 * 5,
-  });
-
-  useEffect(() => {
-    if (!selectedPeriod && periods.length > 0) setSelectedPeriod(periods[0].period);
-  }, [periods, selectedPeriod]);
-
-  const { data: summary, isLoading: summaryLoading } = useQuery({
-    queryKey: ['seasonSummary', communityId, selectedPeriod],
-    queryFn: () => getSeasonSummary(communityId, selectedPeriod),
-    enabled: !!communityId && !!selectedPeriod,
-    staleTime: 1000 * 60 * 5,
+    staleTime: 1000 * 60,
   });
 
   const shareText = useMemo(() => {
     if (!summary) return '';
-    const base = fill(t('season', 'shareText'), {
-      community: summary.communityName,
-      month: Number(summary.period.split('-')[1]),
-    });
+    const base = fill(t('season', 'shareText'), { community: summary.communityName });
     if (!summary.inviteCode) return base;
     // 코드를 손으로 옮겨 적지 않고 링크 한 번으로 참여하도록 (/join이 코드를 받아 처리)
     const appUrl = import.meta.env.VITE_APP_URL || window.location.origin;
@@ -82,12 +62,12 @@ const SeasonSummary = () => {
   const handleShare = async () => {
     if (!cardRef.current || busy) return;
     // 시상대가 유통을 늘렸는지 보려면 결산 카드 공유를 다른 공유와 구분해야 한다 (§10).
-    logEvent(EVENTS.INVITE_SHARED, { communityId, props: { kind: 'season_card' } });
+    logEvent(EVENTS.INVITE_SHARED, { communityId, props: { kind: 'status_card' } });
     setBusy(true);
     setShareError('');
     try {
       const blob = await renderCard();
-      const file = new File([blob], `season-${summary.period}.png`, { type: 'image/png' });
+      const file = new File([blob], `status-${summary.to}.png`, { type: 'image/png' });
 
       if (navigator.canShare?.({ files: [file] })) {
         await navigator.share({ files: [file], text: shareText });
@@ -120,12 +100,10 @@ const SeasonSummary = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `season-${summary.period}.png`;
+    a.download = `status-${summary.to}.png`;
     a.click();
     URL.revokeObjectURL(url);
   };
-
-  const loading = periodsLoading || (!!selectedPeriod && summaryLoading);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
@@ -148,47 +126,12 @@ const SeasonSummary = () => {
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 40px' }}>
 
-        {/* Period picker */}
-        {periods.length > 0 && (
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, marginBottom: 20 }}>
-            {periods.map((p) => {
-              const active = p.period === selectedPeriod;
-              return (
-                <button
-                  key={p.period}
-                  onClick={() => setSelectedPeriod(p.period)}
-                  style={{
-                    flexShrink: 0, padding: '8px 14px', borderRadius: 999, cursor: 'pointer',
-                    fontSize: 13, fontWeight: 700,
-                    backgroundColor: active ? 'var(--th-primary)' : V('--th-card'),
-                    color: active ? '#fff' : V('--th-text-sub'),
-                    border: `1px solid ${active ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                  }}
-                >
-                  {periodLabel(p.period, lang)}
-                </button>
-              );
-            })}
-          </div>
-        )}
-
         {loading ? (
           <div style={{ height: 420, borderRadius: 20, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }} />
-        ) : periods.length === 0 ? (
-          <div style={{ borderRadius: 16, padding: '40px 20px', border: `2px dashed var(--th-border)`, textAlign: 'center' }}>
-            <p style={{ color: V('--th-text'), fontSize: 14, fontWeight: 700, margin: '0 0 6px' }}>{t('season', 'noSeasons')}</p>
-            <p style={{ fontSize: 13, color: V('--th-text-sub'), margin: 0, lineHeight: 1.5 }}>{t('season', 'noSeasonsDesc')}</p>
-          </div>
         ) : summary ? (
           <>
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <SeasonSummaryCard
-                ref={cardRef}
-                summary={summary}
-                podiumOpensOn={summary.period === currentSeasonKey(selectedCommunity?.region)
-                  ? nextResetDateLabel(selectedCommunity?.region, lang)
-                  : null}
-              />
+              <SeasonSummaryCard ref={cardRef} summary={summary} />
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
