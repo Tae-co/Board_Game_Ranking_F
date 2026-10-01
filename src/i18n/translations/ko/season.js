@@ -2,7 +2,7 @@ export default {
   title: '모임 현황',
   monthlyRecap: '{month}월 결산',
   entryTitle: '모임 현황',
-  entryDesc: '최근 30일 동안 누가 잘하고 있을까',
+  entryDesc: '우리 모임에서 최고의 플레이어',
   noMatches: '이 달에는 경기 기록이 없습니다',
   roomsLabel: '게임 방',
   membersLabel: '모임 인원',

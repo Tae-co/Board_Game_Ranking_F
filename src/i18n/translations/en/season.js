@@ -2,7 +2,7 @@ export default {
   title: 'Group Status',
   monthlyRecap: '{month} Recap',
   entryTitle: 'Group Status',
-  entryDesc: 'Who has been on fire the last 30 days',
+  entryDesc: 'The top players in your group',
   noMatches: 'No matches were played this month',
   roomsLabel: 'Rooms',
   membersLabel: 'Members',
