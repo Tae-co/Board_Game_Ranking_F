@@ -105,7 +105,8 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               {isUnranked ? (
                 <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>{t('ranking', 'unranked')}</div>
               ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+                // 좁은 화면에서 4칸 + 평균이 점수 칸을 침범하지 않게 줄바꿈
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 4, rowGap: 0, marginTop: 1 }}>
                   {rank.placementCounts ? (
                     // 승/패만 보면 2등 15번과 꼴등 15번이 같은 15패로 보여 점수가 납득되지 않는다
                     Array.from({ length: placeColumns }, (_, i) => (
