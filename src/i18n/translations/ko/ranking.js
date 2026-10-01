@@ -49,6 +49,7 @@ export default {
   winShort: '{n}승',
   lossShort: '{n}패',
   placeShort: '{p}등 {n}',
+  placeShortOrLower: '{p}등↓ {n}',
   statsStreak: '연속',
   statsRank: '순위',
 };

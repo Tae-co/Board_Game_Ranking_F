@@ -6,11 +6,16 @@ import { useLanguage } from '../../i18n/LanguageContext';
 
 // championIds = 직전 시즌 1위들(동점 가능). 금관은 1등만 붙인다 — 2·3등까지 달면
 // 테이블이 배지 밭이 되어 정작 현재 순위가 안 읽힌다 (기획 §4).
+const MAX_PLACE_COLUMNS = 4;
+
 const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING' }) => {
   const { t } = useLanguage();
   const touchStartX = useRef(null);
   // 순위 분포 칸 수를 표 전체에서 맞춘다. 4인전 방이면 모든 행이 1~4등을 같은 자리에 보여준다
-  const placeColumns = Math.max(0, ...pagedRankings.map(r => r.placementCounts?.length ?? 0));
+  const maxPlace = Math.max(0, ...pagedRankings.map(r => r.placementCounts?.length ?? 0));
+  // 5인 이상 게임은 마지막 칸을 'N등 이하'로 합친다. 숨기면 점수를 가장 많이 깎은 하위권이 사라진다
+  const placeColumns = Math.min(maxPlace, MAX_PLACE_COLUMNS);
+  const mergeTail = maxPlace > MAX_PLACE_COLUMNS;
   return (
   <>
     <div style={{
@@ -102,7 +107,10 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                       <span key={i} style={{ display: 'contents' }}>
                         {i > 0 && <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>}
                         <span style={{ fontSize: 10, fontWeight: 700, color: i === 0 ? '#16a34a' : V('--th-text-sub') }}>
-                          {t('ranking', 'placeShort').replace('{p}', i + 1).replace('{n}', rank.placementCounts[i] ?? 0)}
+                          {mergeTail && i === placeColumns - 1
+                            ? t('ranking', 'placeShortOrLower').replace('{p}', i + 1)
+                                .replace('{n}', rank.placementCounts.slice(i).reduce((a, b) => a + b, 0))
+                            : t('ranking', 'placeShort').replace('{p}', i + 1).replace('{n}', rank.placementCounts[i] ?? 0)}
                         </span>
                       </span>
                     ))

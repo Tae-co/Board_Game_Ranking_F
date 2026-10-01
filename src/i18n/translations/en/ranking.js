@@ -49,6 +49,7 @@ export default {
   winShort: '{n}W',
   lossShort: '{n}L',
   placeShort: '#{p} {n}',
+  placeShortOrLower: '#{p}+ {n}',
   statsStreak: 'STREAK',
   statsRank: 'RANK',
 };
