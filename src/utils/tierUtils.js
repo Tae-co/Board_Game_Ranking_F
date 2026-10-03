@@ -11,9 +11,9 @@ export const getErrorMessage = (err, fallback) => {
 // 백엔드 RatingConstants.DISPLAY_OFFSET(500)과 맞물린 값 — offset이 바뀌면 함께 옮겨야 한다
 export const getTierFromRating = (rating = 500) => {
   if (rating >= 1600) return { ...TIERS.diamond, label: 'DIAMOND' };
-  if (rating >= 1300) return { ...TIERS.platinum, label: 'PLATINUM' };
-  if (rating >= 1000) return { ...TIERS.gold, label: 'GOLD' };
-  if (rating >= 700) return { ...TIERS.silver, label: 'SILVER' };
+  if (rating >= 1200) return { ...TIERS.platinum, label: 'PLATINUM' };
+  if (rating >= 850) return { ...TIERS.gold, label: 'GOLD' };
+  if (rating >= 600) return { ...TIERS.silver, label: 'SILVER' };
   return { ...TIERS.bronze, label: 'BRONZE' };
 };
 
