@@ -54,5 +54,4 @@ export default {
   statsStreak: '연속',
   statsRank: '순위',
   chipHolding: '손익',
-  chipRebuys: '리바이 {n}',
 };

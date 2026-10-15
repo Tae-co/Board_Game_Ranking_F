@@ -106,17 +106,11 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               {isUnranked ? (
                 <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>{t('ranking', 'unranked')}</div>
               ) : chip ? (rank.winCount > 0 || rank.loseCount > 0) && (
-                // 칩 게임: 등수 분포 대신 우승·패배·리바이. 지난 시즌 스냅샷에는 리바이가 없다
+                // 칩 게임: 등수 분포 대신 우승·패배만
                 <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#16a34a' }}>{t('ranking', 'winShort').replace('{n}', rank.winCount)}</span>
                   <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#dc2626' }}>{t('ranking', 'lossShort').replace('{n}', rank.loseCount)}</span>
-                  {rank.rebuyCount != null && (
-                    <>
-                      <span style={{ fontSize: 9, color: V('--th-text-sub') }}>·</span>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub') }}>{t('ranking', 'chipRebuys').replace('{n}', rank.rebuyCount)}</span>
-                    </>
-                  )}
                 </div>
               ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
                 // 좁은 화면에서 4칸 + 평균이 점수 칸을 침범하지 않게 줄바꿈

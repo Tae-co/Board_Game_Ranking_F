@@ -54,5 +54,4 @@ export default {
   statsStreak: 'STREAK',
   statsRank: 'RANK',
   chipHolding: 'Net',
-  chipRebuys: 'Rebuys {n}',
 };
