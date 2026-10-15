@@ -85,4 +85,10 @@ export default {
   customStartingChips: 'Starting chips',
   customStartingChipsHint: 'Every player starts with this amount. Hosts can change it per group in group settings.',
   customStartingChipsInvalid: 'Starting chips must be at least 1.',
+  customChipDenoms: 'Chip values',
+  customChipDenomsHint: 'After each game, enter how many of each chip every player has left. Tap a chip to remove it.',
+  customChipDenomPlaceholder: 'Chip value (e.g. 5000)',
+  customChipDenomAdd: 'Add',
+  customChipDenomRemove: 'Remove {n} chip',
+  customChipDenomsRequired: 'Add at least one chip value.',
 };

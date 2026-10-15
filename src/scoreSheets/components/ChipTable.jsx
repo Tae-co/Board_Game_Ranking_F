@@ -1,6 +1,6 @@
 import { useLanguage } from '../../i18n/LanguageContext';
 import { V } from '../../utils/cssUtils';
-import { formatChipDelta, chipDeltaColor, formatChipDigits, chipDigitsOf } from '../../utils/chipUtils';
+import { formatChipDelta, chipDeltaColor, formatChipDigits, chipDigitsOf, chipDenomColor, chipCountTotal } from '../../utils/chipUtils';
 
 const MAX_DIGITS = 9;
 
@@ -14,22 +14,22 @@ const inputStyle = {
  * ChipTable - 플레이어별 이번 판 칩 증감을 입력한다.
  * type: 'chip' 커스텀 점수판에서 사용. 합계가 0이 아니면 경고만 하고 저장은 막지 않는다.
  *
- * mode 'stack': 판이 끝나고 남은 칩을 적으면 판 시작 칩(stackBefore)과의 차이로 증감을 계산한다.
+ * mode 'count': 판이 끝나고 칩 종류별로 남은 개수를 적으면, 그 합계와 판 시작 칩(stackBefore)의 차이로 증감을 계산한다.
  * mode 'delta': 딴(+)/잃은(-) 금액을 직접 적는다. 매치 수정·읽기 화면은 판 시작 칩을 알 수 없어 이것만 쓴다.
  * onModeChange가 없으면 토글을 숨긴다.
  */
-const ChipTable = ({ players, mode, onModeChange, stackBefore, stackInputs, onStackChange, chipInputs, onChange, deltas, readOnly }) => {
+const ChipTable = ({ players, mode, onModeChange, stackBefore, denominations, chipCounts, onCountChange, chipInputs, onChange, deltas, readOnly }) => {
   const { t } = useLanguage();
 
   const sum = players.reduce((acc, p) => acc + (deltas[p.memberId] ?? 0), 0);
   const allFilled = players.every(p => deltas[p.memberId] != null);
-  const isStack = mode === 'stack';
+  const isCount = mode === 'count';
 
   return (
     <div style={{ padding: '8px 0' }}>
       {onModeChange && (
         <div style={{ margin: '4px 16px 8px', display: 'flex', borderRadius: 10, overflow: 'hidden', border: `1px solid ${V('--th-border')}` }}>
-          {['stack', 'delta'].map((m) => (
+          {['count', 'delta'].map((m) => (
             <button
               key={m}
               type="button"
@@ -40,7 +40,7 @@ const ChipTable = ({ players, mode, onModeChange, stackBefore, stackInputs, onSt
                 color: mode === m ? '#fff' : V('--th-text-sub'),
               }}
             >
-              {t('scoreSheet', m === 'stack' ? 'chipModeStack' : 'chipModeDelta')}
+              {t('scoreSheet', m === 'count' ? 'chipModeCount' : 'chipModeDelta')}
             </button>
           ))}
         </div>
@@ -48,6 +48,19 @@ const ChipTable = ({ players, mode, onModeChange, stackBefore, stackInputs, onSt
 
       {players.map((player) => {
         const delta = deltas[player.memberId];
+        if (isCount) {
+          return (
+            <ChipCountRow
+              key={player.memberId}
+              player={player}
+              before={stackBefore?.[player.memberId]}
+              denominations={denominations}
+              counts={chipCounts[player.memberId] ?? {}}
+              onCountChange={(denom, digits) => onCountChange(player.memberId, denom, digits)}
+              delta={delta}
+            />
+          );
+        }
         return (
           <div
             key={player.memberId}
@@ -56,44 +69,17 @@ const ChipTable = ({ players, mode, onModeChange, stackBefore, stackInputs, onSt
               padding: '10px 16px', borderBottom: `1px solid ${V('--th-border')}`,
             }}
           >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{
-                fontSize: 14, fontWeight: 600, color: V('--th-text'),
-                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-              }}>
-                {player.nickname}
-              </div>
-              {isStack && (
-                <div style={{ fontSize: 11, color: V('--th-text-sub'), marginTop: 1 }}>
-                  {stackBefore
-                    ? t('scoreSheet', 'chipStackBefore').replace('{n}', stackBefore[player.memberId].toLocaleString('en-US'))
-                    : '…'}
-                </div>
-              )}
-            </div>
-
-            {isStack ? (
-              <>
-                <span style={{ width: 64, flexShrink: 0, textAlign: 'right', fontSize: 13, fontWeight: 700, color: delta == null ? V('--th-text-sub') : chipDeltaColor(delta) }}>
-                  {delta == null ? '' : formatChipDelta(delta)}
-                </span>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  disabled={!stackBefore}
-                  value={formatChipDigits(stackInputs[player.memberId] ?? '')}
-                  placeholder={t('scoreSheet', 'chipStackPlaceholder')}
-                  onChange={(e) => onStackChange(player.memberId, chipDigitsOf(e.target.value, MAX_DIGITS))}
-                  style={{ ...inputStyle, color: V('--th-text') }}
-                />
-              </>
-            ) : (
-              <DeltaInput
-                input={chipInputs[player.memberId] ?? { sign: '+', amount: '' }}
-                onChange={(input) => onChange(player.memberId, input)}
-                readOnly={readOnly}
-              />
-            )}
+            <span style={{
+              flex: 1, minWidth: 0, fontSize: 14, fontWeight: 600, color: V('--th-text'),
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {player.nickname}
+            </span>
+            <DeltaInput
+              input={chipInputs[player.memberId] ?? { sign: '+', amount: '' }}
+              onChange={(input) => onChange(player.memberId, input)}
+              readOnly={readOnly}
+            />
           </div>
         );
       })}
@@ -110,6 +96,72 @@ const ChipTable = ({ players, mode, onModeChange, stackBefore, stackInputs, onSt
           ⚠️ {t('scoreSheet', 'chipSumWarning')}
         </p>
       )}
+    </div>
+  );
+};
+
+// 한 플레이어의 칩 종류별 남은 개수 (칩 개수 모드). 칩을 누르면 1개씩 늘고, 개수 칸에 직접 적을 수도 있다
+const ChipCountRow = ({ player, before, denominations, counts, onCountChange, delta }) => {
+  const { t } = useLanguage();
+  const total = chipCountTotal(counts, denominations);
+  const loading = before == null;
+  return (
+    <div style={{ padding: '12px 16px', borderBottom: `1px solid ${V('--th-border')}` }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {player.nickname}
+          </div>
+          <div style={{ fontSize: 11, color: V('--th-text-sub'), marginTop: 1 }}>
+            {loading ? '…' : t('scoreSheet', 'chipStackBefore').replace('{n}', before.toLocaleString('en-US'))}
+          </div>
+        </div>
+        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+          <div style={{ fontSize: 15, fontWeight: 800, color: V('--th-text') }}>
+            {total == null ? '—' : total.toLocaleString('en-US')}
+          </div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: delta == null ? V('--th-text-sub') : chipDeltaColor(delta) }}>
+            {delta == null ? t('scoreSheet', 'chipCountEmpty') : formatChipDelta(delta)}
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(denominations.length, 6)}, 1fr)`, gap: 6 }}>
+        {denominations.map((denom, i) => {
+          const value = counts[denom] ?? '';
+          const color = chipDenomColor(i);
+          return (
+            <div key={denom} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <button
+                type="button"
+                disabled={loading}
+                onClick={() => onCountChange(denom, String(Math.min(999, Number(value || 0) + 1)))}
+                aria-label={t('scoreSheet', 'chipAddOne').replace('{n}', denom.toLocaleString('en-US'))}
+                style={{
+                  width: 44, height: 44, borderRadius: '50%', cursor: loading ? 'default' : 'pointer',
+                  backgroundColor: color, color: '#fff', fontSize: denom >= 10000 ? 9 : 11, fontWeight: 800,
+                  border: '3px dashed rgba(255,255,255,0.7)', boxShadow: `0 0 0 2px ${color}`,
+                  padding: 0, lineHeight: 1,
+                }}
+              >
+                {denom.toLocaleString('en-US')}
+              </button>
+              <input
+                type="text"
+                inputMode="numeric"
+                disabled={loading}
+                value={value}
+                placeholder="0"
+                onChange={(e) => onCountChange(denom, chipDigitsOf(e.target.value, 3))}
+                style={{
+                  width: '100%', maxWidth: 52, padding: '5px 4px', borderRadius: 8, textAlign: 'center',
+                  fontSize: 14, fontWeight: 700, outline: 'none', boxSizing: 'border-box',
+                  backgroundColor: V('--th-bg'), border: `1px solid ${V('--th-border')}`, color: V('--th-text'),
+                }}
+              />
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

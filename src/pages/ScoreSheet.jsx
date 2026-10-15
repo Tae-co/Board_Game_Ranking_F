@@ -18,7 +18,7 @@ import WinnerBanner from '../scoreSheets/shared/WinnerBanner';
 import RankInputTable from '../scoreSheets/components/RankInputTable';
 import WinDrawLossTable, { OUTCOME_TIER } from '../scoreSheets/components/WinDrawLossTable';
 import ChipTable from '../scoreSheets/components/ChipTable';
-import { formatChipDelta, chipDeltaOf, chipInputOf, chipStackBefore } from '../utils/chipUtils';
+import { formatChipDelta, chipDeltaOf, chipInputOf, chipStackBefore, chipDenominationsOf, chipCountTotal } from '../utils/chipUtils';
 
 // DB에 저장된 스키마(JSON)를 렌더링 가능한 스키마로 변환.
 // simple/outcome/chip은 TableComponent가 없다 → 순위 입력 / 승무패 입력 / 칩 증감 입력이 그려진다.
@@ -115,11 +115,12 @@ const ScoreSheet = () => {
     players.map(p => [p.memberId, chipInputOf(savedScores?.chip?.[p.memberId])])
   ));
 
-  // 새 기록은 기본으로 '남은 칩' 입력. 판 시작 칩 = 지금 보유 칩이라 수정·읽기·미리보기에서는 쓸 수 없다
+  // 새 기록은 기본으로 칩 종류별 남은 개수를 입력한다. 판 시작 칩 = 지금 보유 칩이라 수정·읽기·미리보기에서는 쓸 수 없다
   const canUseChipStack = isChip && !readOnly && !editMatchId && !previewMode && !!roomId;
-  const [chipMode, setChipMode] = useState('stack');
+  const [chipMode, setChipMode] = useState('count');
   const effectiveChipMode = canUseChipStack ? chipMode : 'delta';
-  const [stackInputs, setStackInputs] = useState({});
+  const chipDenominations = useMemo(() => chipDenominationsOf(currentSchema), [currentSchema]);
+  const [chipCounts, setChipCounts] = useState({});
   const { data: chipRoom } = useQuery({
     queryKey: ['room', roomId], queryFn: () => getRoom(roomId), enabled: canUseChipStack,
   });
@@ -135,9 +136,9 @@ const ScoreSheet = () => {
   }, [chipRoom, chipRankings, players]);
   const chipDeltas = useMemo(() => Object.fromEntries(players.map(p => {
     if (effectiveChipMode === 'delta') return [p.memberId, chipDeltaOf(chipInputs[p.memberId])];
-    const stack = stackInputs[p.memberId];
-    return [p.memberId, stack && stackBefore ? Number(stack) - stackBefore[p.memberId] : null];
-  })), [players, effectiveChipMode, chipInputs, stackInputs, stackBefore]);
+    const total = chipCountTotal(chipCounts[p.memberId], chipDenominations);
+    return [p.memberId, total != null && stackBefore ? total - stackBefore[p.memberId] : null];
+  })), [players, effectiveChipMode, chipInputs, chipCounts, chipDenominations, stackBefore]);
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
@@ -462,8 +463,9 @@ const ScoreSheet = () => {
             mode={effectiveChipMode}
             onModeChange={canUseChipStack ? setChipMode : null}
             stackBefore={stackBefore}
-            stackInputs={stackInputs}
-            onStackChange={(memberId, digits) => setStackInputs(prev => ({ ...prev, [memberId]: digits }))}
+            denominations={chipDenominations}
+            chipCounts={chipCounts}
+            onCountChange={(memberId, denom, digits) => setChipCounts(prev => ({ ...prev, [memberId]: { ...prev[memberId], [denom]: digits } }))}
             chipInputs={chipInputs}
             onChange={(memberId, input) => setChipInputs(prev => ({ ...prev, [memberId]: input }))}
             deltas={chipDeltas}

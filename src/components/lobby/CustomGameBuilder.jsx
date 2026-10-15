@@ -3,6 +3,7 @@ import { X, Plus, Minus, Trophy, Hash, Swords, Coins, ImagePlus } from 'lucide-r
 import { createGame, uploadGameImage } from '../../api/services/games';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { V } from '../../utils/cssUtils';
+import { DEFAULT_CHIP_DENOMINATIONS, MAX_CHIP_DENOMINATIONS, chipDenomColor, chipDigitsOf } from '../../utils/chipUtils';
 
 // 항목 색상은 사용자에게 묻지 않고 순서대로 배정한다
 const PALETTE = ['#1d4ed8', '#0f766e', '#7c3aed', '#b91c1c', '#c2410c', '#0369a1', '#4d7c0f', '#a21caf'];
@@ -28,6 +29,9 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
   const [maxPlayers, setMaxPlayers] = useState(8);
   // 칩 게임만. 이 게임으로 만드는 그룹의 시작 칩 기본값 (그룹 설정에서 방장이 바꿀 수 있다)
   const [startingChips, setStartingChips] = useState('1000');
+  // 칩 게임만. 점수판에서 플레이어마다 칩 종류별 남은 개수를 적는다 (큰 값부터)
+  const [denominations, setDenominations] = useState(DEFAULT_CHIP_DENOMINATIONS);
+  const [denomInput, setDenomInput] = useState('');
   const fileInputRef = useRef(null);
 
   const handlePickImage = (e) => {
@@ -50,7 +54,10 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
 
   const buildSchemaJson = () => {
     // chip을 고르면 서버가 랭킹도 Elo 대신 칩 누적으로 만든다. 만든 뒤에는 바꿀 수 없다.
-    if (scoreType === 'simple' || scoreType === 'outcome' || scoreType === 'chip') {
+    if (scoreType === 'chip') {
+      return JSON.stringify({ name: name.trim(), type: scoreType, denominations });
+    }
+    if (scoreType === 'simple' || scoreType === 'outcome') {
       return JSON.stringify({ name: name.trim(), type: scoreType });
     }
     return JSON.stringify({
@@ -70,6 +77,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
     if (!name.trim()) { alert(t('lobby', 'customNameRequired')); return; }
     if (minPlayers < 1 || maxPlayers < minPlayers) { alert(t('lobby', 'customPlayersInvalid')); return; }
     if (scoreType === 'chip' && !(Number(startingChips) >= 1)) { alert(t('lobby', 'customStartingChipsInvalid')); return; }
+    if (scoreType === 'chip' && denominations.length === 0) { alert(t('lobby', 'customChipDenomsRequired')); return; }
     if (scoreType === 'flat') {
       const filled = categories.filter(c => c.label.trim());
       if (filled.length === 0) { alert(t('lobby', 'customCategoryRequired')); return; }
@@ -306,8 +314,66 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
                 color: V('--th-text'), fontSize: 15, outline: 'none', boxSizing: 'border-box',
               }}
             />
-            <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 24px' }}>
+            <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 16px' }}>
               {t('lobby', 'customStartingChipsHint')}
+            </p>
+
+            <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
+              {t('lobby', 'customChipDenoms')}
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
+              {denominations.map((d, i) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDenominations(prev => prev.filter(x => x !== d))}
+                  aria-label={t('lobby', 'customChipDenomRemove').replace('{n}', d.toLocaleString('en-US'))}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4, padding: '6px 10px', borderRadius: 999,
+                    border: 'none', cursor: 'pointer', backgroundColor: chipDenomColor(i), color: '#fff',
+                    fontSize: 13, fontWeight: 700,
+                  }}
+                >
+                  {d.toLocaleString('en-US')}
+                  <X size={12} />
+                </button>
+              ))}
+            </div>
+            {denominations.length < MAX_CHIP_DENOMINATIONS && (
+              <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={denomInput ? Number(denomInput).toLocaleString('en-US') : ''}
+                  placeholder={t('lobby', 'customChipDenomPlaceholder')}
+                  onChange={(e) => setDenomInput(chipDigitsOf(e.target.value, 9))}
+                  style={{
+                    flex: 1, padding: '10px 14px', borderRadius: 12,
+                    backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`,
+                    color: V('--th-text'), fontSize: 15, outline: 'none', boxSizing: 'border-box',
+                  }}
+                />
+                <button
+                  type="button"
+                  disabled={!(Number(denomInput) > 0)}
+                  onClick={() => {
+                    const n = Number(denomInput);
+                    setDenominations(prev => (prev.includes(n) ? prev : [...prev, n].sort((a, b) => b - a)));
+                    setDenomInput('');
+                  }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4, padding: '0 14px', borderRadius: 12, border: 'none',
+                    backgroundColor: Number(denomInput) > 0 ? V('--th-primary') : V('--th-border'),
+                    color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+                  }}
+                >
+                  <Plus size={14} />
+                  {t('lobby', 'customChipDenomAdd')}
+                </button>
+              </div>
+            )}
+            <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 24px' }}>
+              {t('lobby', 'customChipDenomsHint')}
             </p>
           </>
         )}

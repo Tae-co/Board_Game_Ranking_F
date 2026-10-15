@@ -85,4 +85,10 @@ export default {
   customStartingChips: '시작 칩',
   customStartingChipsHint: '모든 플레이어가 이만큼 들고 시작해요. 그룹마다 방장이 그룹 설정에서 바꿀 수 있어요.',
   customStartingChipsInvalid: '시작 칩은 1 이상이어야 해요.',
+  customChipDenoms: '칩 종류',
+  customChipDenomsHint: '게임이 끝나면 점수판에서 플레이어마다 칩 종류별로 남은 개수를 적어요. 칩을 누르면 빠져요.',
+  customChipDenomPlaceholder: '칩 금액 (예: 5000)',
+  customChipDenomAdd: '추가',
+  customChipDenomRemove: '칩 {n} 빼기',
+  customChipDenomsRequired: '칩 종류를 1개 이상 넣어주세요.',
 };

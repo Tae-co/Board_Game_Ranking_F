@@ -103,8 +103,9 @@ export default {
   chipSumWarning: '합계가 0이 아니에요. 입력을 확인해주세요.',
   chipRequired: '모든 플레이어의 칩을 입력해주세요.',
   chipSumConfirm: '칩 합계가 {sum}이에요. 그래도 저장할까요?',
-  chipModeStack: '남은 칩',
+  chipModeCount: '칩 개수',
   chipModeDelta: '직접 입력',
   chipStackBefore: '시작 {n}',
-  chipStackPlaceholder: '남은 칩',
+  chipCountEmpty: '남은 칩 입력',
+  chipAddOne: '칩 {n} 1개 추가',
 };

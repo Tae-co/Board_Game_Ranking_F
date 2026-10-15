@@ -30,5 +30,25 @@ export const formatChipDigits = (digits) => (digits ? Number(digits).toLocaleStr
 // 입력값에서 숫자만 남긴다 (쉼표·앞자리 0 제거)
 export const chipDigitsOf = (raw, maxDigits) => raw.replace(/\D/g, '').slice(0, maxDigits).replace(/^0+(?=\d)/, '');
 
+// 칩 종류(액면가). 점수판 스키마 denominations가 없으면(옛 게임) 이걸 쓴다
+export const DEFAULT_CHIP_DENOMINATIONS = [1000, 500, 100, 10];
+export const MAX_CHIP_DENOMINATIONS = 6;
+
+// 큰 칩부터 실물 칩처럼 색을 나눈다
+const DENOM_COLORS = ['#f59e0b', '#7c3aed', '#475569', '#2563eb', '#16a34a', '#dc2626'];
+export const chipDenomColor = (index) => DENOM_COLORS[index % DENOM_COLORS.length];
+
+// 스키마의 칩 종류. 중복·0 이하를 빼고 큰 값부터
+export const chipDenominationsOf = (schema) => {
+  const list = Array.isArray(schema?.denominations) ? schema.denominations.map(Number).filter(n => n > 0) : [];
+  return list.length ? [...new Set(list)].sort((a, b) => b - a) : DEFAULT_CHIP_DENOMINATIONS;
+};
+
+// 칩 종류별 개수({ 1000: '2', 100: '5' }) → 합계. 아무것도 안 적었으면 null
+export const chipCountTotal = (counts, denominations) => {
+  if (!counts || !denominations.some(d => (counts[d] ?? '') !== '')) return null;
+  return denominations.reduce((sum, d) => sum + d * Number(counts[d] || 0), 0);
+};
+
 // 이번 판을 시작할 때 테이블에 놓인 칩. 잔고가 0이면 서버가 시작 칩으로 리바이시키므로 시작 칩이다
 export const chipStackBefore = (balance, startingChips) => (balance > 0 ? balance : startingChips);
