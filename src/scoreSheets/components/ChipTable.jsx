@@ -11,10 +11,10 @@ const sectionLabel = {
 };
 
 /**
- * ChipTable - 칩 게임 한 판 입력. 바이인 금액 → 플레이어별 바이인 횟수 → 우승자 → 결과.
- * 우승자가 판돈을 전부 가져간다. 결과 계산은 chipUtils.buyInResults.
+ * ChipTable - 칩 게임 한 판 입력. 바이인 금액 → 플레이어별 바이인 횟수 → 우승자(여러 명 가능) → 결과.
+ * 우승자들이 판돈을 똑같이 나눈다. 결과 계산은 chipUtils.buyInResults.
  */
-const ChipTable = ({ players, buyIn, onBuyInChange, buyIns, onBuyInsChange, winnerId, onWinnerChange, results, readOnly }) => {
+const ChipTable = ({ players, buyIn, onBuyInChange, buyIns, onBuyInsChange, winnerIds, onToggleWinner, results, readOnly }) => {
   const { t } = useLanguage();
 
   return (
@@ -55,13 +55,13 @@ const ChipTable = ({ players, buyIn, onBuyInChange, buyIns, onBuyInsChange, winn
       <p style={sectionLabel}>{t('scoreSheet', 'chipWinner')}</p>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
         {players.map((player) => {
-          const isOn = winnerId === player.memberId;
+          const isOn = winnerIds.includes(player.memberId);
           return (
             <button
               key={player.memberId}
               type="button"
               disabled={readOnly}
-              onClick={() => onWinnerChange(player.memberId)}
+              onClick={() => onToggleWinner(player.memberId)}
               style={{
                 display: 'flex', alignItems: 'center', gap: 4, padding: '8px 14px', borderRadius: 999,
                 fontSize: 13, fontWeight: 700, cursor: readOnly ? 'default' : 'pointer',

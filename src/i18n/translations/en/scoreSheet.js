@@ -99,7 +99,7 @@ export default {
   sabGoldUnit: '{n} gold',
   chipBuyIn: 'Buy-in',
   chipBuyIns: 'Buy-ins (incl. rebuys)',
-  chipWinner: 'Winner',
+  chipWinner: 'Winners (pot is split evenly)',
   chipResults: 'Results',
   chipResultsEmpty: 'Enter the buy-in and pick a winner to see results.',
   chipRequired: 'Enter the buy-in and pick a winner.',

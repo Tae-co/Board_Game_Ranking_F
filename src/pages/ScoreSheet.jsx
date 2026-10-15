@@ -118,13 +118,12 @@ const ScoreSheet = () => {
   const [chipBuyIns, setChipBuyIns] = useState(() => Object.fromEntries(
     players.map(p => [p.memberId, savedScores?.buyIns?.[p.memberId] ?? 1])
   ));
-  const [chipWinnerId, setChipWinnerId] = useState(() => {
-    const entry = Object.entries(savedScores?.chipWon ?? {}).find(([, v]) => v === true);
-    return entry ? Number(entry[0]) : null;
-  });
+  const [chipWinnerIds, setChipWinnerIds] = useState(() => (
+    Object.entries(savedScores?.chipWon ?? {}).filter(([, v]) => v === true).map(([id]) => Number(id))
+  ));
   const chipResults = useMemo(
-    () => buyInResults(players, Number(chipBuyIn), chipBuyIns, chipWinnerId),
-    [players, chipBuyIn, chipBuyIns, chipWinnerId],
+    () => buyInResults(players, Number(chipBuyIn), chipBuyIns, chipWinnerIds),
+    [players, chipBuyIn, chipBuyIns, chipWinnerIds],
   );
 
   const initScores = (schema, playerList) => {
@@ -265,17 +264,17 @@ const ScoreSheet = () => {
         alert(t('scoreSheet', 'chipRequired'));
         return;
       }
-      // 우승자만 1등(승리), 나머지는 모두 2등(패배)
+      // 우승자는 모두 1등(승리), 나머지는 모두 2등(패배)
       participants = players.map(p => ({
         memberId: p.memberId,
-        placement: p.memberId === chipWinnerId ? 1 : 2,
+        placement: chipWinnerIds.includes(p.memberId) ? 1 : 2,
         chipDelta: chipResults[p.memberId],
         buyIns: chipBuyIns[p.memberId],
         scoresJson: JSON.stringify({
           chip: chipResults[p.memberId],
           buyIn: Number(chipBuyIn),
           buyIns: chipBuyIns[p.memberId],
-          chipWon: p.memberId === chipWinnerId,
+          chipWon: chipWinnerIds.includes(p.memberId),
         }),
       }));
     } else if (rankMode || isRankOnly) {
@@ -444,8 +443,10 @@ const ScoreSheet = () => {
             onBuyInChange={setChipBuyIn}
             buyIns={chipBuyIns}
             onBuyInsChange={(memberId, n) => setChipBuyIns(prev => ({ ...prev, [memberId]: n }))}
-            winnerId={chipWinnerId}
-            onWinnerChange={setChipWinnerId}
+            winnerIds={chipWinnerIds}
+            onToggleWinner={(memberId) => setChipWinnerIds(prev => (
+              prev.includes(memberId) ? prev.filter(id => id !== memberId) : [...prev, memberId]
+            ))}
             results={chipResults}
             readOnly={readOnly}
           />

@@ -99,7 +99,7 @@ export default {
   sabGoldUnit: '{n}금',
   chipBuyIn: '바이인 금액',
   chipBuyIns: '바이인 횟수 (리바이 포함)',
-  chipWinner: '우승자',
+  chipWinner: '우승자 (여러 명이면 판돈을 나눠요)',
   chipResults: '결과',
   chipResultsEmpty: '바이인 금액과 우승자를 고르면 결과가 계산돼요.',
   chipRequired: '바이인 금액과 우승자를 입력해주세요.',

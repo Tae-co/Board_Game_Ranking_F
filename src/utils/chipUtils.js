@@ -19,17 +19,24 @@ export const formatChipDigits = (digits) => (digits ? Number(digits).toLocaleStr
 export const chipDigitsOf = (raw, maxDigits) => raw.replace(/\D/g, '').slice(0, maxDigits).replace(/^0+(?=\d)/, '');
 
 /**
- * 바이인 한 판의 손익. 우승자가 판돈을 전부 가져간다.
- * 진 사람: -(바이인 × 횟수), 우승자: 판돈 - 본인 바이인.
+ * 바이인 한 판의 손익. 우승자들이 판돈을 똑같이 나눠 갖는다.
+ * 진 사람: -(바이인 × 횟수), 우승자: 판돈 ÷ 우승자 수 - 본인 바이인.
  * 바이인 10,000 / Vanna 1·Tae 2·Yuna 1 / Yuna 우승 → -10,000 / -20,000 / +30,000
+ * 나누어떨어지지 않으면 남는 1씩을 목록 앞쪽 우승자부터 준다 (합계가 0으로 맞도록).
  *
  * @return { memberId: 손익 }. 바이인 금액이나 우승자가 없으면 null
  */
-export const buyInResults = (players, buyIn, buyIns, winnerId) => {
-  if (!(buyIn > 0) || winnerId == null) return null;
+export const buyInResults = (players, buyIn, buyIns, winnerIds) => {
+  const winners = players.filter(p => winnerIds.includes(p.memberId));
+  if (!(buyIn > 0) || winners.length === 0) return null;
   const paid = (id) => buyIn * (buyIns[id] ?? 1);
   const pot = players.reduce((sum, p) => sum + paid(p.memberId), 0);
-  return Object.fromEntries(players.map(p => [
-    p.memberId, p.memberId === winnerId ? pot - paid(p.memberId) : -paid(p.memberId),
-  ]));
+  const share = Math.floor(pot / winners.length);
+  const remainder = pot - share * winners.length;
+  const winnerIndex = new Map(winners.map((p, i) => [p.memberId, i]));
+  return Object.fromEntries(players.map(p => {
+    const i = winnerIndex.get(p.memberId);
+    const won = i == null ? 0 : share + (i < remainder ? 1 : 0);
+    return [p.memberId, won - paid(p.memberId)];
+  }));
 };
