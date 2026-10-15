@@ -442,12 +442,12 @@ const Invite = () => {
     const nickname = getNickname() || myRank.nickname;
     nativeShare(
       t('invite', 'shareMyRankTitle').replace('{nickname}', nickname).replace('{game}', gameName),
-      t('invite', 'shareMyRankText')
-        .replace('{rank}', myRankPosition).replace('{rating}', Math.round(myRank.rating))
+      t('invite', isChip ? 'shareMyRankTextChip' : 'shareMyRankText')
+        .replace('{rank}', myRankPosition).replace('{rating}', isChip ? formatChipDelta(myRank.rating) : Math.round(myRank.rating))
         .replace('{winRate}', myWinRate).replace('{wins}', myRank.winCount).replace('{losses}', myRank.loseCount),
       'my_rank',
     );
-  }, [myRank, myRankPosition, gameInfo, roomInfo, myWinRate, t]);
+  }, [myRank, myRankPosition, gameInfo, roomInfo, myWinRate, isChip, t]);
 
   const shareMatchResult = useCallback(() => {
     if (!matchResult) return;
@@ -700,6 +700,7 @@ const Invite = () => {
                         onView={handleViewMatch}
                         onEdit={handleEditMatch}
                         onDelete={handleDeleteMatch}
+                        chip={isChip}
                       />
                     ))}
                   </div>
@@ -743,7 +744,7 @@ const Invite = () => {
                 lang={lang}
               />
               {rankings.length >= 1 && (
-                <PodiumRanking rankings={rankings} myUserId={userId} />
+                <PodiumRanking rankings={rankings} myUserId={userId} chip={isChip} />
               )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 6 }}>
                 {showSearch ? (

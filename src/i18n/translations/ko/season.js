@@ -62,4 +62,5 @@ export default {
   windowLabel: '최근 {days}일 · {from} – {to}',
   windowMatchesLabel: '경기',
   noLeaders: '아직 3판 이상 뛴 사람이 없어요',
+  chipTrend: '내 손익 추이',
 };

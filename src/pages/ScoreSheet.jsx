@@ -18,7 +18,7 @@ import RankInputTable from '../scoreSheets/components/RankInputTable';
 import WinDrawLossTable, { OUTCOME_TIER } from '../scoreSheets/components/WinDrawLossTable';
 import ChipTable from '../scoreSheets/components/ChipTable';
 import ChipCountTable from '../scoreSheets/components/ChipCountTable';
-import { buyInResults, chipModeOf, chipDenominationsOf, chipCountTotal, formatChipDelta } from '../utils/chipUtils';
+import { buyInResults, chipModeOf, chipDenominationsOf, chipCountTotal, formatChipDelta, isChipDeltaTooLarge } from '../utils/chipUtils';
 
 // DB에 저장된 스키마(JSON)를 렌더링 가능한 스키마로 변환.
 // simple/outcome/chip은 TableComponent가 없다 → 순위 입력 / 승무패 입력 / 바이인·칩 세기 입력이 그려진다.
@@ -280,6 +280,7 @@ const ScoreSheet = () => {
         alert(t('scoreSheet', 'chipCountRequired'));
         return;
       }
+      if (isChipDeltaTooLarge(deltas)) { alert(t('scoreSheet', 'chipTooLarge')); return; }
       // 합계가 0이 아니면 세다가 틀렸을 수 있다 — 경고만 하고 저장은 사용자가 고른다
       const sum = Object.values(deltas).reduce((a, b) => a + b, 0);
       if (sum !== 0 && !window.confirm(t('scoreSheet', 'chipSumConfirm').replace('{sum}', formatChipDelta(sum)))) {
@@ -309,6 +310,7 @@ const ScoreSheet = () => {
         alert(t('scoreSheet', 'chipRequired'));
         return;
       }
+      if (isChipDeltaTooLarge(chipResults)) { alert(t('scoreSheet', 'chipTooLarge')); return; }
       // 우승자는 모두 1등(승리), 나머지는 모두 2등(패배)
       participants = players.map(p => ({
         memberId: p.memberId,

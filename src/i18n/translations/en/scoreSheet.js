@@ -110,4 +110,5 @@ export default {
   chipSumWarning: 'Total isn\'t 0. Please check the chip counts.',
   chipSumConfirm: 'Profit total is {sum}. Save anyway?',
   chipCountRequired: 'Enter the starting chips per player.',
+  chipTooLarge: 'The amount is too large to save. A player\'s profit can\'t exceed 2.1 billion.',
 };

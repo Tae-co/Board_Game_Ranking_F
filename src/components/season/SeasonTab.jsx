@@ -175,7 +175,7 @@ const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, on
           </div>
 
           {/* ④ 점수 추이 — 시즌 1개짜리 그래프는 고장으로 보인다 */}
-          {history.length >= 2 && <SeasonTrend history={history} t={t} />}
+          {history.length >= 2 && <SeasonTrend history={history} t={t} chip={chip} />}
         </>
       )}
     </div>

@@ -62,4 +62,5 @@ export default {
   windowLabel: 'Last {days} days · {from} – {to}',
   windowMatchesLabel: 'Matches',
   noLeaders: 'Nobody has played 3+ games yet',
+  chipTrend: 'My net by season',
 };

@@ -54,4 +54,5 @@ export default {
   statsStreak: '연속',
   statsRank: '순위',
   chipHolding: '손익',
+  matchDefeat: '패배',
 };

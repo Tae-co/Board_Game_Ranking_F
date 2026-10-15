@@ -110,4 +110,5 @@ export default {
   chipSumWarning: '합계가 0이 아니에요. 칩 개수를 확인해주세요.',
   chipSumConfirm: '손익 합계가 {sum}이에요. 그래도 저장할까요?',
   chipCountRequired: '1인 시작 칩을 입력해주세요.',
+  chipTooLarge: '금액이 너무 커서 저장할 수 없어요. 한 사람의 손익은 21억을 넘을 수 없어요.',
 };

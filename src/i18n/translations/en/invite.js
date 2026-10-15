@@ -47,4 +47,5 @@ export default {
   shareMyRankText: '#{rank} · Rating {rating} · Win rate {winRate}% ({wins}W {losses}L)\n\nTracking our board game rankings on YadaRank 👉 yadarank.com',
   shareMatchTitle: '🎮 {game} match result!',
   shareMatchText: '{lines}\n\nRecording our board game rankings on YadaRank 👉 yadarank.com',
+  shareMyRankTextChip: '#{rank} · Net {rating} · {wins}W {losses}L\n\nTracking our board game rankings on YadaRank 👉 yadarank.com',
 };

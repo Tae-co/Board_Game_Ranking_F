@@ -11,6 +11,10 @@ export const formatChipDelta = (n) => {
   return `${v > 0 ? '+' : ''}${v.toLocaleString()}`;
 };
 
+// 서버 chip_delta가 32비트 정수라 이 범위를 넘는 손익은 저장할 수 없다
+export const MAX_CHIP_DELTA = 2147483647;
+export const isChipDeltaTooLarge = (deltas) => Object.values(deltas).some(d => Math.abs(d) > MAX_CHIP_DELTA);
+
 export const chipDeltaColor = (n) => (n > 0 ? '#16a34a' : n < 0 ? '#dc2626' : V('--th-text-sub'));
 
 // 입력칸 표시용 천 단위 쉼표. 상태에는 숫자만 담는다 ('1500000' → '1,500,000')
