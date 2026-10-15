@@ -138,7 +138,7 @@ const ScoreSheet = () => {
   const [chipCounts, setChipCounts] = useState(() => savedScores?.chipCounts ?? {});
   const chipCountDeltas = useMemo(() => Object.fromEntries(players.map(p => {
     const total = chipCountTotal(chipCounts[p.memberId], chipDenominations);
-    return [p.memberId, total != null && Number(chipStart) > 0 ? total - Number(chipStart) : null];
+    return [p.memberId, Number(chipStart) > 0 ? total - Number(chipStart) : null];
   })), [players, chipCounts, chipDenominations, chipStart]);
 
   const initScores = (schema, playerList) => {

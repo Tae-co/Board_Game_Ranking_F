@@ -60,8 +60,7 @@ export const chipDenominationsOf = (denominations) => {
   return list.length ? [...new Set(list)].sort((a, b) => b - a) : DEFAULT_CHIP_DENOMINATIONS;
 };
 
-// 칩 종류별 개수({ 1000: '2', 100: '5' }) → 합계. 아무것도 안 적었으면 null
-export const chipCountTotal = (counts, denominations) => {
-  if (!counts || !denominations.some(d => (counts[d] ?? '') !== '')) return null;
-  return denominations.reduce((sum, d) => sum + d * Number(counts[d] || 0), 0);
-};
+// 칩 종류별 개수({ 1000: '2', 100: '5' }) → 합계. 안 적은 칩은 0개로 본다
+export const chipCountTotal = (counts, denominations) => (
+  denominations.reduce((sum, d) => sum + d * Number(counts?.[d] || 0), 0)
+);

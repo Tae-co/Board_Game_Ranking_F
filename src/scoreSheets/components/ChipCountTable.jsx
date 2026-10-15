@@ -77,10 +77,10 @@ const ChipCountRow = ({ player, denominations, counts, onCountChange, delta, rea
         </div>
         <div style={{ textAlign: 'right', flexShrink: 0 }}>
           <div style={{ fontSize: 15, fontWeight: 800, color: V('--th-text') }}>
-            {total == null ? '—' : total.toLocaleString('en-US')}
+            {total.toLocaleString('en-US')}
           </div>
           <div style={{ fontSize: 12, fontWeight: 700, color: delta == null ? V('--th-text-sub') : chipDeltaColor(delta) }}>
-            {delta == null ? t('scoreSheet', 'chipCountEmpty') : formatChipDelta(delta)}
+            {delta == null ? '—' : formatChipDelta(delta)}
           </div>
         </div>
       </div>

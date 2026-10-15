@@ -105,10 +105,9 @@ export default {
   chipRequired: '바이인 금액과 우승자를 입력해주세요.',
   chipStartPerPlayer: '1인 시작 칩',
   chipRemaining: '남은 칩 (칩을 누르면 1개씩 늘어요)',
-  chipCountEmpty: '남은 칩 입력',
   chipAddOne: '칩 {n} 1개 추가',
   chipSum: '합계',
   chipSumWarning: '합계가 0이 아니에요. 칩 개수를 확인해주세요.',
   chipSumConfirm: '손익 합계가 {sum}이에요. 그래도 저장할까요?',
-  chipCountRequired: '시작 칩과 모든 플레이어의 남은 칩을 입력해주세요.',
+  chipCountRequired: '1인 시작 칩을 입력해주세요.',
 };

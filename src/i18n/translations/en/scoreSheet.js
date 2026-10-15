@@ -105,10 +105,9 @@ export default {
   chipRequired: 'Enter the buy-in and pick a winner.',
   chipStartPerPlayer: 'Starting chips per player',
   chipRemaining: 'Chips left (tap a chip to add one)',
-  chipCountEmpty: 'Enter chips left',
   chipAddOne: 'Add one {n} chip',
   chipSum: 'Total',
   chipSumWarning: 'Total isn\'t 0. Please check the chip counts.',
   chipSumConfirm: 'Profit total is {sum}. Save anyway?',
-  chipCountRequired: 'Enter starting chips and chips left for every player.',
+  chipCountRequired: 'Enter the starting chips per player.',
 };
