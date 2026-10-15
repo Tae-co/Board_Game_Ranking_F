@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { usePresence } from '../hooks/usePresence';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Play, Share2, Search, X, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Play, Share2, Search, X, CheckCheck, Info } from 'lucide-react';
 import { Share } from '@capacitor/share';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
@@ -23,6 +23,7 @@ import { EVENTS, logEvent } from '../api/services/events';
 import PodiumRanking from '../components/ranking/PodiumRanking';
 import RankingTable from '../components/ranking/RankingTable';
 import RatingEditModal from '../components/ranking/RatingEditModal';
+import RatingInfoModal from '../components/ranking/RatingInfoModal';
 import SeasonTab from '../components/season/SeasonTab';
 import SeasonHeader from '../components/season/SeasonHeader';
 import SeasonEditModal from '../components/invite/SeasonEditModal';
@@ -70,6 +71,7 @@ const Invite = () => {
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(location.state?.activeTab ?? 'group');
   const [ratingEditModal, setRatingEditModal] = useState(null);
+  const [showRatingInfo, setShowRatingInfo] = useState(false);
   const [ratingEditValue, setRatingEditValue] = useState('');
   const [isRatingEditSaving, setIsRatingEditSaving] = useState(false);
   const [page, setPage] = useState(location.state?.matchPage ?? 0);
@@ -747,6 +749,12 @@ const Invite = () => {
                 <PodiumRanking rankings={rankings} myUserId={userId} chip={isChip} />
               )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 6 }}>
+                <button
+                  onClick={() => setShowRatingInfo(true)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', color: V('--th-text-sub') }}
+                >
+                  <Info size={18} />
+                </button>
                 {showSearch ? (
                   <div style={{
                     flex: 1, display: 'flex', alignItems: 'center', gap: 8,
@@ -881,6 +889,9 @@ const Invite = () => {
         />
       )}
 
+      {showRatingInfo && (
+        <RatingInfoModal chip={isChip} onClose={() => setShowRatingInfo(false)} t={t} />
+      )}
       {ratingEditModal && (
         <RatingEditModal
           ratingEditModal={ratingEditModal}
