@@ -47,10 +47,4 @@ export default {
   shareMyRankText: '{rank}위 · 레이팅 {rating} · 승률 {winRate}% ({wins}승 {losses}패)\n\nYadaRank에서 보드게임 랭킹 관리 중 👉 yadarank.com',
   shareMatchTitle: '🎮 {game} 한판 결과!',
   shareMatchText: '{lines}\n\nYadaRank에서 보드게임 랭킹을 기록 중이에요 👉 yadarank.com',
-  startingChipsLabel: '시작 칩',
-  startingChipsHint: '칩을 다 잃으면 다음 판에 이만큼 다시 받아요 (리바이).',
-  startingChipsPending: '다음 시즌부터 {n}칩',
-  startingChipsReserved: '이번 시즌에 이미 경기가 있어 다음 시즌부터 적용돼요.',
-  startingChipsInvalid: '시작 칩은 1 이상이어야 해요.',
-  startingChipsFailed: '시작 칩 변경에 실패했어요.',
 };

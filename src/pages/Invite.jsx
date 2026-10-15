@@ -6,12 +6,12 @@ import { Share } from '@capacitor/share';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateStartingChips, updateMemberRating, getRoomSeasons, getSeasonPodium, getCurrentSeason, updateCurrentSeason } from '../api/services/rooms';
+import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, getRoomSeasons, getSeasonPodium, getCurrentSeason, updateCurrentSeason } from '../api/services/rooms';
 import { getGame } from '../api/services/games';
 import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
-import { isChipGame } from '../utils/chipUtils';
+import { isChipGame, formatChipDelta } from '../utils/chipUtils';
 import { getSelectedCommunity } from '../utils/storage';
 import { getAuthUserId, getNickname } from '../auth/storage';
 import { REGION_TIMEZONE } from '../constants/regions';
@@ -67,7 +67,6 @@ const Invite = () => {
   const rankingListRef = useRef(null);
   const [showSettings, setShowSettings] = useState(false);
   const [editRoomName, setEditRoomName] = useState('');
-  const [editStartingChips, setEditStartingChips] = useState('');
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(location.state?.activeTab ?? 'group');
   const [ratingEditModal, setRatingEditModal] = useState(null);
@@ -129,7 +128,7 @@ const Invite = () => {
     enabled: !!roomInfo.boardGameId,
     staleTime: 1000 * 60 * 30,
   });
-  // 칩 게임은 점수 대신 칩 순수익으로 줄 세우고, 초기 LP 설정 대신 시작 칩을 쓴다
+  // 칩 게임은 점수 대신 누적 손익으로 줄 세우고, LP 수정이 없다
   const isChip = isChipGame(gameInfo);
 
   const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
@@ -390,23 +389,8 @@ const Invite = () => {
   const handleSaveSettings = async () => {
     const trimmed = editRoomName.trim();
     if (!trimmed) return;
-    const chips = Number(editStartingChips);
-    const chipsChanged = isChip && chips !== (roomInfo.pendingStartingChips ?? roomInfo.startingChips);
-    if (chipsChanged && !(chips >= 1)) { alert(t('invite', 'startingChipsInvalid')); return; }
     setSaving(true);
     try {
-      if (chipsChanged) {
-        try {
-          const updated = await updateStartingChips(roomId, chips);
-          queryClient.setQueryData(['room', roomId], (old) => old ? { ...old, ...updated } : updated);
-          queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
-          if (updated.pendingStartingChips != null) alert(t('invite', 'startingChipsReserved'));
-        } catch {
-          alert(t('invite', 'startingChipsFailed'));
-          setSaving(false);
-          return;
-        }
-      }
       await updateRoomName(roomId, trimmed);
       const updateName = (old) =>
         Array.isArray(old)
@@ -420,11 +404,7 @@ const Invite = () => {
     setSaving(false);
   };
 
-  const openSettings = () => {
-    setEditRoomName(roomName);
-    setEditStartingChips(String(roomInfo.pendingStartingChips ?? roomInfo.startingChips ?? 1000));
-    setShowSettings(true);
-  };
+  const openSettings = () => { setEditRoomName(roomName); setShowSettings(true); };
 
   // 바이럴 퍼널의 시작점. 그룹 로비 진입이 아니라 "실제로 공유를 시도했다"만 센다.
   //
@@ -474,14 +454,14 @@ const Invite = () => {
     const gameName = gameInfo?.name || roomInfo?.roomName || t('invite', 'defaultGameName');
     const lines = [...matchResult]
       .sort((a, b) => b.ratingChange - a.ratingChange)
-      .map(r => `${r.nickname} ${r.ratingChange >= 0 ? '+' : ''}${Math.round(r.ratingChange)}`)
+      .map(r => `${r.nickname} ${isChip ? formatChipDelta(r.ratingChange) : `${r.ratingChange >= 0 ? '+' : ''}${Math.round(r.ratingChange)}`}`)
       .join(' · ');
     nativeShare(
       t('invite', 'shareMatchTitle').replace('{game}', gameName),
       t('invite', 'shareMatchText').replace('{lines}', lines),
       'match_result',
     );
-  }, [matchResult, gameInfo, roomInfo, t]);
+  }, [matchResult, gameInfo, roomInfo, isChip, t]);
 
   const handleUpdateRating = async () => {
     if (!ratingEditModal) return;
@@ -661,7 +641,7 @@ const Invite = () => {
                     <div key={r.memberId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 10, backgroundColor: V('--th-bg') }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: V('--th-text') }}>{r.nickname}</span>
                       <span style={{ fontSize: 13, fontWeight: 700, color: r.ratingChange > 0 ? '#16a34a' : '#dc2626' }}>
-                        {r.ratingChange > 0 ? '+' : ''}{Math.round(r.ratingChange)}
+                        {isChip ? formatChipDelta(r.ratingChange) : `${r.ratingChange > 0 ? '+' : ''}${Math.round(r.ratingChange)}`}
                       </span>
                     </div>
                   ))}
@@ -887,10 +867,6 @@ const Invite = () => {
           t={t}
           season={currentSeason}
           onEditSeason={() => setShowSeasonEdit(true)}
-          chip={isChip}
-          editStartingChips={editStartingChips}
-          setEditStartingChips={setEditStartingChips}
-          pendingStartingChips={roomInfo.pendingStartingChips}
         />
       )}
 

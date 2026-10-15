@@ -53,6 +53,6 @@ export default {
   avgPlaceShort: 'avg {n}',
   statsStreak: 'STREAK',
   statsRank: 'RANK',
-  chipHolding: 'Chips',
+  chipHolding: 'Net',
   chipRebuys: 'Rebuys {n}',
 };

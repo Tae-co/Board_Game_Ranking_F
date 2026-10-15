@@ -6,7 +6,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createMatch, updateMatch } from '../api/services/matches';
 import { EVENTS, logEvent } from '../api/services/events';
 import { getGame } from '../api/services/games';
-import { getRoom, getRoomRankings } from '../api/services/rooms';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
 import FlatTable from '../scoreSheets/tables/FlatTable';
@@ -18,10 +17,10 @@ import WinnerBanner from '../scoreSheets/shared/WinnerBanner';
 import RankInputTable from '../scoreSheets/components/RankInputTable';
 import WinDrawLossTable, { OUTCOME_TIER } from '../scoreSheets/components/WinDrawLossTable';
 import ChipTable from '../scoreSheets/components/ChipTable';
-import { formatChipDelta, chipDeltaOf, chipInputOf, chipStackBefore, chipDenominationsOf, chipCountTotal } from '../utils/chipUtils';
+import { buyInResults } from '../utils/chipUtils';
 
 // DB에 저장된 스키마(JSON)를 렌더링 가능한 스키마로 변환.
-// simple/outcome/chip은 TableComponent가 없다 → 순위 입력 / 승무패 입력 / 칩 증감 입력이 그려진다.
+// simple/outcome/chip은 TableComponent가 없다 → 순위 입력 / 승무패 입력 / 바이인 입력이 그려진다.
 const parseSchema = (raw) => {
   if (!raw) return null;
   try {
@@ -109,36 +108,24 @@ const ScoreSheet = () => {
   const isOutcomeOnly = currentSchema?.type === 'outcome';
   const [outcomeInputs, setOutcomeInputs] = useState(() => savedScores?.outcome ?? {});
 
-  // 칩 게임(chip). 판마다 딴(+)/잃은(-) 칩을 입력한다. 저장된 매치를 열면 이전 값을 복원한다.
+  // 칩 게임(chip). 바이인 금액·플레이어별 바이인 횟수·우승자로 손익을 계산한다.
+  // 저장된 매치를 열면 scoresJson의 buyIn / buyIns / chipWon으로 이전 입력을 복원한다.
   const isChip = currentSchema?.type === 'chip';
-  const [chipInputs, setChipInputs] = useState(() => Object.fromEntries(
-    players.map(p => [p.memberId, chipInputOf(savedScores?.chip?.[p.memberId])])
+  const [chipBuyIn, setChipBuyIn] = useState(() => {
+    const saved = Object.values(savedScores?.buyIn ?? {})[0];
+    return saved ? String(saved) : '';
+  });
+  const [chipBuyIns, setChipBuyIns] = useState(() => Object.fromEntries(
+    players.map(p => [p.memberId, savedScores?.buyIns?.[p.memberId] ?? 1])
   ));
-
-  // 새 기록은 기본으로 칩 종류별 남은 개수를 입력한다. 판 시작 칩 = 지금 보유 칩이라 수정·읽기·미리보기에서는 쓸 수 없다
-  const canUseChipStack = isChip && !readOnly && !editMatchId && !previewMode && !!roomId;
-  const [chipMode, setChipMode] = useState('count');
-  const effectiveChipMode = canUseChipStack ? chipMode : 'delta';
-  const [chipCounts, setChipCounts] = useState({});
-  const { data: chipRoom } = useQuery({
-    queryKey: ['room', roomId], queryFn: () => getRoom(roomId), enabled: canUseChipStack,
+  const [chipWinnerId, setChipWinnerId] = useState(() => {
+    const entry = Object.entries(savedScores?.chipWon ?? {}).find(([, v]) => v === true);
+    return entry ? Number(entry[0]) : null;
   });
-  const { data: chipRankings } = useQuery({
-    queryKey: ['rankings', roomId], queryFn: () => getRoomRankings(roomId), enabled: canUseChipStack,
-  });
-  const chipDenominations = useMemo(() => chipDenominationsOf(chipRoom?.chipDenominations), [chipRoom]);
-  const stackBefore = useMemo(() => {
-    if (!chipRoom || !chipRankings) return null;
-    return Object.fromEntries(players.map(p => {
-      const r = chipRankings.find(x => x.memberId === p.memberId);
-      return [p.memberId, chipStackBefore(r ? r.rating : chipRoom.startingChips, chipRoom.startingChips)];
-    }));
-  }, [chipRoom, chipRankings, players]);
-  const chipDeltas = useMemo(() => Object.fromEntries(players.map(p => {
-    if (effectiveChipMode === 'delta') return [p.memberId, chipDeltaOf(chipInputs[p.memberId])];
-    const total = chipCountTotal(chipCounts[p.memberId], chipDenominations);
-    return [p.memberId, total != null && stackBefore ? total - stackBefore[p.memberId] : null];
-  })), [players, effectiveChipMode, chipInputs, chipCounts, chipDenominations, stackBefore]);
+  const chipResults = useMemo(
+    () => buyInResults(players, Number(chipBuyIn), chipBuyIns, chipWinnerId),
+    [players, chipBuyIn, chipBuyIns, chipWinnerId],
+  );
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
@@ -274,29 +261,22 @@ const ScoreSheet = () => {
         scoresJson: JSON.stringify({ outcome: outcomeInputs[p.memberId] }),
       }));
     } else if (isChip) {
-      const deltas = chipDeltas;
-      if (players.some(p => deltas[p.memberId] == null)) {
+      if (!chipResults) {
         alert(t('scoreSheet', 'chipRequired'));
         return;
       }
-      // 합계가 0이 아니면 입력 실수일 수 있다 — 경고만 하고 저장은 사용자가 고른다
-      const sum = Object.values(deltas).reduce((a, b) => a + b, 0);
-      if (sum !== 0 && !window.confirm(t('scoreSheet', 'chipSumConfirm').replace('{sum}', formatChipDelta(sum)))) {
-        return;
-      }
-      // 많이 딴 순서로 등수를 매긴다. 같은 금액은 동순위 (+300, 0, 0, -300 → 1, 2, 2, 4)
-      const sorted = [...players].sort((a, b) => deltas[b.memberId] - deltas[a.memberId]);
-      const placements = {};
-      sorted.forEach((p, i) => {
-        placements[p.memberId] = i > 0 && deltas[p.memberId] === deltas[sorted[i - 1].memberId]
-          ? placements[sorted[i - 1].memberId]
-          : i + 1;
-      });
+      // 우승자만 1등(승리), 나머지는 모두 2등(패배)
       participants = players.map(p => ({
         memberId: p.memberId,
-        placement: placements[p.memberId],
-        chipDelta: deltas[p.memberId],
-        scoresJson: JSON.stringify({ chip: deltas[p.memberId] }),
+        placement: p.memberId === chipWinnerId ? 1 : 2,
+        chipDelta: chipResults[p.memberId],
+        buyIns: chipBuyIns[p.memberId],
+        scoresJson: JSON.stringify({
+          chip: chipResults[p.memberId],
+          buyIn: Number(chipBuyIn),
+          buyIns: chipBuyIns[p.memberId],
+          chipWon: p.memberId === chipWinnerId,
+        }),
       }));
     } else if (rankMode || isRankOnly) {
       // 순위 직접 입력 모드: rankInputs에서 placement 사용
@@ -460,15 +440,13 @@ const ScoreSheet = () => {
         {isChip ? (
           <ChipTable
             players={players}
-            mode={effectiveChipMode}
-            onModeChange={canUseChipStack ? setChipMode : null}
-            stackBefore={stackBefore}
-            denominations={chipDenominations}
-            chipCounts={chipCounts}
-            onCountChange={(memberId, denom, digits) => setChipCounts(prev => ({ ...prev, [memberId]: { ...prev[memberId], [denom]: digits } }))}
-            chipInputs={chipInputs}
-            onChange={(memberId, input) => setChipInputs(prev => ({ ...prev, [memberId]: input }))}
-            deltas={chipDeltas}
+            buyIn={chipBuyIn}
+            onBuyInChange={setChipBuyIn}
+            buyIns={chipBuyIns}
+            onBuyInsChange={(memberId, n) => setChipBuyIns(prev => ({ ...prev, [memberId]: n }))}
+            winnerId={chipWinnerId}
+            onWinnerChange={setChipWinnerId}
+            results={chipResults}
             readOnly={readOnly}
           />
         ) : isOutcomeOnly ? (

@@ -1,6 +1,6 @@
 import { V } from './cssUtils';
 
-// 칩 게임(BoardGame.ratingType === 'CHIP') 표시용. 순위가 아니라 딴/잃은 칩을 누적한다.
+// 칩 게임(BoardGame.ratingType === 'CHIP') 표시용. 순위가 아니라 판마다 바이인 손익을 누적한다.
 
 export const isChipGame = (game) => game?.ratingType === 'CHIP';
 
@@ -12,43 +12,24 @@ export const formatChipDelta = (n) => {
 
 export const chipDeltaColor = (n) => (n > 0 ? '#16a34a' : n < 0 ? '#dc2626' : V('--th-text-sub'));
 
-// 입력값 { sign: '+' | '-', amount: '300' } → -300. 비어 있으면 null
-export const chipDeltaOf = (input) => {
-  if (!input || input.amount === '' || input.amount == null) return null;
-  const n = Number(input.amount);
-  return input.sign === '-' ? -n : n;
-};
-
-// 저장된 증감(-300) → 입력값. 수정·읽기 화면에서 이전 값을 되살린다
-export const chipInputOf = (delta) => (
-  delta == null ? { sign: '+', amount: '' } : { sign: delta < 0 ? '-' : '+', amount: String(Math.abs(delta)) }
-);
-
 // 입력칸 표시용 천 단위 쉼표. 상태에는 숫자만 담는다 ('1500000' → '1,500,000')
 export const formatChipDigits = (digits) => (digits ? Number(digits).toLocaleString('en-US') : '');
 
 // 입력값에서 숫자만 남긴다 (쉼표·앞자리 0 제거)
 export const chipDigitsOf = (raw, maxDigits) => raw.replace(/\D/g, '').slice(0, maxDigits).replace(/^0+(?=\d)/, '');
 
-// 칩 종류(액면가). 방에 정해진 칩 종류가 없으면(옛 그룹) 이걸 쓴다
-export const DEFAULT_CHIP_DENOMINATIONS = [1000, 500, 100, 10];
-export const MAX_CHIP_DENOMINATIONS = 6;
-
-// 큰 칩부터 실물 칩처럼 색을 나눈다
-const DENOM_COLORS = ['#f59e0b', '#7c3aed', '#475569', '#2563eb', '#16a34a', '#dc2626'];
-export const chipDenomColor = (index) => DENOM_COLORS[index % DENOM_COLORS.length];
-
-// 방의 칩 종류(room.chipDenominations). 중복·0 이하를 빼고 큰 값부터
-export const chipDenominationsOf = (denominations) => {
-  const list = Array.isArray(denominations) ? denominations.map(Number).filter(n => n > 0) : [];
-  return list.length ? [...new Set(list)].sort((a, b) => b - a) : DEFAULT_CHIP_DENOMINATIONS;
+/**
+ * 바이인 한 판의 손익. 우승자가 판돈을 전부 가져간다.
+ * 진 사람: -(바이인 × 횟수), 우승자: 판돈 - 본인 바이인.
+ * 바이인 10,000 / Vanna 1·Tae 2·Yuna 1 / Yuna 우승 → -10,000 / -20,000 / +30,000
+ *
+ * @return { memberId: 손익 }. 바이인 금액이나 우승자가 없으면 null
+ */
+export const buyInResults = (players, buyIn, buyIns, winnerId) => {
+  if (!(buyIn > 0) || winnerId == null) return null;
+  const paid = (id) => buyIn * (buyIns[id] ?? 1);
+  const pot = players.reduce((sum, p) => sum + paid(p.memberId), 0);
+  return Object.fromEntries(players.map(p => [
+    p.memberId, p.memberId === winnerId ? pot - paid(p.memberId) : -paid(p.memberId),
+  ]));
 };
-
-// 칩 종류별 개수({ 1000: '2', 100: '5' }) → 합계. 아무것도 안 적었으면 null
-export const chipCountTotal = (counts, denominations) => {
-  if (!counts || !denominations.some(d => (counts[d] ?? '') !== '')) return null;
-  return denominations.reduce((sum, d) => sum + d * Number(counts[d] || 0), 0);
-};
-
-// 이번 판을 시작할 때 테이블에 놓인 칩. 잔고가 0이면 서버가 시작 칩으로 리바이시키므로 시작 칩이다
-export const chipStackBefore = (balance, startingChips) => (balance > 0 ? balance : startingChips);

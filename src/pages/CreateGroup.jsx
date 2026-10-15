@@ -9,8 +9,6 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import GameImageFallback from '../components/shared/GameImageFallback';
 import SeasonFields from '../components/shared/SeasonFields';
-import ChipDenominationsField from '../components/lobby/ChipDenominationsField';
-import { DEFAULT_CHIP_DENOMINATIONS, isChipGame } from '../utils/chipUtils';
 import { defaultEndDate, isSeasonInputValid } from '../utils/seasonUtils';
 import { getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
@@ -33,8 +31,6 @@ const CreateGroup = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [deletingGameId, setDeletingGameId] = useState(null);
-  // 칩 게임을 고르면 이 그룹에서 쓸 칩 종류를 정한다
-  const [chipDenominations, setChipDenominations] = useState(DEFAULT_CHIP_DENOMINATIONS);
   const PAGE_SIZE = 15;
 
   // 커뮤니티별로 목록이 다르므로 캐시 키에 communityId를 포함한다
@@ -82,9 +78,7 @@ const CreateGroup = () => {
     }
   };
 
-  const isChipSelected = isChipGame(games.find(g => g.id === selectedGameId));
-  const canCreate = !!roomName.trim() && !!selectedGameId && isSeasonInputValid(seasonName, seasonEndDate, region)
-    && (!isChipSelected || chipDenominations.length > 0);
+  const canCreate = !!roomName.trim() && !!selectedGameId && isSeasonInputValid(seasonName, seasonEndDate, region);
 
   const handleCreate = async () => {
     if (!canCreate) return;
@@ -95,7 +89,6 @@ const CreateGroup = () => {
         boardGameId: selectedGameId,
         seasonName: seasonName.trim(),
         seasonEndDate,
-        ...(isChipSelected ? { chipDenominations } : {}),
         ...(communityId ? { communityId: Number(communityId) } : {}),
       });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
@@ -307,12 +300,6 @@ const CreateGroup = () => {
             </div>
           )}
         </div>
-
-        {isChipSelected && (
-          <div style={{ marginTop: '28px' }}>
-            <ChipDenominationsField value={chipDenominations} onChange={setChipDenominations} />
-          </div>
-        )}
       </div>
 
       {/* Sticky Create Button */}
