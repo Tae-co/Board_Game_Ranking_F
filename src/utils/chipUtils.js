@@ -30,7 +30,7 @@ export const formatChipDigits = (digits) => (digits ? Number(digits).toLocaleStr
 // 입력값에서 숫자만 남긴다 (쉼표·앞자리 0 제거)
 export const chipDigitsOf = (raw, maxDigits) => raw.replace(/\D/g, '').slice(0, maxDigits).replace(/^0+(?=\d)/, '');
 
-// 칩 종류(액면가). 점수판 스키마 denominations가 없으면(옛 게임) 이걸 쓴다
+// 칩 종류(액면가). 방에 정해진 칩 종류가 없으면(옛 그룹) 이걸 쓴다
 export const DEFAULT_CHIP_DENOMINATIONS = [1000, 500, 100, 10];
 export const MAX_CHIP_DENOMINATIONS = 6;
 
@@ -38,9 +38,9 @@ export const MAX_CHIP_DENOMINATIONS = 6;
 const DENOM_COLORS = ['#f59e0b', '#7c3aed', '#475569', '#2563eb', '#16a34a', '#dc2626'];
 export const chipDenomColor = (index) => DENOM_COLORS[index % DENOM_COLORS.length];
 
-// 스키마의 칩 종류. 중복·0 이하를 빼고 큰 값부터
-export const chipDenominationsOf = (schema) => {
-  const list = Array.isArray(schema?.denominations) ? schema.denominations.map(Number).filter(n => n > 0) : [];
+// 방의 칩 종류(room.chipDenominations). 중복·0 이하를 빼고 큰 값부터
+export const chipDenominationsOf = (denominations) => {
+  const list = Array.isArray(denominations) ? denominations.map(Number).filter(n => n > 0) : [];
   return list.length ? [...new Set(list)].sort((a, b) => b - a) : DEFAULT_CHIP_DENOMINATIONS;
 };
 

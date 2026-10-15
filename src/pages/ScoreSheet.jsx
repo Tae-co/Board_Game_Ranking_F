@@ -119,7 +119,6 @@ const ScoreSheet = () => {
   const canUseChipStack = isChip && !readOnly && !editMatchId && !previewMode && !!roomId;
   const [chipMode, setChipMode] = useState('count');
   const effectiveChipMode = canUseChipStack ? chipMode : 'delta';
-  const chipDenominations = useMemo(() => chipDenominationsOf(currentSchema), [currentSchema]);
   const [chipCounts, setChipCounts] = useState({});
   const { data: chipRoom } = useQuery({
     queryKey: ['room', roomId], queryFn: () => getRoom(roomId), enabled: canUseChipStack,
@@ -127,6 +126,7 @@ const ScoreSheet = () => {
   const { data: chipRankings } = useQuery({
     queryKey: ['rankings', roomId], queryFn: () => getRoomRankings(roomId), enabled: canUseChipStack,
   });
+  const chipDenominations = useMemo(() => chipDenominationsOf(chipRoom?.chipDenominations), [chipRoom]);
   const stackBefore = useMemo(() => {
     if (!chipRoom || !chipRankings) return null;
     return Object.fromEntries(players.map(p => {
