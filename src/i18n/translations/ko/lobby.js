@@ -81,5 +81,8 @@ export default {
   defaultNickname: '플레이어',
   customTypeChip: '칩',
   customTypeChipDesc: '딴·잃은 칩 누적',
-  customChipHint: '랭킹이 점수 대신 칩 순수익으로 매겨져요. 시작 칩은 방장이 그룹 설정에서 정해요. 만든 뒤에는 유형을 바꿀 수 없어요.',
+  customChipHint: '랭킹이 점수 대신 보유 칩으로 매겨져요. 칩을 다 잃으면 다음 판에 시작 칩을 다시 받아요(리바이). 만든 뒤에는 유형을 바꿀 수 없어요.',
+  customStartingChips: '시작 칩',
+  customStartingChipsHint: '모든 플레이어가 이만큼 들고 시작해요. 그룹마다 방장이 그룹 설정에서 바꿀 수 있어요.',
+  customStartingChipsInvalid: '시작 칩은 1 이상이어야 해요.',
 };

@@ -26,6 +26,8 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
   const [imagePreview, setImagePreview] = useState('');
   const [minPlayers, setMinPlayers] = useState(2);
   const [maxPlayers, setMaxPlayers] = useState(8);
+  // 칩 게임만. 이 게임으로 만드는 그룹의 시작 칩 기본값 (그룹 설정에서 방장이 바꿀 수 있다)
+  const [startingChips, setStartingChips] = useState('1000');
   const fileInputRef = useRef(null);
 
   const handlePickImage = (e) => {
@@ -67,6 +69,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
   const handleCreate = async () => {
     if (!name.trim()) { alert(t('lobby', 'customNameRequired')); return; }
     if (minPlayers < 1 || maxPlayers < minPlayers) { alert(t('lobby', 'customPlayersInvalid')); return; }
+    if (scoreType === 'chip' && !(Number(startingChips) >= 1)) { alert(t('lobby', 'customStartingChipsInvalid')); return; }
     if (scoreType === 'flat') {
       const filled = categories.filter(c => c.label.trim());
       if (filled.length === 0) { alert(t('lobby', 'customCategoryRequired')); return; }
@@ -86,6 +89,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
         imageUrl,
         minPlayers,
         maxPlayers,
+        ...(scoreType === 'chip' && { startingChips: Number(startingChips) }),
       });
       onCreated(game);
     } catch (err) {
@@ -284,9 +288,28 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
         </div>
 
         {scoreType === 'chip' && (
-          <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 24px' }}>
-            {t('lobby', 'customChipHint')}
-          </p>
+          <>
+            <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 16px' }}>
+              {t('lobby', 'customChipHint')}
+            </p>
+            <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
+              {t('lobby', 'customStartingChips')}
+            </p>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={startingChips}
+              onChange={(e) => setStartingChips(e.target.value.replace(/\D/g, '').slice(0, 9))}
+              style={{
+                width: '100%', padding: '12px 16px', borderRadius: 12, marginBottom: 4,
+                backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`,
+                color: V('--th-text'), fontSize: 15, outline: 'none', boxSizing: 'border-box',
+              }}
+            />
+            <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 24px' }}>
+              {t('lobby', 'customStartingChipsHint')}
+            </p>
+          </>
         )}
 
         {/* Categories (flat only) */}

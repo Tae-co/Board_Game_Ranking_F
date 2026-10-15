@@ -1,7 +1,6 @@
 import { PartyPopper } from 'lucide-react';
 import { V } from '../../utils/cssUtils';
 import { fill, seasonLabel, seasonProgress, shortDateLabel } from '../../utils/seasonUtils';
-import { formatChipDelta } from '../../utils/chipUtils';
 
 /**
  * 진행 중인 시즌의 헤더. 시즌(이름·기간)은 서버가 주고, 남은 날짜는 커뮤니티 region 타임존으로 센다 (§22).
@@ -85,7 +84,7 @@ const SeasonHeader = ({ season, region, myRankPosition, myScore, compact = false
         {myRankPosition
           ? fill(t('season', chip ? 'myRankLineChip' : 'myRankLine'), {
               rank: myRankPosition,
-              score: chip ? formatChipDelta(myScore) : Math.round(myScore ?? 0).toLocaleString(),
+              score: Math.round(myScore ?? 0).toLocaleString(),
             })
           : t('season', 'myRankNone')}
       </div>

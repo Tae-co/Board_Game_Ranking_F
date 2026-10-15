@@ -25,7 +25,7 @@ export default {
   lastDay: '오늘 마감',
   seasonScore: '점수',
   myRankLine: '내 순위 {rank}위 · {score}점',
-  myRankLineChip: '내 순위 {rank}위 · 순수익 {score}',
+  myRankLineChip: '내 순위 {rank}위 · 보유 {score}',
   myRankNone: '아직 이번 시즌 기록이 없어요',
   pastSeason: '지난 시즌',
   pastSeasonBadge: '지난 시즌',

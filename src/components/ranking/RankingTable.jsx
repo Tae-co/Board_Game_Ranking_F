@@ -3,7 +3,6 @@ import { Pencil, Check, Crown } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
 import { V } from '../../utils/cssUtils';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { formatChipDelta, chipDeltaColor } from '../../utils/chipUtils';
 
 // championIds = 직전 시즌 1위들(동점 가능). 금관은 1등만 붙인다 — 2·3등까지 달면
 // 테이블이 배지 밭이 되어 정작 현재 순위가 안 읽힌다 (기획 §4).
@@ -105,11 +104,10 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               </div>
               {isUnranked ? (
                 <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>{t('ranking', 'unranked')}</div>
-              ) : chip && rank.netProfit != null ? (
-                // 칩 게임: 순위 분포 대신 지금 들고 있는 칩과 리바이 횟수를 보여준다
-                <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), marginTop: 1 }}>
-                  {t('ranking', 'chipBalance').replace('{n}', Math.round(rank.rating).toLocaleString())}
-                  {rank.rebuyCount > 0 && ` · ${t('ranking', 'chipRebuys').replace('{n}', rank.rebuyCount)}`}
+              ) : chip && rank.rebuyCount > 0 ? (
+                // 칩 게임: 보유 칩만 보면 파산 후 다시 받은 칩이 가려져서 리바이 횟수를 보여준다
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', marginTop: 1 }}>
+                  {t('ranking', 'chipRebuys').replace('{n}', rank.rebuyCount)}
                 </div>
               ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
                 // 좁은 화면에서 4칸 + 평균이 점수 칸을 침범하지 않게 줄바꿈
@@ -152,15 +150,9 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                 <Pencil style={{ width: 13, height: 13, color: V('--th-text-sub') }} />
               </button>
             )}
-            {chip && !isUnranked && rank.netProfit != null ? (
-              <span style={{ fontSize: 14, fontWeight: 700, color: chipDeltaColor(rank.netProfit), flexShrink: 0 }}>
-                {formatChipDelta(rank.netProfit)}
-              </span>
-            ) : (
-              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--th-primary)', flexShrink: 0 }}>
-                {isUnranked ? '—' : Math.round(rank.rating).toLocaleString()}
-              </span>
-            )}
+            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--th-primary)', flexShrink: 0 }}>
+              {isUnranked ? '—' : Math.round(rank.rating).toLocaleString()}
+            </span>
           </div>
         );
       })}

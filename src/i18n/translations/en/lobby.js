@@ -81,5 +81,8 @@ export default {
   defaultNickname: 'Player',
   customTypeChip: 'Chips',
   customTypeChipDesc: 'Track chips won/lost',
-  customChipHint: 'Rankings use net chip profit instead of rating. The host sets starting chips in group settings. The type can\'t be changed later.',
+  customChipHint: 'Rankings use chips held instead of rating. Players who lose everything get starting chips again next game (rebuy). The type can\'t be changed later.',
+  customStartingChips: 'Starting chips',
+  customStartingChipsHint: 'Every player starts with this amount. Hosts can change it per group in group settings.',
+  customStartingChipsInvalid: 'Starting chips must be at least 1.',
 };

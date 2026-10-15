@@ -21,7 +21,7 @@ const PAGE_SIZE = 7;
  *
  * 마감된 시즌이 하나도 없으면 ①만 남기고 ②③④를 숨긴다 — 첫 시즌에는 그게 정상 화면이다.
  */
-// chip: 칩 게임이면 점수 대신 순수익으로 표시한다 (지난 시즌 스냅샷도 순수익 순)
+// chip: 칩 게임이면 점수 대신 보유 칩으로 표시한다
 const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, onPastSeasonViewed, t, lang, chip = false }) => {
   const [pickedSeason, setPickedSeason] = useState(null);
   const [page, setPage] = useState(0);
@@ -167,7 +167,7 @@ const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, on
                 isHost={false}
                 onEditRating={undefined}
                 PAGE_SIZE={PAGE_SIZE}
-                scoreLabel={chip ? t('ranking', 'chipProfit') : t('season', 'seasonScore')}
+                scoreLabel={chip ? t('ranking', 'chipHolding') : t('season', 'seasonScore')}
                 showAvgPlace={!chip}
                 chip={chip}
               />

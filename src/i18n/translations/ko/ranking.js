@@ -53,7 +53,6 @@ export default {
   avgPlaceShort: '평균 {n}등',
   statsStreak: '연속',
   statsRank: '순위',
-  chipProfit: '순수익',
-  chipBalance: '보유 {n}',
+  chipHolding: '보유',
   chipRebuys: '리바이 {n}',
 };

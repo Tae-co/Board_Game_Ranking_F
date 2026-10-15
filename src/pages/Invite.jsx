@@ -678,7 +678,7 @@ const Invite = () => {
               season={currentSeason}
               region={communityRegion}
               myRankPosition={myRankPosition}
-              myScore={isChip ? myRank?.netProfit : myRank?.rating}
+              myScore={myRank?.rating}
               chip={isChip}
               onPastSeasonViewed={handlePastSeasonViewed}
               t={t}
@@ -763,7 +763,7 @@ const Invite = () => {
                 lang={lang}
               />
               {rankings.length >= 1 && (
-                <PodiumRanking rankings={rankings} myUserId={userId} chip={isChip} />
+                <PodiumRanking rankings={rankings} myUserId={userId} />
               )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 6 }}>
                 {showSearch ? (
@@ -814,7 +814,7 @@ const Invite = () => {
                   highlightMemberId={searchResult?.memberId}
                   nudge={nudge}
                   championIds={championIds}
-                  scoreLabel={isChip ? t('ranking', 'chipProfit') : t('season', 'seasonScore')}
+                  scoreLabel={isChip ? t('ranking', 'chipHolding') : t('season', 'seasonScore')}
                   chip={isChip}
                 />
               </div>
