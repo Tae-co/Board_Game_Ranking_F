@@ -104,10 +104,10 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               </div>
               {isUnranked ? (
                 <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>{t('ranking', 'unranked')}</div>
-              ) : chip && rank.rebuyCount > 0 ? (
-                // 칩 게임: 보유 칩만 보면 파산 후 다시 받은 칩이 가려져서 리바이 횟수를 보여준다
-                <div style={{ fontSize: 10, fontWeight: 700, color: '#dc2626', marginTop: 1 }}>
-                  {t('ranking', 'chipRebuys').replace('{n}', rank.rebuyCount)}
+              ) : chip ? (
+                // 칩 게임: 등수 분포 대신 리바이 횟수만. 보유 칩만 보면 파산 후 다시 받은 칩이 가려진다
+                <div style={{ fontSize: 10, fontWeight: 700, color: rank.rebuyCount > 0 ? '#dc2626' : V('--th-text-sub'), marginTop: 1 }}>
+                  {t('ranking', 'chipRebuys').replace('{n}', rank.rebuyCount ?? 0)}
                 </div>
               ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
                 // 좁은 화면에서 4칸 + 평균이 점수 칸을 침범하지 않게 줄바꿈
