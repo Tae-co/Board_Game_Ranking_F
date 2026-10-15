@@ -97,4 +97,10 @@ export default {
   sabTotalGold: 'TOTAL GOLD',
   sabPlace: '#{n}',
   sabGoldUnit: '{n} gold',
+  chipGain: 'Won',
+  chipLoss: 'Lost',
+  chipSum: 'Total',
+  chipSumWarning: 'Total isn\'t 0. Please check the amounts.',
+  chipRequired: 'Enter chips for every player.',
+  chipSumConfirm: 'Chip total is {sum}. Save anyway?',
 };

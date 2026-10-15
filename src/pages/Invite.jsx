@@ -6,11 +6,12 @@ import { Share } from '@capacitor/share';
 import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, getRoomSeasons, getSeasonPodium, getCurrentSeason, updateCurrentSeason } from '../api/services/rooms';
+import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateStartingChips, updateMemberRating, getRoomSeasons, getSeasonPodium, getCurrentSeason, updateCurrentSeason } from '../api/services/rooms';
 import { getGame } from '../api/services/games';
 import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import { isChipGame } from '../utils/chipUtils';
 import { getSelectedCommunity } from '../utils/storage';
 import { getAuthUserId, getNickname } from '../auth/storage';
 import { REGION_TIMEZONE } from '../constants/regions';
@@ -66,6 +67,7 @@ const Invite = () => {
   const rankingListRef = useRef(null);
   const [showSettings, setShowSettings] = useState(false);
   const [editRoomName, setEditRoomName] = useState('');
+  const [editStartingChips, setEditStartingChips] = useState('');
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(location.state?.activeTab ?? 'group');
   const [ratingEditModal, setRatingEditModal] = useState(null);
@@ -127,6 +129,8 @@ const Invite = () => {
     enabled: !!roomInfo.boardGameId,
     staleTime: 1000 * 60 * 30,
   });
+  // 칩 게임은 점수 대신 칩 순수익으로 줄 세우고, 초기 LP 설정 대신 시작 칩을 쓴다
+  const isChip = isChipGame(gameInfo);
 
   const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
     queryKey: ['rankings', roomId],
@@ -386,8 +390,23 @@ const Invite = () => {
   const handleSaveSettings = async () => {
     const trimmed = editRoomName.trim();
     if (!trimmed) return;
+    const chips = Number(editStartingChips);
+    const chipsChanged = isChip && chips !== (roomInfo.pendingStartingChips ?? roomInfo.startingChips);
+    if (chipsChanged && !(chips >= 1)) { alert(t('invite', 'startingChipsInvalid')); return; }
     setSaving(true);
     try {
+      if (chipsChanged) {
+        try {
+          const updated = await updateStartingChips(roomId, chips);
+          queryClient.setQueryData(['room', roomId], (old) => old ? { ...old, ...updated } : updated);
+          queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
+          if (updated.pendingStartingChips != null) alert(t('invite', 'startingChipsReserved'));
+        } catch {
+          alert(t('invite', 'startingChipsFailed'));
+          setSaving(false);
+          return;
+        }
+      }
       await updateRoomName(roomId, trimmed);
       const updateName = (old) =>
         Array.isArray(old)
@@ -401,7 +420,11 @@ const Invite = () => {
     setSaving(false);
   };
 
-  const openSettings = () => { setEditRoomName(roomName); setShowSettings(true); };
+  const openSettings = () => {
+    setEditRoomName(roomName);
+    setEditStartingChips(String(roomInfo.pendingStartingChips ?? roomInfo.startingChips ?? 1000));
+    setShowSettings(true);
+  };
 
   // 바이럴 퍼널의 시작점. 그룹 로비 진입이 아니라 "실제로 공유를 시도했다"만 센다.
   //
@@ -655,7 +678,8 @@ const Invite = () => {
               season={currentSeason}
               region={communityRegion}
               myRankPosition={myRankPosition}
-              myScore={myRank?.rating}
+              myScore={isChip ? myRank?.netProfit : myRank?.rating}
+              chip={isChip}
               onPastSeasonViewed={handlePastSeasonViewed}
               t={t}
               lang={lang}
@@ -739,7 +763,7 @@ const Invite = () => {
                 lang={lang}
               />
               {rankings.length >= 1 && (
-                <PodiumRanking rankings={rankings} myUserId={userId} />
+                <PodiumRanking rankings={rankings} myUserId={userId} chip={isChip} />
               )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 6 }}>
                 {showSearch ? (
@@ -783,14 +807,15 @@ const Invite = () => {
                   totalPages={totalPages}
                   myUserId={userId}
                   isHost={isHost}
-                  onEditRating={handleOpenRatingEdit}
+                  onEditRating={isChip ? undefined : handleOpenRatingEdit}
                   PAGE_SIZE={PAGE_SIZE}
                   selectedPlayers={selectedPlayers}
                   onToggle={isMember ? togglePlayer : undefined}
                   highlightMemberId={searchResult?.memberId}
                   nudge={nudge}
                   championIds={championIds}
-                  scoreLabel={t('season', 'seasonScore')}
+                  scoreLabel={isChip ? t('ranking', 'chipProfit') : t('season', 'seasonScore')}
+                  chip={isChip}
                 />
               </div>
             </>
@@ -862,6 +887,10 @@ const Invite = () => {
           t={t}
           season={currentSeason}
           onEditSeason={() => setShowSeasonEdit(true)}
+          chip={isChip}
+          editStartingChips={editStartingChips}
+          setEditStartingChips={setEditStartingChips}
+          pendingStartingChips={roomInfo.pendingStartingChips}
         />
       )}
 

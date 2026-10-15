@@ -3,6 +3,7 @@ import { Pencil, Check, Crown } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
 import { V } from '../../utils/cssUtils';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatChipDelta, chipDeltaColor } from '../../utils/chipUtils';
 
 // championIds = 직전 시즌 1위들(동점 가능). 금관은 1등만 붙인다 — 2·3등까지 달면
 // 테이블이 배지 밭이 되어 정작 현재 순위가 안 읽힌다 (기획 §4).
@@ -14,7 +15,7 @@ const avgPlace = (counts) => {
   return (counts.reduce((sum, c, i) => sum + c * (i + 1), 0) / total).toFixed(1);
 };
 
-const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING', showAvgPlace = false }) => {
+const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING', showAvgPlace = false, chip = false }) => {
   const { t } = useLanguage();
   const touchStartX = useRef(null);
   // 순위 분포 칸 수를 표 전체에서 맞춘다. 4인전 방이면 모든 행이 1~4등을 같은 자리에 보여준다
@@ -104,6 +105,12 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
               </div>
               {isUnranked ? (
                 <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>{t('ranking', 'unranked')}</div>
+              ) : chip && rank.netProfit != null ? (
+                // 칩 게임: 순위 분포 대신 지금 들고 있는 칩과 리바이 횟수를 보여준다
+                <div style={{ fontSize: 10, fontWeight: 700, color: V('--th-text-sub'), marginTop: 1 }}>
+                  {t('ranking', 'chipBalance').replace('{n}', Math.round(rank.rating).toLocaleString())}
+                  {rank.rebuyCount > 0 && ` · ${t('ranking', 'chipRebuys').replace('{n}', rank.rebuyCount)}`}
+                </div>
               ) : (rank.winCount > 0 || rank.loseCount > 0) ? (
                 // 좁은 화면에서 4칸 + 평균이 점수 칸을 침범하지 않게 줄바꿈
                 <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', columnGap: 4, rowGap: 0, marginTop: 1 }}>
@@ -137,7 +144,7 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                 </div>
               ) : null}
             </div>
-            {isHost && !isUnranked && (
+            {isHost && !isUnranked && onEditRating && (
               <button
                 onClick={(e) => { e.stopPropagation(); onEditRating(rank); }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}
@@ -145,9 +152,15 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                 <Pencil style={{ width: 13, height: 13, color: V('--th-text-sub') }} />
               </button>
             )}
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--th-primary)', flexShrink: 0 }}>
-              {isUnranked ? '—' : Math.round(rank.rating).toLocaleString()}
-            </span>
+            {chip && !isUnranked && rank.netProfit != null ? (
+              <span style={{ fontSize: 14, fontWeight: 700, color: chipDeltaColor(rank.netProfit), flexShrink: 0 }}>
+                {formatChipDelta(rank.netProfit)}
+              </span>
+            ) : (
+              <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--th-primary)', flexShrink: 0 }}>
+                {isUnranked ? '—' : Math.round(rank.rating).toLocaleString()}
+              </span>
+            )}
           </div>
         );
       })}

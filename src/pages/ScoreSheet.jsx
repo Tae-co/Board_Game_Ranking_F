@@ -16,9 +16,11 @@ import { ScienceModal } from '../scoreSheets/shared/ScoreCell';
 import WinnerBanner from '../scoreSheets/shared/WinnerBanner';
 import RankInputTable from '../scoreSheets/components/RankInputTable';
 import WinDrawLossTable, { OUTCOME_TIER } from '../scoreSheets/components/WinDrawLossTable';
+import ChipTable from '../scoreSheets/components/ChipTable';
+import { formatChipDelta, chipDeltaOf, chipInputOf } from '../utils/chipUtils';
 
 // DB에 저장된 스키마(JSON)를 렌더링 가능한 스키마로 변환.
-// simple/outcome은 TableComponent가 없다 → 순위 입력 / 승무패 입력이 그려진다.
+// simple/outcome/chip은 TableComponent가 없다 → 순위 입력 / 승무패 입력 / 칩 증감 입력이 그려진다.
 const parseSchema = (raw) => {
   if (!raw) return null;
   try {
@@ -28,6 +30,7 @@ const parseSchema = (raw) => {
     if (parsed.type === 'conditional') return { ...parsed, TableComponent: ConditionTable };
     if (parsed.type === 'simple') return { ...parsed, TableComponent: null };
     if (parsed.type === 'outcome') return { ...parsed, TableComponent: null };
+    if (parsed.type === 'chip') return { ...parsed, TableComponent: null };
   } catch { /* 깨진 스키마는 없는 것으로 취급 */ }
   return null;
 };
@@ -104,6 +107,12 @@ const ScoreSheet = () => {
   // 승/무/패만 입력하는 게임(outcome). 저장된 매치를 열면 이전 선택을 복원한다.
   const isOutcomeOnly = currentSchema?.type === 'outcome';
   const [outcomeInputs, setOutcomeInputs] = useState(() => savedScores?.outcome ?? {});
+
+  // 칩 게임(chip). 판마다 딴(+)/잃은(-) 칩을 입력한다. 저장된 매치를 열면 이전 값을 복원한다.
+  const isChip = currentSchema?.type === 'chip';
+  const [chipInputs, setChipInputs] = useState(() => Object.fromEntries(
+    players.map(p => [p.memberId, chipInputOf(savedScores?.chip?.[p.memberId])])
+  ));
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
@@ -237,6 +246,31 @@ const ScoreSheet = () => {
         memberId: p.memberId,
         placement: placements[p.memberId],
         scoresJson: JSON.stringify({ outcome: outcomeInputs[p.memberId] }),
+      }));
+    } else if (isChip) {
+      const deltas = Object.fromEntries(players.map(p => [p.memberId, chipDeltaOf(chipInputs[p.memberId])]));
+      if (players.some(p => deltas[p.memberId] == null)) {
+        alert(t('scoreSheet', 'chipRequired'));
+        return;
+      }
+      // 합계가 0이 아니면 입력 실수일 수 있다 — 경고만 하고 저장은 사용자가 고른다
+      const sum = Object.values(deltas).reduce((a, b) => a + b, 0);
+      if (sum !== 0 && !window.confirm(t('scoreSheet', 'chipSumConfirm').replace('{sum}', formatChipDelta(sum)))) {
+        return;
+      }
+      // 많이 딴 순서로 등수를 매긴다. 같은 금액은 동순위 (+300, 0, 0, -300 → 1, 2, 2, 4)
+      const sorted = [...players].sort((a, b) => deltas[b.memberId] - deltas[a.memberId]);
+      const placements = {};
+      sorted.forEach((p, i) => {
+        placements[p.memberId] = i > 0 && deltas[p.memberId] === deltas[sorted[i - 1].memberId]
+          ? placements[sorted[i - 1].memberId]
+          : i + 1;
+      });
+      participants = players.map(p => ({
+        memberId: p.memberId,
+        placement: placements[p.memberId],
+        chipDelta: deltas[p.memberId],
+        scoresJson: JSON.stringify({ chip: deltas[p.memberId] }),
       }));
     } else if (rankMode || isRankOnly) {
       // 순위 직접 입력 모드: rankInputs에서 placement 사용
@@ -397,7 +431,14 @@ const ScoreSheet = () => {
 
       {/* 테이블 */}
       <div style={{ margin: currentSchema?.supportsRankMode && !readOnly ? "0 16px" : "16px 16px 0", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
-        {isOutcomeOnly ? (
+        {isChip ? (
+          <ChipTable
+            players={players}
+            chipInputs={chipInputs}
+            onChange={(memberId, input) => setChipInputs(prev => ({ ...prev, [memberId]: input }))}
+            readOnly={readOnly}
+          />
+        ) : isOutcomeOnly ? (
           <WinDrawLossTable
             players={players}
             outcomeInputs={outcomeInputs}
@@ -437,7 +478,7 @@ const ScoreSheet = () => {
         )}
       </div>
 
-      <WinnerBanner
+      {!isChip && <WinnerBanner
         schema={currentSchema}
         duelWinnerId={duelWinnerId}
         duelFellowshipId={duelFellowshipId}
@@ -449,7 +490,7 @@ const ScoreSheet = () => {
         scores={scores}
         t={t}
         lang={lang}
-      />
+      />}
 
       {/* Bottom Fixed Button */}
       {!readOnly && !previewMode && (

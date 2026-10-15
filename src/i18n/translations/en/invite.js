@@ -47,4 +47,10 @@ export default {
   shareMyRankText: '#{rank} · Rating {rating} · Win rate {winRate}% ({wins}W {losses}L)\n\nTracking our board game rankings on YadaRank 👉 yadarank.com',
   shareMatchTitle: '🎮 {game} match result!',
   shareMatchText: '{lines}\n\nRecording our board game rankings on YadaRank 👉 yadarank.com',
+  startingChipsLabel: 'Starting chips',
+  startingChipsHint: 'Players who lose everything get this amount again next game (rebuy).',
+  startingChipsPending: '{n} chips from next season',
+  startingChipsReserved: 'Games were already played this season, so it applies from next season.',
+  startingChipsInvalid: 'Starting chips must be at least 1.',
+  startingChipsFailed: 'Failed to update starting chips.',
 };

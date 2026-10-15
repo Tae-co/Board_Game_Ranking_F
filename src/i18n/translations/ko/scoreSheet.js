@@ -97,4 +97,10 @@ export default {
   sabTotalGold: '총 금 합산',
   sabPlace: '{n}위',
   sabGoldUnit: '{n}금',
+  chipGain: '딴 칩',
+  chipLoss: '잃은 칩',
+  chipSum: '합계',
+  chipSumWarning: '합계가 0이 아니에요. 입력을 확인해주세요.',
+  chipRequired: '모든 플레이어의 칩을 입력해주세요.',
+  chipSumConfirm: '칩 합계가 {sum}이에요. 그래도 저장할까요?',
 };

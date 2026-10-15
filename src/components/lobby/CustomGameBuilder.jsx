@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { X, Plus, Minus, Trophy, Hash, Swords, ImagePlus } from 'lucide-react';
+import { X, Plus, Minus, Trophy, Hash, Swords, Coins, ImagePlus } from 'lucide-react';
 import { createGame, uploadGameImage } from '../../api/services/games';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { V } from '../../utils/cssUtils';
@@ -19,7 +19,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
   const { t } = useLanguage();
 
   const [name, setName] = useState(initialName ?? '');
-  const [scoreType, setScoreType] = useState(null); // 'simple' | 'flat' | 'outcome'
+  const [scoreType, setScoreType] = useState(null); // 'simple' | 'flat' | 'outcome' | 'chip'
   const [categories, setCategories] = useState([newCategory(), newCategory()]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
@@ -47,7 +47,8 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
     setCategories(prev => prev.map(c => (c.uid === uid ? { ...c, ...patch } : c)));
 
   const buildSchemaJson = () => {
-    if (scoreType === 'simple' || scoreType === 'outcome') {
+    // chip을 고르면 서버가 랭킹도 Elo 대신 칩 누적으로 만든다. 만든 뒤에는 바꿀 수 없다.
+    if (scoreType === 'simple' || scoreType === 'outcome' || scoreType === 'chip') {
       return JSON.stringify({ name: name.trim(), type: scoreType });
     }
     return JSON.stringify({
@@ -249,11 +250,12 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
         <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
           {t('lobby', 'customScoreType')}
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 24 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: scoreType === 'chip' ? 8 : 24 }}>
           {[
             { key: 'simple', Icon: Trophy, label: t('lobby', 'customTypeSimple'), desc: t('lobby', 'customTypeSimpleDesc') },
             { key: 'flat', Icon: Hash, label: t('lobby', 'customTypeFlat'), desc: t('lobby', 'customTypeFlatDesc') },
             { key: 'outcome', Icon: Swords, label: t('lobby', 'customTypeOutcome'), desc: t('lobby', 'customTypeOutcomeDesc') },
+            { key: 'chip', Icon: Coins, label: t('lobby', 'customTypeChip'), desc: t('lobby', 'customTypeChipDesc') },
           ].map((opt) => {
             const selected = scoreType === opt.key;
             return (
@@ -280,6 +282,12 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
             );
           })}
         </div>
+
+        {scoreType === 'chip' && (
+          <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 24px' }}>
+            {t('lobby', 'customChipHint')}
+          </p>
+        )}
 
         {/* Categories (flat only) */}
         {scoreType === 'flat' && (

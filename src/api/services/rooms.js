@@ -27,6 +27,9 @@ export const leaveRoom = (roomId, userId) =>
   api.delete(`/rooms/${roomId}/members/${userId}`);
 export const updateRoomName = (roomId, roomName) =>
   api.patch(`/rooms/${roomId}/name`, { roomName });
+// 칩 게임 시작 칩. 이번 시즌에 경기가 있었으면 서버가 pendingStartingChips로 예약만 한다.
+export const updateStartingChips = (roomId, startingChips) =>
+  api.patch(`/rooms/${roomId}/starting-chips`, { startingChips }).then(r => r.data);
 
 export const getRoomRankings = (roomId) =>
   api.get(`/rooms/${roomId}/rankings`).then(r => r.data || []);

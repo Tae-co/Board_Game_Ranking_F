@@ -1,6 +1,7 @@
 import { PartyPopper } from 'lucide-react';
 import { V } from '../../utils/cssUtils';
 import { fill, seasonLabel, seasonProgress, shortDateLabel } from '../../utils/seasonUtils';
+import { formatChipDelta } from '../../utils/chipUtils';
 
 /**
  * 진행 중인 시즌의 헤더. 시즌(이름·기간)은 서버가 주고, 남은 날짜는 커뮤니티 region 타임존으로 센다 (§22).
@@ -8,7 +9,7 @@ import { fill, seasonLabel, seasonProgress, shortDateLabel } from '../../utils/s
  * `compact`는 랭킹 탭용 한 줄이다 — 리셋이 있다는 사실을 매일 보는 자리라 빠지면 안 되지만,
  * 거기서 진행바까지 두면 정작 현재 순위가 안 읽힌다 (§6).
  */
-const SeasonHeader = ({ season, region, myRankPosition, myScore, compact = false, justReset = false, onViewPastSeason, t, lang }) => {
+const SeasonHeader = ({ season, region, myRankPosition, myScore, compact = false, justReset = false, onViewPastSeason, t, lang, chip = false }) => {
   if (!season) return null;
   const { daysLeft, percent } = seasonProgress(season, region);
   const seasonTitle = seasonLabel(season, t);
@@ -82,9 +83,9 @@ const SeasonHeader = ({ season, region, myRankPosition, myScore, compact = false
 
       <div style={{ marginTop: 10, fontSize: 12, fontWeight: 600, color: V('--th-text-sub') }}>
         {myRankPosition
-          ? fill(t('season', 'myRankLine'), {
+          ? fill(t('season', chip ? 'myRankLineChip' : 'myRankLine'), {
               rank: myRankPosition,
-              score: Math.round(myScore ?? 0).toLocaleString(),
+              score: chip ? formatChipDelta(myScore) : Math.round(myScore ?? 0).toLocaleString(),
             })
           : t('season', 'myRankNone')}
       </div>

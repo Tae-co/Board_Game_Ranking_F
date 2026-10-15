@@ -14,6 +14,7 @@ const RoomSettingsOverlay = ({
   members, userId,
   saving, onKickMember, navigate, t,
   season, onEditSeason,
+  chip = false, editStartingChips, setEditStartingChips, pendingStartingChips,
 }) => {
   const [page, setPage] = useState(0);
   const totalPages = Math.ceil(members.length / PER_PAGE);
@@ -76,6 +77,28 @@ const RoomSettingsOverlay = ({
               <Pencil style={{ width: 18, height: 18 }} />
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Starting chips — 칩 게임만. 시즌 중에 바꾸면 다음 시즌부터 적용된다 */}
+      {chip && (
+        <div>
+          <label style={{ fontSize: '11px', fontWeight: '700', letterSpacing: '0.1em', color: V('--th-text-sub'), display: 'block', marginBottom: '8px' }}>{t('invite', 'startingChipsLabel')}</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={editStartingChips}
+            onChange={(e) => setEditStartingChips(e.target.value.replace(/\D/g, '').slice(0, 9))}
+            style={{ width: '100%', padding: '13px 16px', borderRadius: '12px', border: `1px solid ${V('--th-border')}`, backgroundColor: V('--th-bg'), color: V('--th-text'), fontSize: '15px', fontWeight: '600', outline: 'none', boxSizing: 'border-box' }}
+          />
+          <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: '6px 0 0', lineHeight: 1.4 }}>
+            {t('invite', 'startingChipsHint')}
+            {pendingStartingChips != null && (
+              <span style={{ display: 'block', color: V('--th-primary'), fontWeight: 700, marginTop: '2px' }}>
+                {t('invite', 'startingChipsPending').replace('{n}', pendingStartingChips.toLocaleString())}
+              </span>
+            )}
+          </p>
         </div>
       )}
       </>}

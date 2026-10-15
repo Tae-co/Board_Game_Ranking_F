@@ -79,4 +79,7 @@ export default {
   createGroupDesc: 'Start a new circle',
   joinWithCodeDesc: 'Enter a shared ID',
   defaultNickname: 'Player',
+  customTypeChip: 'Chips',
+  customTypeChipDesc: 'Track chips won/lost',
+  customChipHint: 'Rankings use net chip profit instead of rating. The host sets starting chips in group settings. The type can\'t be changed later.',
 };

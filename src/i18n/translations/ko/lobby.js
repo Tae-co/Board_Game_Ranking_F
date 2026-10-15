@@ -79,4 +79,7 @@ export default {
   createGroupDesc: '새 방을 만들어요',
   joinWithCodeDesc: '공유받은 코드 입력',
   defaultNickname: '플레이어',
+  customTypeChip: '칩',
+  customTypeChipDesc: '딴·잃은 칩 누적',
+  customChipHint: '랭킹이 점수 대신 칩 순수익으로 매겨져요. 시작 칩은 방장이 그룹 설정에서 정해요. 만든 뒤에는 유형을 바꿀 수 없어요.',
 };
