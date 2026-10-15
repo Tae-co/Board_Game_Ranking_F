@@ -53,4 +53,27 @@ export default {
   avgPlaceShort: 'avg {n}',
   statsStreak: 'STREAK',
   statsRank: 'RANK',
+  chipHolding: 'Net',
+  matchDefeat: 'DEFEAT',
+  infoTitle: 'How are scores calculated?',
+  infoCalcTitle: 'Scoring',
+  infoCalc: [
+    'Everyone starts at 500',
+    'Beating an even opponent gives about +100 — stronger opponents give more',
+    'Your first 3 games of this game in this room swing more',
+    'Below 1300, wins give a bonus and losses cost less',
+    'Your score never drops below 500',
+  ],
+  infoDecayTitle: 'Does my score drop if I stop playing?',
+  infoDecay: [
+    'After 14 days without playing, it drops a little every Monday',
+    'It never drops below 500',
+  ],
+  infoChip: [
+    'Chips won and lost each game are added up',
+    'Higher net means higher rank',
+  ],
+  infoChipDecay: [
+    'Chip games never drop from inactivity',
+  ],
 };

@@ -1,6 +1,7 @@
 import StorageImage from '../StorageImage';
 import MedalBadge from '../shared/MedalBadge';
 import { V } from '../../utils/cssUtils';
+import { formatChipDelta } from '../../utils/chipUtils';
 
 const PODIUM_CONFIG = [
   { place: 2, size: 70, avatarSize: 58, podiumOffset: 0, medalOffset: -6 },
@@ -8,7 +9,8 @@ const PODIUM_CONFIG = [
   { place: 3, size: 60, avatarSize: 50, podiumOffset: 0, medalOffset: -4 },
 ];
 
-const PodiumRanking = ({ rankings, myUserId }) => (
+// chip: 칩 게임이면 누적 손익을 +/- 부호와 함께 보여준다
+const PodiumRanking = ({ rankings, myUserId, chip = false }) => (
   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: 8, marginBottom: 20 }}>
     {PODIUM_CONFIG.map(({ place, size, avatarSize, ring, podiumOffset, medalOffset }) => {
       const rank = rankings[place - 1];
@@ -39,7 +41,7 @@ const PodiumRanking = ({ rankings, myUserId }) => (
               {rank.nickname}
             </div>
             <div style={{ fontSize: 13, color: ring ? '#FFD700' : V('--th-text'), fontWeight: 800 }}>
-              {Math.round(rank.rating).toLocaleString()}
+              {chip ? formatChipDelta(rank.rating) : Math.round(rank.rating).toLocaleString()}
             </div>
           </div>
         </div>

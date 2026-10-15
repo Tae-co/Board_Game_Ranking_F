@@ -47,4 +47,5 @@ export default {
   shareMyRankText: '{rank}위 · 레이팅 {rating} · 승률 {winRate}% ({wins}승 {losses}패)\n\nYadaRank에서 보드게임 랭킹 관리 중 👉 yadarank.com',
   shareMatchTitle: '🎮 {game} 한판 결과!',
   shareMatchText: '{lines}\n\nYadaRank에서 보드게임 랭킹을 기록 중이에요 👉 yadarank.com',
+  shareMyRankTextChip: '{rank}위 · 손익 {rating} · {wins}승 {losses}패\n\nYadaRank에서 보드게임 랭킹 관리 중 👉 yadarank.com',
 };

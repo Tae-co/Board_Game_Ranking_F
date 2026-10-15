@@ -3,8 +3,10 @@ import MedalBadge from '../shared/MedalBadge';
 import { V } from '../../utils/cssUtils';
 import { formatDate, formatTime, ordinalSuffix } from '../../utils/dateUtils';
 import { useLanguage } from '../../i18n/LanguageContext';
+import { formatChipDelta } from '../../utils/chipUtils';
 
-const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit, onDelete }) => {
+// chip: 칩 게임이면 손익을 쉼표로 보여주고, 바이인 방식은 진 사람이 모두 2등이라 등수 대신 승리/패배만 쓴다
+const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit, onDelete, chip = false }) => {
   const { t, lang } = useLanguage();
   const myParticipant = match.participants?.find(p => p.memberId === myUserId);
   const isVictory = myParticipant?.placement === 1;
@@ -17,6 +19,7 @@ const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit,
   const placement = myParticipant?.placement ?? 0;
   const resultLabel = isVictory
     ? t('ranking', 'matchVictory')
+    : chip ? t('ranking', 'matchDefeat')
     : t('ranking', 'matchPlace').replace('{n}', lang === 'ko' ? placement : ordinalSuffix(placement));
 
   return (
@@ -29,7 +32,7 @@ const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit,
         {myParticipant && (
           <div style={{ textAlign: 'right' }}>
             <div style={{ fontSize: 18, fontWeight: 900, color: resultColor, lineHeight: 1 }}>
-              {ratingSign}{Math.round(ratingChange)}
+              {chip ? formatChipDelta(ratingChange) : `${ratingSign}${Math.round(ratingChange)}`}
             </div>
             <div style={{ fontSize: 10, fontWeight: 800, letterSpacing: '0.05em', color: resultColor, marginTop: 2 }}>
               {resultLabel}
@@ -42,7 +45,7 @@ const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit,
           {visibleParticipants.map((p, i) => (
             <div key={p.memberId} style={{ marginLeft: i === 0 ? 0 : -10, zIndex: visibleParticipants.length - i, position: 'relative' }}>
               <InitialAvatar nickname={p.nickname} profileImage={p.profileImage} size={36} fontSize={14} />
-              {p.placement >= 1 && p.placement <= 3 && (
+              {p.placement >= 1 && p.placement <= (chip ? 1 : 3) && (
                 <div style={{ position: 'absolute', top: -8, left: -4, lineHeight: 0 }}>
                   <MedalBadge place={p.placement} size={18} />
                 </div>

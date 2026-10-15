@@ -25,6 +25,7 @@ export default {
   lastDay: '오늘 마감',
   seasonScore: '점수',
   myRankLine: '내 순위 {rank}위 · {score}점',
+  myRankLineChip: '내 순위 {rank}위 · 손익 {score}',
   myRankNone: '아직 이번 시즌 기록이 없어요',
   pastSeason: '지난 시즌',
   pastSeasonBadge: '지난 시즌',
@@ -61,4 +62,5 @@ export default {
   windowLabel: '최근 {days}일 · {from} – {to}',
   windowMatchesLabel: '경기',
   noLeaders: '아직 3판 이상 뛴 사람이 없어요',
+  chipTrend: '내 손익 추이',
 };
