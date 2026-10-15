@@ -17,10 +17,11 @@ import WinnerBanner from '../scoreSheets/shared/WinnerBanner';
 import RankInputTable from '../scoreSheets/components/RankInputTable';
 import WinDrawLossTable, { OUTCOME_TIER } from '../scoreSheets/components/WinDrawLossTable';
 import ChipTable from '../scoreSheets/components/ChipTable';
-import { buyInResults } from '../utils/chipUtils';
+import ChipCountTable from '../scoreSheets/components/ChipCountTable';
+import { buyInResults, chipModeOf, chipDenominationsOf, chipCountTotal, formatChipDelta } from '../utils/chipUtils';
 
 // DB에 저장된 스키마(JSON)를 렌더링 가능한 스키마로 변환.
-// simple/outcome/chip은 TableComponent가 없다 → 순위 입력 / 승무패 입력 / 바이인 입력이 그려진다.
+// simple/outcome/chip은 TableComponent가 없다 → 순위 입력 / 승무패 입력 / 바이인·칩 세기 입력이 그려진다.
 const parseSchema = (raw) => {
   if (!raw) return null;
   try {
@@ -125,6 +126,20 @@ const ScoreSheet = () => {
     () => buyInResults(players, Number(chipBuyIn), chipBuyIns, chipWinnerIds),
     [players, chipBuyIn, chipBuyIns, chipWinnerIds],
   );
+
+  // 칩 세기 방식(schema.chipMode === 'count'). 1인 시작 칩과 칩 종류별 남은 개수로 손익을 계산한다.
+  // 저장된 매치는 scoresJson의 chipStart / chipCounts로 복원한다.
+  const chipMode = chipModeOf(currentSchema);
+  const chipDenominations = useMemo(() => chipDenominationsOf(currentSchema?.denominations), [currentSchema]);
+  const [chipStart, setChipStart] = useState(() => {
+    const saved = Object.values(savedScores?.chipStart ?? {})[0];
+    return saved ? String(saved) : '';
+  });
+  const [chipCounts, setChipCounts] = useState(() => savedScores?.chipCounts ?? {});
+  const chipCountDeltas = useMemo(() => Object.fromEntries(players.map(p => {
+    const total = chipCountTotal(chipCounts[p.memberId], chipDenominations);
+    return [p.memberId, total != null && Number(chipStart) > 0 ? total - Number(chipStart) : null];
+  })), [players, chipCounts, chipDenominations, chipStart]);
 
   const initScores = (schema, playerList) => {
     const cats = getAllCategories(schema);
@@ -258,6 +273,36 @@ const ScoreSheet = () => {
         memberId: p.memberId,
         placement: placements[p.memberId],
         scoresJson: JSON.stringify({ outcome: outcomeInputs[p.memberId] }),
+      }));
+    } else if (isChip && chipMode === 'count') {
+      const deltas = chipCountDeltas;
+      if (players.some(p => deltas[p.memberId] == null)) {
+        alert(t('scoreSheet', 'chipCountRequired'));
+        return;
+      }
+      // 합계가 0이 아니면 세다가 틀렸을 수 있다 — 경고만 하고 저장은 사용자가 고른다
+      const sum = Object.values(deltas).reduce((a, b) => a + b, 0);
+      if (sum !== 0 && !window.confirm(t('scoreSheet', 'chipSumConfirm').replace('{sum}', formatChipDelta(sum)))) {
+        return;
+      }
+      // 많이 남긴 순서로 등수를 매긴다. 같은 금액은 동순위 (+300, 0, 0, -300 → 1, 2, 2, 4). 1등만 승리
+      const sorted = [...players].sort((a, b) => deltas[b.memberId] - deltas[a.memberId]);
+      const placements = {};
+      sorted.forEach((p, i) => {
+        placements[p.memberId] = i > 0 && deltas[p.memberId] === deltas[sorted[i - 1].memberId]
+          ? placements[sorted[i - 1].memberId]
+          : i + 1;
+      });
+      participants = players.map(p => ({
+        memberId: p.memberId,
+        placement: placements[p.memberId],
+        chipDelta: deltas[p.memberId],
+        buyIns: 1,
+        scoresJson: JSON.stringify({
+          chip: deltas[p.memberId],
+          chipStart: Number(chipStart),
+          chipCounts: chipCounts[p.memberId],
+        }),
       }));
     } else if (isChip) {
       if (!chipResults) {
@@ -436,7 +481,18 @@ const ScoreSheet = () => {
 
       {/* 테이블 */}
       <div style={{ margin: currentSchema?.supportsRankMode && !readOnly ? "0 16px" : "16px 16px 0", background: "var(--th-card)", borderRadius: 16, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)", border: "1px solid var(--th-border)" }}>
-        {isChip ? (
+        {isChip && chipMode === 'count' ? (
+          <ChipCountTable
+            players={players}
+            startChips={chipStart}
+            onStartChange={setChipStart}
+            denominations={chipDenominations}
+            chipCounts={chipCounts}
+            onCountChange={(memberId, denom, digits) => setChipCounts(prev => ({ ...prev, [memberId]: { ...prev[memberId], [denom]: digits } }))}
+            deltas={chipCountDeltas}
+            readOnly={readOnly}
+          />
+        ) : isChip ? (
           <ChipTable
             players={players}
             buyIn={chipBuyIn}

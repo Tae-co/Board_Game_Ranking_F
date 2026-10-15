@@ -1,6 +1,7 @@
 import { V } from './cssUtils';
 
-// 칩 게임(BoardGame.ratingType === 'CHIP') 표시용. 순위가 아니라 판마다 바이인 손익을 누적한다.
+// 칩 게임(BoardGame.ratingType === 'CHIP') 표시용. 순위가 아니라 판마다 손익을 누적한다.
+// 점수판은 바이인 방식(기본)과 칩 세기 방식 두 가지다.
 
 export const isChipGame = (game) => game?.ratingType === 'CHIP';
 
@@ -39,4 +40,28 @@ export const buyInResults = (players, buyIn, buyIns, winnerIds) => {
     const won = i == null ? 0 : share + (i < remainder ? 1 : 0);
     return [p.memberId, won - paid(p.memberId)];
   }));
+};
+
+// ── 칩 세기 방식 (schema.chipMode === 'count') ──
+// 판마다 1인 시작 칩을 적고, 끝나면 칩 종류별 남은 개수를 센다. 손익 = 남은 칩 - 시작 칩
+
+export const chipModeOf = (schema) => (schema?.chipMode === 'count' ? 'count' : 'buyin');
+
+export const DEFAULT_CHIP_DENOMINATIONS = [1000, 500, 100, 10];
+export const MAX_CHIP_DENOMINATIONS = 6;
+
+// 큰 칩부터 실물 칩처럼 색을 나눈다
+const DENOM_COLORS = ['#f59e0b', '#7c3aed', '#475569', '#2563eb', '#16a34a', '#dc2626'];
+export const chipDenomColor = (index) => DENOM_COLORS[index % DENOM_COLORS.length];
+
+// 스키마의 칩 종류. 중복·0 이하를 빼고 큰 값부터
+export const chipDenominationsOf = (denominations) => {
+  const list = Array.isArray(denominations) ? denominations.map(Number).filter(n => n > 0) : [];
+  return list.length ? [...new Set(list)].sort((a, b) => b - a) : DEFAULT_CHIP_DENOMINATIONS;
+};
+
+// 칩 종류별 개수({ 1000: '2', 100: '5' }) → 합계. 아무것도 안 적었으면 null
+export const chipCountTotal = (counts, denominations) => {
+  if (!counts || !denominations.some(d => (counts[d] ?? '') !== '')) return null;
+  return denominations.reduce((sum, d) => sum + d * Number(counts[d] || 0), 0);
 };
