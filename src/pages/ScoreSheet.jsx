@@ -310,6 +310,8 @@ const ScoreSheet = () => {
         alert(t('scoreSheet', 'chipRequired'));
         return;
       }
+      // 전원 우승이면 판돈이 각자에게 그대로 돌아가 아무 의미가 없고, 모두 승으로 잡힌다
+      if (chipWinnerIds.length >= players.length) { alert(t('scoreSheet', 'chipAllWinners')); return; }
       if (isChipDeltaTooLarge(chipResults)) { alert(t('scoreSheet', 'chipTooLarge')); return; }
       // 우승자는 모두 1등(승리), 나머지는 모두 2등(패배)
       participants = players.map(p => ({

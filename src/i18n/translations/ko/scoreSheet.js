@@ -102,7 +102,7 @@ export default {
   chipWinner: '우승자 (여러 명이면 판돈을 나눠요)',
   chipResults: '결과',
   chipResultsEmpty: '바이인 금액과 우승자를 고르면 결과가 계산돼요.',
-  chipRequired: '바이인 금액과 우승자를 입력해주세요.',
+  chipRequired: '바이인 금액을 입력하고 우승자를 한 명 이상 골라주세요.',
   chipStartPerPlayer: '1인 시작 칩',
   chipRemaining: '남은 칩 (칩을 누르면 1개씩 늘어요)',
   chipAddOne: '칩 {n} 1개 추가',
@@ -111,4 +111,5 @@ export default {
   chipSumConfirm: '손익 합계가 {sum}이에요. 그래도 저장할까요?',
   chipCountRequired: '1인 시작 칩을 입력해주세요.',
   chipTooLarge: '금액이 너무 커서 저장할 수 없어요. 한 사람의 손익은 21억을 넘을 수 없어요.',
+  chipAllWinners: '모두 우승자로 고를 수 없어요. 진 사람을 한 명 이상 남겨주세요.',
 };

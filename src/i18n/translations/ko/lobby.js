@@ -80,7 +80,7 @@ export default {
   joinWithCodeDesc: '공유받은 코드 입력',
   defaultNickname: '플레이어',
   customTypeChip: '칩',
-  customTypeChipDesc: '바이인 손익 누적',
+  customTypeChipDesc: '판마다 손익 누적',
   customChipHint: '랭킹은 점수 대신 누적 손익으로 매겨져요. 만든 뒤에는 유형을 바꿀 수 없어요.',
   customChipMode: '기록 방식',
   customChipModeBuyIn: '바이인',
