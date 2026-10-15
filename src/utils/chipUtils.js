@@ -23,3 +23,12 @@ export const chipDeltaOf = (input) => {
 export const chipInputOf = (delta) => (
   delta == null ? { sign: '+', amount: '' } : { sign: delta < 0 ? '-' : '+', amount: String(Math.abs(delta)) }
 );
+
+// 입력칸 표시용 천 단위 쉼표. 상태에는 숫자만 담는다 ('1500000' → '1,500,000')
+export const formatChipDigits = (digits) => (digits ? Number(digits).toLocaleString('en-US') : '');
+
+// 입력값에서 숫자만 남긴다 (쉼표·앞자리 0 제거)
+export const chipDigitsOf = (raw, maxDigits) => raw.replace(/\D/g, '').slice(0, maxDigits).replace(/^0+(?=\d)/, '');
+
+// 이번 판을 시작할 때 테이블에 놓인 칩. 잔고가 0이면 서버가 시작 칩으로 리바이시키므로 시작 칩이다
+export const chipStackBefore = (balance, startingChips) => (balance > 0 ? balance : startingChips);

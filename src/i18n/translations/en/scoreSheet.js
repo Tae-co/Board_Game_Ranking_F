@@ -103,4 +103,8 @@ export default {
   chipSumWarning: 'Total isn\'t 0. Please check the amounts.',
   chipRequired: 'Enter chips for every player.',
   chipSumConfirm: 'Chip total is {sum}. Save anyway?',
+  chipModeStack: 'Final stack',
+  chipModeDelta: 'Enter +/−',
+  chipStackBefore: 'Start {n}',
+  chipStackPlaceholder: 'Stack',
 };
