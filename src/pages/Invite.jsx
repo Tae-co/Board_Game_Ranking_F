@@ -11,6 +11,7 @@ import { getGame } from '../api/services/games';
 import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import { isChipGame, formatChipDelta } from '../utils/chipUtils';
 import { getSelectedCommunity } from '../utils/storage';
 import { getAuthUserId, getNickname } from '../auth/storage';
 import { REGION_TIMEZONE } from '../constants/regions';
@@ -127,6 +128,8 @@ const Invite = () => {
     enabled: !!roomInfo.boardGameId,
     staleTime: 1000 * 60 * 30,
   });
+  // 칩 게임은 점수 대신 누적 손익으로 줄 세우고, LP 수정이 없다
+  const isChip = isChipGame(gameInfo);
 
   const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
     queryKey: ['rankings', roomId],
@@ -439,26 +442,26 @@ const Invite = () => {
     const nickname = getNickname() || myRank.nickname;
     nativeShare(
       t('invite', 'shareMyRankTitle').replace('{nickname}', nickname).replace('{game}', gameName),
-      t('invite', 'shareMyRankText')
-        .replace('{rank}', myRankPosition).replace('{rating}', Math.round(myRank.rating))
+      t('invite', isChip ? 'shareMyRankTextChip' : 'shareMyRankText')
+        .replace('{rank}', myRankPosition).replace('{rating}', isChip ? formatChipDelta(myRank.rating) : Math.round(myRank.rating))
         .replace('{winRate}', myWinRate).replace('{wins}', myRank.winCount).replace('{losses}', myRank.loseCount),
       'my_rank',
     );
-  }, [myRank, myRankPosition, gameInfo, roomInfo, myWinRate, t]);
+  }, [myRank, myRankPosition, gameInfo, roomInfo, myWinRate, isChip, t]);
 
   const shareMatchResult = useCallback(() => {
     if (!matchResult) return;
     const gameName = gameInfo?.name || roomInfo?.roomName || t('invite', 'defaultGameName');
     const lines = [...matchResult]
       .sort((a, b) => b.ratingChange - a.ratingChange)
-      .map(r => `${r.nickname} ${r.ratingChange >= 0 ? '+' : ''}${Math.round(r.ratingChange)}`)
+      .map(r => `${r.nickname} ${isChip ? formatChipDelta(r.ratingChange) : `${r.ratingChange >= 0 ? '+' : ''}${Math.round(r.ratingChange)}`}`)
       .join(' · ');
     nativeShare(
       t('invite', 'shareMatchTitle').replace('{game}', gameName),
       t('invite', 'shareMatchText').replace('{lines}', lines),
       'match_result',
     );
-  }, [matchResult, gameInfo, roomInfo, t]);
+  }, [matchResult, gameInfo, roomInfo, isChip, t]);
 
   const handleUpdateRating = async () => {
     if (!ratingEditModal) return;
@@ -638,7 +641,7 @@ const Invite = () => {
                     <div key={r.memberId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 10, backgroundColor: V('--th-bg') }}>
                       <span style={{ fontSize: 13, fontWeight: 700, color: V('--th-text') }}>{r.nickname}</span>
                       <span style={{ fontSize: 13, fontWeight: 700, color: r.ratingChange > 0 ? '#16a34a' : '#dc2626' }}>
-                        {r.ratingChange > 0 ? '+' : ''}{Math.round(r.ratingChange)}
+                        {isChip ? formatChipDelta(r.ratingChange) : `${r.ratingChange > 0 ? '+' : ''}${Math.round(r.ratingChange)}`}
                       </span>
                     </div>
                   ))}
@@ -656,6 +659,7 @@ const Invite = () => {
               region={communityRegion}
               myRankPosition={myRankPosition}
               myScore={myRank?.rating}
+              chip={isChip}
               onPastSeasonViewed={handlePastSeasonViewed}
               t={t}
               lang={lang}
@@ -696,6 +700,7 @@ const Invite = () => {
                         onView={handleViewMatch}
                         onEdit={handleEditMatch}
                         onDelete={handleDeleteMatch}
+                        chip={isChip}
                       />
                     ))}
                   </div>
@@ -739,7 +744,7 @@ const Invite = () => {
                 lang={lang}
               />
               {rankings.length >= 1 && (
-                <PodiumRanking rankings={rankings} myUserId={userId} />
+                <PodiumRanking rankings={rankings} myUserId={userId} chip={isChip} />
               )}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 6 }}>
                 {showSearch ? (
@@ -783,14 +788,15 @@ const Invite = () => {
                   totalPages={totalPages}
                   myUserId={userId}
                   isHost={isHost}
-                  onEditRating={handleOpenRatingEdit}
+                  onEditRating={isChip ? undefined : handleOpenRatingEdit}
                   PAGE_SIZE={PAGE_SIZE}
                   selectedPlayers={selectedPlayers}
                   onToggle={isMember ? togglePlayer : undefined}
                   highlightMemberId={searchResult?.memberId}
                   nudge={nudge}
                   championIds={championIds}
-                  scoreLabel={t('season', 'seasonScore')}
+                  scoreLabel={isChip ? t('ranking', 'chipHolding') : t('season', 'seasonScore')}
+                  chip={isChip}
                 />
               </div>
             </>

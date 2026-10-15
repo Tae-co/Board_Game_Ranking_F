@@ -25,6 +25,7 @@ export default {
   lastDay: 'Ends today',
   seasonScore: 'Score',
   myRankLine: 'You are #{rank} · {score} pts',
+  myRankLineChip: 'You are #{rank} · net {score}',
   myRankNone: 'No games this season yet',
   pastSeason: 'Past season',
   pastSeasonBadge: 'Past season',
@@ -61,4 +62,5 @@ export default {
   windowLabel: 'Last {days} days · {from} – {to}',
   windowMatchesLabel: 'Matches',
   noLeaders: 'Nobody has played 3+ games yet',
+  chipTrend: 'My net profit by season',
 };

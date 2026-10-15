@@ -53,4 +53,6 @@ export default {
   avgPlaceShort: '평균 {n}등',
   statsStreak: '연속',
   statsRank: '순위',
+  chipHolding: '손익',
+  matchDefeat: '패배',
 };

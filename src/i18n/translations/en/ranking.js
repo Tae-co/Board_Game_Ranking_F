@@ -53,4 +53,6 @@ export default {
   avgPlaceShort: 'avg {n}',
   statsStreak: 'STREAK',
   statsRank: 'RANK',
+  chipHolding: 'Net',
+  matchDefeat: 'DEFEAT',
 };

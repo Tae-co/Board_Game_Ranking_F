@@ -21,7 +21,8 @@ const PAGE_SIZE = 7;
  *
  * 마감된 시즌이 하나도 없으면 ①만 남기고 ②③④를 숨긴다 — 첫 시즌에는 그게 정상 화면이다.
  */
-const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, onPastSeasonViewed, t, lang }) => {
+// chip: 칩 게임이면 점수 대신 누적 손익으로 표시한다
+const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, onPastSeasonViewed, t, lang, chip = false }) => {
   const [pickedSeason, setPickedSeason] = useState(null);
   const [page, setPage] = useState(0);
 
@@ -78,6 +79,7 @@ const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, on
         region={region}
         myRankPosition={myRankPosition}
         myScore={myScore}
+        chip={chip}
         t={t}
         lang={lang}
       />
@@ -165,14 +167,15 @@ const SeasonTab = ({ roomId, userId, season, region, myRankPosition, myScore, on
                 isHost={false}
                 onEditRating={undefined}
                 PAGE_SIZE={PAGE_SIZE}
-                scoreLabel={t('season', 'seasonScore')}
-                showAvgPlace
+                scoreLabel={chip ? t('ranking', 'chipHolding') : t('season', 'seasonScore')}
+                showAvgPlace={!chip}
+                chip={chip}
               />
             )}
           </div>
 
           {/* ④ 점수 추이 — 시즌 1개짜리 그래프는 고장으로 보인다 */}
-          {history.length >= 2 && <SeasonTrend history={history} t={t} />}
+          {history.length >= 2 && <SeasonTrend history={history} t={t} chip={chip} />}
         </>
       )}
     </div>

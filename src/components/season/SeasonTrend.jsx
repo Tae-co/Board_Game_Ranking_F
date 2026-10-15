@@ -1,5 +1,6 @@
 import { V } from '../../utils/cssUtils';
 import { seasonLabel } from '../../utils/seasonUtils';
+import { formatChipDelta } from '../../utils/chipUtils';
 
 /**
  * 시즌별 내 점수 추이. 점 하나짜리 그래프는 고장으로 보이므로 2시즌 미만이면
@@ -10,7 +11,8 @@ import { seasonLabel } from '../../utils/seasonUtils';
 const HEIGHT = 96;
 const MAX_POINTS = 6; // 최근 6시즌. 390px 폭에서 라벨이 겹치지 않는 한계다
 
-const SeasonTrend = ({ history, t }) => {
+// chip: 칩 게임이면 시즌별 누적 손익을 +/- 부호와 함께 보여준다
+const SeasonTrend = ({ history, t, chip = false }) => {
   const points = history.slice(-MAX_POINTS);
   const scores = points.map((p) => p.displayScore);
   const min = Math.min(...scores);
@@ -30,7 +32,7 @@ const SeasonTrend = ({ history, t }) => {
         fontSize: 10, fontWeight: 800, color: V('--th-text-sub'),
         textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10,
       }}>
-        {t('season', 'scoreTrend')}
+        {t('season', chip ? 'chipTrend' : 'scoreTrend')}
       </div>
 
       {/* 가로로 늘린 viewBox라 선은 괜찮지만 원은 타원이 된다 — 점은 SVG 밖에서 찍는다. */}
@@ -67,7 +69,7 @@ const SeasonTrend = ({ history, t }) => {
         {points.map((p) => (
           <div key={p.seasonId} style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: V('--th-text') }}>
-              {Math.round(p.displayScore).toLocaleString()}
+              {chip ? formatChipDelta(p.displayScore) : Math.round(p.displayScore).toLocaleString()}
             </div>
             <div style={{ fontSize: 10, color: V('--th-text-sub'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 2px' }}>
               {seasonLabel({ name: p.seasonName, seasonNumber: p.seasonNumber }, t)}
