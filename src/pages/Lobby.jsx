@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Plus, Trophy, Users, Copy, CheckCheck, Settings } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Plus, Star, Users, Copy, CheckCheck, Settings } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { QRCodeSVG } from 'qrcode.react';
@@ -14,6 +14,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import RoomCard from '../components/lobby/RoomCard';
 import JoinCodeSheet from '../components/lobby/JoinCodeSheet';
+import { useSwipePaging } from '../hooks/useSwipePaging';
 import { EVENTS, logEvent } from '../api/services/events';
 
 const DiceLogo = () => (
@@ -92,6 +93,9 @@ const Lobby = () => {
     enabled: !!communityId,
     staleTime: 1000 * 30,
   });
+
+  const roomSwipe = useSwipePaging(roomPage, Math.ceil(rooms.length / ROOMS_PER_PAGE), setRoomPage);
+  const memberSwipe = useSwipePaging(memberPage, Math.ceil(communityMembers.length / MEMBERS_PER_PAGE), setMemberPage);
 
   // 참가는 방 화면의 참가하기 버튼에서 한다. 여기서는 들어가기만 한다.
   const handleEnterRoom = (room) => {
@@ -188,7 +192,12 @@ const Lobby = () => {
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
             ) : (
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)' }} />
+              // 사진 없이 만든 모임은 앱 로고(주사위)를 기본 사진으로 쓴다
+              <img
+                src="/logo.png"
+                alt={selectedCommunity?.name}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
             )}
             <div style={{
               position: 'absolute', inset: 0,
@@ -200,27 +209,13 @@ const Lobby = () => {
               display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
             }}>
               <div>
-                <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 4px', letterSpacing: '-0.3px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                  {selectedCommunity?.name}
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: communityInviteCode ? '8px' : 0 }}>
+                {/* 모임 이름은 헤더에 이미 있고, 카드 위에 두면 사진(대개 로고)을 가린다 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Users style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.8)' }} />
                   <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '500' }}>
                     {t('lobby', 'membersCount').replace('{n}', selectedCommunity?.memberCount ?? 0)}
                   </span>
                 </div>
-                {selectedCommunity?.region && (
-                  <div style={{
-                    display: 'inline-block',
-                    backgroundColor: 'var(--th-primary)',
-                    borderRadius: '20px', padding: '5px 12px',
-                    fontSize: '11px', fontWeight: '700', color: '#fff',
-                    letterSpacing: '0.08em', textTransform: 'uppercase',
-                    boxShadow: '0 2px 8px rgba(107,92,231,0.5)',
-                  }}>
-                    {selectedCommunity.region}
-                  </div>
-                )}
               </div>
               {communityInviteCode && (
                 <div style={{
@@ -285,7 +280,7 @@ const Lobby = () => {
           </div>
         )}
 
-        {/* 모임 현황 — 커뮤니티 모드에서만. 방마다 시즌이 달라서 커뮤니티는 최근 30일로 본다 (plan-season-reset §22).
+        {/* 모임 현황 — 커뮤니티 모드에서만. 방마다 시즌이 달라서 커뮤니티는 전체 기간으로 본다 (plan-season-reset §22).
             공유자가 많을수록 카드가 많이 나가므로 어드민만이 아니라 멤버 전원에게 보인다. */}
         {communityId && (
           <button
@@ -304,7 +299,7 @@ const Lobby = () => {
               background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Trophy size={19} color="#fff" />
+              <Star size={19} color="#fff" />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: '700', fontSize: '14px', marginBottom: '3px', color: V('--th-text') }}>
@@ -418,7 +413,7 @@ const Lobby = () => {
             const pagedRooms = sortedRooms.slice(roomPage * ROOMS_PER_PAGE, (roomPage + 1) * ROOMS_PER_PAGE);
             return (
               <>
-                <div style={{
+                <div {...roomSwipe} style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
                   gap: '10px',
@@ -502,7 +497,7 @@ const Lobby = () => {
               const pagedMembers = communityMembers.slice(memberPage * MEMBERS_PER_PAGE, (memberPage + 1) * MEMBERS_PER_PAGE);
               return (
                 <>
-                  <div style={{
+                  <div {...memberSwipe} style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(5, 1fr)',
                     gap: '10px 6px',

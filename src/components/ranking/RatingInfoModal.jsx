@@ -1,7 +1,7 @@
 import { X } from 'lucide-react';
 import { V } from '../../utils/cssUtils';
 
-// 방 랭킹의 ⓘ 버튼 팝업. 점수 계산·decay 규칙 요약 (Elo / 칩 게임 내용이 다르다)
+// 방 랭킹의 ⓘ 버튼 팝업. 점수 계산 규칙 요약 (Elo / 칩 게임 내용이 다르다)
 const Section = ({ title, items }) => (
   <div style={{ marginBottom: 16 }}>
     <p style={{ fontSize: 13, fontWeight: 700, color: V('--th-text'), marginBottom: 6 }}>{title}</p>
@@ -29,7 +29,7 @@ const RatingInfoModal = ({ chip, onClose, t }) => (
         </button>
       </div>
       <Section title={t('ranking', 'infoCalcTitle')} items={t('ranking', chip ? 'infoChip' : 'infoCalc')} />
-      <Section title={t('ranking', 'infoDecayTitle')} items={t('ranking', chip ? 'infoChipDecay' : 'infoDecay')} />
+      <Section title={t('ranking', 'infoDecayTitle')} items={t('ranking', 'infoDecay')} />
     </div>
   </div>
 );

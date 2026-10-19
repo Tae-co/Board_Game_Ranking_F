@@ -6,6 +6,7 @@ import { createRoom } from '../api/services/rooms';
 import { getGames, deleteGame } from '../api/services/games';
 import CustomGameBuilder from '../components/lobby/CustomGameBuilder';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useSwipePaging } from '../hooks/useSwipePaging';
 import { V } from '../utils/cssUtils';
 import GameImageFallback from '../components/shared/GameImageFallback';
 import SeasonFields from '../components/shared/SeasonFields';
@@ -46,6 +47,8 @@ const CreateGroup = () => {
 
   const totalPages = Math.ceil(filteredGames.length / PAGE_SIZE);
   const pagedGames = filteredGames.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  // currentPage는 1부터 센다
+  const swipe = useSwipePaging(currentPage - 1, totalPages, (p) => setCurrentPage(p + 1));
 
   const handleGameSearch = (value) => {
     setGameSearch(value);
@@ -94,8 +97,9 @@ const CreateGroup = () => {
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
       navigate(`/invite/${res.roomId}`);
-    } catch {
-      alert(t('lobby', 'createFailed'));
+    } catch (err) {
+      // 어드민이 아니면 403 등 — 서버가 보낸 이유를 그대로 보여준다
+      alert(err?.response?.data?.message || t('lobby', 'createFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -195,7 +199,7 @@ const CreateGroup = () => {
           </div>
 
           {/* Game Grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+          <div {...swipe} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
             {pagedGames.map((game) => {
               const selected = selectedGameId === game.id;
               // 커스텀 게임(communityId 있음)만 커뮤니티 어드민이 지울 수 있다

@@ -66,14 +66,10 @@ export default {
   ],
   infoDecayTitle: 'Does my score drop if I stop playing?',
   infoDecay: [
-    'After 14 days without playing, it drops a little every Monday',
-    'It never drops below 500',
+    'Your score never drops from inactivity',
   ],
   infoChip: [
     'Chips won and lost each game are added up',
     'Higher net means higher rank',
-  ],
-  infoChipDecay: [
-    'Chip games never drop from inactivity',
   ],
 };
