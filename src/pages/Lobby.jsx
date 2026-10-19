@@ -200,9 +200,12 @@ const Lobby = () => {
               display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
             }}>
               <div>
-                <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 4px', letterSpacing: '-0.3px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                  {selectedCommunity?.name}
-                </p>
+                {/* 사진이 있으면 이름이 사진(대개 로고)을 가린다 — 이름은 헤더에 이미 있다 */}
+                {!selectedCommunity?.imageUrl && (
+                  <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 4px', letterSpacing: '-0.3px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
+                    {selectedCommunity?.name}
+                  </p>
+                )}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: communityInviteCode ? '8px' : 0 }}>
                   <Users style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.8)' }} />
                   <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '500' }}>
