@@ -8,7 +8,7 @@ export default {
   awardLongestStreak: '최대 연승',
   awardLastWinner: '마지막 경기 승자',
   awardLongestLosingStreak: '최대 연패',
-  awardBestWinRate: '최고 승률 (10판 이상)',
+  awardBestWinRate: '최고 승률',
   awardMostPlayed: '최다 경기',
   awardMostAppOpens: '최다 접속',
   winsUnit: '{count}승',

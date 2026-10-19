@@ -8,7 +8,7 @@ export default {
   awardLongestStreak: 'Unstoppable',
   awardLastWinner: 'Latest Champ',
   awardLongestLosingStreak: 'Cursed',
-  awardBestWinRate: 'Mastermind (10+ games)',
+  awardBestWinRate: 'Mastermind',
   awardMostPlayed: 'Addict',
   awardMostAppOpens: 'The Scorekeeper',
   winsUnit: '{count} wins',
