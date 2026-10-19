@@ -1,5 +1,4 @@
 import { forwardRef } from 'react';
-import { Crown, Dices, Flame, Percent, TrendingDown, Trophy } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { V } from '../../utils/cssUtils';
@@ -17,14 +16,14 @@ const HERO_FADE = {
   light: 'linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0.05) 100%)',
 };
 
-// 이모지는 기기 폰트에 따라 ? 상자로 깨진다 — SVG 아이콘으로 그린다.
+// 이모지는 iOS 26.3 시뮬레이터에서만 ? 상자로 보인다 (실기기·배포 앱은 정상).
 const AWARD_META = {
-  LAST_WINNER: { Icon: Crown, labelKey: 'awardLastWinner' },
-  MOST_WINS: { Icon: Trophy, labelKey: 'awardMostWins' },
-  LONGEST_STREAK: { Icon: Flame, labelKey: 'awardLongestStreak' },
-  LONGEST_LOSING_STREAK: { Icon: TrendingDown, labelKey: 'awardLongestLosingStreak' },
-  BEST_WIN_RATE: { Icon: Percent, labelKey: 'awardBestWinRate' },
-  MOST_PLAYED: { Icon: Dices, labelKey: 'awardMostPlayed' },
+  LAST_WINNER: { emoji: '👑', labelKey: 'awardLastWinner' },
+  MOST_WINS: { emoji: '🐐', labelKey: 'awardMostWins' },
+  LONGEST_STREAK: { emoji: '🔥', labelKey: 'awardLongestStreak' },
+  LONGEST_LOSING_STREAK: { emoji: '💀', labelKey: 'awardLongestLosingStreak' },
+  BEST_WIN_RATE: { emoji: '🧠', labelKey: 'awardBestWinRate' },
+  MOST_PLAYED: { emoji: '🎲', labelKey: 'awardMostPlayed' },
 };
 
 // 강조색은 다크 배경 기준으로 고른 색이라 흰 카드 위에선 안 읽힌다 — 라이트용으로 한 톤 진하게 둔다.
@@ -176,7 +175,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                 border: `1px solid var(--th-border)`,
               }}
             >
-              <meta.Icon size={18} color={AWARD_ACCENT[tone][award.type]} strokeWidth={2.4} style={{ flexShrink: 0 }} />
+              <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{meta.emoji}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: V('--th-text-sub') }}>
                   {t('season', meta.labelKey)}
