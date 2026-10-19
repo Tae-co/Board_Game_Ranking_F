@@ -138,7 +138,9 @@ const CommunitySettings = () => {
         name: name.trim(),
         region,
         imageUrl: uploadedImageUrl ?? (detail?.imageUrl ?? null),
-        adminMemberIds: [...selectedIds],
+        // 목록에서 나는 빠져 있다. 서버는 생성자 + 이 목록으로 어드민을 다시 쓰므로,
+        // 생성자가 아닌 어드민이 저장해도 자기 권한이 지워지지 않게 나를 넣는다 (생성자면 서버가 건너뛴다)
+        adminMemberIds: [userId, ...selectedIds],
       });
       setMyCommunity(res);
       const parsed = getSelectedCommunity();
@@ -197,7 +199,7 @@ const CommunitySettings = () => {
     );
   }
 
-  const totalAdminCount = selectedIds.size + 1; // +1 for creator
+  const totalAdminCount = selectedIds.size + 1; // +1 for me (생성자가 아니면 생성자는 selectedIds에 있다)
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
