@@ -175,6 +175,9 @@ const CommunitySettings = () => {
       };
       queryClient.setQueriesData({ queryKey: ['myCommunitiesList'] }, patchList);
       queryClient.setQueriesData({ queryKey: ['joinedCommunities'] }, patchList);
+      // 소유권 이전·어드민 변경은 패치로 못 따라간다 — 내 커뮤니티/참여 목록과 관리 버튼이 바로 바뀌게 다시 받는다
+      queryClient.invalidateQueries({ queryKey: ['myCommunitiesList'] });
+      queryClient.invalidateQueries({ queryKey: ['joinedCommunities'] });
       queryClient.invalidateQueries({ queryKey: ['communityDetail', communityId] });
       navigate('/community', { replace: true });
     } catch (err) {
