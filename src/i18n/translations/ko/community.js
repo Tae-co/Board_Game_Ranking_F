@@ -34,7 +34,7 @@ export default {
   updateFailed: '커뮤니티 수정에 실패했습니다.',
   deleteCommunity: '커뮤니티 삭제',
   deleteConfirmTitle: '커뮤니티를 삭제하시겠습니까?',
-  deleteConfirmDesc: '이 작업은 되돌릴 수 없습니다. 커뮤니티의 모든 설정이 삭제됩니다.',
+  deleteConfirmDesc: '이 작업은 되돌릴 수 없습니다. 커뮤니티의 모든 방과 경기 기록, 랭킹이 함께 삭제됩니다.',
   deleteConfirmButton: '삭제하기',
   deleting: '삭제 중...',
   deleteFailed: '커뮤니티 삭제에 실패했습니다.',
@@ -60,5 +60,8 @@ export default {
   memberCount: '{n}명',
   memberKickConfirm: '{n}님을 커뮤니티에서 내보내시겠습니까?',
   memberKickFailed: '멤버 내보내기에 실패했습니다.',
+  ownerBadge: '소유자',
+  adminBadge: '어드민',
+  ownerLeaveConfirm: '어드민을 내려놓으면 소유권과 커뮤니티 삭제 권한이 {n}님에게 넘어갑니다.\n계속할까요?',
   joinFailed: '커뮤니티 참여에 실패했습니다.',
 };

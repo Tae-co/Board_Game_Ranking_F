@@ -15,7 +15,7 @@ export default {
   startPlaceholder: 'Select the Players',
   viewRanking: 'View Ranking',
   leaveConfirm: 'Your score in this group will be reset if you leave. Are you sure?',
-  leaveConfirmHost: 'The top-ranked member will become host and your score will be reset. Are you sure you want to leave?',
+  leaveConfirmHost: 'The member who has played the most games in this group will become host and your score will be reset. Are you sure you want to leave?',
   leaveConfirmHostAlone: 'You are the only member, so leaving will delete this group and all its records. Are you sure?',
   deleteConfirm: 'All records will be deleted. Are you sure?',
   kickConfirm: ' from the room?',

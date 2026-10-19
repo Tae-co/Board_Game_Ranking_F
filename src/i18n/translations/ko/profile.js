@@ -42,7 +42,7 @@ export default {
   deleteAccount: '회원 탈퇴',
   deleteAccountDesc: '탈퇴 시 모든 게임 기록과 랭킹이 삭제됩니다.',
   deleteAccountProcessing: '탈퇴 처리 중...',
-  deleteAccountConfirm: '정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.',
+  deleteAccountConfirm: '정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.\n\n내가 만든 커뮤니티는 다른 어드민에게, 어드민이 없으면 경기를 가장 많이 한 멤버에게 넘어갑니다.',
   deleteAccountFailed: '탈퇴에 실패했습니다.',
 
   // ── 하드코딩 문구 이관 ──

@@ -4,7 +4,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Users, X } from 'lucide-react';
 import StorageImage from '../components/StorageImage';
 import NavAvatar from '../components/NavAvatar';
-import { getCommunityMembers, kickCommunityMember } from '../api/services/communities';
+import RoleBadge from '../components/shared/RoleBadge';
+import { getCommunity, getCommunityMembers, kickCommunityMember } from '../api/services/communities';
 import { V } from '../utils/cssUtils';
 import { getAuthUserId } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
@@ -34,6 +35,14 @@ const CommunityMemberManage = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  // 소유자는 내보낼 수 없다 (서버도 같은 규칙)
+  const { data: detail } = useQuery({
+    queryKey: ['communityDetail', communityId],
+    queryFn: () => getCommunity(communityId),
+    enabled: !!communityId,
+    staleTime: 0,
+  });
+
   const handleKick = async (member) => {
     if (!window.confirm(t('community', 'memberKickConfirm').replace('{n}', member.nickname))) return;
     try {
@@ -41,9 +50,11 @@ const CommunityMemberManage = () => {
       queryClient.setQueryData(['communityMembers', communityId], (old) =>
         Array.isArray(old) ? old.filter(m => m.memberId !== member.memberId) : old
       );
+      // 어드민을 내보내면 어드민 목록도 바뀐다
+      queryClient.invalidateQueries({ queryKey: ['communityDetail', communityId] });
       setPage(0);
-    } catch {
-      alert(t('community', 'memberKickFailed'));
+    } catch (err) {
+      alert(err?.response?.data?.message || t('community', 'memberKickFailed'));
     }
   };
 
@@ -98,6 +109,8 @@ const CommunityMemberManage = () => {
               {pagedMembers.map((member, idx) => {
                 const color = COLORS[member.memberId % COLORS.length];
                 const isMe = String(member.memberId) === String(userId);
+                const isOwner = member.memberId === detail?.createdBy;
+                const isAdmin = !isOwner && (detail?.admins ?? []).some((a) => a.memberId === member.memberId);
                 const isLast = idx === pagedMembers.length - 1;
                 return (
                   <div
@@ -121,18 +134,21 @@ const CommunityMemberManage = () => {
                       }
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: '15px', fontWeight: isMe ? '700' : '600',
-                        color: isMe ? 'var(--th-primary)' : V('--th-text'),
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {member.nickname}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                        <span style={{
+                          fontSize: '15px', fontWeight: isMe ? '700' : '600',
+                          color: isMe ? 'var(--th-primary)' : V('--th-text'),
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {member.nickname}
+                        </span>
+                        {(isOwner || isAdmin) && <RoleBadge owner={isOwner} />}
                       </div>
                       {isMe && (
                         <div style={{ fontSize: '11px', color: V('--th-text-sub'), marginTop: '2px' }}>{t('invite', 'me')}</div>
                       )}
                     </div>
-                    {!isMe && (
+                    {!isMe && !isOwner && (
                       <button
                         onClick={() => handleKick(member)}
                         style={{

@@ -34,7 +34,7 @@ export default {
   updateFailed: 'Failed to update community.',
   deleteCommunity: 'Delete Community',
   deleteConfirmTitle: 'Delete this community?',
-  deleteConfirmDesc: 'This action cannot be undone. All community settings will be permanently removed.',
+  deleteConfirmDesc: 'This action cannot be undone. All rooms, match records, and rankings in this community will be permanently deleted.',
   deleteConfirmButton: 'Delete',
   deleting: 'Deleting...',
   deleteFailed: 'Failed to delete community.',
@@ -60,5 +60,8 @@ export default {
   memberCount: '{n} members',
   memberKickConfirm: 'Remove {n} from the community?',
   memberKickFailed: 'Failed to remove the member.',
+  ownerBadge: 'Owner',
+  adminBadge: 'Admin',
+  ownerLeaveConfirm: 'If you step down as admin, ownership and the right to delete this community will pass to {n}.\nContinue?',
   joinFailed: 'Failed to join the community.',
 };
