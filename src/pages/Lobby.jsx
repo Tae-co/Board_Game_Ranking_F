@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Plus, Trophy, Users, Copy, CheckCheck, Settings } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Plus, Star, Users, Copy, CheckCheck, Settings } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { QRCodeSVG } from 'qrcode.react';
@@ -188,7 +188,12 @@ const Lobby = () => {
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
               />
             ) : (
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)' }} />
+              // 사진 없이 만든 모임은 앱 로고(주사위)를 기본 사진으로 쓴다
+              <img
+                src="/logo.png"
+                alt={selectedCommunity?.name}
+                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+              />
             )}
             <div style={{
               position: 'absolute', inset: 0,
@@ -200,27 +205,13 @@ const Lobby = () => {
               display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
             }}>
               <div>
-                <p style={{ fontSize: '26px', fontWeight: '800', color: '#fff', margin: '0 0 4px', letterSpacing: '-0.3px', textShadow: '0 1px 4px rgba(0,0,0,0.4)' }}>
-                  {selectedCommunity?.name}
-                </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: communityInviteCode ? '8px' : 0 }}>
+                {/* 모임 이름은 헤더에 이미 있고, 카드 위에 두면 사진(대개 로고)을 가린다 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Users style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.8)' }} />
                   <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '500' }}>
                     {t('lobby', 'membersCount').replace('{n}', selectedCommunity?.memberCount ?? 0)}
                   </span>
                 </div>
-                {selectedCommunity?.region && (
-                  <div style={{
-                    display: 'inline-block',
-                    backgroundColor: 'var(--th-primary)',
-                    borderRadius: '20px', padding: '5px 12px',
-                    fontSize: '11px', fontWeight: '700', color: '#fff',
-                    letterSpacing: '0.08em', textTransform: 'uppercase',
-                    boxShadow: '0 2px 8px rgba(107,92,231,0.5)',
-                  }}>
-                    {selectedCommunity.region}
-                  </div>
-                )}
               </div>
               {communityInviteCode && (
                 <div style={{
@@ -304,7 +295,7 @@ const Lobby = () => {
               background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Trophy size={19} color="#fff" />
+              <Star size={19} color="#fff" />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: '700', fontSize: '14px', marginBottom: '3px', color: V('--th-text') }}>
