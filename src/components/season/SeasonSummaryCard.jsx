@@ -42,8 +42,9 @@ const PODIUM_ACCENT = {
   dark: { 1: '#FFD700', 2: '#C8C8D4', 3: '#D4936A' },
   light: { 1: '#B7791F', 2: '#6B7280', 3: '#A0522D' },
 };
-const PODIUM_TINT = { 1: 'rgba(255,215,0,0.10)', 2: 'rgba(200,200,212,0.08)', 3: 'rgba(212,147,106,0.08)' };
-const PODIUM_EDGE = { 1: 'rgba(255,215,0,0.35)', 2: 'rgba(200,200,212,0.28)', 3: 'rgba(212,147,106,0.28)' };
+// 게임별 최고 점수 칸은 순위와 상관없이 모두 금색 바탕이다 (칸마다 다른 게임의 1위라서).
+const LEADER_TINT = 'rgba(255,215,0,0.10)';
+const LEADER_EDGE = 'rgba(255,215,0,0.35)';
 
 const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
   const { t } = useLanguage();
@@ -121,8 +122,8 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                 style={{
                   flex: 1, minWidth: 0, textAlign: 'center',
                   padding: '10px 6px', borderRadius: 12,
-                  backgroundColor: PODIUM_TINT[entry.rank] || 'rgba(255,255,255,0.05)',
-                  border: `1px solid ${PODIUM_EDGE[entry.rank] || 'rgba(255,255,255,0.07)'}`,
+                  backgroundColor: LEADER_TINT,
+                  border: `1px solid ${LEADER_EDGE}`,
                 }}
               >
                 {/* 칸마다 게임이 다르다 — 어느 게임 점수인지 밝힌다. */}
