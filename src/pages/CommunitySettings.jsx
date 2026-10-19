@@ -36,6 +36,12 @@ const CommunitySettings = () => {
     staleTime: 0,
   });
 
+  // 소유자(처음엔 생성자)는 항상 어드민이다. 소유자 본인만 자기 체크를 풀어 내려놓을 수 있고,
+  // 그러면 서버가 가장 오래된 어드민에게 소유권(삭제 권한 포함)을 넘긴다.
+  const isOwner = detail?.createdBy === userId;
+  // 선택 목록에 들어가는 최대 인원. 내가 소유자가 아니면 소유자 1명은 목록 밖에 있다.
+  const maxSelected = isOwner ? 5 : 4;
+
   // 커뮤니티 멤버 목록
   const { data: communityMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['communityMembers', communityId],
@@ -92,13 +98,13 @@ const CommunitySettings = () => {
       if (!adminsTouched.current) {
         const existingIds = new Set(
           (detail.admins || [])
-            .filter((a) => a.memberId !== detail.createdBy)
+            .filter((a) => a.memberId !== detail.createdBy || detail.createdBy === userId)
             .map((a) => a.memberId)
         );
         setSelectedIds(existingIds);
       }
     }
-  }, [detail]);
+  }, [detail, userId]);
 
   const toggleAdmin = (memberId) => {
     adminsTouched.current = true;
@@ -107,16 +113,18 @@ const CommunitySettings = () => {
       if (next.has(memberId)) {
         next.delete(memberId);
       } else {
-        if (next.size >= 4) return prev; // 생성자 포함 최대 5명
+        if (next.size >= maxSelected) return prev; // 소유자 포함 최대 5명
         next.add(memberId);
       }
       return next;
     });
   };
 
-  // 생성자는 항상 어드민이라 목록에서 뺀다 (서버도 저장 때마다 생성자를 다시 넣는다).
-  // 나는 목록에 남긴다 — 생성자가 아닌 어드민은 자기 체크를 직접 풀 때만 어드민에서 빠진다.
-  const allMembers = communityMembers.filter((m) => m.memberId !== detail?.createdBy);
+  // 남이 해제할 수 없는 소유자는 목록에서 뺀다. 내가 소유자면 내려놓을 수 있게 남긴다.
+  // 나는 항상 목록에 있다 — 자기 체크를 직접 풀 때만 어드민에서 빠진다.
+  const allMembers = isOwner
+    ? communityMembers
+    : communityMembers.filter((m) => m.memberId !== detail?.createdBy);
 
   // 검색어 기준 클라이언트 필터
   const filteredMembers = searchQuery.trim()
@@ -140,6 +148,7 @@ const CommunitySettings = () => {
         region,
         imageUrl: uploadedImageUrl ?? (detail?.imageUrl ?? null),
         adminMemberIds: [...selectedIds],
+        ownerLeavesAdmin: isOwner && !selectedIds.has(userId),
       });
       setMyCommunity(res);
       const parsed = getSelectedCommunity();
@@ -166,8 +175,9 @@ const CommunitySettings = () => {
       queryClient.setQueriesData({ queryKey: ['joinedCommunities'] }, patchList);
       queryClient.invalidateQueries({ queryKey: ['communityDetail', communityId] });
       navigate('/community', { replace: true });
-    } catch {
-      setError(t('community', 'updateFailed'));
+    } catch (err) {
+      // 혼자인 소유자가 내려놓으려 하면 서버가 이유를 담아 거절한다
+      setError(err?.response?.data?.message || t('community', 'updateFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -200,7 +210,7 @@ const CommunitySettings = () => {
     );
   }
 
-  const totalAdminCount = selectedIds.size + 1; // +1 for creator
+  const totalAdminCount = selectedIds.size + (isOwner ? 0 : 1); // 내가 소유자가 아니면 목록 밖 소유자 1명
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
@@ -417,7 +427,7 @@ const CommunitySettings = () => {
             ) : (
               pagedAdminMembers.map((m) => {
                 const isSelected = selectedIds.has(m.memberId);
-                const isDisabled = !isSelected && selectedIds.size >= 4;
+                const isDisabled = !isSelected && selectedIds.size >= maxSelected;
                 return (
                   <button
                     key={m.memberId}
@@ -502,8 +512,8 @@ const CommunitySettings = () => {
           {isUploading ? t('common', 'imageUploading') : isSubmitting ? t('community', 'saving') : t('community', 'saveChanges')}
         </button>
 
-        {/* Delete button */}
-        <button
+        {/* Delete button — 소유자만 삭제할 수 있다 (서버도 같은 규칙) */}
+        {isOwner && <button
           onClick={() => setShowDeleteModal(true)}
           style={{
             width: '100%', padding: '15px',
@@ -515,7 +525,7 @@ const CommunitySettings = () => {
         >
           <Trash2 size={16} />
           {t('community', 'deleteCommunity')}
-        </button>
+        </button>}
       </div>
 
       {/* Delete confirm modal */}
