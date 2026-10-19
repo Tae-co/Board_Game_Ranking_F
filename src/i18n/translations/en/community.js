@@ -34,7 +34,7 @@ export default {
   updateFailed: 'Failed to update community.',
   deleteCommunity: 'Delete Community',
   deleteConfirmTitle: 'Delete this community?',
-  deleteConfirmDesc: 'This action cannot be undone. All community settings will be permanently removed.',
+  deleteConfirmDesc: 'This action cannot be undone. All rooms, match records, and rankings in this community will be permanently deleted.',
   deleteConfirmButton: 'Delete',
   deleting: 'Deleting...',
   deleteFailed: 'Failed to delete community.',

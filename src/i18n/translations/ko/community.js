@@ -34,7 +34,7 @@ export default {
   updateFailed: '커뮤니티 수정에 실패했습니다.',
   deleteCommunity: '커뮤니티 삭제',
   deleteConfirmTitle: '커뮤니티를 삭제하시겠습니까?',
-  deleteConfirmDesc: '이 작업은 되돌릴 수 없습니다. 커뮤니티의 모든 설정이 삭제됩니다.',
+  deleteConfirmDesc: '이 작업은 되돌릴 수 없습니다. 커뮤니티의 모든 방과 경기 기록, 랭킹이 함께 삭제됩니다.',
   deleteConfirmButton: '삭제하기',
   deleting: '삭제 중...',
   deleteFailed: '커뮤니티 삭제에 실패했습니다.',
