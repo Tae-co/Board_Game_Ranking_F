@@ -22,9 +22,21 @@ const handleRefreshFailure = (error) => {
   markSessionExpired();
 };
 
+// access token은 30분짜리라 백그라운드에서 30분 넘게 있다 돌아오면 메모리에 만료된 채로 남아 있다.
+// /api/events처럼 permitAll인 API는 만료 토큰에 401을 주지 않고 비로그인으로 처리하므로
+// 응답 인터셉터의 갱신이 돌지 않는다 — 보내기 전에 만료(1분 여유)를 직접 확인한다.
+const isExpiring = (token) => {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    return payload.exp * 1000 - Date.now() < 60 * 1000;
+  } catch {
+    return true;
+  }
+};
+
 // 여러 곳에서 동시에 호출해도 refresh HTTP 요청은 한 번만 발생
 export const ensureToken = () => {
-  if (accessToken) return Promise.resolve();
+  if (accessToken && !isExpiring(accessToken)) return Promise.resolve();
   if (_refreshPromise) return _refreshPromise;
   const storedRefreshToken = getRefreshToken();
   if (!storedRefreshToken) return Promise.resolve();
