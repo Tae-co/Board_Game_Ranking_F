@@ -97,8 +97,9 @@ const CreateGroup = () => {
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
       navigate(`/invite/${res.roomId}`);
-    } catch {
-      alert(t('lobby', 'createFailed'));
+    } catch (err) {
+      // 어드민이 아니면 403 등 — 서버가 보낸 이유를 그대로 보여준다
+      alert(err?.response?.data?.message || t('lobby', 'createFailed'));
     } finally {
       setIsSubmitting(false);
     }
