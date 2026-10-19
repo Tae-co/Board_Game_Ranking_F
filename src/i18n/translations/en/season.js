@@ -12,7 +12,7 @@ export default {
   awardLongestLosingStreak: 'Longest Losing Streak',
   awardBestWinRate: 'Highest Win Rate (10+ games)',
   awardMostPlayed: 'Most Games Played',
-  awardMostAppOpens: 'Most App Visits',
+  awardMostAppOpens: 'The Scorekeeper',
   winsUnit: '{count} wins',
   winsUnitOne: '{count} win',
   streakUnit: '{count} in a row',
