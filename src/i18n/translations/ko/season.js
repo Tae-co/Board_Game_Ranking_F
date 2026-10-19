@@ -12,7 +12,7 @@ export default {
   awardLongestLosingStreak: '최대 연패',
   awardBestWinRate: '최고 승률 (10판 이상)',
   awardMostPlayed: '최다 경기',
-  awardMostAppOpens: 'The Scorekeeper',
+  awardMostAppOpens: '최다 접속',
   winsUnit: '{count}승',
   winsUnitOne: '{count}승',
   streakUnit: '{count}연승',
