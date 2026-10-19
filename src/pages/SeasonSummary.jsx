@@ -48,12 +48,23 @@ const SeasonSummary = () => {
   }, [summary, t]);
 
   const renderCard = async () => {
-    const canvas = await html2canvas(cardRef.current, {
-      backgroundColor: null,
-      scale: 2,
-      useCORS: true,
-      logging: false,
-    });
+    // html2canvas는 글자 기준선을 원본 문서에 1×1 img를 붙여 잰다. Tailwind preflight의
+    // img { display: block } 때문에 기준선이 아래로 잡혀 글자가 밀리고 overflow: hidden 칸에서 잘린다.
+    // 캡처하는 동안만 그 측정용 img를 인라인으로 되돌린다.
+    const fix = document.createElement('style');
+    fix.textContent = 'img[width="1"][height="1"] { display: inline !important; }';
+    document.head.appendChild(fix);
+    let canvas;
+    try {
+      canvas = await html2canvas(cardRef.current, {
+        backgroundColor: null,
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+    } finally {
+      fix.remove();
+    }
     return new Promise((resolve, reject) => {
       canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('toBlob failed'))), 'image/png');
     });
