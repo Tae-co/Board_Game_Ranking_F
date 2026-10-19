@@ -206,24 +206,12 @@ const Lobby = () => {
             }}>
               <div>
                 {/* 모임 이름은 헤더에 이미 있고, 카드 위에 두면 사진(대개 로고)을 가린다 */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: communityInviteCode ? '8px' : 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Users style={{ width: 13, height: 13, color: 'rgba(255,255,255,0.8)' }} />
                   <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '500' }}>
                     {t('lobby', 'membersCount').replace('{n}', selectedCommunity?.memberCount ?? 0)}
                   </span>
                 </div>
-                {selectedCommunity?.region && (
-                  <div style={{
-                    display: 'inline-block',
-                    backgroundColor: 'var(--th-primary)',
-                    borderRadius: '20px', padding: '5px 12px',
-                    fontSize: '11px', fontWeight: '700', color: '#fff',
-                    letterSpacing: '0.08em', textTransform: 'uppercase',
-                    boxShadow: '0 2px 8px rgba(107,92,231,0.5)',
-                  }}>
-                    {selectedCommunity.region}
-                  </div>
-                )}
               </div>
               {communityInviteCode && (
                 <div style={{
