@@ -36,13 +36,10 @@ const CommunitySettings = () => {
     staleTime: 0,
   });
 
-  // 커뮤니티 멤버 목록 (자신 제외)
-  const { data: allMembers = [], isLoading: membersLoading } = useQuery({
+  // 커뮤니티 멤버 목록
+  const { data: communityMembers = [], isLoading: membersLoading } = useQuery({
     queryKey: ['communityMembers', communityId],
-    queryFn: async () => {
-      const data = await getCommunityMembers(communityId);
-      return data.filter((m) => m.memberId !== userId);
-    },
+    queryFn: () => getCommunityMembers(communityId),
     enabled: !!communityId,
     staleTime: 1000 * 60 * 5,
   });
@@ -95,13 +92,13 @@ const CommunitySettings = () => {
       if (!adminsTouched.current) {
         const existingIds = new Set(
           (detail.admins || [])
-            .filter((a) => a.memberId !== userId)
+            .filter((a) => a.memberId !== detail.createdBy)
             .map((a) => a.memberId)
         );
         setSelectedIds(existingIds);
       }
     }
-  }, [detail, userId]);
+  }, [detail]);
 
   const toggleAdmin = (memberId) => {
     adminsTouched.current = true;
@@ -116,6 +113,10 @@ const CommunitySettings = () => {
       return next;
     });
   };
+
+  // 생성자는 항상 어드민이라 목록에서 뺀다 (서버도 저장 때마다 생성자를 다시 넣는다).
+  // 나는 목록에 남긴다 — 생성자가 아닌 어드민은 자기 체크를 직접 풀 때만 어드민에서 빠진다.
+  const allMembers = communityMembers.filter((m) => m.memberId !== detail?.createdBy);
 
   // 검색어 기준 클라이언트 필터
   const filteredMembers = searchQuery.trim()
@@ -138,9 +139,7 @@ const CommunitySettings = () => {
         name: name.trim(),
         region,
         imageUrl: uploadedImageUrl ?? (detail?.imageUrl ?? null),
-        // 목록에서 나는 빠져 있다. 서버는 생성자 + 이 목록으로 어드민을 다시 쓰므로,
-        // 생성자가 아닌 어드민이 저장해도 자기 권한이 지워지지 않게 나를 넣는다 (생성자면 서버가 건너뛴다)
-        adminMemberIds: [userId, ...selectedIds],
+        adminMemberIds: [...selectedIds],
       });
       setMyCommunity(res);
       const parsed = getSelectedCommunity();
@@ -149,6 +148,8 @@ const CommunitySettings = () => {
           ...parsed,
           name: name.trim(),
           imageUrl: uploadedImageUrl ?? detail?.imageUrl ?? null,
+          // 내 체크를 풀었으면 어드민이 아니다 — 어드민 버튼이 남아 있지 않게 바로 반영한다
+          isAdmin: (res.admins ?? []).some((a) => a.memberId === userId),
         });
         notifySelectedCommunityUpdated();
       }
@@ -199,7 +200,7 @@ const CommunitySettings = () => {
     );
   }
 
-  const totalAdminCount = selectedIds.size + 1; // +1 for me (생성자가 아니면 생성자는 selectedIds에 있다)
+  const totalAdminCount = selectedIds.size + 1; // +1 for creator
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
