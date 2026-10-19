@@ -1,6 +1,7 @@
 import { forwardRef } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useTheme } from '../../theme/ThemeContext';
+import AwardIcon from './AwardIcon';
 import { V } from '../../utils/cssUtils';
 import { fill } from '../../utils/seasonUtils';
 
@@ -16,15 +17,14 @@ const HERO_FADE = {
   light: 'linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0.05) 100%)',
 };
 
-// 이모지는 iOS 26.3 시뮬레이터에서만 ? 상자로 보인다 (실기기·배포 앱은 정상).
 const AWARD_META = {
-  LAST_WINNER: { emoji: '👑', labelKey: 'awardLastWinner' },
-  MOST_WINS: { emoji: '🐐', labelKey: 'awardMostWins' },
-  LONGEST_STREAK: { emoji: '🔥', labelKey: 'awardLongestStreak' },
-  LONGEST_LOSING_STREAK: { emoji: '💀', labelKey: 'awardLongestLosingStreak' },
-  BEST_WIN_RATE: { emoji: '🧠', labelKey: 'awardBestWinRate' },
-  MOST_PLAYED: { emoji: '🎲', labelKey: 'awardMostPlayed' },
-  MOST_APP_OPENS: { emoji: '📝', labelKey: 'awardMostAppOpens' },
+  LAST_WINNER: { labelKey: 'awardLastWinner' },
+  MOST_WINS: { labelKey: 'awardMostWins' },
+  LONGEST_STREAK: { labelKey: 'awardLongestStreak' },
+  LONGEST_LOSING_STREAK: { labelKey: 'awardLongestLosingStreak' },
+  BEST_WIN_RATE: { labelKey: 'awardBestWinRate' },
+  MOST_PLAYED: { labelKey: 'awardMostPlayed' },
+  MOST_APP_OPENS: { labelKey: 'awardMostAppOpens' },
 };
 
 // 강조색은 다크 배경 기준으로 고른 색이라 흰 카드 위에선 안 읽힌다 — 라이트용으로 한 톤 진하게 둔다.
@@ -178,7 +178,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                 border: `1px solid var(--th-border)`,
               }}
             >
-              <span style={{ fontSize: 18, lineHeight: 1, flexShrink: 0 }}>{meta.emoji}</span>
+              <AwardIcon type={award.type} color={AWARD_ACCENT[tone][award.type]} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: V('--th-text-sub') }}>
                   {t('season', meta.labelKey)}
