@@ -109,6 +109,7 @@ const CommunityMemberManage = () => {
                 const color = COLORS[member.memberId % COLORS.length];
                 const isMe = String(member.memberId) === String(userId);
                 const isOwner = member.memberId === detail?.createdBy;
+                const isAdmin = !isOwner && (detail?.admins ?? []).some((a) => a.memberId === member.memberId);
                 const isLast = idx === pagedMembers.length - 1;
                 return (
                   <div
@@ -132,12 +133,25 @@ const CommunityMemberManage = () => {
                       }
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{
-                        fontSize: '15px', fontWeight: isMe ? '700' : '600',
-                        color: isMe ? 'var(--th-primary)' : V('--th-text'),
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {member.nickname}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0 }}>
+                        <span style={{
+                          fontSize: '15px', fontWeight: isMe ? '700' : '600',
+                          color: isMe ? 'var(--th-primary)' : V('--th-text'),
+                          overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                        }}>
+                          {member.nickname}
+                        </span>
+                        {(isOwner || isAdmin) && (
+                          <span style={{
+                            flexShrink: 0, fontSize: '11px', fontWeight: '700',
+                            borderRadius: '20px', padding: '1px 7px',
+                            color: isOwner ? '#fff' : 'var(--th-primary)',
+                            backgroundColor: isOwner ? 'var(--th-primary)' : 'transparent',
+                            border: `1px solid var(--th-primary)`,
+                          }}>
+                            {t('community', isOwner ? 'ownerBadge' : 'adminBadge')}
+                          </span>
+                        )}
                       </div>
                       {isMe && (
                         <div style={{ fontSize: '11px', color: V('--th-text-sub'), marginTop: '2px' }}>{t('invite', 'me')}</div>

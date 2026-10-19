@@ -60,5 +60,7 @@ export default {
   memberCount: '{n} members',
   memberKickConfirm: 'Remove {n} from the community?',
   memberKickFailed: 'Failed to remove the member.',
+  ownerBadge: 'Owner',
+  adminBadge: 'Admin',
   joinFailed: 'Failed to join the community.',
 };

@@ -60,5 +60,7 @@ export default {
   memberCount: '{n}명',
   memberKickConfirm: '{n}님을 커뮤니티에서 내보내시겠습니까?',
   memberKickFailed: '멤버 내보내기에 실패했습니다.',
+  ownerBadge: '소유자',
+  adminBadge: '어드민',
   joinFailed: '커뮤니티 참여에 실패했습니다.',
 };
