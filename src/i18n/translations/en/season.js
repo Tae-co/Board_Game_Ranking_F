@@ -8,11 +8,15 @@ export default {
   membersLabel: 'Members',
   awardMostWins: 'Most Wins',
   awardLongestStreak: 'Longest Streak',
-  awardDarkHorse: 'Dark Horse',
+  awardLastWinner: 'Last Game Winner',
+  awardLongestLosingStreak: 'Longest Losing Streak',
+  awardBestWinRate: 'Highest Win Rate (10+ games)',
+  awardMostPlayed: 'Most Games Played',
   winsUnit: '{count} wins',
   winsUnitOne: '{count} win',
   streakUnit: '{count} in a row',
-  inviteCode: 'Invite Code',
+  losingStreakUnit: '{count} losses in a row',
+  gamesUnit: '{count} games',
   share: 'Share Status Card',
   saveImage: 'Save Image',
   sharing: 'Building card...',
@@ -58,8 +62,8 @@ export default {
   editSeason: 'Edit season',
   seasonSaveFailed: 'Could not save the season. Please try again.',
 
-  // ── 모임 현황 (최근 30일) ──
-  windowLabel: 'Last {days} days · {from} – {to}',
+  // ── 모임 현황 (전체 기간) ──
+  allTimeLabel: 'All Time',
   windowMatchesLabel: 'Matches',
   noLeaders: 'Nobody has played 3+ games yet',
   chipTrend: 'My net profit by season',

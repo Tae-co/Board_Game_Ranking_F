@@ -13,8 +13,8 @@ import { V } from '../utils/cssUtils';
 import { fill } from '../utils/seasonUtils';
 
 /**
- * 모임 현황 — 최근 30일 (plan-season-reset §22). 방마다 시즌이 따로 돌아서 커뮤니티는
- * 시즌 대신 계속 밀려가는 기간으로 본다. 서버가 조회할 때마다 계산한다.
+ * 모임 현황 — 전체 기간 (plan-season-reset §22). 방마다 시즌이 따로 돌아서 커뮤니티는
+ * 시즌 대신 커뮤니티의 전체 경기로 본다. 서버가 조회할 때마다 계산한다.
  */
 const SeasonSummary = () => {
   const navigate = useNavigate();

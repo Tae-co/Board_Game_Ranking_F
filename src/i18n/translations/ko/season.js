@@ -8,11 +8,15 @@ export default {
   membersLabel: '모임 인원',
   awardMostWins: '최다승',
   awardLongestStreak: '최대 연승',
-  awardDarkHorse: '다크호스',
+  awardLastWinner: '마지막 경기 승자',
+  awardLongestLosingStreak: '최대 연패',
+  awardBestWinRate: '최고 승률 (10판 이상)',
+  awardMostPlayed: '최다 경기',
   winsUnit: '{count}승',
   winsUnitOne: '{count}승',
   streakUnit: '{count}연승',
-  inviteCode: '초대코드',
+  losingStreakUnit: '{count}연패',
+  gamesUnit: '{count}판',
   share: '현황 카드 공유',
   saveImage: '이미지 저장',
   sharing: '카드 만드는 중...',
@@ -58,8 +62,8 @@ export default {
   editSeason: '시즌 수정',
   seasonSaveFailed: '시즌을 저장하지 못했습니다. 다시 시도해주세요.',
 
-  // ── 모임 현황 (최근 30일) ──
-  windowLabel: '최근 {days}일 · {from} – {to}',
+  // ── 모임 현황 (전체 기간) ──
+  allTimeLabel: '전체 기록',
   windowMatchesLabel: '경기',
   noLeaders: '아직 3판 이상 뛴 사람이 없어요',
   chipTrend: '내 손익 추이',

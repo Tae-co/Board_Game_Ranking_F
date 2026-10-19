@@ -1,12 +1,12 @@
 import { forwardRef } from 'react';
-import { Flame, TrendingUp, Trophy } from 'lucide-react';
+import { Crown, Dices, Flame, Percent, TrendingDown, Trophy } from 'lucide-react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useTheme } from '../../theme/ThemeContext';
 import { V } from '../../utils/cssUtils';
-import { fill, shortDateLabel } from '../../utils/seasonUtils';
+import { fill } from '../../utils/seasonUtils';
 
 /**
- * 공유용 모임 현황 카드 (최근 30일, plan-season-reset §22). 화면 테마를 그대로 따르고,
+ * 공유용 모임 현황 카드 (전체 기간, plan-season-reset §22). 화면 테마를 그대로 따르고,
  * 공유 이미지도 캡처한 사람의 테마로 나간다.
  */
 const CARD_WIDTH = 340;
@@ -19,15 +19,24 @@ const HERO_FADE = {
 
 // 이모지는 기기 폰트에 따라 ? 상자로 깨진다 — SVG 아이콘으로 그린다.
 const AWARD_META = {
+  LAST_WINNER: { Icon: Crown, labelKey: 'awardLastWinner' },
   MOST_WINS: { Icon: Trophy, labelKey: 'awardMostWins' },
   LONGEST_STREAK: { Icon: Flame, labelKey: 'awardLongestStreak' },
-  DARK_HORSE: { Icon: TrendingUp, labelKey: 'awardDarkHorse' },
+  LONGEST_LOSING_STREAK: { Icon: TrendingDown, labelKey: 'awardLongestLosingStreak' },
+  BEST_WIN_RATE: { Icon: Percent, labelKey: 'awardBestWinRate' },
+  MOST_PLAYED: { Icon: Dices, labelKey: 'awardMostPlayed' },
 };
 
 // 강조색은 다크 배경 기준으로 고른 색이라 흰 카드 위에선 안 읽힌다 — 라이트용으로 한 톤 진하게 둔다.
 const AWARD_ACCENT = {
-  dark: { MOST_WINS: '#FBBF24', LONGEST_STREAK: '#F87171', DARK_HORSE: '#818CF8' },
-  light: { MOST_WINS: '#D97706', LONGEST_STREAK: '#DC2626', DARK_HORSE: '#4F46E5' },
+  dark: {
+    LAST_WINNER: '#FBBF24', MOST_WINS: '#FBBF24', LONGEST_STREAK: '#F87171',
+    LONGEST_LOSING_STREAK: '#94A3B8', BEST_WIN_RATE: '#34D399', MOST_PLAYED: '#818CF8',
+  },
+  light: {
+    LAST_WINNER: '#D97706', MOST_WINS: '#D97706', LONGEST_STREAK: '#DC2626',
+    LONGEST_LOSING_STREAK: '#64748B', BEST_WIN_RATE: '#059669', MOST_PLAYED: '#4F46E5',
+  },
 };
 const PODIUM_ACCENT = {
   dark: { 1: '#FFD700', 2: '#C8C8D4', 3: '#D4936A' },
@@ -37,28 +46,27 @@ const PODIUM_TINT = { 1: 'rgba(255,215,0,0.10)', 2: 'rgba(200,200,212,0.08)', 3:
 const PODIUM_EDGE = { 1: 'rgba(255,215,0,0.35)', 2: 'rgba(200,200,212,0.28)', 3: 'rgba(212,147,106,0.28)' };
 
 const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
-  const { t, lang } = useLanguage();
+  const { t } = useLanguage();
   const { themeKey } = useTheme();
   const tone = themeKey === 'ledger' ? 'dark' : 'light';
 
   const leaders = summary.leaders ?? [];
 
-  const windowLabel = fill(t('season', 'windowLabel'), {
-    days: summary.windowDays,
-    from: shortDateLabel(summary.from, lang),
-    to: shortDateLabel(summary.to, lang),
-  });
-
   const formatAwardValue = (award) => {
-    if (award.type === 'MOST_WINS') {
-      const key = award.value === 1 ? 'winsUnitOne' : 'winsUnit';
-      return fill(t('season', key), { count: award.value });
+    switch (award.type) {
+      case 'LAST_WINNER':
+        return award.boardGameName;
+      case 'MOST_WINS':
+        return fill(t('season', award.value === 1 ? 'winsUnitOne' : 'winsUnit'), { count: award.value });
+      case 'LONGEST_STREAK':
+        return fill(t('season', 'streakUnit'), { count: award.value });
+      case 'LONGEST_LOSING_STREAK':
+        return fill(t('season', 'losingStreakUnit'), { count: award.value });
+      case 'BEST_WIN_RATE':
+        return `${Math.round(award.value)}%`;
+      default:
+        return fill(t('season', 'gamesUnit'), { count: award.value });
     }
-    if (award.type === 'LONGEST_STREAK') {
-      return fill(t('season', 'streakUnit'), { count: award.value });
-    }
-    const rounded = Math.round(award.value);
-    return `${rounded >= 0 ? '+' : ''}${rounded}`;
   };
 
   return (
@@ -92,7 +100,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
         }} />
         <div style={{ position: 'absolute', left: 20, right: 20, bottom: 14 }}>
           <p style={{ margin: 0, fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', color: V('--th-text-sub') }}>
-            {windowLabel.toUpperCase()}
+            {t('season', 'allTimeLabel').toUpperCase()}
           </p>
           <p style={{ margin: '4px 0 0', fontSize: 23, fontWeight: 800, color: V('--th-text'), letterSpacing: '-0.3px' }}>
             {summary.communityName}
@@ -107,7 +115,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
         <Stat value={summary.matchCount} label={t('season', 'windowMatchesLabel')} />
       </div>
 
-      {/* 시상대 — 커뮤니티 방들에서 가장 높은 점수를 가진 3명. 순위가 카드의 머리기사라 수상 3종 위에 온다.
+      {/* 게임별 최고 점수 — 칸마다 다른 게임. 점수가 카드의 머리기사라 수상 위에 온다.
           그 방·게임에서 3판 이상 뛴 사람이 없으면 서버가 빈 목록을 준다. */}
       <div style={{ padding: '10px 20px 0' }}>
         {leaders.length > 0 ? (
@@ -122,13 +130,13 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                   border: `1px solid ${PODIUM_EDGE[entry.rank] || 'rgba(255,255,255,0.07)'}`,
                 }}
               >
-                {/* 사람마다 최고 점수를 낸 방이 다르다 — 어느 방 점수인지 밝힌다. */}
+                {/* 칸마다 게임이 다르다 — 어느 게임 점수인지 밝힌다. */}
                 <p style={{
                   margin: 0, minHeight: 14, fontSize: 10, fontWeight: 700, lineHeight: '14px',
                   color: V('--th-text-sub'),
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
-                  {entry.roomName}
+                  {entry.boardGameName}
                 </p>
                 <p style={{
                   margin: '4px 0 0', fontSize: 12, fontWeight: 700, color: V('--th-text'),
@@ -160,7 +168,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
           if (!meta) return null;
           return (
             <div
-              key={award.type}
+              key={`${award.type}-${award.memberId}`}
               style={{
                 display: 'flex', alignItems: 'center', gap: 10,
                 padding: '10px 12px', marginBottom: 8,
@@ -188,25 +196,14 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
         })}
       </div>
 
-      {/* Footer — 초대코드가 카드에 각인되어 나간다 */}
+      {/* Footer */}
       <div style={{
         marginTop: 10, padding: '12px 20px 14px',
         borderTop: `1px solid var(--th-border)`,
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: '0.1em', color: V('--th-text-sub') }}>
           YADA RANK
         </span>
-        {summary.inviteCode && (
-          <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', color: V('--th-text-sub') }}>
-              {t('season', 'inviteCode').toUpperCase()}
-            </span>
-            <span style={{ fontFamily: 'monospace', fontSize: 14, fontWeight: 800, color: V('--th-text'), letterSpacing: '0.1em' }}>
-              {summary.inviteCode}
-            </span>
-          </span>
-        )}
       </div>
     </div>
   );
