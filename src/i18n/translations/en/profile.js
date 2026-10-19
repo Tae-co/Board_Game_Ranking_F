@@ -42,7 +42,7 @@ export default {
   deleteAccount: 'Delete Account',
   deleteAccountDesc: 'All your game records and rankings will be permanently deleted.',
   deleteAccountProcessing: 'Deleting...',
-  deleteAccountConfirm: 'Are you sure you want to delete your account?\nAll data will be erased and cannot be recovered.',
+  deleteAccountConfirm: 'Are you sure you want to delete your account?\nAll data will be erased and cannot be recovered.\n\nCommunities you own will be handed to another admin, or to the member who has played the most games if there is no other admin.',
   deleteAccountFailed: 'Failed to delete the account.',
 
   // ── 하드코딩 문구 이관 ──
