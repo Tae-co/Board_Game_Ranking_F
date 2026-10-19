@@ -8,6 +8,7 @@ import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useSwipePaging } from '../hooks/useSwipePaging';
 import NavAvatar from '../components/NavAvatar';
+import RoleBadge from '../components/shared/RoleBadge';
 import { V } from '../utils/cssUtils';
 import { REGION_NAMES } from '../constants/regions';
 import { getAuthUserId } from '../auth/storage';
@@ -137,10 +138,30 @@ const CommunitySettings = () => {
   const pagedAdminMembers = filteredMembers.slice(adminPage * ADMIN_PER_PAGE, (adminPage + 1) * ADMIN_PER_PAGE);
   const adminSwipe = useSwipePaging(adminPage, totalAdminPages, setAdminPage);
 
+  // 공동 어드민 화면에서 목록 밖의 소유자를 맨 위에 고정해 보여준다
+  const ownerInfo = isOwner ? null
+    : communityMembers.find((m) => m.memberId === detail?.createdBy)
+      ?? (detail?.admins ?? []).find((a) => a.memberId === detail?.createdBy);
+
+  // 소유자가 내려놓을 때 넘겨받을 사람 — 서버와 같은 규칙(남는 어드민 중 가장 오래된 사람).
+  // 상세의 어드민 목록이 어드민이 된 순서이고, 새로 추가한 사람은 그 뒤에 선택한 순서로 붙는다.
+  const findNextOwner = () => {
+    const kept = (detail?.admins ?? []).filter((a) => a.memberId !== userId && selectedIds.has(a.memberId));
+    if (kept.length > 0) return kept[0];
+    const addedId = [...selectedIds].find((id) => id !== userId);
+    return communityMembers.find((m) => m.memberId === addedId) ?? null;
+  };
+
   const handleSubmit = async () => {
     if (!name.trim()) {
       setError(t('community', 'nameRequired'));
       return;
+    }
+    const ownerLeaves = isOwner && !selectedIds.has(userId);
+    if (ownerLeaves) {
+      // 넘겨받을 사람이 없으면 서버가 이유를 담아 거절한다
+      const next = findNextOwner();
+      if (next && !window.confirm(t('community', 'ownerLeaveConfirm').replace('{n}', next.nickname))) return;
     }
     setError('');
     setIsSubmitting(true);
@@ -150,7 +171,7 @@ const CommunitySettings = () => {
         region,
         imageUrl: uploadedImageUrl ?? (detail?.imageUrl ?? null),
         adminMemberIds: [...selectedIds],
-        ownerLeavesAdmin: isOwner && !selectedIds.has(userId),
+        ownerLeavesAdmin: ownerLeaves,
       });
       setMyCommunity(res);
       const parsed = getSelectedCommunity();
@@ -175,6 +196,9 @@ const CommunitySettings = () => {
       };
       queryClient.setQueriesData({ queryKey: ['myCommunitiesList'] }, patchList);
       queryClient.setQueriesData({ queryKey: ['joinedCommunities'] }, patchList);
+      // 소유권 이전·어드민 변경은 패치로 못 따라간다 — 내 커뮤니티/참여 목록과 관리 버튼이 바로 바뀌게 다시 받는다
+      queryClient.invalidateQueries({ queryKey: ['myCommunitiesList'] });
+      queryClient.invalidateQueries({ queryKey: ['joinedCommunities'] });
       queryClient.invalidateQueries({ queryKey: ['communityDetail', communityId] });
       navigate('/community', { replace: true });
     } catch (err) {
@@ -420,6 +444,34 @@ const CommunitySettings = () => {
             />
           </div>
 
+          {/* 소유자 — 공동 어드민은 해제할 수 없어 체크된 채 고정 */}
+          {ownerInfo && (
+            <div style={{
+              padding: '10px 12px', marginBottom: '2px', borderRadius: '10px',
+              display: 'flex', alignItems: 'center', gap: '12px',
+              backgroundColor: 'rgba(107,92,231,0.08)',
+            }}>
+              <div style={{
+                width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
+                backgroundColor: 'var(--th-primary)', border: `2px solid var(--th-primary)`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '14px', fontWeight: '700', color: '#fff',
+              }}>
+                {ownerInfo.nickname[0].toUpperCase()}
+              </div>
+              <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{
+                  fontSize: '14px', fontWeight: '500', color: 'var(--th-primary)',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                }}>
+                  {ownerInfo.nickname}
+                </span>
+                <RoleBadge owner />
+              </span>
+              <Check size={16} color="var(--th-primary)" strokeWidth={2.5} />
+            </div>
+          )}
+
           {/* Member list */}
           <div {...adminSwipe} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {filteredMembers.length === 0 ? (
@@ -454,11 +506,18 @@ const CommunitySettings = () => {
                     }}>
                       {m.nickname[0].toUpperCase()}
                     </div>
-                    <span style={{
-                      flex: 1, fontSize: '14px', fontWeight: '500', textAlign: 'left',
-                      color: isSelected ? 'var(--th-primary)' : V('--th-text'),
-                    }}>
-                      {m.nickname}
+                    <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{
+                        fontSize: '14px', fontWeight: '500', textAlign: 'left',
+                        color: isSelected ? 'var(--th-primary)' : V('--th-text'),
+                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      }}>
+                        {m.nickname}
+                      </span>
+                      {m.memberId === userId && (
+                        <span style={{ flexShrink: 0, fontSize: '11px', color: V('--th-text-sub') }}>{t('invite', 'me')}</span>
+                      )}
+                      {m.memberId === detail?.createdBy && <RoleBadge owner />}
                     </span>
                     {isSelected && (
                       <Check size={16} color="var(--th-primary)" strokeWidth={2.5} />
