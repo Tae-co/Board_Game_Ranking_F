@@ -2,7 +2,7 @@ export default {
   title: '명예의 전당',
   monthlyRecap: '{month}월 결산',
   entryTitle: '명예의 전당',
-  entryDesc: '칭호와 모임 기록',
+  entryDesc: '수상과 커뮤니티 현황',
   noMatches: '이 달에는 경기 기록이 없습니다',
   awardMostWins: '최다승',
   awardLongestStreak: '최대 연승',
