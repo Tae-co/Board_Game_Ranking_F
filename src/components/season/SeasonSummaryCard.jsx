@@ -173,7 +173,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
             >
               <AwardIcon type={award.type} color={AWARD_ACCENT[tone][award.type]} />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: V('--th-text-sub') }}>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: V('--th-text-sub') }}>
                   {t('season', meta.labelKey)}
                 </p>
                 <p style={{
