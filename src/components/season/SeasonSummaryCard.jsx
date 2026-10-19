@@ -129,9 +129,12 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                 <p style={{
                   margin: 0, minHeight: 14, fontSize: 10, fontWeight: 700, lineHeight: '14px',
                   color: V('--th-text-sub'),
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
                 }}>
-                  {entry.boardGameName}
+                  <AwardIcon type="GAME_LEADER" color={PODIUM_ACCENT[tone][entry.rank]} size={12} />
+                  <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {entry.boardGameName}
+                  </span>
                 </p>
                 <p style={{
                   margin: '4px 0 0', fontSize: 12, fontWeight: 700, color: V('--th-text'),
