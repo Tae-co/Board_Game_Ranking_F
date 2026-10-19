@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Users, X } from 'lucide-react';
 import StorageImage from '../components/StorageImage';
 import NavAvatar from '../components/NavAvatar';
+import RoleBadge from '../components/shared/RoleBadge';
 import { getCommunity, getCommunityMembers, kickCommunityMember } from '../api/services/communities';
 import { V } from '../utils/cssUtils';
 import { getAuthUserId } from '../auth/storage';
@@ -141,17 +142,7 @@ const CommunityMemberManage = () => {
                         }}>
                           {member.nickname}
                         </span>
-                        {(isOwner || isAdmin) && (
-                          <span style={{
-                            flexShrink: 0, fontSize: '11px', fontWeight: '700',
-                            borderRadius: '20px', padding: '1px 7px',
-                            color: isOwner ? '#fff' : 'var(--th-primary)',
-                            backgroundColor: isOwner ? 'var(--th-primary)' : 'transparent',
-                            border: `1px solid var(--th-primary)`,
-                          }}>
-                            {t('community', isOwner ? 'ownerBadge' : 'adminBadge')}
-                          </span>
-                        )}
+                        {(isOwner || isAdmin) && <RoleBadge owner={isOwner} />}
                       </div>
                       {isMe && (
                         <div style={{ fontSize: '11px', color: V('--th-text-sub'), marginTop: '2px' }}>{t('invite', 'me')}</div>

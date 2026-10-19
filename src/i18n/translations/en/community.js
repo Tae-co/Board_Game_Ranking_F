@@ -62,5 +62,6 @@ export default {
   memberKickFailed: 'Failed to remove the member.',
   ownerBadge: 'Owner',
   adminBadge: 'Admin',
+  ownerLeaveConfirm: 'If you step down as admin, ownership and the right to delete this community will pass to {n}.\nContinue?',
   joinFailed: 'Failed to join the community.',
 };

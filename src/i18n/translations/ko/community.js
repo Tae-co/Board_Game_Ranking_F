@@ -62,5 +62,6 @@ export default {
   memberKickFailed: '멤버 내보내기에 실패했습니다.',
   ownerBadge: '소유자',
   adminBadge: '어드민',
+  ownerLeaveConfirm: '어드민을 내려놓으면 소유권과 커뮤니티 삭제 권한이 {n}님에게 넘어갑니다.\n계속할까요?',
   joinFailed: '커뮤니티 참여에 실패했습니다.',
 };
