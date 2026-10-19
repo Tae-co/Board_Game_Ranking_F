@@ -38,10 +38,7 @@ const AWARD_ACCENT = {
     LONGEST_LOSING_STREAK: '#64748B', BEST_WIN_RATE: '#059669', MOST_PLAYED: '#4F46E5', MOST_RECORDED: '#0284C7',
   },
 };
-const PODIUM_ACCENT = {
-  dark: { 1: '#FFD700', 2: '#C8C8D4', 3: '#D4936A' },
-  light: { 1: '#B7791F', 2: '#6B7280', 3: '#A0522D' },
-};
+const LEADER_GOLD = { dark: '#FFD700', light: '#B7791F' };
 // 게임별 최고 점수 칸은 순위와 상관없이 모두 금색 바탕이다 (칸마다 다른 게임의 1위라서).
 const LEADER_TINT = 'rgba(255,215,0,0.10)';
 const LEADER_EDGE = 'rgba(255,215,0,0.35)';
@@ -132,7 +129,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                   color: V('--th-text-sub'),
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3,
                 }}>
-                  <AwardIcon type="GAME_LEADER" color={PODIUM_ACCENT[tone][1]} size={12} />
+                  <AwardIcon type="GAME_LEADER" color={LEADER_GOLD[tone]} size={12} />
                   <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {entry.boardGameName}
                   </span>
@@ -143,7 +140,7 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                 }}>
                   {entry.nickname}
                 </p>
-                <p style={{ margin: '1px 0 0', fontSize: 13, fontWeight: 800, color: PODIUM_ACCENT[tone][entry.rank] }}>
+                <p style={{ margin: '1px 0 0', fontSize: 13, fontWeight: 800, color: LEADER_GOLD[tone] }}>
                   {Math.round(entry.displayScore).toLocaleString()}
                 </p>
               </div>
