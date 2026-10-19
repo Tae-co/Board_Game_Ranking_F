@@ -61,7 +61,7 @@ const shapes = (fill, solid) => ({
     </>
   ),
   // 📝 The Scorekeeper — 메모지와 연필
-  MOST_APP_OPENS: (
+  MOST_RECORDED: (
     <>
       <path {...fill} d="M16 11V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-1.5" />
       <path d="M7 8h6M7 11.5h5M7 15h2.5" />

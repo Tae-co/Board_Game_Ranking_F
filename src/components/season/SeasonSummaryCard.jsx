@@ -24,18 +24,18 @@ const AWARD_META = {
   LONGEST_LOSING_STREAK: { labelKey: 'awardLongestLosingStreak' },
   BEST_WIN_RATE: { labelKey: 'awardBestWinRate' },
   MOST_PLAYED: { labelKey: 'awardMostPlayed' },
-  MOST_APP_OPENS: { labelKey: 'awardMostAppOpens' },
+  MOST_RECORDED: { labelKey: 'awardMostRecorded' },
 };
 
 // 강조색은 다크 배경 기준으로 고른 색이라 흰 카드 위에선 안 읽힌다 — 라이트용으로 한 톤 진하게 둔다.
 const AWARD_ACCENT = {
   dark: {
     LAST_WINNER: '#FBBF24', MOST_WINS: '#FBBF24', LONGEST_STREAK: '#F87171',
-    LONGEST_LOSING_STREAK: '#94A3B8', BEST_WIN_RATE: '#34D399', MOST_PLAYED: '#818CF8', MOST_APP_OPENS: '#38BDF8',
+    LONGEST_LOSING_STREAK: '#94A3B8', BEST_WIN_RATE: '#34D399', MOST_PLAYED: '#818CF8', MOST_RECORDED: '#38BDF8',
   },
   light: {
     LAST_WINNER: '#D97706', MOST_WINS: '#D97706', LONGEST_STREAK: '#DC2626',
-    LONGEST_LOSING_STREAK: '#64748B', BEST_WIN_RATE: '#059669', MOST_PLAYED: '#4F46E5', MOST_APP_OPENS: '#0284C7',
+    LONGEST_LOSING_STREAK: '#64748B', BEST_WIN_RATE: '#059669', MOST_PLAYED: '#4F46E5', MOST_RECORDED: '#0284C7',
   },
 };
 const PODIUM_ACCENT = {
@@ -64,8 +64,8 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
         return fill(t('season', 'losingStreakUnit'), { count: award.value });
       case 'BEST_WIN_RATE':
         return `${Math.round(award.value)}%`;
-      case 'MOST_APP_OPENS':
-        return fill(t('season', 'visitsUnit'), { count: award.value });
+      case 'MOST_RECORDED':
+        return fill(t('season', 'recordedUnit'), { count: award.value });
       default:
         return fill(t('season', 'gamesUnit'), { count: award.value });
     }
