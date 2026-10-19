@@ -1,8 +1,8 @@
 export default {
-  title: 'Group Status',
+  title: 'Hall of Fame',
   monthlyRecap: '{month} Recap',
-  entryTitle: 'Group Status',
-  entryDesc: 'The top players in your group',
+  entryTitle: 'Hall of Fame',
+  entryDesc: 'Awarded titles and community stats',
   noMatches: 'No matches were played this month',
   awardMostWins: 'The GOAT',
   awardLongestStreak: 'Unstoppable',

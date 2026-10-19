@@ -1,8 +1,8 @@
 export default {
-  title: '모임 현황',
+  title: '명예의 전당',
   monthlyRecap: '{month}월 결산',
-  entryTitle: '모임 현황',
-  entryDesc: '우리 모임에서 최고의 플레이어',
+  entryTitle: '명예의 전당',
+  entryDesc: '칭호와 모임 기록',
   noMatches: '이 달에는 경기 기록이 없습니다',
   awardMostWins: '최다승',
   awardLongestStreak: '최대 연승',

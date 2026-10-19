@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronRight, Plus, Trophy, Users, Copy, CheckCheck, Settings } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Plus, Star, Users, Copy, CheckCheck, Settings } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import { QRCodeSVG } from 'qrcode.react';
@@ -307,7 +307,7 @@ const Lobby = () => {
               background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <Trophy size={19} color="#fff" />
+              <Star size={19} color="#fff" />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: '700', fontSize: '14px', marginBottom: '3px', color: V('--th-text') }}>
