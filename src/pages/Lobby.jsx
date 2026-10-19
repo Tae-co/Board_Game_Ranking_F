@@ -14,6 +14,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import RoomCard from '../components/lobby/RoomCard';
 import JoinCodeSheet from '../components/lobby/JoinCodeSheet';
+import { useSwipePaging } from '../hooks/useSwipePaging';
 import { EVENTS, logEvent } from '../api/services/events';
 
 const DiceLogo = () => (
@@ -92,6 +93,9 @@ const Lobby = () => {
     enabled: !!communityId,
     staleTime: 1000 * 30,
   });
+
+  const roomSwipe = useSwipePaging(roomPage, Math.ceil(rooms.length / ROOMS_PER_PAGE), setRoomPage);
+  const memberSwipe = useSwipePaging(memberPage, Math.ceil(communityMembers.length / MEMBERS_PER_PAGE), setMemberPage);
 
   // 참가는 방 화면의 참가하기 버튼에서 한다. 여기서는 들어가기만 한다.
   const handleEnterRoom = (room) => {
@@ -409,7 +413,7 @@ const Lobby = () => {
             const pagedRooms = sortedRooms.slice(roomPage * ROOMS_PER_PAGE, (roomPage + 1) * ROOMS_PER_PAGE);
             return (
               <>
-                <div style={{
+                <div {...roomSwipe} style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(3, 1fr)',
                   gap: '10px',
@@ -493,7 +497,7 @@ const Lobby = () => {
               const pagedMembers = communityMembers.slice(memberPage * MEMBERS_PER_PAGE, (memberPage + 1) * MEMBERS_PER_PAGE);
               return (
                 <>
-                  <div style={{
+                  <div {...memberSwipe} style={{
                     display: 'grid',
                     gridTemplateColumns: 'repeat(5, 1fr)',
                     gap: '10px 6px',

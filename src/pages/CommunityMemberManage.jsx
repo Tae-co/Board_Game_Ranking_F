@@ -9,6 +9,7 @@ import { V } from '../utils/cssUtils';
 import { getAuthUserId } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useSwipePaging } from '../hooks/useSwipePaging';
 const COLORS = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
 const PER_PAGE = 10;
 
@@ -48,6 +49,7 @@ const CommunityMemberManage = () => {
 
   const totalPages = Math.ceil(members.length / PER_PAGE);
   const pagedMembers = members.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+  const swipe = useSwipePaging(page, totalPages, setPage);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
@@ -89,7 +91,7 @@ const CommunityMemberManage = () => {
               </span>
             </div>
 
-            <div style={{
+            <div {...swipe} style={{
               backgroundColor: V('--th-card'), borderRadius: '16px',
               border: `1px solid var(--th-border)`, overflow: 'hidden',
             }}>

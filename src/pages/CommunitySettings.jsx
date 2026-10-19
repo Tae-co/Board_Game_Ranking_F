@@ -6,6 +6,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { getCommunity, getCommunityMembers, updateCommunity, deleteCommunity } from '../api/services/communities';
 import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useSwipePaging } from '../hooks/useSwipePaging';
 import NavAvatar from '../components/NavAvatar';
 import { V } from '../utils/cssUtils';
 import { REGION_NAMES } from '../constants/regions';
@@ -125,6 +126,7 @@ const CommunitySettings = () => {
     : allMembers;
   const totalAdminPages = Math.ceil(filteredMembers.length / ADMIN_PER_PAGE);
   const pagedAdminMembers = filteredMembers.slice(adminPage * ADMIN_PER_PAGE, (adminPage + 1) * ADMIN_PER_PAGE);
+  const adminSwipe = useSwipePaging(adminPage, totalAdminPages, setAdminPage);
 
   const handleSubmit = async () => {
     if (!name.trim()) {
@@ -406,7 +408,7 @@ const CommunitySettings = () => {
           </div>
 
           {/* Member list */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          <div {...adminSwipe} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {filteredMembers.length === 0 ? (
               <p style={{ fontSize: '13px', color: V('--th-text-sub'), textAlign: 'center', padding: '20px 0', margin: 0 }}>
                 {t('community', 'searchNoResult')}

@@ -5,6 +5,7 @@ import NavAvatar from '../NavAvatar';
 import { V } from '../../utils/cssUtils';
 import { getAvatarColorById as getAvatarColor } from '../../utils/avatarUtils';
 import { fill, seasonLabel } from '../../utils/seasonUtils';
+import { useSwipePaging } from '../../hooks/useSwipePaging';
 
 const PER_PAGE = 10;
 
@@ -18,6 +19,7 @@ const RoomSettingsOverlay = ({
   const [page, setPage] = useState(0);
   const totalPages = Math.ceil(members.length / PER_PAGE);
   const pagedMembers = members.slice(page * PER_PAGE, (page + 1) * PER_PAGE);
+  const swipe = useSwipePaging(page, totalPages, setPage);
   return (
   <div style={{
     position: 'fixed', top: 0, bottom: 0, left: '50%', transform: 'translateX(-50%)',
@@ -94,7 +96,7 @@ const RoomSettingsOverlay = ({
             <span style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text-sub') }}>{members.length}</span>
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+        <div {...swipe} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {pagedMembers.map((member) => {
             const isMe = member.memberId === userId;
             const canKick = isHost && !isMe && !member.isHost;
