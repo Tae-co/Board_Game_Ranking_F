@@ -177,14 +177,17 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
                   {t('season', meta.labelKey)}
                 </p>
                 <p style={{
-                  margin: '2px 0 0', fontSize: 15, fontWeight: 700, color: V('--th-text'),
+                  margin: '2px 0 0', fontSize: 15, fontWeight: 800, color: AWARD_ACCENT[tone][award.type],
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
-                  {award.nickname}
+                  {formatAwardValue(award)}
                 </p>
               </div>
-              <span style={{ fontSize: 15, fontWeight: 800, color: AWARD_ACCENT[tone][award.type], flexShrink: 0 }}>
-                {formatAwardValue(award)}
+              <span style={{
+                maxWidth: '45%', fontSize: 15, fontWeight: 700, color: V('--th-text'), flexShrink: 0,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {award.nickname}
               </span>
             </div>
           );
