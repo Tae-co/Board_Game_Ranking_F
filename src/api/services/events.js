@@ -57,8 +57,8 @@ CapApp.getInfo().then(info => { appVersion = info.version; }).catch(() => {});
 export const logEvent = (eventName, payload = {}) => {
   if (isDuplicate(`${eventName}:${JSON.stringify(payload)}`)) return;
 
-  // 콜드 스타트 직후에는 accessToken이 아직 없다 — ensureToken이 /auth/refresh 왕복 중이다.
-  // 그대로 보내면 로그인 사용자의 이벤트까지 member_id NULL로 저장된다.
+  // 콜드 스타트 직후에는 accessToken이 아직 없고, 백그라운드 복귀 직후에는 만료돼 있다.
+  // 그대로 보내면 로그인 사용자의 이벤트까지 member_id NULL로 저장된다 — ensureToken이 먼저 갱신한다.
   ensureToken().finally(() => {
     api.post('/events', {
       eventName,
