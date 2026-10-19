@@ -110,16 +110,9 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
         </div>
       </div>
 
-      {/* Totals */}
-      <div style={{ display: 'flex', gap: 8, padding: '14px 20px 4px' }}>
-        <Stat value={summary.totalRooms} label={t('season', 'roomsLabel')} />
-        <Stat value={summary.totalMembers} label={t('season', 'membersLabel')} />
-        <Stat value={summary.matchCount} label={t('season', 'windowMatchesLabel')} />
-      </div>
-
       {/* 게임별 최고 점수 — 칸마다 다른 게임. 점수가 카드의 머리기사라 수상 위에 온다.
           그 방·게임에서 3판 이상 뛴 사람이 없으면 서버가 빈 목록을 준다. */}
-      <div style={{ padding: '10px 20px 0' }}>
+      <div style={{ padding: '14px 20px 0' }}>
         {leaders.length > 0 ? (
           <div style={{ display: 'flex', gap: 8 }}>
             {leaders.map((entry) => (
@@ -210,16 +203,6 @@ const SeasonSummaryCard = forwardRef(({ summary }, ref) => {
     </div>
   );
 });
-
-const Stat = ({ value, label }) => (
-  <div style={{
-    flex: 1, borderRadius: 12, padding: '10px 12px',
-    backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`,
-  }}>
-    <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: V('--th-text'), lineHeight: 1.1 }}>{value}</p>
-    <p style={{ margin: '2px 0 0', fontSize: 10, fontWeight: 600, color: V('--th-text-sub') }}>{label}</p>
-  </div>
-);
 
 SeasonSummaryCard.displayName = 'SeasonSummaryCard';
 

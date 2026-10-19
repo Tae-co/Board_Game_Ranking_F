@@ -4,8 +4,6 @@ export default {
   entryTitle: 'Group Status',
   entryDesc: 'The top players in your group',
   noMatches: 'No matches were played this month',
-  roomsLabel: 'Rooms',
-  membersLabel: 'Members',
   awardMostWins: 'The GOAT',
   awardLongestStreak: 'Unstoppable',
   awardLastWinner: 'Latest Champ',
@@ -66,7 +64,6 @@ export default {
 
   // ── 모임 현황 (전체 기간) ──
   allTimeLabel: 'All Time',
-  windowMatchesLabel: 'Matches',
   noLeaders: 'Nobody has played 3+ games yet',
   chipTrend: 'My net profit by season',
 };

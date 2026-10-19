@@ -4,8 +4,6 @@ export default {
   entryTitle: '모임 현황',
   entryDesc: '우리 모임에서 최고의 플레이어',
   noMatches: '이 달에는 경기 기록이 없습니다',
-  roomsLabel: '게임 방',
-  membersLabel: '모임 인원',
   awardMostWins: '최다승',
   awardLongestStreak: '최대 연승',
   awardLastWinner: '마지막 경기 승자',
@@ -66,7 +64,6 @@ export default {
 
   // ── 모임 현황 (전체 기간) ──
   allTimeLabel: '전체 기록',
-  windowMatchesLabel: '경기',
   noLeaders: '아직 3판 이상 뛴 사람이 없어요',
   chipTrend: '내 손익 추이',
 };
