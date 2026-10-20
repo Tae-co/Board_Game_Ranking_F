@@ -33,3 +33,6 @@ dist-ssr
 build/
 android/.gradle-home/
 .gstack/
+
+# 로컬 로그인용 (토큰 포함)
+devlogin.local.html
