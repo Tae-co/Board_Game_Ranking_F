@@ -43,7 +43,7 @@ const CommunityLobby = () => {
     return () => { document.body.style.overflow = ''; };
   }, [showJoinInput]);
 
-  const { data: myCommunities = [], isLoading: myLoading } = useQuery({
+  const { data: myCommunities = [], isLoading: myLoading, isError: myError } = useQuery({
     queryKey: ['myCommunitiesList', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -58,7 +58,7 @@ const CommunityLobby = () => {
     else if (myCommunities.length === 0 && userId) removeMyCommunity();
   }, [myCommunities, userId]);
 
-  const { data: joinedCommunities = [], isLoading: joinedLoading } = useQuery({
+  const { data: joinedCommunities = [], isLoading: joinedLoading, isError: joinedError } = useQuery({
     queryKey: ['joinedCommunities', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -69,7 +69,9 @@ const CommunityLobby = () => {
   });
 
   // 둘 다 불러온 뒤에만 판단한다. 로딩 중에 첫 방문 화면이 번쩍였다 사라지면 안 된다.
-  const isFirstVisit = !myLoading && !joinedLoading && myCommunities.length === 0 && joinedCommunities.length === 0;
+  // 요청이 실패해도 목록은 빈 배열이라, 모임이 있는 사람에게 첫 방문 화면이 뜨지 않게 실패도 거른다.
+  const isFirstVisit = !myLoading && !joinedLoading && !myError && !joinedError
+    && myCommunities.length === 0 && joinedCommunities.length === 0;
 
   const handleEnterCommunity = (community) => {
     enterCommunity(community, userId);

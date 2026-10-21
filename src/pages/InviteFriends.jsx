@@ -30,29 +30,34 @@ const InviteFriends = () => {
   const [newMemberIds, setNewMemberIds] = useState(() => new Set());
   const [newcomerName, setNewcomerName] = useState(null);
   const knownIds = useRef(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // 실시간 감지는 하지 않는다. 공유하러 다른 앱에 다녀오면 다시 불러오고, 나머지는 새로고침 버튼으로.
-  const { data: members = [], refetch, isFetching } = useQuery({
+  const { data, refetch, isFetching } = useQuery({
     queryKey: ['communityMembers', communityId],
     queryFn: () => getCommunityMembers(communityId),
     enabled: !!communityId,
     staleTime: 0,
     refetchOnWindowFocus: true,
   });
+  // 아직 한 번도 못 받았으면 "0명·빈자리 2개"로 그리지 않는다 — 만든 사람은 항상 멤버라 0명은 틀린 숫자다
+  const loaded = data !== undefined;
+  const members = data ?? [];
 
   // 처음 불러온 멤버는 원래 있던 사람이다. 그 뒤에 늘어난 사람만 "들어왔다"고 보여준다.
   useEffect(() => {
-    const ids = members.map(m => m.memberId);
+    if (!data) return;
+    const ids = data.map(m => m.memberId);
     if (knownIds.current === null) {
       if (ids.length > 0) knownIds.current = new Set(ids);
       return;
     }
-    const added = members.filter(m => !knownIds.current.has(m.memberId));
+    const added = data.filter(m => !knownIds.current.has(m.memberId));
     if (added.length === 0) return;
     knownIds.current = new Set(ids);
     setNewMemberIds(new Set(added.map(m => m.memberId)));
     setNewcomerName(added[added.length - 1].nickname);
-  }, [members]);
+  }, [data]);
 
   if (!community) return <Navigate to="/community" replace />;
 
@@ -63,6 +68,13 @@ const InviteFriends = () => {
   const leave = (path, state) => {
     if (members.length > 0) setSelectedCommunity({ ...community, memberCount: members.length });
     navigate(path, { replace: true, state });
+  };
+
+  // 응답이 너무 빠르면 아이콘이 돌다 만 것처럼 보여 눌렸는지조차 모른다 — 최소 한 바퀴는 돌린다
+  const refresh = async () => {
+    setRefreshing(true);
+    await Promise.all([refetch(), new Promise(r => setTimeout(r, 800))]);
+    setRefreshing(false);
   };
 
   const flash = (setter) => {
@@ -103,7 +115,7 @@ const InviteFriends = () => {
 
   return (
     // 하단 고정 버튼 높이만큼 비워둔다 — 안 그러면 멤버 카드 끝이 버튼 밑에 깔린다
-    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(100px + env(safe-area-inset-bottom))' }}>
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
@@ -179,18 +191,18 @@ const InviteFriends = () => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <p style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text'), margin: 0 }}>
-              {t('community', 'onboardMembers').replace('{n}', members.length)}
+              {loaded ? t('community', 'onboardMembers').replace('{n}', members.length) : t('common', 'loading')}
             </p>
             <button
-              onClick={() => refetch()}
-              disabled={isFetching}
+              onClick={refresh}
+              disabled={refreshing || isFetching}
               aria-label={t('community', 'onboardRefresh')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
             >
               <RefreshCw
                 size={18}
                 color="var(--th-text-sub)"
-                style={{ animation: isFetching ? 'spin 0.8s linear infinite' : 'none' }}
+                style={{ animation: refreshing || isFetching ? 'spin 0.8s linear infinite' : 'none' }}
               />
             </button>
           </div>
@@ -222,7 +234,7 @@ const InviteFriends = () => {
               );
             })}
             {/* 빈자리: 몇 명이 더 와야 하는지 보이게 한다 */}
-            {Array.from({ length: Math.max(0, MIN_PLAYERS - members.length) }).map((_, i) => (
+            {loaded && Array.from({ length: Math.max(0, MIN_PLAYERS - members.length) }).map((_, i) => (
               <div key={`empty-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
                 <div style={{
                   width: 44, height: 44, borderRadius: '50%', boxSizing: 'border-box',
@@ -237,6 +249,12 @@ const InviteFriends = () => {
             ))}
           </div>
 
+          {loaded && !canCreateRoom && (
+            <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: '14px 0 0', textAlign: 'center' }}>
+              {t('community', 'onboardNeedFriend')}
+            </p>
+          )}
+
           {newcomerName && (
             <p style={{ fontSize: '13px', fontWeight: '700', color: V('--th-primary'), margin: '14px 0 0', textAlign: 'center' }}>
               {t('community', 'onboardNewMember').replace('{name}', newcomerName)}
@@ -246,26 +264,19 @@ const InviteFriends = () => {
 
       </div>
 
-      {/* 첫 게임방 — 이 화면의 목적지라 스크롤 없이 항상 보이게 하단에 고정한다 */}
-      <div style={{
-        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 10,
-        backgroundColor: V('--th-bg'), borderTop: `1px solid var(--th-border)`,
-        padding: '12px 20px calc(12px + env(safe-area-inset-bottom))',
-      }}>
-        <div style={{ maxWidth: 350, margin: '0 auto' }}>
-          {!canCreateRoom && (
-            <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: '0 0 8px', textAlign: 'center' }}>
-              {t('community', 'onboardNeedFriend')}
-            </p>
-          )}
+      {/* 첫 게임방 — 이 화면의 목적지라 스크롤 없이 항상 보이게 하단에 고정한다.
+          CreateGroup의 방 만들기 버튼처럼 바 없이 버튼만 띄워 아래 내용을 덜 가린다 */}
+      <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 10 }}>
+        <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px calc(24px + env(safe-area-inset-bottom))' }}>
           <button
             onClick={() => leave('/create-group', { fromOnboarding: true })}
             disabled={!canCreateRoom}
             style={{
               width: '100%', padding: '16px', borderRadius: '14px', border: 'none',
               cursor: canCreateRoom ? 'pointer' : 'not-allowed',
-              background: canCreateRoom ? 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)' : 'var(--th-border)',
+              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
               color: '#fff', fontSize: '16px', fontWeight: '700',
+              opacity: canCreateRoom ? 1 : 0.4,
               boxShadow: canCreateRoom ? '0 4px 16px rgba(107,92,231,0.35)' : 'none',
             }}
           >
