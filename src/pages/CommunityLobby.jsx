@@ -95,11 +95,10 @@ const CommunityLobby = () => {
       setJoinCode('');
       setPendingJoinCode('');
       queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
-      // 서버는 이미 멤버여도 200을 준다. 원래 있던 모임이면 "들어왔어요"를 띄우지 않는다.
-      const alreadyIn = [...joinedCommunities, ...myCommunities].some(c => c.communityId === res.data.communityId);
-      // 목록에 남겨두면 참가했는지조차 모른다 — 들어간 모임으로 바로 보낸다
+      // 목록에 남겨두면 참가했는지조차 모른다 — 들어간 모임으로 바로 보낸다.
+      // 원래 있던 모임이면 그냥 들어가기만 한다 ("들어왔어요"를 띄우지 않는다).
       enterCommunity(res.data, userId);
-      navigate('/lobby', { state: { justJoined: !alreadyIn } });
+      navigate('/lobby', { state: { justJoined: !res.data.alreadyMember } });
     } catch (e) {
       // 확인 팝업으로 넘어가며 입력창을 닫았다 — 다시 열어야 오류가 보인다. 코드는 남겨 고쳐 쓰게 한다.
       setJoinError(e.response?.data?.message || t('community', 'invalidCode'));

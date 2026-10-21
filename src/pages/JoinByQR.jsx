@@ -39,9 +39,9 @@ const JoinByQR = () => {
       const res = await joinCommunity(pendingCode);
       const userId = getAuthUserId();
       queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
-      // 목록이 아니라 방금 들어간 모임으로 바로 보낸다
+      // 목록이 아니라 방금 들어간 모임으로 바로 보낸다. 원래 있던 모임이면 환영 문구 없이 들어가기만 한다.
       enterCommunity(res.data, userId);
-      navigate('/lobby', { replace: true, state: { justJoined: true } });
+      navigate('/lobby', { replace: true, state: { justJoined: !res.data.alreadyMember } });
     } catch (e) {
       const msg = e?.response?.data?.message || t('community', 'joinFailed');
       setError(msg);
