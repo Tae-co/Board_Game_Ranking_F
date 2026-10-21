@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Plus, Star, Users, Copy, CheckCheck, Settings } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
@@ -42,6 +42,17 @@ const Lobby = () => {
   const isAdmin = selectedCommunity?.isAdmin ?? false;
   const communityInviteCode = selectedCommunity?.inviteCode ?? null;
   const [codeCopied, setCodeCopied] = useState(false);
+
+  // 초대코드·QR로 막 참가했다면 어디에 들어왔는지 한 번 알려준다.
+  // state를 지워두지 않으면 뒤로가기로 돌아올 때마다 다시 뜬다.
+  const location = useLocation();
+  const [showJoinedToast, setShowJoinedToast] = useState(() => !!location.state?.justJoined);
+  useEffect(() => {
+    if (!showJoinedToast) return;
+    navigate(location.pathname, { replace: true, state: null });
+    const timer = setTimeout(() => setShowJoinedToast(false), 3500);
+    return () => clearTimeout(timer);
+  }, [showJoinedToast]);
 
   // 초대코드 복사가 초대 퍼널의 진짜 첫 칸이다 — /join 랜딩으로 이어지는 경로는
   // 랭킹 자랑(INVITE_SHARED kind=my_rank)이 아니라 이 코드다. 여기가 비어 있으면
@@ -135,6 +146,27 @@ const Lobby = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
+
+      {showJoinedToast && selectedCommunity && (
+        <div
+          onClick={() => setShowJoinedToast(false)}
+          style={{
+            position: 'fixed', left: 16, right: 16, zIndex: 300,
+            top: 'calc(env(safe-area-inset-top) + 72px)',
+            maxWidth: 358, margin: '0 auto',
+            padding: '14px 16px', borderRadius: '16px',
+            background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+            color: '#fff', boxShadow: '0 8px 24px rgba(107,92,231,0.35)',
+          }}
+        >
+          <p style={{ fontSize: '15px', fontWeight: '800', margin: '0 0 3px' }}>
+            {t('lobby', 'joinedToastTitle').replace('{name}', selectedCommunity.name)}
+          </p>
+          <p style={{ fontSize: '12px', margin: 0, opacity: 0.85 }}>
+            {t('lobby', 'joinedToastDesc')}
+          </p>
+        </div>
+      )}
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>

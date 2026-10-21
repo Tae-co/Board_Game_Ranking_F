@@ -93,4 +93,6 @@ export default {
   customChipDenomAdd: '추가',
   customChipDenomRemove: '칩 {n} 빼기',
   customChipDenomsRequired: '칩 종류를 1개 이상 넣어주세요.',
+  joinedToastTitle: '🎉 {name}에 들어왔어요!',
+  joinedToastDesc: '게임방에 들어가서 함께 기록을 시작하세요.',
 };

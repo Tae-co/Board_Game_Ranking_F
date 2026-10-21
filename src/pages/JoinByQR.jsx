@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { joinCommunity } from '../api/services/communities';
 import { getAuthUserId } from '../auth/storage';
+import { enterCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 
@@ -35,10 +36,12 @@ const JoinByQR = () => {
   const handleConfirm = async () => {
     setJoining(true);
     try {
-      await joinCommunity(pendingCode);
+      const res = await joinCommunity(pendingCode);
       const userId = getAuthUserId();
       queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
-      navigate('/community');
+      // 목록이 아니라 방금 들어간 모임으로 바로 보낸다. 원래 있던 모임이면 환영 문구 없이 들어가기만 한다.
+      enterCommunity(res.data, userId);
+      navigate('/lobby', { replace: true, state: { justJoined: !res.data.alreadyMember } });
     } catch (e) {
       const msg = e?.response?.data?.message || t('community', 'joinFailed');
       setError(msg);

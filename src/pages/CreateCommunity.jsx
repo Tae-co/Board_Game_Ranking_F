@@ -6,8 +6,8 @@ import { createCommunity } from '../api/services/communities';
 import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
-import { getNickname } from '../auth/storage';
-import { setMyCommunity } from '../utils/storage';
+import { getAuthUserId, getNickname } from '../auth/storage';
+import { enterCommunity, setMyCommunity } from '../utils/storage';
 
 const REGIONS = [
   'South Korea', 'United States', 'Japan', 'China', 'United Kingdom',
@@ -66,8 +66,10 @@ const CreateCommunity = () => {
         adminMemberIds: [],
       });
       setMyCommunity(res);
+      enterCommunity(res, getAuthUserId());
       queryClient.invalidateQueries({ queryKey: ['myCommunitiesList'] });
-      navigate('/community', { replace: true });
+      // 혼자서는 쓸 수 없는 앱이다 — 만들자마자 친구 부르기로 이어간다
+      navigate('/invite-friends', { replace: true });
     } catch {
       setError(t('community', 'createFailed'));
     } finally {
