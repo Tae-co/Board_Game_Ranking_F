@@ -3,8 +3,9 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Share } from '@capacitor/share';
 import { QRCodeSVG } from 'qrcode.react';
-import { Check, CheckCheck, Copy, RefreshCw, Share2 } from 'lucide-react';
+import { CheckCheck, Copy, RefreshCw, Share2 } from 'lucide-react';
 import InitialAvatar from '../components/shared/InitialAvatar';
+import OnboardingSteps from '../components/shared/OnboardingSteps';
 import { getCommunityMembers } from '../api/services/communities';
 import { EVENTS, logEvent } from '../api/services/events';
 import { getAuthUserId } from '../auth/storage';
@@ -59,9 +60,9 @@ const InviteFriends = () => {
   const canCreateRoom = members.length >= MIN_PLAYERS;
 
   // 로비 헤더의 인원 수는 선택 커뮤니티에 저장된 값을 읽는다 — 만든 직후의 1명으로 남지 않게 갱신한다
-  const leave = (path) => {
+  const leave = (path, state) => {
     if (members.length > 0) setSelectedCommunity({ ...community, memberCount: members.length });
-    navigate(path, { replace: true });
+    navigate(path, { replace: true, state });
   };
 
   const flash = (setter) => {
@@ -100,15 +101,9 @@ const InviteFriends = () => {
     }
   };
 
-  const steps = [
-    { label: t('community', 'onboardStepCreate'), done: true },
-    { label: t('community', 'onboardStepInvite'), done: canCreateRoom },
-    { label: t('community', 'onboardStepRoom'), done: false },
-  ];
-  const currentStep = steps.findIndex(s => !s.done);
-
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 48 }}>
+    // 하단 고정 버튼 높이만큼 비워둔다 — 안 그러면 멤버 카드 끝이 버튼 밑에 깔린다
+    <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: 'calc(120px + env(safe-area-inset-bottom))' }}>
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
@@ -127,37 +122,13 @@ const InviteFriends = () => {
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 0' }}>
 
-        {/* 단계 표시 */}
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '24px' }}>
-          {steps.map((step, i) => {
-            const isCurrent = i === currentStep;
-            return (
-              <div key={step.label} style={{ flex: 1, minWidth: 0 }}>
-                <div style={{
-                  height: 4, borderRadius: 2, marginBottom: 8,
-                  backgroundColor: step.done || isCurrent ? V('--th-primary') : V('--th-border'),
-                  opacity: isCurrent ? 0.45 : 1,
-                }} />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  {step.done && <Check size={12} color="var(--th-primary)" strokeWidth={3} />}
-                  <span style={{
-                    fontSize: '11px', fontWeight: isCurrent ? '800' : '600',
-                    color: step.done || isCurrent ? V('--th-text') : V('--th-text-sub'),
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {step.label}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        <OnboardingSteps current={canCreateRoom ? 2 : 1} t={t} />
 
         <p style={{ fontSize: '24px', fontWeight: '800', color: V('--th-text'), margin: '0 0 6px', letterSpacing: '-0.3px' }}>
-          {t('community', 'onboardTitle')}
+          {t('community', canCreateRoom ? 'onboardReadyTitle' : 'onboardTitle')}
         </p>
         <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: '0 0 20px', lineHeight: 1.5 }}>
-          {t('community', 'onboardDesc')}
+          {t('community', canCreateRoom ? 'onboardReadyDesc' : 'onboardDesc')}
         </p>
 
         {/* QR + 코드 + 공유 */}
@@ -205,7 +176,6 @@ const InviteFriends = () => {
         <div style={{
           backgroundColor: V('--th-card'), borderRadius: '20px',
           border: `1px solid var(--th-border)`, padding: '18px 20px',
-          marginBottom: '24px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
             <p style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text'), margin: 0 }}>
@@ -274,25 +244,34 @@ const InviteFriends = () => {
           )}
         </div>
 
-        {/* 첫 게임방 */}
-        <button
-          onClick={() => leave('/create-group')}
-          disabled={!canCreateRoom}
-          style={{
-            width: '100%', padding: '16px', borderRadius: '14px', border: 'none',
-            cursor: canCreateRoom ? 'pointer' : 'not-allowed',
-            background: canCreateRoom ? 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)' : 'var(--th-border)',
-            color: '#fff', fontSize: '16px', fontWeight: '700',
-            boxShadow: canCreateRoom ? '0 4px 16px rgba(107,92,231,0.35)' : 'none',
-          }}
-        >
-          {t('community', 'onboardCreateRoom')}
-        </button>
-        {!canCreateRoom && (
-          <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: '10px 0 0', textAlign: 'center' }}>
-            {t('community', 'onboardNeedFriend')}
-          </p>
-        )}
+      </div>
+
+      {/* 첫 게임방 — 이 화면의 목적지라 스크롤 없이 항상 보이게 하단에 고정한다 */}
+      <div style={{
+        position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 10,
+        backgroundColor: V('--th-bg'), borderTop: `1px solid var(--th-border)`,
+        padding: '12px 20px calc(12px + env(safe-area-inset-bottom))',
+      }}>
+        <div style={{ maxWidth: 350, margin: '0 auto' }}>
+          {!canCreateRoom && (
+            <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: '0 0 8px', textAlign: 'center' }}>
+              {t('community', 'onboardNeedFriend')}
+            </p>
+          )}
+          <button
+            onClick={() => leave('/create-group', { fromOnboarding: true })}
+            disabled={!canCreateRoom}
+            style={{
+              width: '100%', padding: '16px', borderRadius: '14px', border: 'none',
+              cursor: canCreateRoom ? 'pointer' : 'not-allowed',
+              background: canCreateRoom ? 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)' : 'var(--th-border)',
+              color: '#fff', fontSize: '16px', fontWeight: '700',
+              boxShadow: canCreateRoom ? '0 4px 16px rgba(107,92,231,0.35)' : 'none',
+            }}
+          >
+            {t('community', 'onboardCreateRoom')}
+          </button>
+        </div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Search, Plus, Trash2 } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createRoom } from '../api/services/rooms';
@@ -10,6 +10,7 @@ import { useSwipePaging } from '../hooks/useSwipePaging';
 import { V } from '../utils/cssUtils';
 import GameImageFallback from '../components/shared/GameImageFallback';
 import SeasonFields from '../components/shared/SeasonFields';
+import OnboardingSteps from '../components/shared/OnboardingSteps';
 import { defaultEndDate, isSeasonInputValid } from '../utils/seasonUtils';
 import { getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
@@ -22,6 +23,8 @@ const CreateGroup = () => {
   const communityId = selectedCommunity?.communityId ?? null;
   const isCommunityAdmin = selectedCommunity?.isAdmin ?? false;
   const region = selectedCommunity?.region;
+  // 친구 부르기 대기실에서 넘어왔다면 온보딩의 마지막 단계로 보여준다
+  const fromOnboarding = !!useLocation().state?.fromOnboarding;
 
   const [roomName, setRoomName] = useState('');
   const [seasonName, setSeasonName] = useState('');
@@ -137,6 +140,8 @@ const CreateGroup = () => {
       </div>
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '24px 20px' }}>
+
+        {fromOnboarding && <OnboardingSteps current={2} t={t} />}
 
         {/* Group Name */}
         <div style={{ marginBottom: '28px' }}>
