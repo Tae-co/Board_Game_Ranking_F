@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Shield } from 'lucide-react';
+import { Plus, Shield, Ticket } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
@@ -12,7 +12,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
-import { setSelectedCommunity, setMyCommunity, removeMyCommunity, recordCommunityVisit, sortByRecentVisit } from '../utils/storage';
+import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit } from '../utils/storage';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -68,18 +68,11 @@ const CommunityLobby = () => {
     staleTime: 1000 * 60 * 5,
   });
 
+  // 둘 다 불러온 뒤에만 판단한다. 로딩 중에 첫 방문 화면이 번쩍였다 사라지면 안 된다.
+  const isFirstVisit = !myLoading && !joinedLoading && myCommunities.length === 0 && joinedCommunities.length === 0;
+
   const handleEnterCommunity = (community) => {
-    recordCommunityVisit(community.communityId);
-    const isAdmin = (community.admins ?? []).some(a => a.memberId === Number(userId));
-    setSelectedCommunity({
-      communityId: community.communityId,
-      name: community.name,
-      isAdmin,
-      inviteCode: community.inviteCode ?? null,
-      imageUrl: community.imageUrl ?? null,
-      region: community.region ?? null,
-      memberCount: community.memberCount ?? 0,
-    });
+    enterCommunity(community, userId);
     navigate('/lobby');
   };
 
@@ -95,10 +88,13 @@ const CommunityLobby = () => {
     setShowJoinConfirm(false);
     setJoinLoading(true);
     try {
-      await joinCommunity(pendingJoinCode);
+      const res = await joinCommunity(pendingJoinCode);
       setJoinCode('');
       setPendingJoinCode('');
       queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
+      // 목록에 남겨두면 참가했는지조차 모른다 — 들어간 모임으로 바로 보낸다
+      enterCommunity(res.data, userId);
+      navigate('/lobby', { state: { justJoined: true } });
     } catch (e) {
       setJoinError(e.response?.data?.message || t('community', 'invalidCode'));
     } finally {
@@ -222,6 +218,52 @@ const CommunityLobby = () => {
           </p>
         </div>
 
+        {/* 첫 방문: 이 앱은 혼자 쓸 수 없다. 빈 목록 두 개 대신 "만들기 / 참가" 둘 중 하나를 고르게 한다 */}
+        {isFirstVisit ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), margin: '0 0 2px' }}>
+              {t('community', 'firstVisitTitle')}
+            </p>
+            <button
+              onClick={() => navigate('/create-community')}
+              style={{
+                width: '100%', borderRadius: '18px', padding: '22px 20px',
+                border: 'none', cursor: 'pointer', textAlign: 'left',
+                background: 'linear-gradient(135deg, #5B4EDA 0%, #7B8FF5 100%)',
+                display: 'flex', alignItems: 'center', gap: '14px',
+                boxShadow: '0 4px 16px rgba(107,92,231,0.3)',
+              }}
+            >
+              <div style={{ width: 44, height: 44, borderRadius: '14px', backgroundColor: 'rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Plus size={22} color="#fff" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: '17px', fontWeight: '800', color: '#fff', margin: '0 0 4px' }}>{t('community', 'firstVisitCreate')}</p>
+                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', margin: 0, lineHeight: 1.5 }}>{t('community', 'firstVisitCreateDesc')}</p>
+              </div>
+            </button>
+            <button
+              onClick={() => { logEvent(EVENTS.COMMUNITY_JOIN_STARTED); setJoinCode(''); setJoinError(''); setShowJoinInput(true); }}
+              style={{
+                width: '100%', borderRadius: '18px', padding: '22px 20px',
+                cursor: 'pointer', textAlign: 'left',
+                backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+                display: 'flex', alignItems: 'center', gap: '14px',
+              }}
+            >
+              <div style={{ width: 44, height: 44, borderRadius: '14px', backgroundColor: V('--th-bg'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Ticket size={22} color="var(--th-primary)" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: '0 0 4px' }}>{t('community', 'firstVisitJoin')}</p>
+                <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.5 }}>{t('community', 'firstVisitJoinDesc')}</p>
+              </div>
+            </button>
+            {joinError && (
+              <p style={{ fontSize: '12px', color: '#ef4444', margin: 0, textAlign: 'center' }}>{joinError}</p>
+            )}
+          </div>
+        ) : (<>
         {/* Joined Communities */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
           <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), margin: 0 }}>
@@ -346,6 +388,8 @@ const CommunityLobby = () => {
             })}
           </div>
         )}
+
+        </>)}
 
         {/* 코드 입력 모달 */}
         {showJoinInput && (

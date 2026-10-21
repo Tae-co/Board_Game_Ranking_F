@@ -93,4 +93,6 @@ export default {
   customChipDenomAdd: 'Add',
   customChipDenomRemove: 'Remove the {n} chip',
   customChipDenomsRequired: 'Add at least one chip value.',
+  joinedToastTitle: '🎉 You joined {name}!',
+  joinedToastDesc: 'Enter a game room and start recording together.',
 };

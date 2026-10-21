@@ -71,6 +71,21 @@ export const sortByRecentVisit = (communities) => {
   });
 };
 
+// 커뮤니티 응답(CommunityDto.Response)을 로비가 읽는 형태로 골라 저장한다.
+// 목록에서 입장할 때, 만든 직후, 초대코드로 참가한 직후 모두 같은 모양이어야 한다.
+export const enterCommunity = (community, userId) => {
+  recordCommunityVisit(community.communityId);
+  setSelectedCommunity({
+    communityId: community.communityId,
+    name: community.name,
+    isAdmin: (community.admins ?? []).some(a => a.memberId === Number(userId)),
+    inviteCode: community.inviteCode ?? null,
+    imageUrl: community.imageUrl ?? null,
+    region: community.region ?? null,
+    memberCount: community.memberCount ?? 0,
+  });
+};
+
 export const SELECTED_COMMUNITY_UPDATED_EVENT = 'selectedCommunityUpdated';
 
 export const notifySelectedCommunityUpdated = () => {
