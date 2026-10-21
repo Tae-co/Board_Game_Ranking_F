@@ -43,7 +43,7 @@ const CommunityLobby = () => {
     return () => { document.body.style.overflow = ''; };
   }, [showJoinInput]);
 
-  const { data: myCommunities = [], isLoading: myLoading, isError: myError, refetch: refetchMy, isFetching: myFetching } = useQuery({
+  const { data: myCommunities = [], isLoading: myLoading, isLoadingError: myError, refetch: refetchMy, isFetching: myFetching } = useQuery({
     queryKey: ['myCommunitiesList', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -58,7 +58,7 @@ const CommunityLobby = () => {
     else if (myCommunities.length === 0 && userId) removeMyCommunity();
   }, [myCommunities, userId]);
 
-  const { data: joinedCommunities = [], isLoading: joinedLoading, isError: joinedError, refetch: refetchJoined, isFetching: joinedFetching } = useQuery({
+  const { data: joinedCommunities = [], isLoading: joinedLoading, isLoadingError: joinedError, refetch: refetchJoined, isFetching: joinedFetching } = useQuery({
     queryKey: ['joinedCommunities', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -70,6 +70,8 @@ const CommunityLobby = () => {
 
   // 둘 다 불러온 뒤에만 판단한다. 로딩 중에 첫 방문 화면이 번쩍였다 사라지면 안 된다.
   // 요청이 실패해도 목록은 빈 배열이다 — "없습니다"나 첫 방문 화면 대신 실패했다고 말한다.
+  // 한 번도 못 받았을 때만이다. 참가 직후 새로고침 같은 백그라운드 재요청이 실패했다고
+  // 이미 받아둔 목록을 오류 화면으로 가리면 안 된다.
   const loadFailed = myError || joinedError;
   const isFirstVisit = !myLoading && !joinedLoading && !loadFailed
     && myCommunities.length === 0 && joinedCommunities.length === 0;
