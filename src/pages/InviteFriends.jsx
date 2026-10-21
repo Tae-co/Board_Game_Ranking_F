@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Share } from '@capacitor/share';
 import { QRCodeSVG } from 'qrcode.react';
 import { CheckCheck, Copy, RefreshCw, Share2 } from 'lucide-react';
 import InitialAvatar from '../components/shared/InitialAvatar';
 import OnboardingSteps from '../components/shared/OnboardingSteps';
-import { getCommunityMembers } from '../api/services/communities';
+import { deleteCommunity, getCommunityMembers } from '../api/services/communities';
 import { EVENTS, logEvent } from '../api/services/events';
 import { getAuthUserId } from '../auth/storage';
-import { getSelectedCommunity, setSelectedCommunity } from '../utils/storage';
+import { getSelectedCommunity, setSelectedCommunity, removeSelectedCommunity, removeMyCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 
@@ -20,6 +20,7 @@ const MIN_PLAYERS = 2;
 // 커뮤니티를 만든 직후의 화면. 만든 사람이 친구를 불러 모으고, 모이면 첫 게임방으로 넘어간다.
 const InviteFriends = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { t } = useLanguage();
   const userId = getAuthUserId();
   const [community] = useState(() => getSelectedCommunity());
@@ -31,6 +32,9 @@ const InviteFriends = () => {
   const [newcomerName, setNewcomerName] = useState(null);
   const knownIds = useRef(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [isCanceling, setIsCanceling] = useState(false);
+  const [cancelError, setCancelError] = useState('');
 
   // 실시간 감지는 하지 않는다. 공유하러 다른 앱에 다녀오면 다시 불러오고, 나머지는 새로고침 버튼으로.
   const { data, refetch, isFetching } = useQuery({
@@ -77,6 +81,23 @@ const InviteFriends = () => {
     setRefreshing(false);
   };
 
+  // 취소 = 방금 만든 모임을 없던 일로. CommunitySettings의 삭제와 같은 정리를 한다.
+  const cancelCreation = async () => {
+    setIsCanceling(true);
+    setCancelError('');
+    try {
+      await deleteCommunity(communityId);
+      removeMyCommunity();
+      removeSelectedCommunity();
+      queryClient.removeQueries({ queryKey: ['myCommunitiesList'] });
+      queryClient.removeQueries({ queryKey: ['communityRooms'] });
+      navigate('/community', { replace: true });
+    } catch {
+      setCancelError(t('community', 'deleteFailed'));
+      setIsCanceling(false);
+    }
+  };
+
   const flash = (setter) => {
     setter(true);
     setTimeout(() => setter(false), 2000);
@@ -120,9 +141,12 @@ const InviteFriends = () => {
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
         <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
-          <span style={{ fontSize: '17px', fontWeight: '700', color: V('--th-primary'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {community.name}
-          </span>
+          <button
+            onClick={() => { setCancelError(''); setShowCancelModal(true); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', fontSize: '14px', fontWeight: '600', color: V('--th-text-sub'), flexShrink: 0 }}
+          >
+            {t('common', 'cancel')}
+          </button>
           <button
             onClick={() => leave('/lobby')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', fontSize: '14px', fontWeight: '600', color: V('--th-text-sub'), flexShrink: 0 }}
@@ -284,6 +308,63 @@ const InviteFriends = () => {
           </button>
         </div>
       </div>
+
+      {/* 취소 확인 — 이미 들어온 친구가 있으면 그 사람들도 빠진다는 걸 알려준다 */}
+      {showCancelModal && (
+        <div
+          onClick={() => !isCanceling && setShowCancelModal(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 100,
+            backgroundColor: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: '20px',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: V('--th-card'), borderRadius: '20px',
+              padding: '28px 24px', width: '100%', maxWidth: '320px',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+            }}
+          >
+            <p style={{ fontSize: '18px', fontWeight: '800', color: V('--th-text'), margin: '0 0 8px', textAlign: 'center' }}>
+              {t('community', 'onboardCancelTitle')}
+            </p>
+            <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: '0 0 24px', textAlign: 'center', lineHeight: 1.5 }}>
+              {t('community', members.length > 1 ? 'onboardCancelDescWithFriends' : 'onboardCancelDesc')}
+            </p>
+            {cancelError && (
+              <p style={{ fontSize: '12px', color: '#ef4444', margin: '-12px 0 12px', textAlign: 'center' }}>{cancelError}</p>
+            )}
+            <div style={{ display: 'flex', gap: '10px' }}>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                disabled={isCanceling}
+                style={{
+                  flex: 1, padding: '13px', borderRadius: '12px', border: `1px solid var(--th-border)`,
+                  backgroundColor: V('--th-bg'), color: V('--th-text'),
+                  fontSize: '15px', fontWeight: '700', cursor: 'pointer',
+                }}
+              >
+                {t('community', 'onboardCancelKeep')}
+              </button>
+              <button
+                onClick={cancelCreation}
+                disabled={isCanceling}
+                style={{
+                  flex: 1, padding: '13px', borderRadius: '12px', border: 'none',
+                  backgroundColor: '#ef4444', color: '#fff',
+                  fontSize: '15px', fontWeight: '700', cursor: isCanceling ? 'not-allowed' : 'pointer',
+                  opacity: isCanceling ? 0.7 : 1,
+                }}
+              >
+                {isCanceling ? t('community', 'deleting') : t('community', 'onboardCancelConfirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

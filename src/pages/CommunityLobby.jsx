@@ -43,7 +43,7 @@ const CommunityLobby = () => {
     return () => { document.body.style.overflow = ''; };
   }, [showJoinInput]);
 
-  const { data: myCommunities = [], isLoading: myLoading, isError: myError } = useQuery({
+  const { data: myCommunities = [], isLoading: myLoading, isError: myError, refetch: refetchMy, isFetching: myFetching } = useQuery({
     queryKey: ['myCommunitiesList', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -58,7 +58,7 @@ const CommunityLobby = () => {
     else if (myCommunities.length === 0 && userId) removeMyCommunity();
   }, [myCommunities, userId]);
 
-  const { data: joinedCommunities = [], isLoading: joinedLoading, isError: joinedError } = useQuery({
+  const { data: joinedCommunities = [], isLoading: joinedLoading, isError: joinedError, refetch: refetchJoined, isFetching: joinedFetching } = useQuery({
     queryKey: ['joinedCommunities', userId],
     queryFn: async () => {
       if (!userId) return [];
@@ -69,8 +69,9 @@ const CommunityLobby = () => {
   });
 
   // 둘 다 불러온 뒤에만 판단한다. 로딩 중에 첫 방문 화면이 번쩍였다 사라지면 안 된다.
-  // 요청이 실패해도 목록은 빈 배열이라, 모임이 있는 사람에게 첫 방문 화면이 뜨지 않게 실패도 거른다.
-  const isFirstVisit = !myLoading && !joinedLoading && !myError && !joinedError
+  // 요청이 실패해도 목록은 빈 배열이다 — "없습니다"나 첫 방문 화면 대신 실패했다고 말한다.
+  const loadFailed = myError || joinedError;
+  const isFirstVisit = !myLoading && !joinedLoading && !loadFailed
     && myCommunities.length === 0 && joinedCommunities.length === 0;
 
   const handleEnterCommunity = (community) => {
@@ -221,7 +222,31 @@ const CommunityLobby = () => {
         </div>
 
         {/* 첫 방문: 이 앱은 혼자 쓸 수 없다. 빈 목록 두 개 대신 "만들기 / 참가" 둘 중 하나를 고르게 한다 */}
-        {isFirstVisit ? (
+        {loadFailed ? (
+          <div style={{
+            backgroundColor: V('--th-card'), borderRadius: '18px',
+            border: `1px solid var(--th-border)`, padding: '28px 20px',
+            textAlign: 'center',
+          }}>
+            <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), margin: '0 0 6px' }}>
+              {t('community', 'loadFailedTitle')}
+            </p>
+            <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: '0 0 18px' }}>
+              {t('community', 'loadFailedDesc')}
+            </p>
+            <button
+              onClick={() => { refetchMy(); refetchJoined(); }}
+              disabled={myFetching || joinedFetching}
+              style={{
+                padding: '12px 28px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+                color: '#fff', fontSize: '15px', fontWeight: '700',
+              }}
+            >
+              {myFetching || joinedFetching ? '...' : t('community', 'loadFailedRetry')}
+            </button>
+          </div>
+        ) : isFirstVisit ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), margin: '0 0 2px' }}>
               {t('community', 'firstVisitTitle')}
