@@ -19,7 +19,8 @@ export const updateCommunity = (communityId, payload) =>
 export const deleteCommunity = (communityId) => api.delete(`/communities/${communityId}`);
 export const joinCommunity = (inviteCode) =>
   api.post('/communities/join', { inviteCode }).then(r => {
-    logEvent(EVENTS.COMMUNITY_JOIN_COMPLETED, { communityId: r.data?.communityId });
+    // 이미 멤버여도 200이다 — 원래 있던 모임에 들어간 건 참가가 아니다 (서버도 중복을 한 번 더 거른다)
+    if (!r.data?.alreadyMember) logEvent(EVENTS.COMMUNITY_JOIN_COMPLETED, { communityId: r.data?.communityId });
     return r;
   });
 export const kickCommunityMember = (communityId, memberId) =>
