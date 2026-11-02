@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { getAdminStores } from '../../api/services/admin';
+import { getAdminStores, getAdminTvSetting } from '../../api/services/admin';
 import { storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
 import AdminStoreForm from './AdminStoreForm';
 import AdminStoreStaff from './AdminStoreStaff';
 import AdminStoreRooms from './AdminStoreRooms';
+import AdminStoreDevices from './AdminStoreDevices';
+import AdminTvSettings from './AdminTvSettings';
+import { fmt } from '../store/fmt';
 
 const h2Style = { margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') };
 const ghostButton = {
@@ -15,14 +18,14 @@ const ghostButton = {
 };
 
 /**
- * 6 어드민 매장 탭: 매장 선택 → 매장 정보(수정 6f) · STAFF 지정(6h) · 게임방 관리(6i) · "+ 매장 등록"(6e).
- * 매장 기기·TV 화면·시즌·이벤트·신고·요청·통계 칸은 뒤 단계에서 더한다.
+ * 6 어드민 매장 탭: 매장 선택 → 매장 정보(수정 6f) · 매장 기기(6g) · STAFF 지정(6h) · 매장 TV 화면(6k) ·
+ * 게임방 관리(6i) · "+ 매장 등록"(6e). 시즌·이벤트·신고·요청·통계 칸은 뒤 단계에서 더한다.
  */
 const AdminStoresTab = () => {
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState(null);
-  const [page, setPage] = useState(null); // null | 'create' | 'edit' | 'staff' | 'rooms'
+  const [page, setPage] = useState(null); // null | 'create' | 'edit' | 'staff' | 'rooms' | 'devices' | 'tv'
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['adminStores'],
@@ -31,6 +34,15 @@ const AdminStoresTab = () => {
   });
 
   const selected = items.find(i => i.store.id === selectedId) ?? items[0] ?? null;
+  const showTv = selected && !selected.store.closed;
+
+  // 매장 TV 화면 줄의 요약 (MVP → TOP 10 → … · 10초마다)
+  const { data: tv } = useQuery({
+    queryKey: ['adminTvSetting', selected?.store.id],
+    queryFn: () => getAdminTvSetting(selected.store.id),
+    enabled: !!showTv,
+    staleTime: 1000 * 30,
+  });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['adminStores'] });
   const handleSaved = (item) => { refresh(); setSelectedId(item.store.id); };
@@ -96,12 +108,31 @@ const AdminStoresTab = () => {
               {t('admin', 'storeClosedAt').replace('{date}', formatDate(selected.closedAt))}
             </span>
           )}
-          {/* 매장 기기(6g)는 3단계에서 이 줄에 더한다 */}
           <div style={{ display: 'flex', gap: '8px' }}>
+            <button onClick={() => setPage('devices')} style={{ ...ghostButton, height: 44, flex: 1, fontSize: '14px' }}>
+              {t('admin', 'storeDevices')}
+            </button>
             <button onClick={() => setPage('staff')} style={{ ...ghostButton, height: 44, flex: 1, fontSize: '14px' }}>
               {t('admin', 'assignStaffTitle')}
             </button>
           </div>
+        </section>
+      )}
+
+      {showTv && (
+        <section style={{
+          backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px',
+          padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h2 style={h2Style}>{t('admin', 'tvScreen')}</h2>
+            <button onClick={() => setPage('tv')} style={{ ...ghostButton, height: 36, fontSize: '13px' }}>{t('admin', 'tvSettingsButton')}</button>
+          </div>
+          {tv && (
+            <span style={{ fontSize: '14px', lineHeight: 1.5, color: V('--th-text-sub') }}>
+              {tv.setting.order.map(k => t('admin', `tvShort${k}`)).join(' → ')} · {fmt(t('admin', 'tvEvery'), { n: tv.setting.intervalSec })}
+            </span>
+          )}
         </section>
       )}
 
@@ -126,6 +157,8 @@ const AdminStoresTab = () => {
         />
       )}
       {page === 'rooms' && selected && <AdminStoreRooms store={selected.store} onBack={() => setPage(null)} />}
+      {page === 'devices' && selected && <AdminStoreDevices store={selected.store} onBack={() => setPage(null)} />}
+      {page === 'tv' && selected && <AdminTvSettings store={selected.store} onBack={() => setPage(null)} />}
       {page === 'staff' && selected && (
         <AdminStoreStaff store={selected.store} staff={selected.staff} onBack={() => setPage(null)} />
       )}

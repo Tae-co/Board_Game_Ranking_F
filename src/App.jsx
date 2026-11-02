@@ -10,6 +10,7 @@ import { EVENTS, logEvent, startNewSession } from './api/services/events';
 import { useRouteTracking } from './hooks/useRouteTracking';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
+import { DEVICE_MODE_CHANGED_EVENT, getDeviceToken } from './utils/storage';
 
 import './App.css';
 
@@ -39,6 +40,8 @@ const StoreRoom = lazy(() => import('./pages/StoreRoom'));
 const StoreRanking = lazy(() => import('./pages/StoreRanking'));
 const StoreGames = lazy(() => import('./pages/StoreGames'));
 const StoreMatch = lazy(() => import('./pages/StoreMatch'));
+const StoreDevices = lazy(() => import('./pages/StoreDevices'));
+const StoreDevice = lazy(() => import('./pages/StoreDevice'));
 const PartyBubble = lazy(() => import('./components/store/PartyBubble'));
 
 // 라우트 진입 계측. useLocation을 쓰므로 BrowserRouter 안에 있어야 한다.
@@ -94,6 +97,14 @@ const RouteFallback = () => {
 
 function App() {
   const [authState, setAuthState] = useState(() => getStoredAuth());
+  // 매장 기기 모드: 기기 토큰이 있으면 어느 경로든 기기 화면만 (plan-store §6.6 — 기기에서 나갈 수 없음)
+  const [deviceMode, setDeviceMode] = useState(() => !!getDeviceToken());
+
+  useEffect(() => {
+    const sync = () => setDeviceMode(!!getDeviceToken());
+    window.addEventListener(DEVICE_MODE_CHANGED_EVENT, sync);
+    return () => window.removeEventListener(DEVICE_MODE_CHANGED_EVENT, sync);
+  }, []);
 
   useEffect(() => {
     if (window.location.hostname.includes('pages.dev')) {
@@ -206,6 +217,20 @@ function App() {
     return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
+  if (deviceMode) {
+    return (
+      <ThemeProvider>
+      <LanguageProvider>
+      <BrowserRouter>
+        <Suspense fallback={null}>
+          <StoreDevice />
+        </Suspense>
+      </BrowserRouter>
+      </LanguageProvider>
+      </ThemeProvider>
+    );
+  }
+
   return (
     <ThemeProvider>
     <LanguageProvider>
@@ -250,6 +275,9 @@ function App() {
             <Route path="/store/:storeId/rooms/:roomId" element={isAuthenticated ? <StoreRoom /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/rooms/:roomId/ranking" element={isAuthenticated ? <StoreRanking /> : <Navigate to="/login" replace />} />
             <Route path="/store/match/:matchId" element={isAuthenticated ? <StoreMatch /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/devices" element={isAuthenticated ? <StoreDevices /> : <Navigate to="/login" replace />} />
+            {/* 4j 매장 기기로 쓰기 — 로그인 없이 (기기 토큰을 받으면 위의 기기 모드로 바뀐다) */}
+            <Route path="/device" element={<StoreDevice />} />
 
             {/* QR 코드 초대 링크 */}
             <Route path="/join" element={<JoinByQR />} />

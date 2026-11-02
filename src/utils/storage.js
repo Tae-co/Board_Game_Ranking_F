@@ -140,3 +140,20 @@ export const setLobbyFocus = (focus) => {
   if (focus == null) localStorage.removeItem(LOBBY_FOCUS_KEY);
   else localStorage.setItem(LOBBY_FOCUS_KEY, focus);
 };
+
+// 매장 기기 토큰 (plan-store §6.6). 있으면 이 기기는 매장 TV·테이블 기기 모드 — 사람 로그인 없이 기기 화면만 뜬다.
+// 해제되면 서버가 401(DEVICE_TOKEN_INVALID)을 주고 지운다
+const DEVICE_TOKEN_KEY = 'storeDeviceToken';
+export const DEVICE_MODE_CHANGED_EVENT = 'deviceModeChanged';
+
+export const getDeviceToken = () => localStorage.getItem(DEVICE_TOKEN_KEY);
+
+export const setDeviceToken = (token) => {
+  localStorage.setItem(DEVICE_TOKEN_KEY, token);
+  window.dispatchEvent(new Event(DEVICE_MODE_CHANGED_EVENT));
+};
+
+export const clearDeviceToken = () => {
+  localStorage.removeItem(DEVICE_TOKEN_KEY);
+  window.dispatchEvent(new Event(DEVICE_MODE_CHANGED_EVENT));
+};

@@ -199,6 +199,17 @@ const Login = () => {
             onClick={() => Browser.open({ url: 'https://yadarank.com/privacy' })}
           >{t('login', 'privacy')}</span>
         </p>
+
+        {/* 4j 매장 TV·태블릿을 매장 기기로 등록 (plan-store §6.6) */}
+        <button
+          onClick={() => navigate('/device')}
+          style={{
+            display: 'block', margin: '16px auto 0', padding: '12px 16px', border: 'none', background: 'none',
+            cursor: 'pointer', fontSize: '13px', color: V('--th-text-sub'), textDecoration: 'underline',
+          }}
+        >
+          {t('store', 'useAsDevice')}
+        </button>
       </div>
     </div>
   );
