@@ -6,6 +6,7 @@ import { storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
 import AdminStoreForm from './AdminStoreForm';
 import AdminStoreStaff from './AdminStoreStaff';
+import AdminStoreRooms from './AdminStoreRooms';
 
 const h2Style = { margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') };
 const ghostButton = {
@@ -14,14 +15,14 @@ const ghostButton = {
 };
 
 /**
- * 6 어드민 매장 탭: 매장 선택 → 매장 정보(수정 6f) · STAFF 지정(6h) · "+ 매장 등록"(6e).
- * 매장 기기·TV 화면·게임방·시즌·이벤트·신고·요청·통계 칸은 뒤 단계에서 더한다.
+ * 6 어드민 매장 탭: 매장 선택 → 매장 정보(수정 6f) · STAFF 지정(6h) · 게임방 관리(6i) · "+ 매장 등록"(6e).
+ * 매장 기기·TV 화면·시즌·이벤트·신고·요청·통계 칸은 뒤 단계에서 더한다.
  */
 const AdminStoresTab = () => {
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const [selectedId, setSelectedId] = useState(null);
-  const [page, setPage] = useState(null); // null | 'create' | 'edit' | 'staff'
+  const [page, setPage] = useState(null); // null | 'create' | 'edit' | 'staff' | 'rooms'
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['adminStores'],
@@ -104,6 +105,16 @@ const AdminStoresTab = () => {
         </section>
       )}
 
+      {selected && !selected.store.closed && (
+        <section style={{
+          backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px',
+          padding: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        }}>
+          <h2 style={h2Style}>{t('admin', 'storeRooms')}</h2>
+          <button onClick={() => setPage('rooms')} style={{ ...ghostButton, height: 36, fontSize: '13px' }}>{t('admin', 'manageRooms')}</button>
+        </section>
+      )}
+
       {(page === 'create' || (page === 'edit' && selected)) && (
         <AdminStoreForm
           key={page === 'edit' ? selected.store.id : 'new'}
@@ -114,6 +125,7 @@ const AdminStoresTab = () => {
           onAssignStaff={(item) => { setSelectedId(item.store.id); setPage('staff'); }}
         />
       )}
+      {page === 'rooms' && selected && <AdminStoreRooms store={selected.store} onBack={() => setPage(null)} />}
       {page === 'staff' && selected && (
         <AdminStoreStaff store={selected.store} staff={selected.staff} onBack={() => setPage(null)} />
       )}

@@ -61,6 +61,17 @@ const AdminGamesTab = () => {
               </div>
             </div>
 
+            {/* 매장 기록 시간 (plan-store 6d). 비우면 매장에서 시작할 수 없다 */}
+            <div>
+              <label className="block mb-1.5 text-xs" style={{ color: 'var(--th-text-sub)' }}>{t('admin', 'recordMinutes')}</label>
+              <div className="flex gap-3 items-center">
+                <input type="number" min={1} placeholder={t('admin', 'recordMinutesMin')} className="flex-1 min-w-0 px-4 py-3 rounded-lg border text-center focus:outline-none" style={inputStyle} value={gm.form.minMinutes} onChange={(e) => gm.setForm(p => ({ ...p, minMinutes: e.target.value }))} />
+                <span style={{ color: 'var(--th-text-sub)' }}>–</span>
+                <input type="number" min={1} placeholder={t('admin', 'recordMinutesMax')} className="flex-1 min-w-0 px-4 py-3 rounded-lg border text-center focus:outline-none" style={inputStyle} value={gm.form.maxMinutes} onChange={(e) => gm.setForm(p => ({ ...p, maxMinutes: e.target.value }))} />
+              </div>
+              <p className="mt-1.5 text-xs" style={{ color: 'var(--th-text-sub)' }}>{t('admin', 'recordMinutesHint')}</p>
+            </div>
+
             {/* 이미지 업로드 */}
             <div className="space-y-2">
               <label className="block text-xs" style={{ color: 'var(--th-text-sub)' }}>{t('admin', 'imageLabel')}</label>

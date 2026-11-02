@@ -86,4 +86,21 @@ export default {
   staffInfo: 'STAFF는 매장 홈의 STAFF 버튼으로 매장 기기를 등록하고, 월간 리포트를 보고, 대회를 진행해요\nSTAFF 계정은 지정과 상관없이 어느 매장에서도 매장 게임(오늘의 그룹·대회)에 참가할 수 없고, 매장 랭킹·MVP에 안 나와요\nSTAFF 역할이 있는 계정만 목록에 나와요. 역할은 관리자가 따로 줘요. 매장 QR을 찍지 않은 계정도 바로 지정할 수 있어요\nSTAFF 계정 하나는 한 매장만 맡아요. 다른 매장에 지정된 계정은 목록에 안 나와요. 지정하면 그 사람의 내 매장에 이 매장이 떠요\n해제하면 바로 이 매장의 STAFF 버튼이 사라져요. STAFF 역할을 빼도 지정이 같이 사라져요',
   assignStaff: '지정',
   unassignStaff: '해제',
+
+  // ── 매장 2단계: 게임방 관리(6i) · 기록 시간(6d) ──
+  storeRooms: '매장 게임방',
+  manageRooms: '게임방 관리 ›',
+  roomsTitle: '게임방 관리',
+  roomsMeta: '{store} · 열림 {open} / 전체 {total}',
+  roomsInfo: '점수판이 있는 게임은 모든 매장에 게임방이 있어요. 새 매장을 등록해도 바로 다 생겨요\n이 매장에 없는 게임은 잠시 닫아 두세요. 손님 화면에서 숨기고 기록은 남겨요. 잠시 닫기는 이 매장에만 적용되고, 진행 중인 판은 끝날 때까지 두고 새 게임만 막아요\n기록 시간이 없는 게임은 손님 화면에 안 보여요. 관리자 게임 탭에서 기록 시간을 정해 주세요',
+  roomClosedBadge: '잠시 닫힘',
+  roomSub: '기록 시간 {a}–{b}분 · {n}판',
+  roomNoMinutes: '기록 시간 없음 · 손님 화면에 안 보여요',
+  roomClose: '잠시 닫기',
+  roomReopen: '다시 열기',
+  recordMinutes: '매장 기록 시간 (분)',
+  recordMinutesMin: '최소',
+  recordMinutesMax: '최대',
+  recordMinutesHint: '매장에서 게임을 시작하고 이 시간 사이에 저장한 결과만 기록돼요. 모든 매장이 같아요. 비우면 매장에서 할 수 없어요',
+  recordMinutesInvalid: '기록 시간은 둘 다 비우거나, 1분 이상이고 최대가 최소보다 커야 해요',
 };

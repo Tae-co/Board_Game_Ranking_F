@@ -9,7 +9,7 @@ const GAMES_PER_PAGE = 6;
 export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSchema, loadFromGame }, t) => {
   const location = useLocation();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ name: '', minPlayers: 2, maxPlayers: 6, imageUrl: '' });
+  const [form, setForm] = useState({ name: '', minPlayers: 2, maxPlayers: 6, imageUrl: '', minMinutes: '', maxMinutes: '' });
   const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
@@ -27,6 +27,13 @@ export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSche
     if (!form.name.trim()) { alert(t('admin', 'gameNamePlaceholder')); return; }
     if (form.minPlayers < 1 || form.maxPlayers < form.minPlayers) {
       alert(t('admin', 'saveFailed'));
+      return;
+    }
+    // 매장 기록 시간 (plan-store 6d): 둘 다 비우거나 0 < 최소 ≤ 최대
+    const minMinutes = form.minMinutes === '' ? null : Number(form.minMinutes);
+    const maxMinutes = form.maxMinutes === '' ? null : Number(form.maxMinutes);
+    if ((minMinutes == null) !== (maxMinutes == null) || (minMinutes != null && (minMinutes < 1 || maxMinutes < minMinutes))) {
+      alert(t('admin', 'recordMinutesInvalid'));
       return;
     }
     const schemaError = validateSchemaUI();
@@ -49,13 +56,13 @@ export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSche
         imageUrl = uploadData.url;
       }
       const schemaJson = buildSchemaJson(form.name);
-      const payload = { ...form, imageUrl, schemaJson };
+      const payload = { ...form, imageUrl, schemaJson, minMinutes, maxMinutes };
       if (editingId) {
         await updateAdminGame(editingId, payload);
       } else {
         await createAdminGame(payload);
       }
-      setForm({ name: '', minPlayers: 2, maxPlayers: 6, imageUrl: '' });
+      setForm({ name: '', minPlayers: 2, maxPlayers: 6, imageUrl: '', minMinutes: '', maxMinutes: '' });
       setEditingId(null);
       setImageFile(null);
       setImagePreview('');
@@ -87,6 +94,8 @@ export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSche
       minPlayers: game.minPlayers,
       maxPlayers: game.maxPlayers,
       imageUrl: game.imageUrl || '',
+      minMinutes: game.minMinutes ?? '',
+      maxMinutes: game.maxMinutes ?? '',
     });
     setImageFile(null);
     setImagePreview(game.imageUrl || '');
@@ -109,7 +118,7 @@ export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSche
 
   const handleCancelForm = () => {
     setEditingId(null);
-    setForm({ name: '', minPlayers: 2, maxPlayers: 6, imageUrl: '' });
+    setForm({ name: '', minPlayers: 2, maxPlayers: 6, imageUrl: '', minMinutes: '', maxMinutes: '' });
     setImageFile(null);
     setImagePreview('');
     resetSchema();

@@ -3,8 +3,8 @@ import { getNickname } from '../../auth/storage';
 import { V } from '../../utils/cssUtils';
 import { BackIcon } from './StoreIcons';
 
-/** 매장 화면 위쪽 막대 (시안 1f·1g·2·2m): 뒤로 · 가운데 제목 · 오른쪽 프로필(선택) */
-const StoreTopBar = ({ title, onBack, showProfile = false, backLabel }) => {
+/** 매장 화면 위쪽 막대 (시안 1f·1g·2·2m·3b~3n): 뒤로 · 가운데 제목 · 오른쪽 프로필 또는 right(! 버튼·게임 취소 등) */
+const StoreTopBar = ({ title, onBack, showProfile = false, backLabel, right = null }) => {
   const navigate = useNavigate();
   return (
     <header style={{
@@ -23,7 +23,7 @@ const StoreTopBar = ({ title, onBack, showProfile = false, backLabel }) => {
           <BackIcon />
         </button>
         <span style={{ fontSize: '17px', fontWeight: 700, color: V('--th-primary') }}>{title}</span>
-        {showProfile ? (
+        {right ?? (showProfile ? (
           <button
             onClick={() => navigate('/profile')}
             aria-label="profile"
@@ -36,7 +36,7 @@ const StoreTopBar = ({ title, onBack, showProfile = false, backLabel }) => {
           </button>
         ) : (
           <span style={{ width: 44 }} />
-        )}
+        ))}
       </div>
     </header>
   );

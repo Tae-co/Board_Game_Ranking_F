@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { getStoreHome, storeErrorCode } from '../api/services/stores';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { createParty, getStoreHome, storeErrorCode } from '../api/services/stores';
+import { CURRENT_PARTY_KEY } from '../hooks/useCurrentParty';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import StoreTopBar from '../components/store/StoreTopBar';
@@ -9,24 +10,11 @@ import StoreHeader, { StorePhoto } from '../components/store/StoreHeader';
 import StoreGameGrid from '../components/store/StoreGameGrid';
 import StoreBottomBar from '../components/store/StoreBottomBar';
 import StoreQrProblem from '../components/store/StoreQrProblem';
+import StorePartyCard from '../components/store/StorePartyCard';
+import StoreMvp from '../components/store/StoreMvp';
+import StoreGameRankings from '../components/store/StoreGameRankings';
 import { QrIcon, ShopIcon } from '../components/store/StoreIcons';
 import { Skeleton } from '../components/Skeleton';
-
-const Toast = ({ title, onClose }) => (
-  <div
-    onClick={onClose}
-    style={{
-      position: 'fixed', left: 16, right: 16, zIndex: 300,
-      top: 'calc(env(safe-area-inset-top) + 68px)',
-      maxWidth: 358, margin: '0 auto',
-      padding: '14px 16px', borderRadius: '16px',
-      backgroundColor: V('--th-text'), color: V('--th-card'),
-      fontSize: '14px', fontWeight: 700, textAlign: 'center',
-    }}
-  >
-    {title}
-  </div>
-);
 
 const noteStyle = {
   fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub'),
@@ -35,13 +23,15 @@ const noteStyle = {
 
 /**
  * 매장 홈 `/store/:storeId` — 2(멤버·STAFF) · 2d(구경) · 2j(방금 가입). viewer.role로 나눈다.
- * 오늘의 그룹·게임별 랭킹·MVP(2단계), 기기 관리(3단계), 리포트·신고 카드(4단계), 대회·이벤트(5단계)는 아직 없다.
+ * 기기 관리(3단계), 리포트·신고 카드(4단계), 대회·이벤트(5단계)는 아직 없다.
  */
 const StoreHome = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
-  const [toast, setToast] = useState(false);
+  const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
+  const [actionError, setActionError] = useState(null);
 
   const { data: home, isLoading, error, refetch } = useQuery({
     queryKey: ['store', Number(storeId), 'home'],
@@ -49,13 +39,24 @@ const StoreHome = () => {
     staleTime: 1000 * 30,
   });
 
-  useEffect(() => {
-    if (!toast) return;
-    const timer = setTimeout(() => setToast(false), 2500);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
   const goCommunity = () => navigate('/community');
+
+  const handleCreateParty = async () => {
+    setCreating(true);
+    setActionError(null);
+    try {
+      await createParty(storeId);
+      await queryClient.invalidateQueries({ queryKey: CURRENT_PARTY_KEY });
+      queryClient.invalidateQueries({ queryKey: ['store', Number(storeId), 'home'] });
+      navigate(`/store/${storeId}/party`);
+    } catch (e) {
+      const code = storeErrorCode(e);
+      setActionError(code === 'NOT_CHECKED_IN' ? t('store', 'blockNotCheckedIn') : t('store', 'actionFailed'));
+      if (code === 'NOT_CHECKED_IN') refetch();
+    } finally {
+      setCreating(false);
+    }
+  };
 
   if (error && !home) {
     const notFound = storeErrorCode(error) === 'STORE_NOT_FOUND';
@@ -87,7 +88,6 @@ const StoreHome = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
-      {toast && <Toast title={t('store', 'comingSoon')} onClose={() => setToast(false)} />}
 
       <StoreTopBar title={t('store', 'storeTitle')} onBack={goCommunity} showProfile backLabel={t('common', 'back')} />
 
@@ -140,6 +140,18 @@ const StoreHome = () => {
                 </section>
               )}
 
+              {role === 'MEMBER' && !store.closed && (
+                <StorePartyCard
+                  party={home.party}
+                  onManage={() => navigate(`/store/${storeId}/party/manage`)}
+                  onCreate={handleCreateParty}
+                  onJoin={() => navigate(`/store/${storeId}/party/join`)}
+                  creating={creating}
+                  t={t}
+                />
+              )}
+              {actionError && <span role="status" style={{ ...noteStyle, color: '#B91C1C' }}>{actionError}</span>}
+
               {role === 'STAFF' && <span style={noteStyle}>{t('store', 'staffNoPlay')}</span>}
 
               {role === 'STAFF' && !store.closed && (
@@ -165,10 +177,22 @@ const StoreHome = () => {
                 </section>
               )}
 
+              <StoreMvp mvp={home.mvp} t={t} />
+
+              <StoreGameRankings
+                rankings={home.rankings}
+                onMore={(roomId) => navigate(`/store/${storeId}/rooms/${roomId}/ranking`)}
+                t={t}
+              />
+
+              {/* 게임방은 체크인이 살아 있는 멤버만. STAFF·구경은 눌러도 안 간다 (plan-store §2 2·2d) */}
               <StoreGameGrid
                 games={home.games}
                 showCount={isVisitor}
-                onGameClick={isVisitor ? undefined : () => setToast(true)}
+                onGameClick={role === 'MEMBER' && !checkinExpired && !store.closed
+                  ? (game) => navigate(`/store/${storeId}/rooms/${game.storeRoomId}`)
+                  : undefined}
+                onMore={isVisitor ? undefined : () => navigate(`/store/${storeId}/games`)}
                 t={t}
               />
             </main>

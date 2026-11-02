@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Client } from '@stomp/stompjs';
 import { getAccessToken } from '../api/axios';
 
-const getWsBrokerUrl = () => {
+export const getWsBrokerUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL || '';
   if (apiUrl.startsWith('https://')) {
     return apiUrl.replace(/\/api.*$/, '/ws').replace('https://', 'wss://');

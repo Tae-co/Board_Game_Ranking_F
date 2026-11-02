@@ -31,3 +31,8 @@ export const uploadAdminImage = (file) => {
   fd.append('file', file);
   return api.post('/admin/upload-image', fd, { headers: { 'Content-Type': undefined } }).then(r => r.data.url);
 };
+
+// 6i 게임방 관리
+export const getAdminStoreRooms = (storeId) => api.get(`/admin/stores/${storeId}/rooms`).then(r => r.data);
+export const setAdminStoreRoomClosed = (storeId, roomId, closed) =>
+  api.put(`/admin/stores/${storeId}/rooms/${roomId}/closed`, { closed }).then(r => r.data);

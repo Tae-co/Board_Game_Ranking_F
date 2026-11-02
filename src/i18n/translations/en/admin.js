@@ -86,4 +86,21 @@ export default {
   staffInfo: 'STAFF register store devices, view the monthly report and run contests from the STAFF button on the store home\nSTAFF accounts can’t join store games (today’s group, contests) at any store and don’t appear in store rankings or MVP\nOnly accounts with the STAFF role are listed. Admins grant the role separately. Accounts that haven’t scanned the store QR can be assigned too\nEach STAFF account handles one store. Accounts assigned elsewhere aren’t listed. Once assigned, this store appears in their My stores\nRemoving them hides this store’s STAFF button right away. Removing the STAFF role also removes the assignment',
   assignStaff: 'Assign',
   unassignStaff: 'Remove',
+
+  // ── Store stage 2: game rooms (6i) · record time (6d) ──
+  storeRooms: 'Store game rooms',
+  manageRooms: 'Manage rooms ›',
+  roomsTitle: 'Game rooms',
+  roomsMeta: '{store} · open {open} / total {total}',
+  roomsInfo: "Every game with a score sheet has a room at every store, including newly added stores\nTemporarily close games this store doesn't have. They're hidden from guests and records stay. Closing applies to this store only; games in progress finish and only new starts are blocked\nGames without a record time are hidden from guests. Set it in the admin Games tab",
+  roomClosedBadge: 'Closed',
+  roomSub: 'Record time {a}–{b} min · {n} games',
+  roomNoMinutes: 'No record time · hidden from guests',
+  roomClose: 'Close for now',
+  roomReopen: 'Reopen',
+  recordMinutes: 'Store record time (min)',
+  recordMinutesMin: 'Min',
+  recordMinutesMax: 'Max',
+  recordMinutesHint: 'Only results saved within this window after starting count at stores. Same for every store. Leave empty to disable at stores',
+  recordMinutesInvalid: 'Leave both empty, or use at least 1 minute with max ≥ min',
 };

@@ -4,7 +4,7 @@ import GameImageFallback from '../shared/GameImageFallback';
 import { STORE_GAME_GRID_LIMIT } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
 
-const GameTile = ({ game, onClick }) => {
+const GameTile = ({ game, onClick, playersLabel }) => {
   const [imgError, setImgError] = useState(false);
   return (
     <button
@@ -24,24 +24,24 @@ const GameTile = ({ game, onClick }) => {
           <GameImageFallback size={40} />
         )}
       </div>
-      {/* 시안의 "참여 N명"은 매장 기록이 생기는 2단계에서 더한다 */}
-      <div style={{ padding: '10px 12px 12px' }}>
+      <div style={{ padding: '10px 12px 12px', display: 'flex', flexDirection: 'column', gap: '2px' }}>
         <span style={{
           display: 'block', fontSize: '15px', fontWeight: 700, color: V('--th-text'),
           overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
         }}>
           {game.name}
         </span>
+        {playersLabel && <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>{playersLabel}</span>}
       </div>
     </button>
   );
 };
 
 /**
- * 매장 게임 2열 그리드 (시안 2 · 2d). 4개 먼저, 더보기로 전부. 구경(2d)은 제목 옆에 개수가 붙고 누를 수 없다.
- * 1단계엔 게임방이 없어 멤버가 누르면 onGameClick("곧 열려요")
+ * 매장 게임 2열 그리드 (시안 2 · 2d). 4개 먼저. 더보기는 onMore가 있으면 2c로, 없으면 그 자리에서 전부.
+ * 구경(2d)은 제목 옆에 개수가 붙고 누를 수 없다. 멤버는 누르면 게임방(3)
  */
-const StoreGameGrid = ({ games, onGameClick, showCount, t }) => {
+const StoreGameGrid = ({ games, onGameClick, onMore, showCount, t }) => {
   const [expanded, setExpanded] = useState(false);
   const visible = expanded ? games : games.slice(0, STORE_GAME_GRID_LIMIT);
 
@@ -58,7 +58,7 @@ const StoreGameGrid = ({ games, onGameClick, showCount, t }) => {
         </h2>
         {!expanded && games.length > STORE_GAME_GRID_LIMIT && (
           <button
-            onClick={() => setExpanded(true)}
+            onClick={() => (onMore ? onMore() : setExpanded(true))}
             style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: V('--th-primary') }}
           >
             {t('store', 'more')}
@@ -72,7 +72,12 @@ const StoreGameGrid = ({ games, onGameClick, showCount, t }) => {
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
           {visible.map(game => (
-            <GameTile key={game.storeRoomId} game={game} onClick={onGameClick ? () => onGameClick(game) : undefined} />
+            <GameTile
+              key={game.storeRoomId}
+              game={game}
+              onClick={onGameClick ? () => onGameClick(game) : undefined}
+              playersLabel={showCount ? null : t('store', 'gamePlayers').replace('{n}', game.playerCount ?? 0)}
+            />
           ))}
         </div>
       )}
