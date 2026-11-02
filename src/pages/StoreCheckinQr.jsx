@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { QRCodeSVG } from 'qrcode.react';
-import { ArrowLeft, WifiOff } from 'lucide-react';
-import { getCheckinQr, storeErrorCode } from '../api/services/stores';
-import { CHECKIN_QR_SLOT_MS } from '../constants/store';
+import { WifiOff } from 'lucide-react';
+import { getCheckinQr, getStoreHome, storeErrorCode } from '../api/services/stores';
+import { CHECKIN_QR_SLOT_MS, storeTitle } from '../constants/store';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import StoreTopBar from '../components/store/StoreTopBar';
 
 // 만료 뒤 새 QR을 못 받았을 때 다시 묻는 간격. 서버 시계가 아직 정각 전이면 같은 QR이 오므로 계속 두드리지 않는다
 const RETRY_MS = 3000;
@@ -19,6 +21,12 @@ const StoreCheckinQr = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  // 매장 이름만 쓴다. 매장 홈에서 들어오면 캐시에 이미 있다
+  const { data: home } = useQuery({
+    queryKey: ['store', Number(storeId), 'home'],
+    queryFn: () => getStoreHome(storeId),
+    staleTime: 1000 * 30,
+  });
 
   const [qr, setQr] = useState(null);           // { url, expiresAtMs }
   const [now, setNow] = useState(Date.now());   // 서버 기준 지금
@@ -58,37 +66,36 @@ const StoreCheckinQr = () => {
   }, [qr, expired, now, fetchQr]);
 
   const remainingMs = qr ? Math.max(0, qr.expiresAtMs - now) : 0;
-  const minutes = Math.floor(remainingMs / 60000);
-  const seconds = Math.floor((remainingMs % 60000) / 1000);
+  const minutesLeft = Math.max(1, Math.ceil(remainingMs / 60000));
   // 만료 직후 몇 초는 새 QR을 받는 중으로 보고, 그래도 못 받으면 QR을 지운다 (찍어도 1f가 뜨니까)
   const offline = expired && now - qr.expiresAtMs > RETRY_MS * 2;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
-      <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid ${V('--th-border')}` }}>
-        <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', gap: '8px', padding: '16px 20px' }}>
-          <button
-            onClick={() => navigate(`/store/${storeId}`, { replace: true })}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: V('--th-primary'), display: 'flex' }}
-          >
-            <ArrowLeft size={22} />
-          </button>
-          <span style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text') }}>{t('store', 'checkinQrTitle')}</span>
-        </div>
-      </div>
+      <StoreTopBar
+        title={t('store', 'checkinQrTitle')}
+        onBack={() => navigate(`/store/${storeId}`, { replace: true })}
+        backLabel={t('common', 'back')}
+      />
 
-      <div style={{ maxWidth: 390, margin: '0 auto', padding: '32px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <p style={{ fontSize: '18px', fontWeight: '800', color: V('--th-text'), margin: '0 0 24px', textAlign: 'center' }}>
-          {t('store', 'checkinQrDesc')}
-        </p>
+      <main style={{
+        maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: '28px 24px',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', textAlign: 'center',
+      }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <span style={{ fontSize: '13px', fontWeight: 700, color: V('--th-text-sub') }}>
+            {t('store', 'staffBadge')}{home ? ` · ${storeTitle(home.store)}` : ''}
+          </span>
+          <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: V('--th-text') }}>{t('store', 'checkinQrDesc')}</h1>
+        </div>
 
         <div style={{
-          width: 280, height: 280, borderRadius: '24px', backgroundColor: '#fff',
+          width: 312, height: 312, boxSizing: 'border-box', padding: 16, borderRadius: '24px',
+          backgroundColor: '#fff', border: '1px solid #E5E7EB',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)', marginBottom: '24px',
         }}>
           {qr && !offline ? (
-            <QRCodeSVG value={qr.url} size={240} bgColor="#ffffff" fgColor="#1a1a2e" style={{ opacity: expired ? 0.15 : 1 }} />
+            <QRCodeSVG value={qr.url} size={280} bgColor="#ffffff" fgColor="#111827" style={{ opacity: expired ? 0.15 : 1 }} />
           ) : offline ? (
             <WifiOff size={48} color="#9ca3af" />
           ) : (
@@ -97,29 +104,36 @@ const StoreCheckinQr = () => {
         </div>
 
         {qr && !expired && (
-          <div style={{ width: 280 }}>
-            <div style={{ height: 6, borderRadius: 3, backgroundColor: V('--th-border'), overflow: 'hidden', marginBottom: '10px' }}>
+          <div style={{ width: 312, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ height: 8, borderRadius: 999, backgroundColor: V('--th-border'), overflow: 'hidden' }}>
               <div style={{
-                height: '100%', borderRadius: 3, backgroundColor: V('--th-primary'),
+                height: '100%', backgroundColor: V('--th-primary'),
                 width: `${Math.min(100, (remainingMs / CHECKIN_QR_SLOT_MS) * 100)}%`,
                 transition: 'width 1s linear',
               }} />
             </div>
-            <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0, textAlign: 'center' }}>
-              {t('store', 'checkinQrRemaining').replace('{m}', minutes).replace('{s}', String(seconds).padStart(2, '0'))}
-            </p>
+            <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>
+              {t('store', 'checkinQrRemaining').replace('{m}', minutesLeft)}
+            </span>
           </div>
         )}
         {expired && !offline && (
-          <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0 }}>{t('store', 'checkinQrRefreshing')}</p>
+          <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('store', 'checkinQrRefreshing')}</span>
         )}
         {offline && (
-          <div style={{ textAlign: 'center', maxWidth: 280 }}>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text'), margin: '0 0 6px' }}>{t('store', 'checkinQrOffline')}</p>
-            <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.5 }}>{t('store', 'checkinQrOfflineDesc')}</p>
+          <div style={{ maxWidth: 312 }}>
+            <p style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text'), margin: '0 0 6px' }}>{t('store', 'checkinQrOffline')}</p>
+            <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.5 }}>{t('store', 'checkinQrOfflineDesc')}</p>
           </div>
         )}
-      </div>
+
+        <span style={{
+          fontSize: '13px', lineHeight: 1.55, color: V('--th-text-sub'), textAlign: 'left',
+          backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '12px', padding: '12px 14px',
+        }}>
+          {t('store', 'checkinQrNote')}
+        </span>
+      </main>
     </div>
   );
 };

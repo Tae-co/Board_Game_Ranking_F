@@ -2,16 +2,39 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { assignStoreStaff, getStaffCandidates, unassignStoreStaff } from '../../api/services/admin';
+import { storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
+import AdminSubPage from './AdminSubPage';
+import { SearchIcon } from '../store/StoreIcons';
+
+const h2Style = { margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') };
+const listStyle = { backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px', padding: '4px 16px' };
+const pillStyle = { height: 34, padding: '0 12px', borderRadius: 999, fontSize: '13px', fontWeight: 700, cursor: 'pointer', flexShrink: 0 };
+
+const formatDay = (iso) => {
+  const d = new Date(iso);
+  return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const Row = ({ first, name, sub, action }) => (
+  <div style={{ height: 60, display: 'flex', alignItems: 'center', gap: '12px', borderTop: first ? 'none' : `1px solid ${V('--th-border')}` }}>
+    <span style={{ width: 36, height: 36, borderRadius: 999, flexShrink: 0, backgroundColor: V('--th-bg-deep') }} />
+    <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+      <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
+      <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>{sub}</span>
+    </span>
+    {action}
+  </div>
+);
 
 /**
- * 6h STAFF 지정. 후보는 role = STAFF이고 어느 매장에도 지정되지 않은 계정 (역할은 DB에서 직접 준다).
+ * 6h STAFF 지정 (전체 화면). 후보는 role = STAFF이고 어느 매장에도 지정되지 않은 계정 (역할은 DB에서 직접 준다).
  * 계정 하나 = 매장 하나 — 다른 매장에 있으면 서버가 STAFF_ALREADY_ASSIGNED로 막는다.
  */
-const AdminStoreStaff = ({ storeId, staff, closed }) => {
+const AdminStoreStaff = ({ store, staff, onBack }) => {
   const { t } = useLanguage();
   const queryClient = useQueryClient();
-  const [candidateId, setCandidateId] = useState('');
+  const [search, setSearch] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,14 +44,18 @@ const AdminStoreStaff = ({ storeId, staff, closed }) => {
     staleTime: 1000 * 30,
   });
 
+  const needle = search.trim().toLowerCase();
+  const shown = needle ? candidates.filter(c => c.nickname.toLowerCase().includes(needle)) : candidates;
+
   const run = async (action) => {
     setBusy(true);
     setError('');
     try {
       await action();
-      setCandidateId('');
-      queryClient.invalidateQueries({ queryKey: ['adminStores'] });
-      queryClient.invalidateQueries({ queryKey: ['adminStaffCandidates'] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['adminStores'] }),
+        queryClient.invalidateQueries({ queryKey: ['adminStaffCandidates'] }),
+      ]);
     } catch (e) {
       setError(e?.response?.data?.message || t('admin', 'saveFailed'));
     } finally {
@@ -36,56 +63,88 @@ const AdminStoreStaff = ({ storeId, staff, closed }) => {
     }
   };
 
-  const handleUnassign = (member) => {
-    if (!window.confirm(t('admin', 'unassignStaffConfirm').replace('{name}', member.nickname))) return;
-    run(() => unassignStoreStaff(storeId, member.memberId));
-  };
-
   return (
-    <div className="rounded-xl p-4 border" style={{ backgroundColor: V('--th-card'), borderColor: V('--th-border') }}>
-      <p className="mb-3 text-sm font-bold" style={{ color: V('--th-text') }}>{t('admin', 'staffTitle')}</p>
+    <AdminSubPage title={t('admin', 'assignStaffTitle')} info={t('admin', 'staffInfo')} onBack={onBack} t={t}>
+      <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{storeTitle(store)}</span>
 
-      {staff.length === 0 ? (
-        <p className="text-sm mb-3" style={{ color: V('--th-text-sub') }}>{t('admin', 'noStaff')}</p>
-      ) : (
-        <div className="space-y-2 mb-3">
-          {staff.map(member => (
-            <div key={member.memberId} className="flex items-center justify-between gap-3">
-              <span className="truncate text-sm" style={{ color: V('--th-text') }}>{member.nickname}</span>
-              <button onClick={() => handleUnassign(member)} disabled={busy} className="text-xs px-3 py-1 rounded-lg border disabled:opacity-50" style={{ color: '#dc2626', borderColor: V('--th-border') }}>
-                {t('admin', 'unassignStaff')}
-              </button>
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <h2 style={h2Style}>
+          {t('admin', 'currentStaff')}{' '}
+          <span style={{ fontSize: '14px', fontWeight: 500, color: V('--th-text-sub') }}>{t('admin', 'peopleCount').replace('{n}', staff.length)}</span>
+        </h2>
+        {staff.length > 0 && (
+          <div style={listStyle}>
+            {staff.map((member, i) => (
+              <Row
+                key={member.memberId}
+                first={i === 0}
+                name={member.nickname}
+                sub={t('admin', 'staffAssignedOn').replace('{date}', formatDay(member.assignedAt))}
+                action={(
+                  <button
+                    onClick={() => run(() => unassignStoreStaff(store.id, member.memberId))}
+                    disabled={busy}
+                    style={{ ...pillStyle, border: '1px solid #FECACA', backgroundColor: V('--th-card'), color: '#DC2626' }}
+                  >
+                    {t('admin', 'unassignStaff')}
+                  </button>
+                )}
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {!store.closed && (
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <h2 style={h2Style}>{t('admin', 'addStaff')}</h2>
+          <label style={{
+            height: 48, boxSizing: 'border-box', padding: '0 14px', borderRadius: '12px',
+            border: `1px solid ${V('--th-border')}`, backgroundColor: V('--th-card'),
+            display: 'flex', alignItems: 'center', gap: '10px', color: V('--th-text-sub'),
+          }}>
+            <SearchIcon />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={t('admin', 'staffSearch')}
+              aria-label={t('admin', 'staffSearch')}
+              style={{ flex: 1, minWidth: 0, border: 'none', outline: 'none', background: 'transparent', fontSize: '15px', color: V('--th-text') }}
+            />
+          </label>
+          {shown.length > 0 ? (
+            <div style={listStyle}>
+              {shown.map((c, i) => (
+                <Row
+                  key={c.memberId}
+                  first={i === 0}
+                  name={c.nickname}
+                  sub={t('admin', 'staffCandidateSub')}
+                  action={(
+                    <button
+                      onClick={() => run(() => assignStoreStaff(store.id, c.memberId))}
+                      disabled={busy}
+                      style={{
+                        ...pillStyle, border: `1px solid rgba(${V('--th-primary-rgb')}, 0.3)`,
+                        backgroundColor: `rgba(${V('--th-primary-rgb')}, 0.1)`, color: V('--th-primary'),
+                      }}
+                    >
+                      {t('admin', 'assignStaff')}
+                    </button>
+                  )}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          ) : (
+            <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>
+              {t('admin', needle ? 'noStaffSearchResult' : 'noStaffCandidates')}
+            </p>
+          )}
+        </section>
       )}
 
-      {!closed && (candidates.length === 0 ? (
-        <p className="text-xs" style={{ color: V('--th-text-sub'), lineHeight: 1.5 }}>{t('admin', 'noStaffCandidates')}</p>
-      ) : (
-        <div className="flex gap-2">
-          <select
-            value={candidateId}
-            onChange={(e) => setCandidateId(e.target.value)}
-            className="flex-1 min-w-0 px-3 py-2 rounded-lg border text-sm focus:outline-none"
-            style={{ backgroundColor: V('--th-bg'), borderColor: V('--th-border'), color: V('--th-text') }}
-          >
-            <option value="">{t('admin', 'staffCandidate')}</option>
-            {candidates.map(c => <option key={c.memberId} value={c.memberId}>{c.nickname}</option>)}
-          </select>
-          <button
-            onClick={() => run(() => assignStoreStaff(storeId, candidateId))}
-            disabled={!candidateId || busy}
-            className="px-4 py-2 rounded-lg text-sm disabled:opacity-50"
-            style={{ backgroundColor: V('--th-primary'), color: '#FFFFFF' }}
-          >
-            {t('admin', 'assignStaff')}
-          </button>
-        </div>
-      ))}
-
-      {error && <p className="text-xs mt-2" style={{ color: '#ef4444' }}>{error}</p>}
-    </div>
+      {error && <p style={{ margin: 0, fontSize: '12px', color: '#ef4444', textAlign: 'center' }}>{error}</p>}
+    </AdminSubPage>
   );
 };
 

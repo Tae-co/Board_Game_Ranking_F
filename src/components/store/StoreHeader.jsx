@@ -1,22 +1,28 @@
 import { useState } from 'react';
 import { Share } from '@capacitor/share';
-import { Clock, MapPin, Phone, Share2, Users } from 'lucide-react';
-import StoreThumb from './StoreThumb';
+import StorageImage from '../StorageImage';
 import { storeShareUrl, storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
+import { ShareIcon } from './StoreIcons';
 
-const InfoLine = ({ icon, children }) => {
-  const Icon = icon;
-  return (
-  <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-    <Icon size={14} style={{ flexShrink: 0 }} />
-    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{children}</span>
-  </p>
-  );
-};
+const subStyle = { fontSize: '14px', color: V('--th-text-sub') };
 
-/** 매장 홈 위쪽 매장 정보 + 공유 버튼(이름 줄 끝). 공유 링크엔 토큰이 없다 — 열면 구경이고 체크인은 안 된다 */
-const StoreHeader = ({ store, memberCount, t }) => {
+/** 매장 홈 위쪽 대표 사진 (전체 폭 180px). 사진이 없으면 빈 칸 */
+export const StorePhoto = ({ store }) => (
+  <div style={{ height: 180, flexShrink: 0, backgroundColor: V('--th-bg-deep'), overflow: 'hidden' }}>
+    {store?.imageUrl && (
+      <StorageImage src={store.imageUrl} alt={store.name} decoding="async"
+        transform={{ width: 860, height: 360, quality: 75 }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+    )}
+  </div>
+);
+
+/**
+ * 매장 이름 + 공유 버튼, 아래로 (주소) · 영업시간 · "게임방 N개 · 멤버 N명". 주소는 구경(2d)에서만 보인다.
+ * 공유 링크엔 토큰이 없다 — 열면 구경이고 체크인은 안 된다
+ */
+const StoreHeader = ({ store, memberCount, gameCount, showAddress, t }) => {
   const [copied, setCopied] = useState(false);
   const title = storeTitle(store);
 
@@ -40,42 +46,28 @@ const StoreHeader = ({ store, memberCount, t }) => {
   };
 
   return (
-    <div style={{
-      borderRadius: '20px', padding: '18px',
-      backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`,
-      boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '20px',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
-        <StoreThumb store={store} size={64} radius={16} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: '20px', fontWeight: '800', color: V('--th-text'), margin: '0 0 4px', lineHeight: 1.3 }}>
-            {store.name}
-          </p>
-          {store.branch && (
-            <p style={{ fontSize: '13px', fontWeight: '600', color: V('--th-text-sub'), margin: 0 }}>{store.branch}</p>
-          )}
-        </div>
+    <section style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+        <h1 style={{ margin: 0, fontSize: '24px', fontWeight: 700, letterSpacing: '-0.01em', color: V('--th-text') }}>{title}</h1>
         <button
           onClick={handleShare}
           aria-label={t('store', 'share')}
           style={{
-            flexShrink: 0, display: 'flex', alignItems: 'center', gap: '4px',
-            fontSize: '12px', fontWeight: '600', color: V('--th-text'),
-            backgroundColor: V('--th-bg'), border: `1px solid ${V('--th-border')}`,
-            borderRadius: '8px', padding: '6px 10px', cursor: 'pointer',
+            width: 44, height: 44, flexShrink: 0, marginRight: -10, border: 'none', borderRadius: 999,
+            background: 'transparent', cursor: 'pointer', color: V('--th-text'),
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}
         >
-          <Share2 size={13} />
-          {copied ? t('store', 'linkCopied') : t('store', 'share')}
+          <ShareIcon />
         </button>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        <InfoLine icon={MapPin}>{store.address}</InfoLine>
-        <InfoLine icon={Clock}>{t('store', 'hours').replace('{open}', store.openTime).replace('{close}', store.closeTime)}</InfoLine>
-        {store.phone && <InfoLine icon={Phone}>{store.phone}</InfoLine>}
-        <InfoLine icon={Users}>{t('store', 'memberCount').replace('{n}', memberCount)}</InfoLine>
-      </div>
-    </div>
+      {copied && <span style={{ ...subStyle, color: V('--th-primary'), fontWeight: 700 }}>{t('store', 'linkCopied')}</span>}
+      {showAddress && <span style={subStyle}>{store.address}</span>}
+      <span style={subStyle}>{t('store', 'hours').replace('{open}', store.openTime).replace('{close}', store.closeTime)}</span>
+      <span style={subStyle}>
+        {t('store', 'roomsAndMembers').replace('{rooms}', gameCount).replace('{members}', memberCount)}
+      </span>
+    </section>
   );
 };
 

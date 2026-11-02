@@ -2,92 +2,119 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMyStores } from '../../hooks/useMyStores';
 import { useStoreDirectory } from '../../hooks/useStoreDirectory';
-import { useSwipePaging } from '../../hooks/useSwipePaging';
-import { STORE_DIRECTORY_PREVIEW } from '../../constants/store';
+import { STORE_DIRECTORY_PREVIEW, storeArea, storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
 import StoreCard from './StoreCard';
-import StoreDirectoryList from './StoreDirectoryList';
 import StoreLeaveModal from './StoreLeaveModal';
-import StoreQrHint from './StoreQrHint';
+import { QrIcon } from './StoreIcons';
 
-const SectionTitle = ({ children, action }) => (
-  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-    <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), margin: 0 }}>{children}</p>
-    {action}
-  </div>
-);
+const sectionStyle = { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' };
+const h2Style = { margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') };
 
-/** 입점 매장 미리 보기 (내 매장 제외, 최대 5개) + 전체 보기 → 1g. 1e도 같이 쓴다 */
+/** 입점 매장 미리 보기 (내 매장 제외, 두 곳) + 전체 보기 → 1g. 1e도 같이 쓴다 */
 export const StoreDirectoryPreview = ({ t }) => {
   const navigate = useNavigate();
   const { data: directory = [] } = useStoreDirectory();
   const { data: myStores = [] } = useMyStores();
+
   // STAFF의 지정 매장은 가입(store_member)이 아니라 joined가 false다 — 내 매장 목록으로도 거른다
   const mine = new Set(myStores.map(s => s.id));
   const others = directory.filter(s => !s.joined && !mine.has(s.id));
   if (others.length === 0) return null;
+
   return (
-    <div style={{ marginBottom: '28px' }}>
-      <SectionTitle action={(
+    <section style={sectionStyle}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h2 style={h2Style}>{t('store', 'directoryTitle')}</h2>
         <button
           onClick={() => navigate('/stores')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: V('--th-primary'), padding: 0 }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: V('--th-primary'), padding: 0 }}
         >
           {t('store', 'directorySeeAll')}
         </button>
-      )}>
-        {t('store', 'directoryTitle')}
-      </SectionTitle>
-      <StoreDirectoryList stores={others.slice(0, STORE_DIRECTORY_PREVIEW)} onOpen={(s) => navigate(`/store/${s.id}`)} t={t} />
-    </div>
+      </div>
+      <div style={{ display: 'flex', gap: '10px' }}>
+        {others.slice(0, STORE_DIRECTORY_PREVIEW).map(store => (
+          <button
+            key={store.id}
+            onClick={() => navigate(`/store/${store.id}`)}
+            style={{
+              flex: 1, minWidth: 0, textAlign: 'left', cursor: 'pointer',
+              backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '16px',
+              padding: '14px', display: 'flex', flexDirection: 'column', gap: '4px',
+            }}
+          >
+            <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+              {storeTitle(store)}
+            </span>
+            <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>
+              {t('store', 'areaAndRooms').replace('{area}', storeArea(store)).replace('{rooms}', store.gameCount)}
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 };
 
 /**
- * 로비 맨 위 내 매장 (시안 1). 여러 곳이면 옆으로 넘긴다.
- * 매장이 하나도 없고 입점 매장도 없으면(입점 전) 아무것도 그리지 않는다 — 기존 사용자 로비를 비워 두지 않으려고.
+ * 로비 맨 위 내 매장 (시안 1). 여러 곳이면 옆으로 넘긴다 (다음 카드가 살짝 보인다).
+ * 매장이 하나도 없으면 그리지 않는다 — 1e(lobbyFocus='store')는 CommunityLobby가 따로 그린다.
  */
-const MyStoreSection = ({ t }) => {
+const MyStoreSection = ({ lang, t }) => {
   const navigate = useNavigate();
   const { data: myStores = [], isLoading } = useMyStores();
-  const { data: directory = [], isLoading: directoryLoading } = useStoreDirectory();
   const [page, setPage] = useState(0);
   const [leaving, setLeaving] = useState(null);
-  const swipe = useSwipePaging(page, myStores.length, setPage);
 
-  if (isLoading || directoryLoading) return null;
-  if (myStores.length === 0 && directory.length === 0) return null;
+  if (isLoading) return null;
 
   const isStaff = myStores.some(s => s.role === 'STAFF');
-  const current = myStores[Math.min(page, myStores.length - 1)];
+
+  // 카드 폭 318 + 간격 12
+  const handleScroll = (e) => setPage(Math.round(e.currentTarget.scrollLeft / 330));
 
   return (
     <>
-      <div style={{ marginBottom: '28px' }}>
-        <SectionTitle>{t('store', 'myStores')}</SectionTitle>
-        {current && (
-          <div {...swipe} style={{ marginBottom: '10px' }}>
-            <StoreCard store={current} onOpen={(s) => navigate(`/store/${s.id}`)} onLeave={setLeaving} t={t} />
-            {myStores.length > 1 && (
-              <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '10px' }}>
-                {myStores.map((s, i) => (
-                  <button
-                    key={s.id}
-                    aria-label={`${i + 1}`}
-                    onClick={() => setPage(i)}
-                    style={{
-                      width: i === page ? 16 : 6, height: 6, borderRadius: 3, padding: 0,
-                      border: 'none', cursor: 'pointer', transition: 'width 0.2s',
-                      backgroundColor: i === page ? V('--th-primary') : V('--th-border'),
-                    }}
-                  />
-                ))}
-              </div>
+      {myStores.length > 0 && (
+        <section style={sectionStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+            <h2 style={h2Style}>
+              {t('store', 'myStores')}{' '}
+              <span style={{ fontSize: '14px', fontWeight: 500, color: V('--th-text-sub') }}>
+                {t('store', 'placeCount').replace('{n}', myStores.length)}
+              </span>
+            </h2>
+            {!isStaff && (
+              <span style={{ fontSize: '12px', color: V('--th-text-sub'), display: 'flex', alignItems: 'center', gap: '4px', textAlign: 'right' }}>
+                <QrIcon size={14} />
+                {t('store', 'qrHint')}
+              </span>
             )}
           </div>
-        )}
-        {!isStaff && <StoreQrHint text={t('store', 'qrHint')} />}
-      </div>
+          <div
+            onScroll={handleScroll}
+            style={{
+              display: 'flex', gap: '12px', marginRight: -20, paddingRight: 20,
+              overflowX: 'auto', scrollSnapType: 'x mandatory', scrollbarWidth: 'none',
+            }}
+          >
+            {myStores.map(store => (
+              <StoreCard key={store.id} store={store} onOpen={(s) => navigate(`/store/${s.id}`)} onLeave={setLeaving} lang={lang} t={t} />
+            ))}
+          </div>
+          {myStores.length > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px' }} aria-hidden="true">
+              {myStores.map((s, i) => (
+                <span key={s.id} style={{
+                  width: i === page ? 18 : 6, height: 6, borderRadius: 999, transition: 'width 0.2s',
+                  backgroundColor: i === page ? V('--th-primary') : '#D1D5DB',
+                }} />
+              ))}
+            </div>
+          )}
+        </section>
+      )}
       <StoreDirectoryPreview t={t} />
       {leaving && (
         <StoreLeaveModal

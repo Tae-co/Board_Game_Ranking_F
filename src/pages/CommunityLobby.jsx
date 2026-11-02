@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, ScanLine, Shield, Store as StoreIcon, Ticket } from 'lucide-react';
+import { Plus, Shield, Ticket } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
@@ -12,6 +12,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
 import MyStoreSection, { StoreDirectoryPreview } from '../components/store/MyStoreSection';
+import { QrIcon, ShopIcon } from '../components/store/StoreIcons';
 import { useMyStores } from '../hooks/useMyStores';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
 import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit, getPendingStoreTicket, getLobbyFocus, setLobbyFocus as saveLobbyFocus } from '../utils/storage';
@@ -24,7 +25,7 @@ const DiceLogo = () => (
 const CommunityLobby = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const nickname = getNickname() || '?';
   const userId = getAuthUserId();
   const isSystemAdmin = getRole() === 'ADMIN';
@@ -271,34 +272,61 @@ const CommunityLobby = () => {
           </div>
         ) : isFirstVisit && lobbyFocus === 'store' ? (
           // 1e 매장만 고른 첫 화면: 빈 내 매장 자리에 QR 안내, 입점 매장, 모임 만들기·초대코드는 작게
-          <div>
-            <div style={{
-              borderRadius: '18px', padding: '22px 20px', marginBottom: '28px',
-              backgroundColor: V('--th-card'), border: `1px dashed var(--th-border)`,
-              textAlign: 'center',
-            }}>
-              <div style={{ width: 52, height: 52, borderRadius: '16px', margin: '0 auto 12px', backgroundColor: V('--th-bg'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <ScanLine size={26} color="var(--th-primary)" />
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <section style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
+              <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') }}>{t('store', 'myStores')}</h2>
+              <div style={{
+                backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px',
+                padding: '22px 18px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px', textAlign: 'center',
+              }}>
+                <span style={{ width: 56, height: 56, borderRadius: '16px', backgroundColor: '#E7F6EC', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <QrIcon size={28} />
+                </span>
+                <span style={{ fontSize: '17px', fontWeight: 700, color: V('--th-text') }}>{t('store', 'storeFocusTitle')}</span>
+                <span style={{ fontSize: '14px', lineHeight: 1.5, color: V('--th-text-sub'), whiteSpace: 'pre-line' }}>
+                  <b style={{ color: V('--th-text') }}>{t('store', 'storeFocusCamera')}</b>{t('store', 'storeFocusDesc')}
+                </span>
+                <span style={{ alignSelf: 'stretch', fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub'), backgroundColor: V('--th-bg'), borderRadius: '12px', padding: '10px 12px' }}>
+                  {t('store', 'storeFocusInstalled')}
+                </span>
+                <button
+                  onClick={() => navigate('/stores')}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '13px', fontWeight: 700, color: V('--th-primary') }}
+                >
+                  {t('store', 'storeFocusFind')}
+                </button>
               </div>
-              <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: '0 0 6px' }}>{t('store', 'storeFocusTitle')}</p>
-              <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.6 }}>{t('store', 'storeFocusDesc')}</p>
-            </div>
+            </section>
             <StoreDirectoryPreview t={t} />
-            <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: '0 0 8px', textAlign: 'center' }}>{t('store', 'storeFocusOther')}</p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
-              <button
-                onClick={() => navigate('/create-community')}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', color: V('--th-primary'), padding: '4px' }}
-              >
-                {t('community', 'firstVisitCreate')}
-              </button>
-              <button
-                onClick={() => { logEvent(EVENTS.COMMUNITY_JOIN_STARTED); setJoinCode(''); setJoinError(''); setShowJoinInput(true); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', color: V('--th-primary'), padding: '4px' }}
-              >
-                {t('community', 'firstVisitJoin')}
-              </button>
-            </div>
+            <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') }}>{t('community', 'joinedCommunities')}</h2>
+              <div style={{
+                backgroundColor: V('--th-card'), border: '1px dashed #D1D5DB', borderRadius: '20px',
+                padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '10px',
+              }}>
+                <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('store', 'storeFocusOther')}</span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() => navigate('/create-community')}
+                    style={{
+                      flex: 1, height: 44, borderRadius: '12px', cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+                      border: `1px solid rgba(${V('--th-primary-rgb')}, 0.3)`, backgroundColor: `rgba(${V('--th-primary-rgb')}, 0.1)`, color: V('--th-primary'),
+                    }}
+                  >
+                    {t('community', 'firstVisitCreate')}
+                  </button>
+                  <button
+                    onClick={() => { logEvent(EVENTS.COMMUNITY_JOIN_STARTED); setJoinCode(''); setJoinError(''); setShowJoinInput(true); }}
+                    style={{
+                      flex: 1, height: 44, borderRadius: '12px', cursor: 'pointer', fontSize: '14px', fontWeight: 700,
+                      border: `1px solid ${V('--th-border')}`, backgroundColor: V('--th-card'), color: V('--th-text'),
+                    }}
+                  >
+                    {t('store', 'storeFocusJoin')}
+                  </button>
+                </div>
+              </div>
+            </section>
           </div>
         ) : isFirstVisit ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -345,22 +373,22 @@ const CommunityLobby = () => {
               style={{
                 width: '100%', borderRadius: '18px', padding: '22px 20px',
                 cursor: 'pointer', textAlign: 'left',
-                backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+                backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`,
                 display: 'flex', alignItems: 'center', gap: '14px',
               }}
             >
-              <div style={{ width: 44, height: 44, borderRadius: '14px', backgroundColor: V('--th-bg'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <StoreIcon size={22} color="var(--th-primary)" />
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: '0 0 4px' }}>{t('store', 'firstVisitStore')}</p>
-                <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.5 }}>{t('store', 'firstVisitStoreDesc')}</p>
-              </div>
+              <span style={{ width: 44, height: 44, borderRadius: '14px', backgroundColor: '#E7F6EC', color: '#15803D', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <ShopIcon />
+              </span>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <span style={{ fontSize: '17px', fontWeight: 700, color: V('--th-text') }}>{t('store', 'firstVisitStore')}</span>
+                <span style={{ fontSize: '12px', color: V('--th-text-sub'), lineHeight: 1.5 }}>{t('store', 'firstVisitStoreDesc')}</span>
+              </span>
             </button>
           </div>
         ) : (<>
         {/* 내 매장 · 입점 매장 (시안 1). 커뮤니티 목록 위 */}
-        <MyStoreSection t={t} />
+        <MyStoreSection lang={lang} t={t} />
 
         {/* Joined Communities */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>

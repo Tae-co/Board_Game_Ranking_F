@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { checkInStore, getStoreHome, joinStore, scanStore, storeErrorCode } from '../api/services/stores';
 import { getAuthUserId } from '../auth/storage';
 import { clearPendingStoreTicket, getPendingStoreTicket, setPendingStoreTicket } from '../utils/storage';
-import { MY_STORES_KEY } from '../hooks/useMyStores';
+import { MY_STORES_KEY, useMyStores } from '../hooks/useMyStores';
 import { STORE_CONSENT_VERSION, storeTitle } from '../constants/store';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -24,6 +24,7 @@ const StoreEntry = () => {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const started = useRef(false);
+  const { data: myStores = [] } = useMyStores();
 
   const [problem, setProblem] = useState(null);   // { kind, storeName }
   const [consentStore, setConsentStore] = useState(null);
@@ -122,7 +123,7 @@ const StoreEntry = () => {
       queryClient.invalidateQueries({ queryKey: MY_STORES_KEY });
       queryClient.invalidateQueries({ queryKey: ['stores', 'list'] });
       queryClient.invalidateQueries({ queryKey: ['store', Number(storeId), 'home'] });
-      navigate(`/store/${storeId}`, { replace: true, state: { justJoined: true } });
+      navigate(`/store/${storeId}`, { replace: true });
     } catch (e) {
       const code = storeErrorCode(e);
       if (ticketProblem(code, storeTitle(consentStore))) { setConsentStore(null); return; }
@@ -140,18 +141,20 @@ const StoreEntry = () => {
 
   if (problem) {
     const { kind, storeName } = problem;
+    const goCommunity = () => navigate('/community', { replace: true });
     // 시간 지난 QR은 멤버면 매장 홈, 아니면 구경. 로그인 전이면 로그인 뒤에 홈이 역할로 판단한다
+    const isMember = myStores.some(s => s.id === Number(storeId));
     const primary = kind === 'expired' || kind === 'ticket'
-      ? { label: t('store', 'viewStore'), onClick: getAuthUserId() ? goHome : goLogin }
+      ? { label: t('store', isMember ? 'goStoreHome' : 'viewStore'), onClick: getAuthUserId() ? goHome : goLogin }
       : kind === 'failed'
         ? { label: t('store', 'retry'), onClick: () => { setProblem(null); run(); } }
-        : null;
+        : { label: t('store', 'goHome'), onClick: goCommunity };
     return (
       <StoreQrProblem
         kind={kind}
         storeName={storeName}
         primary={primary}
-        secondary={{ label: t('store', 'goHome'), onClick: () => navigate('/community', { replace: true }) }}
+        onBack={goCommunity}
         t={t}
       />
     );
