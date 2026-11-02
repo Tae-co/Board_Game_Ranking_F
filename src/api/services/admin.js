@@ -36,3 +36,12 @@ export const uploadAdminImage = (file) => {
 export const getAdminStoreRooms = (storeId) => api.get(`/admin/stores/${storeId}/rooms`).then(r => r.data);
 export const setAdminStoreRoomClosed = (storeId, roomId, closed) =>
   api.put(`/admin/stores/${storeId}/rooms/${roomId}/closed`, { closed }).then(r => r.data);
+
+// ── 매장 기기 (6g) · 매장 TV 화면 (6k) ──
+export const getAdminStoreDevices = (storeId) => api.get(`/admin/stores/${storeId}/devices`).then(r => r.data);
+export const revokeAdminStoreDevice = (storeId, deviceId) =>
+  api.delete(`/admin/stores/${storeId}/devices/${deviceId}`).then(r => r.data);
+export const rotateAdminStoreQrSecret = (storeId) => api.post(`/admin/stores/${storeId}/qr-secret`);
+export const getAdminTvSetting = (storeId) => api.get(`/admin/stores/${storeId}/tv-setting`).then(r => r.data);
+export const saveAdminTvSetting = (storeId, setting) =>
+  api.put(`/admin/stores/${storeId}/tv-setting`, setting).then(r => r.data);

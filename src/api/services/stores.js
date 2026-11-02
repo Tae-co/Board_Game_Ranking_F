@@ -1,3 +1,4 @@
+import axios from 'axios';
 import api from '../axios';
 
 // 매장 API 오류는 { message, code }로 온다. 화면은 문구가 아니라 code로 나눈다 (plan-store-impl-p1 §3.7).
@@ -47,3 +48,22 @@ export const confirmStoreMatch = (matchId) => api.post(`/stores/matches/${matchI
 export const disputeStoreMatch = (matchId) => api.post(`/stores/matches/${matchId}/dispute`).then(r => r.data);
 export const reopenStoreMatch = (matchId) => api.post(`/stores/matches/${matchId}/reopen`).then(r => r.data);
 export const cancelStoreMatch = (matchId) => api.post(`/stores/matches/${matchId}/cancel`).then(r => r.data);
+
+// ── 3단계: 매장 기기 ──
+
+// STAFF 폰 2l (로그인 STAFF)
+export const getStoreDevices = (storeId) => api.get(`/stores/${storeId}/devices`).then(r => r.data);
+export const registerStoreDevice = (storeId, { code, kind, name }) =>
+  api.post(`/stores/${storeId}/devices`, { code, kind, name }).then(r => r.data);
+export const revokeStoreDevice = (storeId, deviceId) => api.delete(`/stores/${storeId}/devices/${deviceId}`).then(r => r.data);
+
+// 기기 쪽(4j·4·4f)은 사람 로그인이 없다. 공용 api 인스턴스는 401에 refresh·로그아웃을 하므로 따로 만든다
+const deviceApi = axios.create({ baseURL: import.meta.env.VITE_API_URL, headers: { 'Content-Type': 'application/json' } });
+
+/** 4j 숫자 받기 → { code, nonce, expiresAt, serverNow } */
+export const getDevicePairCode = () => deviceApi.post('/stores/device/pair-code').then(r => r.data);
+/** 4j 폴링 → { status: WAITING | CLAIMED | EXPIRED, deviceToken, kind } */
+export const getDevicePairStatus = (nonce) => deviceApi.get(`/stores/device/pair-code/${nonce}`).then(r => r.data);
+/** 4·4f 기기 화면 데이터. 해제된 기기면 401 DEVICE_TOKEN_INVALID */
+export const getDeviceDisplay = (token) =>
+  deviceApi.get('/stores/device/display', { headers: { 'X-Device-Token': token } }).then(r => r.data);

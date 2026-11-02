@@ -7,8 +7,8 @@ import { V } from '../../utils/cssUtils';
 
 const SIZE = 56;
 const EDGE = 8;
-// 로그인·QR 진입·관리자 화면엔 띄우지 않는다. 매장 TV(3단계)도 여기에 더한다
-const HIDDEN = ['/login', '/s/', '/admin', '/oauth-callback', '/join'];
+// 로그인·QR 진입·관리자·매장 기기(4j) 화면엔 띄우지 않는다
+const HIDDEN = ['/login', '/s/', '/admin', '/oauth-callback', '/join', '/device'];
 
 /** 지금 그룹이 있는 곳: 내가 낀 판이 열려 있으면 그 판, 아니면 그룹 기다리는 화면(3b) */
 const partyTarget = (party, myId) => {

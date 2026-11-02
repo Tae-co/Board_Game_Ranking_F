@@ -25,3 +25,31 @@ export const ChevronRightIcon = ({ size = 16 }) => <Icon size={size}><path d="M9
 export const InfoIcon = ({ size = 22 }) => (
   <Icon size={size}><circle cx="12" cy="12" r="9" /><path d="M12 7.5v6" /><circle cx="12" cy="16.5" r="0.6" fill="currentColor" /></Icon>
 );
+
+export const MonitorIcon = ({ size = 20 }) => <Icon size={size}><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></Icon>;
+
+export const NextIcon = ({ size = 18 }) => <Icon size={size}><path d="M9 5l7 7-7 7" /></Icon>;
+
+export const ArrowUpIcon = ({ size = 18 }) => <Icon size={size}><path d="M12 19V5M6 11l6-6 6 6" /></Icon>;
+
+export const ArrowDownIcon = ({ size = 18 }) => <Icon size={size}><path d="M12 5v14M6 13l6 6 6-6" /></Icon>;
+
+export const CloseIcon = ({ size = 18 }) => <Icon size={size}><path d="M6 6l12 12M18 6L6 18" /></Icon>;
+
+// 매장 기기 화면(4·4f·4j) 머리의 주사위 로고. 색은 기기 화면 팔레트
+export const DiceLogo = ({ size = 52 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#818CF8" strokeWidth="1.8" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="4" />
+    <circle cx="8.5" cy="8.5" r="1.2" fill="#818CF8" />
+    <circle cx="15.5" cy="15.5" r="1.2" fill="#818CF8" />
+    <circle cx="12" cy="12" r="1.2" fill="#818CF8" />
+  </svg>
+);
+
+export const WifiOffIcon = ({ size = 96 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#94A3B8" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M2 8.5a15 15 0 0120 0M5 12a10 10 0 0114 0M8.5 15.5a5 5 0 017 0" />
+    <circle cx="12" cy="19" r="1" fill="#94A3B8" />
+    <path d="M3 3l18 18" />
+  </svg>
+);

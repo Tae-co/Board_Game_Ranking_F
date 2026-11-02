@@ -13,7 +13,7 @@ import StoreQrProblem from '../components/store/StoreQrProblem';
 import StorePartyCard from '../components/store/StorePartyCard';
 import StoreMvp from '../components/store/StoreMvp';
 import StoreGameRankings from '../components/store/StoreGameRankings';
-import { QrIcon, ShopIcon } from '../components/store/StoreIcons';
+import { MonitorIcon, QrIcon, ShopIcon } from '../components/store/StoreIcons';
 import { Skeleton } from '../components/Skeleton';
 
 const noteStyle = {
@@ -161,7 +161,18 @@ const StoreHome = () => {
                   borderRadius: '20px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px',
                 }}>
                   <span style={{ fontSize: '12px', fontWeight: 700, color: V('--th-primary') }}>{t('store', 'staffOnly')}</span>
-                  {/* 매장 기기 추가·관리(3단계), 월간 리포트(4단계)는 여기 더한다 */}
+                  {/* 월간 리포트(4단계)는 여기 더한다 */}
+                  <button
+                    onClick={() => navigate(`/store/${storeId}/devices`)}
+                    style={{
+                      height: 52, borderRadius: '14px', cursor: 'pointer', border: 'none',
+                      backgroundColor: V('--th-primary'), color: '#fff', fontSize: '16px', fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    }}
+                  >
+                    <MonitorIcon />
+                    {t('store', 'staffDevicesButton')}
+                  </button>
                   <button
                     onClick={() => navigate(`/store/${storeId}/checkin-qr`)}
                     style={{
