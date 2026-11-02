@@ -108,3 +108,35 @@ export const getAnonId = () => {
     return null;
   }
 };
+
+// QR을 찍고 받은 스캔 티켓. 로그인·동의를 거치는 동안 들고 있다가 가입·체크인에 쓴다.
+// 네이티브 OAuth는 외부 브라우저를 다녀오므로 sessionStorage가 아니라 localStorage에 둔다.
+// 서버도 24시간 뒤엔 거절하지만, 오래된 티켓이 로비를 매장으로 계속 끌고 가지 않게 여기서도 버린다.
+const PENDING_STORE_TICKET_KEY = 'pendingStoreTicket';
+const PENDING_STORE_TICKET_TTL_MS = 24 * 60 * 60 * 1000;
+
+export const getPendingStoreTicket = () => {
+  try {
+    const pending = JSON.parse(localStorage.getItem(PENDING_STORE_TICKET_KEY));
+    if (!pending || Date.now() - pending.savedAt > PENDING_STORE_TICKET_TTL_MS) return null;
+    return pending;
+  } catch { return null; }
+};
+
+export const setPendingStoreTicket = (storeId, ticket) => {
+  localStorage.setItem(PENDING_STORE_TICKET_KEY, JSON.stringify({ storeId: Number(storeId), ticket, savedAt: Date.now() }));
+};
+
+export const clearPendingStoreTicket = () => {
+  localStorage.removeItem(PENDING_STORE_TICKET_KEY);
+};
+
+// 첫 방문 화면(1d)에서 "매장에서 게임하기"를 골랐는지. 'store'면 매장 위주 첫 화면(1e)
+const LOBBY_FOCUS_KEY = 'lobbyFocus';
+
+export const getLobbyFocus = () => localStorage.getItem(LOBBY_FOCUS_KEY);
+
+export const setLobbyFocus = (focus) => {
+  if (focus == null) localStorage.removeItem(LOBBY_FOCUS_KEY);
+  else localStorage.setItem(LOBBY_FOCUS_KEY, focus);
+};

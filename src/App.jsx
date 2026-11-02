@@ -28,6 +28,18 @@ const InviteFriends = lazy(() => import('./pages/InviteFriends'));
 const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
 const CommunityMemberManage = lazy(() => import('./pages/CommunityMemberManage'));
 const SeasonSummary = lazy(() => import('./pages/SeasonSummary'));
+const StoreEntry = lazy(() => import('./pages/StoreEntry'));
+const StoreHome = lazy(() => import('./pages/StoreHome'));
+const StoreCheckinQr = lazy(() => import('./pages/StoreCheckinQr'));
+const StoreList = lazy(() => import('./pages/StoreList'));
+const StoreParty = lazy(() => import('./pages/StoreParty'));
+const StorePartyJoin = lazy(() => import('./pages/StorePartyJoin'));
+const StorePartyManage = lazy(() => import('./pages/StorePartyManage'));
+const StoreRoom = lazy(() => import('./pages/StoreRoom'));
+const StoreRanking = lazy(() => import('./pages/StoreRanking'));
+const StoreGames = lazy(() => import('./pages/StoreGames'));
+const StoreMatch = lazy(() => import('./pages/StoreMatch'));
+const PartyBubble = lazy(() => import('./components/store/PartyBubble'));
 
 // 라우트 진입 계측. useLocation을 쓰므로 BrowserRouter 안에 있어야 한다.
 const RouteTracker = ({ isAuthenticated }) => {
@@ -40,6 +52,23 @@ const RouteTracker = ({ isAuthenticated }) => {
 const ScrollToTop = () => {
   const { pathname } = useLocation();
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+};
+
+// 매장 QR(https://yadarank.com/s/…)이 유니버설 링크·앱 링크로 앱을 열면 같은 경로로 보낸다.
+// navigate를 쓰므로 BrowserRouter 안에 있어야 한다. oauth-callback은 App의 기존 리스너가 맡는다.
+const DeepLinkHandler = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    const handler = CapApp.addListener('appUrlOpen', ({ url }) => {
+      let urlObj;
+      try { urlObj = new URL(url); } catch { return; }
+      if (!urlObj.pathname.startsWith('/s/')) return;
+      navigate(`${urlObj.pathname}${urlObj.search}`);
+    });
+    return () => { handler.then(h => h.remove()); };
+  }, [navigate]);
   return null;
 };
 
@@ -182,6 +211,7 @@ function App() {
     <LanguageProvider>
     <BrowserRouter>
       <RouteTracker isAuthenticated={isAuthenticated} />
+      <DeepLinkHandler />
       <ScrollToTop />
       <div style={{
         position: 'fixed', top: 0, left: 0, right: 0,
@@ -208,6 +238,19 @@ function App() {
             <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
             <Route path="/season" element={isAuthenticated ? <SeasonSummary /> : <Navigate to="/login" replace />} />
 
+            {/* 매장 (plan-store-impl-p1 §4.1). /s/:storeId는 로그인 전에도 QR을 확인해야 해서 가드 없이 페이지 안에서 처리 */}
+            <Route path="/s/:storeId" element={<StoreEntry />} />
+            <Route path="/store/:storeId" element={isAuthenticated ? <StoreHome /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/checkin-qr" element={isAuthenticated ? <StoreCheckinQr /> : <Navigate to="/login" replace />} />
+            <Route path="/stores" element={isAuthenticated ? <StoreList /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/party" element={isAuthenticated ? <StoreParty /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/party/join" element={isAuthenticated ? <StorePartyJoin /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/party/manage" element={isAuthenticated ? <StorePartyManage /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/games" element={isAuthenticated ? <StoreGames /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/rooms/:roomId" element={isAuthenticated ? <StoreRoom /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/rooms/:roomId/ranking" element={isAuthenticated ? <StoreRanking /> : <Navigate to="/login" replace />} />
+            <Route path="/store/match/:matchId" element={isAuthenticated ? <StoreMatch /> : <Navigate to="/login" replace />} />
+
             {/* QR 코드 초대 링크 */}
             <Route path="/join" element={<JoinByQR />} />
 
@@ -219,6 +262,8 @@ function App() {
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          {/* 오늘의 그룹 주사위 (plan-store 2k). 앱 어느 화면에나 */}
+          {isAuthenticated && !isAdmin && <PartyBubble />}
         </Suspense>
       </div>
     </BrowserRouter>

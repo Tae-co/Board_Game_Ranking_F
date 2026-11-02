@@ -36,21 +36,28 @@ const parseSchema = (raw) => {
   return null;
 };
 
-const ScoreSheet = () => {
+/**
+ * storeMode가 있으면 매장 판 점수판 (plan-store 3d·3e·3f·3k): 플레이어·저장을 매장 쪽이 넘기고,
+ * 위·아래 막대도 매장 화면이 그린다. 계산·테이블은 커뮤니티와 같다.
+ * storeMode = { boardGameId, players, savedScores, readOnly, header, top, after, renderBottom({ submit, isSubmitting }),
+ *               onSubmit(participants), onScoresChange(scores) }
+ */
+const ScoreSheet = ({ storeMode = null } = {}) => {
   const { boardGameId: boardGameIdStr } = useParams();
-  const boardGameId = Number(boardGameIdStr);
+  const boardGameId = Number(storeMode ? storeMode.boardGameId : boardGameIdStr);
   const navigate = useNavigate();
   const location = useLocation();
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
-  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null, backState = null, previewMode = false, schemaJson = null } = location.state || {};
+  const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null, backState = null, previewMode = false, schemaJson = null } = storeMode ?? location.state ?? {};
 
   // 이탈률의 분모. "기록하려고 열었다"만 세어야 한다 — 수정·읽기전용·미리보기는
   // MATCH_SUBMITTED로 이어지지 않으므로 분모에 들어가면 이탈로 잘못 잡힌다.
+  const isStoreMode = !!storeMode;
   useEffect(() => {
-    if (readOnly || previewMode || editMatchId) return;
+    if (isStoreMode || readOnly || previewMode || editMatchId) return;
     logEvent(EVENTS.SCORE_SHEET_OPENED, { boardGameId, roomId });
-  }, [boardGameId, roomId, readOnly, previewMode, editMatchId]);
+  }, [boardGameId, roomId, readOnly, previewMode, editMatchId, isStoreMode]);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scienceModal, setScienceModal] = useState(null);
@@ -165,6 +172,11 @@ const ScoreSheet = () => {
     if (savedScores) return savedScores;
     return initScores(currentSchema, players);
   });
+
+  const onStoreScoresChange = storeMode?.onScoresChange;
+  useEffect(() => {
+    if (onStoreScoresChange) onStoreScoresChange(scores);
+  }, [scores, onStoreScoresChange]);
 
   const allCategories = useMemo(() => (
     currentSchema ? getAllCategories(currentSchema) : []
@@ -359,6 +371,21 @@ const ScoreSheet = () => {
         ),
       }));
     }
+    if (storeMode) {
+      // 매장 판: 게임 점수(합계)를 같이 보내 3i·3j·3n에 띄운다
+      try {
+        setIsSubmitting(true);
+        await storeMode.onSubmit(participants.map(p => ({
+          memberId: p.memberId,
+          placement: p.placement,
+          gameScore: Number.isFinite(totals[p.memberId]) ? totals[p.memberId] : null,
+          scoresJson: p.scoresJson ?? null,
+        })));
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
     try {
       setIsSubmitting(true);
       const res = editMatchId
@@ -446,9 +473,9 @@ const ScoreSheet = () => {
   const winnerNickname = players.find(p => p.memberId === winnerId)?.nickname;
 
   return (
-    <div style={{ fontFamily: "'Pretendard', sans-serif", background: "var(--th-bg)", minHeight: "100vh", paddingBottom: 'calc(100px + env(safe-area-inset-bottom))', maxWidth: '375px', margin: '0 auto' }}>
+    <div style={{ fontFamily: "'Pretendard', sans-serif", background: "var(--th-bg)", minHeight: "100vh", paddingBottom: storeMode ? 'calc(170px + env(safe-area-inset-bottom))' : 'calc(100px + env(safe-area-inset-bottom))', maxWidth: '375px', margin: '0 auto' }}>
 
-      {/* Header */}
+      {storeMode ? storeMode.header : (
       <div style={{ position: "sticky", top: 0, zIndex: 10, background: "var(--th-nav-bg)", padding: "16px 20px", display: "flex", alignItems: "center", gap: 12, borderBottom: "1px solid var(--th-border)" }}>
         <button onClick={handleBack} style={{ padding: 6, borderRadius: 8, border: "none", background: "transparent", cursor: "pointer", color: "var(--th-text)", flexShrink: 0 }}>
           <ArrowLeft size={22} />
@@ -456,6 +483,8 @@ const ScoreSheet = () => {
         <span style={{ flex: 1, fontSize: 17, fontWeight: 700, color: "var(--th-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentSchema.name}</span>
         <NavAvatar />
       </div>
+      )}
+      {storeMode?.top}
 
       {/* 순위 입력 모드 토글 (supportsRankMode 게임만) */}
       {currentSchema?.supportsRankMode && !readOnly && (
@@ -565,7 +594,9 @@ const ScoreSheet = () => {
       />}
 
       {/* Bottom Fixed Button */}
-      {!readOnly && !previewMode && (
+      {storeMode?.after}
+      {storeMode && storeMode.renderBottom({ submit: handleSubmit, isSubmitting })}
+      {!storeMode && !readOnly && !previewMode && (
         <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20, background: 'linear-gradient(to top, var(--th-bg) 70%, transparent)' }}>
           <div style={{ maxWidth: 375, margin: '0 auto', padding: '20px 16px calc(32px + env(safe-area-inset-bottom))' }}>
             <button
