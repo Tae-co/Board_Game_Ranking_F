@@ -17,8 +17,8 @@ const Avatar = ({ size = 88 }) => (
   <span style={{ width: size, height: size, borderRadius: 999, backgroundColor: D.border, flexShrink: 0 }} />
 );
 
-/** 4·4i 머리: 로고 + "[매장] 랭킹". 시즌 이름·남은 날은 시즌(4단계)이 생기면 오른쪽에 */
-const RankingHeader = ({ store, t }) => (
+/** 4·4i 머리: 로고 + "[매장] 랭킹" · 오른쪽 "[시즌] · 종료까지 N일" */
+const RankingHeader = ({ store, season, t }) => (
   <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
       <DiceLogo size={52} />
@@ -26,11 +26,14 @@ const RankingHeader = ({ store, t }) => (
         {fmt(t('store', 'tvRankingTitle'), { store: storeTitle(store) })}
       </h1>
     </div>
+    {season && (
+      <span style={{ fontSize: '26px', color: D.accentText }}>{fmt(t('store', 'tvSeasonHeader'), { name: season.name, n: season.daysLeft })}</span>
+    )}
   </header>
 );
 
 /** 4 게임별 1위 · 매장 MVP. 게임 카드는 2×2까지 (TV 한 화면) */
-export const TvLeaders = ({ store, mvp, t }) => {
+export const TvLeaders = ({ store, season, mvp, t }) => {
   const leaders = (mvp?.gameLeaders ?? []).slice(0, 4);
   const mvpCard = (label, item, unitKey) => (
     <div style={{ ...cardStyle, flex: 1, padding: '36px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
@@ -41,7 +44,7 @@ export const TvLeaders = ({ store, mvp, t }) => {
   );
   return (
     <div style={frame('56px 64px', '40px')}>
-      <RankingHeader store={store} t={t} />
+      <RankingHeader store={store} season={season} t={t} />
       <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 560px', gap: '32px' }}>
         <section style={{ display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>
           <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 700, color: D.accentSoft }}>{t('store', 'tvGameLeaders')}</h2>
@@ -73,9 +76,9 @@ export const TvLeaders = ({ store, mvp, t }) => {
 const rankColor = (rank) => (rank === 1 ? D.gold : rank <= 3 ? D.silver : D.sub);
 
 /** 4i 게임별 TOP 10 (게임 하나) */
-export const TvTop10 = ({ store, game, t }) => (
+export const TvTop10 = ({ store, season, game, t }) => (
   <div style={frame('56px 64px', '40px')}>
-    <RankingHeader store={store} t={t} />
+    <RankingHeader store={store} season={season} t={t} />
     <section style={{ ...cardStyle, flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', paddingBottom: '16px' }}>
         <h2 style={{ margin: 0, fontSize: '36px', fontWeight: 700 }}>{fmt(t('store', 'tvTop10'), { game: game.name })}</h2>
@@ -143,6 +146,52 @@ export const TvJustFinished = ({ match, t }) => {
         ))}
       </section>
       <span style={{ marginTop: 'auto', fontSize: '28px', color: D.sub }}>{t('store', 'tvJustFoot')}</span>
+    </div>
+  );
+};
+
+const CrownIcon = () => (
+  <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinejoin="round"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z" /></svg>
+);
+
+/** 4b 시즌 결과 (끝나고 1주일): 게임별 우승 4칸 · 최다 방문 · 최다 참여 · 다음 시즌 시작일 */
+export const TvSeasonResult = ({ store, result, lang, t }) => {
+  const next = new Date(`${result.nextStart}T00:00:00`).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US', { month: 'long', day: 'numeric' });
+  const mvpCard = (label, item, unitKey) => (
+    <div style={{ ...cardStyle, padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+      <span style={{ fontSize: '26px', color: D.accentText, flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: '34px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        {item ? `${item.nickname ?? t('store', 'leftMember')} · ${fmt(t('store', unitKey), { n: num(item.count) })}` : '—'}
+      </span>
+    </div>
+  );
+  return (
+    <div style={{ width: TV_W, height: TV_H, boxSizing: 'border-box', padding: '64px', display: 'flex', flexDirection: 'column', gap: '44px' }}>
+      <header style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '26px', color: D.accentText }}>{storeTitle(store)}</span>
+        <h1 style={{ margin: 0, fontSize: '64px', fontWeight: 700, letterSpacing: '-0.01em' }}>{fmt(t('store', 'tvSeasonFinal'), { name: result.name })}</h1>
+      </header>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '28px' }}>
+        {result.winners.slice(0, 4).map(w => (
+          <div key={w.boardGameId} style={{ ...cardStyle, padding: '36px 28px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px', minWidth: 0 }}>
+            <CrownIcon />
+            <span style={{ fontSize: '26px', color: D.accentText, fontWeight: 500, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {fmt(t('store', 'tvWinnerOf'), { game: w.name })}
+            </span>
+            <Avatar size={120} />
+            <span style={{ fontSize: '40px', fontWeight: 700, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.nickname ?? t('store', 'leftMember')}</span>
+            <span style={{ fontSize: '30px', fontWeight: 700, color: D.gold }}>{num(w.score)}</span>
+          </div>
+        ))}
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '28px' }}>
+        {mvpCard(t('store', 'tvMostVisits'), result.mostVisits, 'tvDays')}
+        {mvpCard(t('store', 'tvMostGames'), result.mostGames, 'tvGames')}
+        <div style={{ borderRadius: '28px', padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: D.button }}>
+          <span style={{ fontSize: '26px', color: D.stepText }}>{t('store', 'tvNextSeason')}</span>
+          <span style={{ fontSize: '34px', fontWeight: 700 }}>{fmt(t('store', 'tvNextStart'), { date: next })}</span>
+        </div>
+      </div>
     </div>
   );
 };

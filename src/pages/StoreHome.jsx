@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createParty, getStoreHome, storeErrorCode } from '../api/services/stores';
+import { createParty, getStoreHome, markStoreResetSeen, storeErrorCode } from '../api/services/stores';
 import { CURRENT_PARTY_KEY } from '../hooks/useCurrentParty';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
@@ -13,7 +13,9 @@ import StoreQrProblem from '../components/store/StoreQrProblem';
 import StorePartyCard from '../components/store/StorePartyCard';
 import StoreMvp from '../components/store/StoreMvp';
 import StoreGameRankings from '../components/store/StoreGameRankings';
-import { MonitorIcon, QrIcon, ShopIcon } from '../components/store/StoreIcons';
+import { ChartIcon, MonitorIcon, QrIcon, ShopIcon } from '../components/store/StoreIcons';
+import StoreClosedView from '../components/store/StoreClosedView';
+import { fmt } from '../components/store/fmt';
 import { Skeleton } from '../components/Skeleton';
 
 const noteStyle = {
@@ -22,16 +24,24 @@ const noteStyle = {
 };
 
 /**
- * 매장 홈 `/store/:storeId` — 2(멤버·STAFF) · 2d(구경) · 2j(방금 가입). viewer.role로 나눈다.
- * 기기 관리(3단계), 리포트·신고 카드(4단계), 대회·이벤트(5단계)는 아직 없다.
+ * 매장 홈 `/store/:storeId` — 2(멤버·STAFF) · 2d(구경) · 2j(방금 가입) · 2h(운영 끝남). viewer.role로 나눈다.
+ * 대회·이벤트 카드(5단계)는 아직 없다.
  */
+/** 10/30 14:20 */
+const matchWhen = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+
 const StoreHome = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const [creating, setCreating] = useState(false);
   const [actionError, setActionError] = useState(null);
+  const [resetDismissed, setResetDismissed] = useState(false);
 
   const { data: home, isLoading, error, refetch } = useQuery({
     queryKey: ['store', Number(storeId), 'home'],
@@ -40,6 +50,12 @@ const StoreHome = () => {
   });
 
   const goCommunity = () => navigate('/community');
+
+  // 신고 초기화 안내 카드(2)는 확인을 누르면 다시 안 뜬다
+  const dismissReset = () => {
+    setResetDismissed(true);
+    markStoreResetSeen(storeId).catch(() => {});
+  };
 
   const handleCreateParty = async () => {
     setCreating(true);
@@ -103,6 +119,8 @@ const StoreHome = () => {
               </div>
             </div>
           </>
+        ) : store.closed ? (
+          <StoreClosedView home={home} lang={lang} t={t} />
         ) : (
           <>
             <StorePhoto store={store} />
@@ -110,7 +128,24 @@ const StoreHome = () => {
               boxSizing: 'border-box', padding: bottomBar ? '20px 20px 150px' : '20px 20px 40px',
               display: 'flex', flexDirection: 'column', gap: '28px',
             }}>
-              {store.closed && <span style={noteStyle}>{t('store', 'closedNotice')}</span>}
+              {home.resetNotice && !resetDismissed && (
+                <section role="status" style={{
+                  backgroundColor: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '20px', padding: '16px 18px',
+                  display: 'flex', flexDirection: 'column', gap: '8px',
+                }}>
+                  <span style={{ fontSize: '16px', fontWeight: 700, color: '#9A3412' }}>
+                    {fmt(t('store', 'resetNoticeTitle'), { game: home.resetNotice.gameName })}
+                  </span>
+                  <span style={{ fontSize: '13px', lineHeight: 1.55, color: '#7C2D12' }}>
+                    {fmt(t('store', 'resetNoticeBody'), { when: matchWhen(home.resetNotice.matchEndedAt), game: home.resetNotice.gameName })}
+                  </span>
+                  <span style={{ fontSize: '12px', lineHeight: 1.5, color: '#9A3412' }}>{t('store', 'resetNoticeHelp')}</span>
+                  <button onClick={dismissReset} style={{
+                    alignSelf: 'flex-end', height: 40, padding: '0 18px', border: 'none', borderRadius: '12px', cursor: 'pointer',
+                    backgroundColor: '#FFFFFF', color: '#9A3412', fontSize: '14px', fontWeight: 700,
+                  }}>{t('store', 'infoOk')}</button>
+                </section>
+              )}
 
               <StoreHeader
                 store={store}
@@ -161,7 +196,6 @@ const StoreHome = () => {
                   borderRadius: '20px', padding: '14px', display: 'flex', flexDirection: 'column', gap: '10px',
                 }}>
                   <span style={{ fontSize: '12px', fontWeight: 700, color: V('--th-primary') }}>{t('store', 'staffOnly')}</span>
-                  {/* 월간 리포트(4단계)는 여기 더한다 */}
                   <button
                     onClick={() => navigate(`/store/${storeId}/devices`)}
                     style={{
@@ -184,6 +218,18 @@ const StoreHome = () => {
                   >
                     <QrIcon />
                     {t('store', 'staffQrButton')}
+                  </button>
+                  <button
+                    onClick={() => navigate(`/store/${storeId}/report`)}
+                    style={{
+                      height: 48, borderRadius: '14px', cursor: 'pointer',
+                      backgroundColor: V('--th-card'), border: `1px solid rgba(${V('--th-primary-rgb')}, 0.3)`,
+                      color: V('--th-primary'), fontSize: '15px', fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                    }}
+                  >
+                    <ChartIcon />
+                    {t('store', 'staffReportButton')}
                   </button>
                 </section>
               )}

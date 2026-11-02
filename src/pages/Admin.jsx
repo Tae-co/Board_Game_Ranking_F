@@ -12,6 +12,8 @@ const Admin = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState('games');
+  // 점수판 요청(6c) → 게임 추가 폼 (이름 미리 채움)
+  const [gamePrefill, setGamePrefill] = useState('');
 
   const handleLogout = () => {
     setAccessToken(null);
@@ -55,9 +57,9 @@ const Admin = () => {
       </div>
 
       <div className="px-6">
-        {activeTab === 'games' && <AdminGamesTab />}
+        {activeTab === 'games' && <AdminGamesTab key={gamePrefill} prefillName={gamePrefill} />}
         {activeTab === 'members' && <AdminMembersTab />}
-        {activeTab === 'stores' && <AdminStoresTab />}
+        {activeTab === 'stores' && <AdminStoresTab onCreateGame={(name) => { setGamePrefill(name); setActiveTab('games'); }} />}
       </div>
     </div>
   );

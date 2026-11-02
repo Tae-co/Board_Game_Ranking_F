@@ -7,7 +7,8 @@ import { V } from '../utils/cssUtils';
 import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
 import StoreTopBar from '../components/store/StoreTopBar';
-import { BackIcon, ChevronRightIcon, SearchIcon } from '../components/store/StoreIcons';
+import { BackIcon, ChevronRightIcon, PlusIcon, SearchIcon } from '../components/store/StoreIcons';
+import StoreBottomBar from '../components/store/StoreBottomBar';
 import { fmt } from '../components/store/fmt';
 
 const PER_PAGE = 8;
@@ -15,8 +16,8 @@ const PER_PAGE = 8;
 const Tile = ({ game, onClick, label }) => {
   const [err, setErr] = useState(false);
   return (
-    <button onClick={onClick} style={{
-      padding: 0, textAlign: 'left', cursor: 'pointer', minWidth: 0, backgroundColor: V('--th-card'),
+    <button onClick={onClick} disabled={!onClick} style={{
+      padding: 0, textAlign: 'left', cursor: onClick ? 'pointer' : 'default', minWidth: 0, backgroundColor: V('--th-card'),
       border: `1px solid ${V('--th-border')}`, borderRadius: '16px', overflow: 'hidden', display: 'flex', flexDirection: 'column',
     }}>
       <div style={{ height: 96, width: '100%', backgroundColor: V('--th-bg-deep'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -32,7 +33,7 @@ const Tile = ({ game, onClick, label }) => {
   );
 };
 
-/** 매장 게임 전체 (시안 2c). 검색 · 8개씩 옆으로 넘기는 페이지. 점수판 요청(2g)은 4단계 */
+/** 매장 게임 전체 (시안 2c · 구경 2f). 검색 · 8개씩 옆으로 넘기는 페이지 · 오른쪽 위 점수판 요청(2g) */
 const StoreGames = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
@@ -53,18 +54,34 @@ const StoreGames = () => {
     setPage(target);
   };
   const storeName = home ? [home.store.name, home.store.branch].filter(Boolean).join(' ') : '';
+  // 2f 구경: 눌러도 게임방에 안 가고, 아래 QR 안내
+  const isVisitor = home && (home.viewer.role === 'VISITOR' || home.viewer.role === 'STAFF_OTHER');
+  const canEnter = home?.viewer.role === 'MEMBER' && home.viewer.checkin?.active && !home.store.closed;
   const navBtn = { width: 44, height: 44, border: 'none', borderRadius: '12px', background: 'none', cursor: 'pointer', color: V('--th-text-sub'), display: 'flex', alignItems: 'center', justifyContent: 'center' };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
-      <StoreTopBar title={t('store', 'storeGames')} onBack={() => navigate(-1)} backLabel={t('common', 'back')} />
-      <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <StoreTopBar
+        title={t('store', 'storeGames')}
+        onBack={() => navigate(-1)}
+        backLabel={t('common', 'back')}
+        right={(
+          <button onClick={() => navigate(`/store/${storeId}/score-request`)} style={{
+            height: 36, boxSizing: 'border-box', padding: '0 12px', borderRadius: 999, cursor: 'pointer',
+            border: `1px solid rgba(${V('--th-primary-rgb')}, 0.3)`, backgroundColor: `rgba(${V('--th-primary-rgb')}, 0.12)`,
+            color: V('--th-primary'), fontSize: '13px', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px',
+          }}>
+            <PlusIcon />{t('store', 'scoreRequestButton')}
+          </button>
+        )}
+      />
+      <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: isVisitor ? '20px 20px 150px' : '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <section style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: V('--th-text') }}>
             {fmt(t('store', 'gamesHeading'), { store: storeName })}{' '}
             <span style={{ fontSize: '16px', fontWeight: 500, color: V('--th-text-sub') }}>{t('store', 'gameCountShort').replace('{n}', games.length)}</span>
           </h1>
-          <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('store', 'gamesSub')}</span>
+          <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('store', isVisitor ? 'gamesSubVisitor' : 'gamesSub')}</span>
         </section>
         <label style={{ height: 48, boxSizing: 'border-box', padding: '0 14px', borderRadius: '12px', border: `1px solid ${V('--th-border')}`, backgroundColor: V('--th-card'), display: 'flex', alignItems: 'center', gap: '10px', color: V('--th-text-sub') }}>
           <SearchIcon />
@@ -79,7 +96,7 @@ const StoreGames = () => {
             <div key={i} style={{ flex: '0 0 100%', scrollSnapAlign: 'start', scrollSnapStop: 'always', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoRows: 152, alignContent: 'start', gap: '12px' }}>
               {pg.map(g => (
                 <Tile key={g.storeRoomId} game={g} label={fmt(t('store', 'gamePlayers'), { n: g.playerCount })}
-                  onClick={() => navigate(`/store/${storeId}/rooms/${g.storeRoomId}`)} />
+                  onClick={canEnter ? () => navigate(`/store/${storeId}/rooms/${g.storeRoomId}`) : undefined} />
               ))}
             </div>
           ))}
@@ -97,6 +114,7 @@ const StoreGames = () => {
           </nav>
         )}
       </main>
+      {isVisitor && <StoreBottomBar title={t('store', 'visitorBarTitle')} desc={t('store', 'visitorBarDesc')} note={t('store', 'visitorBarNote')} />}
     </div>
   );
 };

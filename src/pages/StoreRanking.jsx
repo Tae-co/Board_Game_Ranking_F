@@ -7,12 +7,13 @@ import { V } from '../utils/cssUtils';
 import StoreTopBar from '../components/store/StoreTopBar';
 import StoreGameChips from '../components/store/StoreGameChips';
 import StoreRankRow from '../components/store/StoreRankRow';
+import StoreBottomBar from '../components/store/StoreBottomBar';
 import { InfoButton, InfoPopup } from '../components/store/StorePopup';
 import { fmt, num } from '../components/store/fmt';
 import { card } from '../components/store/storeStyles';
 import { Skeleton } from '../components/Skeleton';
 
-/** 게임별 매장 랭킹 전체 (시안 2b). 상위 20명 + 내 순위 카드, 게임 칩으로 바꾼다 */
+/** 게임별 매장 랭킹 전체 (시안 2b · 구경 2e). 상위 20명 + 내 순위 카드(구경엔 없음), 게임 칩으로 바꾼다 */
 const StoreRanking = () => {
   const { storeId, roomId } = useParams();
   const navigate = useNavigate();
@@ -27,6 +28,9 @@ const StoreRanking = () => {
   });
   const storeName = home ? [home.store.name, home.store.branch].filter(Boolean).join(' ') : '';
   const me = ranking?.me;
+  // 2e 구경: 내 순위 없음, 아래 QR 안내
+  const isVisitor = home && (home.viewer.role === 'VISITOR' || home.viewer.role === 'STAFF_OTHER');
+  const season = ranking?.season;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
@@ -36,16 +40,21 @@ const StoreRanking = () => {
         backLabel={t('common', 'back')}
         right={<InfoButton onClick={() => setInfo(true)} label={t('store', 'infoAria')} />}
       />
-      <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: '20px 20px 40px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-        <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>
-          {fmt(t('store', 'rankingMeta'), { store: storeName, n: ranking?.playerCount ?? 0 })}
-        </span>
+      <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: isVisitor ? '20px 20px 150px' : '20px 20px 40px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>
+            {season
+              ? fmt(t('store', 'rankingMetaSeason'), { store: storeName, season: season.name, n: ranking?.playerCount ?? 0 })
+              : fmt(t('store', 'rankingMeta'), { store: storeName, n: ranking?.playerCount ?? 0 })}
+          </span>
+          {season && <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{fmt(t('store', 'seasonDaysLeft'), { n: season.daysLeft })}</span>}
+        </section>
         <StoreGameChips
           games={games}
           selectedId={Number(roomId)}
           onSelect={(id) => navigate(`/store/${storeId}/rooms/${id}/ranking`, { replace: true })}
         />
-        {me && (
+        {me && !isVisitor && (
           <section style={{ backgroundColor: V('--th-primary'), color: '#fff', borderRadius: '16px', padding: '14px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
               <span style={{ fontSize: '12px', opacity: 0.85 }}>{t('store', 'myRank')}</span>
@@ -77,7 +86,8 @@ const StoreRanking = () => {
           </section>
         )}
       </main>
-      {info && <InfoPopup title={t('store', 'infoTitle')} text={t('store', 'rankingInfo')} okLabel={t('store', 'infoOk')} onClose={() => setInfo(false)} />}
+      {isVisitor && <StoreBottomBar title={t('store', 'visitorBarTitle')} desc={t('store', 'visitorBarDesc')} note={t('store', 'visitorBarNote')} />}
+      {info && <InfoPopup title={t('store', 'infoTitle')} text={t('store', isVisitor ? 'rankingInfoVisitor' : 'rankingInfo')} okLabel={t('store', 'infoOk')} onClose={() => setInfo(false)} />}
     </div>
   );
 };

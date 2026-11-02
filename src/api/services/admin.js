@@ -45,3 +45,20 @@ export const rotateAdminStoreQrSecret = (storeId) => api.post(`/admin/stores/${s
 export const getAdminTvSetting = (storeId) => api.get(`/admin/stores/${storeId}/tv-setting`).then(r => r.data);
 export const saveAdminTvSetting = (storeId, setting) =>
   api.put(`/admin/stores/${storeId}/tv-setting`, setting).then(r => r.data);
+
+// ── 매장 시즌 · 신고(6b) · 통계 · 점수판 요청(6c) ──
+export const getAdminStoreSeason = (storeId) => api.get(`/admin/stores/${storeId}/season`).then(r => r.data);
+export const saveAdminStoreSeason = (storeId, form) => api.put(`/admin/stores/${storeId}/season`, form).then(r => r.data);
+export const getAdminStoreReports = (storeId) => api.get(`/admin/stores/${storeId}/reports`).then(r => r.data);
+// targetId가 없으면(탈퇴한 사람) 0
+const reportPath = (storeId, gameId, targetId) => `/admin/stores/${storeId}/reports/${gameId}/${targetId ?? 0}`;
+export const getAdminStoreReport = (storeId, gameId, targetId) => api.get(reportPath(storeId, gameId, targetId)).then(r => r.data);
+export const resetAdminStoreRatings = (storeId, gameId, targetId, memberIds) =>
+  api.post(`${reportPath(storeId, gameId, targetId)}/reset`, { memberIds }).then(r => r.data);
+export const closeAdminStoreReport = (storeId, gameId, targetId) => api.post(`${reportPath(storeId, gameId, targetId)}/close`).then(r => r.data);
+export const undoAdminStoreReset = (storeId, gameId, targetId) => api.post(`${reportPath(storeId, gameId, targetId)}/undo`).then(r => r.data);
+export const getAdminStoreMonthlyReport = (storeId, month) =>
+  api.get(`/admin/stores/${storeId}/report`, { params: month ? { month } : undefined }).then(r => r.data);
+export const getAdminScoreRequests = () => api.get('/admin/score-requests').then(r => r.data);
+export const setAdminScoreRequestStatus = (requestId, status) =>
+  api.put(`/admin/score-requests/${requestId}/status`, { status }).then(r => r.data);

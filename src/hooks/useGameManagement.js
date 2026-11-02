@@ -6,15 +6,16 @@ import { getAdminGames, createAdminGame, updateAdminGame, deleteAdminGame } from
 
 const GAMES_PER_PAGE = 6;
 
-export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSchema, loadFromGame }, t) => {
+// prefillName: 점수판 요청(6c) "이 게임 점수판 만들기"로 들어오면 이름을 채운 추가 폼으로 연다
+export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSchema, loadFromGame }, t, prefillName = '') => {
   const location = useLocation();
   const queryClient = useQueryClient();
-  const [form, setForm] = useState({ name: '', minPlayers: 2, maxPlayers: 6, imageUrl: '', minMinutes: '', maxMinutes: '' });
+  const [form, setForm] = useState({ name: prefillName, minPlayers: 2, maxPlayers: 6, imageUrl: '', minMinutes: '', maxMinutes: '' });
   const [editingId, setEditingId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(!!prefillName);
   const [gamePage, setGamePage] = useState(location.state?.returnPage ?? 0);
 
   const { data: games = [] } = useQuery({

@@ -148,7 +148,10 @@ const StoreEntry = () => {
       ? { label: t('store', isMember ? 'goStoreHome' : 'viewStore'), onClick: getAuthUserId() ? goHome : goLogin }
       : kind === 'failed'
         ? { label: t('store', 'retry'), onClick: () => { setProblem(null); run(); } }
-        : { label: t('store', 'goHome'), onClick: goCommunity };
+        // 운영 끝난 매장: 멤버면 지난 기록(2h), 아니면 홈
+        : kind === 'closed' && isMember
+          ? { label: t('store', 'viewPastRecords'), onClick: goHome }
+          : { label: t('store', 'goHome'), onClick: goCommunity };
     return (
       <StoreQrProblem
         kind={kind}

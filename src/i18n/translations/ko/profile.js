@@ -61,4 +61,22 @@ export default {
   themeMode: '테마',
   themeDark: '다크',
   themeLight: '라이트',
+
+  // ── 매장 탭 (plan-store 7) ──
+  recordKind: '기록 종류',
+  tabGeneral: '일반',
+  tabStore: '매장',
+  seasonTier: '이번 시즌 티어',
+  tierInfoAria: '티어 설명 보기',
+  noCommunityRecord: '아직 커뮤니티 기록이 없어요',
+  noCommunityRecordDesc: '친구들과 모임을 만들어 기록하면 여기에 티어가 나와요',
+  storeSeasonRank: '이번 시즌 순위',
+  storeRankValue: '{rank}위 / {n}명',
+  storeTopGame: '가장 많이 한 게임',
+  storeTopGameValue: '{game} · {n}판',
+  storeResetRow: '{game} 점수 초기화',
+  storeResetDesc: '신고된 {when} 경기를 확인해 500점으로 초기화했어요',
+  storeHomeLink: '{name} 매장 홈',
+  tierInfoStore: '매장 게임방에서 기록한 경기만, 매장마다 따로 계산돼요. 티어는 그 매장 이번 시즌 게임별 점수 중 가장 높은 점수로 정해요. 티어 구간은 일반과 같아요 (브론즈 ~600 · 실버 ~850 · 골드 ~1200 · 플래티넘 ~1600 · 다이아). 시즌이 끝나면 500점부터 다시 시작해요',
+  tierInfoGeneral: '커뮤니티에서 기록한 경기만 계산돼요. 매장 경기는 들어가지 않아요. 티어 구간: 브론즈 ~600 · 실버 ~850 · 골드 ~1200 · 플래티넘 ~1600 · 다이아',
 };

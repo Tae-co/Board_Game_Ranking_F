@@ -41,6 +41,8 @@ const StoreRanking = lazy(() => import('./pages/StoreRanking'));
 const StoreGames = lazy(() => import('./pages/StoreGames'));
 const StoreMatch = lazy(() => import('./pages/StoreMatch'));
 const StoreDevices = lazy(() => import('./pages/StoreDevices'));
+const StoreScoreRequest = lazy(() => import('./pages/StoreScoreRequest'));
+const StoreReport = lazy(() => import('./pages/StoreReport'));
 const StoreDevice = lazy(() => import('./pages/StoreDevice'));
 const PartyBubble = lazy(() => import('./components/store/PartyBubble'));
 
@@ -276,6 +278,8 @@ function App() {
             <Route path="/store/:storeId/rooms/:roomId/ranking" element={isAuthenticated ? <StoreRanking /> : <Navigate to="/login" replace />} />
             <Route path="/store/match/:matchId" element={isAuthenticated ? <StoreMatch /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/devices" element={isAuthenticated ? <StoreDevices /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/score-request" element={isAuthenticated ? <StoreScoreRequest /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/report" element={isAuthenticated ? <StoreReport /> : <Navigate to="/login" replace />} />
             {/* 4j 매장 기기로 쓰기 — 로그인 없이 (기기 토큰을 받으면 위의 기기 모드로 바뀐다) */}
             <Route path="/device" element={<StoreDevice />} />
 

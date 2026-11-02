@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createParty, getStoreRoom, getStoreRoomMatches, startStoreMatch, storeErrorCode } from '../api/services/stores';
+import { createParty, getStoreRoom, startStoreMatch, storeErrorCode } from '../api/services/stores';
 import { getAuthUserId, getNickname } from '../auth/storage';
 import { CURRENT_PARTY_KEY, useAutoEnterMatch, useCurrentParty } from '../hooks/useCurrentParty';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -10,7 +10,9 @@ import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
 import StoreRankRow from '../components/store/StoreRankRow';
 import StoreFixedBottom from '../components/store/StoreFixedBottom';
-import { fmt, num } from '../components/store/fmt';
+import StoreMatchHistory from '../components/store/StoreMatchHistory';
+import StoreSeasonTab from '../components/store/StoreSeasonTab';
+import { fmt } from '../components/store/fmt';
 import { card, hintText, primaryButton } from '../components/store/storeStyles';
 import { Skeleton } from '../components/Skeleton';
 
@@ -33,34 +35,8 @@ const blockText = (start, game, room, t) => {
   }
 };
 
-const MatchList = ({ storeId, roomId, t }) => {
-  const { data: matches = [], isLoading } = useQuery({
-    queryKey: ['store', 'room', Number(roomId), 'matches'],
-    queryFn: () => getStoreRoomMatches(storeId, roomId),
-  });
-  if (isLoading) return <Skeleton height={120} radius={20} />;
-  if (matches.length === 0) return <p style={{ margin: 0, padding: '24px 0', textAlign: 'center', fontSize: '13px', color: V('--th-text-sub') }}>{t('store', 'noMatches')}</p>;
-  return matches.map(m => (
-    <section key={m.id} style={{ ...card, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>{new Date(m.endedAt).toLocaleString()}</span>
-      {m.participants.map((p, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: V('--th-text') }}>
-          <span style={{ width: 32, fontWeight: 700, color: p.placement === 1 ? V('--th-primary') : V('--th-text-sub') }}>{fmt(t('store', 'placeN'), { n: p.placement })}</span>
-          <span style={{ flex: 1 }}>{p.nickname ?? t('store', 'leftMember')}</span>
-          {p.gameScore != null && <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{num(p.gameScore)}</span>}
-          {p.ratingChange != null && (
-            <span style={{ width: 44, textAlign: 'right', fontWeight: 700, color: p.ratingChange > 0 ? '#2F6B4C' : V('--th-text-sub') }}>
-              {p.ratingChange > 0 ? `+${p.ratingChange}` : p.ratingChange}
-            </span>
-          )}
-        </div>
-      ))}
-    </section>
-  ));
-};
-
 /**
- * 매장 게임방 (시안 3). 매장 랭킹 / 매치기록 탭 (시즌 탭은 시즌이 생기는 4단계). 아래는 시작 버튼 상태:
+ * 매장 게임방 (시안 3). 매장 랭킹 / 매치기록(3g) / 시즌(3l) 탭. 아래는 시작 버튼 상태:
  * 기록자면 "그룹 N명으로 게임 시작", 아니면 회색 "[기록자]님이 게임을 고르는 중", 막히면 이유, 그룹 없으면 만들기/합류
  */
 const StoreRoom = () => {
@@ -150,12 +126,12 @@ const StoreRoom = () => {
         )}
 
         <div style={{ display: 'flex', gap: '4px', padding: '4px', backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: 999 }}>
-          {['ranking', 'matches'].map(k => (
+          {['ranking', 'matches', 'season'].map(k => (
             <button key={k} onClick={() => setTab(k)} style={{
               flex: 1, height: 40, border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: '14px',
               fontWeight: tab === k ? 700 : 500, backgroundColor: tab === k ? V('--th-primary') : 'transparent',
               color: tab === k ? '#fff' : V('--th-text-sub'),
-            }}>{t('store', k === 'ranking' ? 'tabRanking' : 'tabMatches')}</button>
+            }}>{t('store', { ranking: 'tabRanking', matches: 'tabMatches', season: 'tabSeason' }[k])}</button>
           ))}
         </div>
 
@@ -179,7 +155,8 @@ const StoreRoom = () => {
             )}
           </>
         )}
-        {tab === 'matches' && <MatchList storeId={storeId} roomId={roomId} t={t} />}
+        {tab === 'matches' && <StoreMatchHistory storeId={storeId} roomId={roomId} gameName={game?.name ?? ''} t={t} />}
+        {tab === 'season' && <StoreSeasonTab storeId={storeId} roomId={roomId} t={t} />}
       </main>
 
       {st && (

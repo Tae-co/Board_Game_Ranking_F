@@ -11,8 +11,8 @@ import AdminSubPage, { AdminPopup } from './AdminSubPage';
 
 const SCREENS = ['MVP', 'TOP10', 'QR', 'EVENT', 'CONTEST', 'SEASON'];
 const INTERVALS = [5, 10, 15, 20];
-// 매장 이벤트·대회·시즌은 4·5단계에서 내용이 생긴다. 지금은 TV에서 늘 건너뛴다
-const NOT_YET = { EVENT: 'tvSkipEvent', CONTEST: 'tvSkipContest', SEASON: 'tvSkipSeason' };
+// 매장 이벤트·대회는 5단계에서 내용이 생긴다. 지금은 TV에서 늘 건너뛴다
+const NOT_YET = { EVENT: 'tvSkipEvent', CONTEST: 'tvSkipContest' };
 
 const cardStyle = {
   backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px',
@@ -83,6 +83,19 @@ const Preview = ({ screen, data, top10Game, t }) => {
       </div>
     );
   }
+  if (screen === 'SEASON' && data.seasonResult) {
+    const r = data.seasonResult;
+    return (
+      <>
+        {label(fmt(t('store', 'tvSeasonFinal'), { name: r.name }))}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
+          {r.winners.slice(0, 3).map(w => (
+            <PvTile key={w.boardGameId} label={fmt(t('store', 'tvWinnerOf'), { game: w.name })} name={w.nickname ?? '—'} value={num(w.score)} />
+          ))}
+        </div>
+      </>
+    );
+  }
   return label(t('admin', `tvScreen${screen}`));
 };
 
@@ -131,7 +144,8 @@ const AdminTvSettings = ({ store, onBack }) => {
   const pvName = pk === 'NONE' ? t('admin', 'tvPreviewQrOnly') : t('admin', `tvScreen${pk}`);
   const skipKey = NOT_YET[pk]
     ?? (pk === 'TOP10' && !top10Game ? 'tvSkipTop10' : null)
-    ?? (pk === 'MVP' && !data.mvp ? 'tvSkipMvp' : null);
+    ?? (pk === 'MVP' && !data.mvp ? 'tvSkipMvp' : null)
+    ?? (pk === 'SEASON' && !data.seasonResult ? 'tvSkipSeason' : null);
 
   const lastTv = data.tvLastSeenAt
     ? deviceSeen({ connected: true, lastSeenAt: data.tvLastSeenAt }, t).text

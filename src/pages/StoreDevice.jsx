@@ -9,7 +9,7 @@ import { clearDeviceToken, getDeviceToken, setDeviceToken } from '../utils/stora
 import { useLanguage } from '../i18n/LanguageContext';
 import DeviceStage from '../components/storeDevice/DeviceStage';
 import DevicePair from '../components/storeDevice/DevicePair';
-import { TV_H, TV_W, TvJustFinished, TvLeaders, TvQr, TvTop10 } from '../components/storeDevice/TvScreens';
+import { TV_H, TV_W, TvJustFinished, TvLeaders, TvQr, TvSeasonResult, TvTop10 } from '../components/storeDevice/TvScreens';
 import { TABLE_H, TABLE_W, TableOffline, TableQr, TvOffline } from '../components/storeDevice/TableScreens';
 import { clock, minSec } from '../components/storeDevice/deviceTheme';
 
@@ -96,19 +96,20 @@ const PairScreen = ({ onPaired, t }) => {
   );
 };
 
-/** TV 돌아가는 순서 (6k). 띄울 내용이 없는 화면은 건너뛴다. 매장 이벤트·대회·시즌은 아직 내용이 없어 늘 건너뜀 */
+/** TV 돌아가는 순서 (6k). 띄울 내용이 없는 화면은 건너뛴다. 매장 이벤트·대회는 아직 내용이 없어 늘 건너뜀 */
 const buildRotation = (display) => {
   const slides = [];
   for (const key of display.setting.order) {
     if (key === 'MVP' && (display.mvp?.gameLeaders?.length || display.mvp?.mostVisits)) slides.push({ key: 'MVP' });
     if (key === 'TOP10') display.top10.forEach(g => slides.push({ key: `TOP10-${g.boardGameId}`, game: g }));
     if (key === 'QR') slides.push({ key: 'QR' });
+    if (key === 'SEASON' && display.seasonResult) slides.push({ key: 'SEASON' });
   }
   return slides.length ? slides : [{ key: 'QR' }];
 };
 
 /** 4·4f 기기 화면. 30초마다 다시 받고, QR은 만료 시각(서버 기준)에 맞춰 새로 받는다 */
-const DisplayScreen = ({ token, onRevoked, t }) => {
+const DisplayScreen = ({ token, onRevoked, lang, t }) => {
   const [display, setDisplay] = useState(null);
   const [failed, setFailed] = useState(false);
   const [lastOkAt, setLastOkAt] = useState(null);
@@ -215,8 +216,9 @@ const DisplayScreen = ({ token, onRevoked, t }) => {
     screen = <TvJustFinished match={justQueue[0]} t={t} />;
   } else {
     const slide = rotation[slideIndex % rotation.length];
-    if (slide.key === 'MVP') screen = <TvLeaders store={display.store} mvp={display.mvp} t={t} />;
-    else if (slide.game) screen = <TvTop10 store={display.store} game={slide.game} t={t} />;
+    if (slide.key === 'MVP') screen = <TvLeaders store={display.store} season={display.season} mvp={display.mvp} t={t} />;
+    else if (slide.key === 'SEASON') screen = <TvSeasonResult store={display.store} result={display.seasonResult} lang={lang} t={t} />;
+    else if (slide.game) screen = <TvTop10 store={display.store} season={display.season} game={slide.game} t={t} />;
     else screen = <TvQr store={display.store} url={display.qr.url} remainingMs={remainingMs} t={t} />;
   }
   return <DeviceStage width={TV_W} height={TV_H}>{screen}</DeviceStage>;
@@ -228,7 +230,7 @@ const DisplayScreen = ({ token, onRevoked, t }) => {
  * 기기 모드에선 화면이 꺼지지 않게 한다 (네이티브만).
  */
 const StoreDevice = () => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [token, setToken] = useState(() => getDeviceToken());
 
   useEffect(() => {
@@ -253,7 +255,7 @@ const StoreDevice = () => {
   }, []);
 
   return token
-    ? <DisplayScreen token={token} onRevoked={handleRevoked} t={t} />
+    ? <DisplayScreen token={token} onRevoked={handleRevoked} lang={lang} t={t} />
     : <PairScreen onPaired={handlePaired} t={t} />;
 };
 
