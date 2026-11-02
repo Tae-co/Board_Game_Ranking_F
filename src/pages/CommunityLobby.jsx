@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Shield, Ticket } from 'lucide-react';
+import { Plus, ScanLine, Shield, Store as StoreIcon, Ticket } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
@@ -11,8 +11,10 @@ import { EVENTS, logEvent } from '../api/services/events';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
+import MyStoreSection, { StoreDirectoryPreview } from '../components/store/MyStoreSection';
+import { useMyStores } from '../hooks/useMyStores';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
-import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit } from '../utils/storage';
+import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit, getPendingStoreTicket, getLobbyFocus, setLobbyFocus as saveLobbyFocus } from '../utils/storage';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -33,6 +35,13 @@ const CommunityLobby = () => {
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
   const [pendingJoinCode, setPendingJoinCode] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
+  const [lobbyFocus, setLobbyFocus] = useState(getLobbyFocus);
+
+  // 매장 QR을 찍고 로그인하러 갔다가(네이티브 OAuth는 redirectAfterLogin 없이 여기로 온다) 돌아오면 가입·체크인을 이어 간다
+  useEffect(() => {
+    const pending = getPendingStoreTicket();
+    if (pending) navigate(`/s/${pending.storeId}`, { replace: true });
+  }, []);
 
   useEffect(() => {
     if (showJoinInput) {
@@ -72,9 +81,17 @@ const CommunityLobby = () => {
   // 요청이 실패해도 목록은 빈 배열이다 — "없습니다"나 첫 방문 화면 대신 실패했다고 말한다.
   // 한 번도 못 받았을 때만이다. 참가 직후 새로고침 같은 백그라운드 재요청이 실패했다고
   // 이미 받아둔 목록을 오류 화면으로 가리면 안 된다.
+  const { data: myStores = [], isLoading: storesLoading } = useMyStores();
+
   const loadFailed = myError || joinedError;
-  const isFirstVisit = !myLoading && !joinedLoading && !loadFailed
-    && myCommunities.length === 0 && joinedCommunities.length === 0;
+  // 매장만 있는 사람(매장 QR로 들어온 사람)은 첫 방문이 아니다 — 매장 카드와 빈 커뮤니티 목록을 본다
+  const isFirstVisit = !myLoading && !joinedLoading && !storesLoading && !loadFailed
+    && myCommunities.length === 0 && joinedCommunities.length === 0 && myStores.length === 0;
+
+  const chooseStoreFocus = () => {
+    saveLobbyFocus('store');
+    setLobbyFocus('store');
+  };
 
   const handleEnterCommunity = (community) => {
     enterCommunity(community, userId);
@@ -252,6 +269,37 @@ const CommunityLobby = () => {
               {myFetching || joinedFetching ? '...' : t('community', 'loadFailedRetry')}
             </button>
           </div>
+        ) : isFirstVisit && lobbyFocus === 'store' ? (
+          // 1e 매장만 고른 첫 화면: 빈 내 매장 자리에 QR 안내, 입점 매장, 모임 만들기·초대코드는 작게
+          <div>
+            <div style={{
+              borderRadius: '18px', padding: '22px 20px', marginBottom: '28px',
+              backgroundColor: V('--th-card'), border: `1px dashed var(--th-border)`,
+              textAlign: 'center',
+            }}>
+              <div style={{ width: 52, height: 52, borderRadius: '16px', margin: '0 auto 12px', backgroundColor: V('--th-bg'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ScanLine size={26} color="var(--th-primary)" />
+              </div>
+              <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: '0 0 6px' }}>{t('store', 'storeFocusTitle')}</p>
+              <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.6 }}>{t('store', 'storeFocusDesc')}</p>
+            </div>
+            <StoreDirectoryPreview t={t} />
+            <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: '0 0 8px', textAlign: 'center' }}>{t('store', 'storeFocusOther')}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '16px' }}>
+              <button
+                onClick={() => navigate('/create-community')}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', color: V('--th-primary'), padding: '4px' }}
+              >
+                {t('community', 'firstVisitCreate')}
+              </button>
+              <button
+                onClick={() => { logEvent(EVENTS.COMMUNITY_JOIN_STARTED); setJoinCode(''); setJoinError(''); setShowJoinInput(true); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '13px', fontWeight: '700', color: V('--th-primary'), padding: '4px' }}
+              >
+                {t('community', 'firstVisitJoin')}
+              </button>
+            </div>
+          </div>
         ) : isFirstVisit ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), margin: '0 0 2px' }}>
@@ -292,8 +340,28 @@ const CommunityLobby = () => {
                 <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.5 }}>{t('community', 'firstVisitJoinDesc')}</p>
               </div>
             </button>
+            <button
+              onClick={chooseStoreFocus}
+              style={{
+                width: '100%', borderRadius: '18px', padding: '22px 20px',
+                cursor: 'pointer', textAlign: 'left',
+                backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
+                display: 'flex', alignItems: 'center', gap: '14px',
+              }}
+            >
+              <div style={{ width: 44, height: 44, borderRadius: '14px', backgroundColor: V('--th-bg'), display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <StoreIcon size={22} color="var(--th-primary)" />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: '17px', fontWeight: '800', color: V('--th-text'), margin: '0 0 4px' }}>{t('store', 'firstVisitStore')}</p>
+                <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.5 }}>{t('store', 'firstVisitStoreDesc')}</p>
+              </div>
+            </button>
           </div>
         ) : (<>
+        {/* 내 매장 · 입점 매장 (시안 1). 커뮤니티 목록 위 */}
+        <MyStoreSection t={t} />
+
         {/* Joined Communities */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
           <p style={{ fontSize: '16px', fontWeight: '700', color: V('--th-text'), margin: 0 }}>

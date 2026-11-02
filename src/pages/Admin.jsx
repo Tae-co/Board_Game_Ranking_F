@@ -6,6 +6,7 @@ import { clearAuthSession } from '../auth/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import AdminGamesTab from '../components/admin/AdminGamesTab';
 import AdminMembersTab from '../components/admin/AdminMembersTab';
+import AdminStoresTab from '../components/admin/AdminStoresTab';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Admin = () => {
   const tabs = [
     { key: 'games', label: t('admin', 'gamesTab') },
     { key: 'members', label: t('admin', 'membersTab') },
+    { key: 'stores', label: t('admin', 'storesTab') },
     { key: 'settings', label: t('admin', 'settingsTab') },
   ];
 
@@ -55,6 +57,7 @@ const Admin = () => {
       <div className="px-6">
         {activeTab === 'games' && <AdminGamesTab />}
         {activeTab === 'members' && <AdminMembersTab />}
+        {activeTab === 'stores' && <AdminStoresTab />}
       </div>
     </div>
   );
