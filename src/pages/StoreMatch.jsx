@@ -228,7 +228,8 @@ const StoreMatch = () => {
   const confirmedCount = match.participants.filter(p => p.memberId != null && p.confirmed).length;
   const activeCount = match.participants.filter(p => p.memberId != null).length;
   const mine = match.participants.find(p => p.memberId === myId);
-  const back = () => goBack(roomPath);
+  // 기록 완료(3n)는 항상 그 게임방으로 — 바로 매장 랭킹을 보게 (대회 판은 위에서 이미 대회 화면으로 보냄)
+  const back = () => (match.status === 'RECORDED' ? navigate(roomPath, { replace: true }) : goBack(roomPath));
   const errorLine = error && <span role="alert" style={{ textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#B91C1C' }}>{error}</span>;
 
   // ── 3d·3e·3k 기록자 점수판 / 3f 같이 하는 사람 ──
