@@ -130,20 +130,33 @@ const ResultList = ({ participants, myId, t, showDelta = false, contest = false 
   </section>
 );
 
-/** 기록자 점수판 입력을 같이 하는 사람 화면에 보낸다 (debounce) */
+/**
+ * 기록자 점수판 입력을 같이 하는 사람 화면에 보낸다 (debounce).
+ * flush = 저장 직전 아직 안 보낸 입력을 먼저 보낸다 — 안 그러면 "점수가 달라요" 뒤 다시 열린 점수판에 마지막 입력이 빠진다
+ */
 const useDraftSync = (matchId, enabled) => {
   const timer = useRef(null);
+  const pending = useRef(null);
   const first = useRef(true);
   useEffect(() => () => clearTimeout(timer.current), []);
-  return useCallback((scores) => {
+  const send = useCallback(() => {
+    const scores = pending.current;
+    pending.current = null;
+    return saveStoreMatchDraft(matchId, JSON.stringify(scores)).catch(() => {});
+  }, [matchId]);
+  const onChange = useCallback((scores) => {
     if (!enabled) return;
     // 처음 그려질 때 들어오는 값은 이미 서버에 있는 값이다
     if (first.current) { first.current = false; return; }
+    pending.current = scores;
     clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      saveStoreMatchDraft(matchId, JSON.stringify(scores)).catch(() => {});
-    }, DRAFT_DEBOUNCE_MS);
-  }, [matchId, enabled]);
+    timer.current = setTimeout(send, DRAFT_DEBOUNCE_MS);
+  }, [enabled, send]);
+  const flush = useCallback(async () => {
+    clearTimeout(timer.current);
+    if (pending.current) await send();
+  }, [send]);
+  return { onChange, flush };
 };
 
 /**
@@ -176,7 +189,7 @@ const StoreMatch = () => {
 
   const isRecorder = match?.recorderMemberId === myId;
   const editable = match && (match.status === 'PLAYING' || match.status === 'DISPUTED');
-  const onScoresChange = useDraftSync(matchId, !!(isRecorder && editable));
+  const { onChange: onScoresChange, flush: flushDraft } = useDraftSync(matchId, !!(isRecorder && editable));
   const players = useMemo(() => (match?.participants ?? [])
     .filter(p => p.memberId != null)
     .map(p => ({ memberId: p.memberId, nickname: p.nickname })), [match?.participants]);
@@ -296,6 +309,7 @@ const StoreMatch = () => {
     const onSubmit = async (participants) => {
       setError(null);
       try {
+        await flushDraft();
         await refresh(await submitStoreMatch(matchId, participants));
       } catch (e) {
         setError(storeErrorCode(e) ? e.response.data.message : t('store', 'saveFailed'));
