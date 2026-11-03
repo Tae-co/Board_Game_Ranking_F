@@ -8,7 +8,7 @@ const StoreFixedBottom = ({ children }) => (
   }}>
     <div style={{
       maxWidth: 430, margin: '0 auto', boxSizing: 'border-box',
-      padding: '12px 20px calc(28px + env(safe-area-inset-bottom))',
+      padding: '12px 20px calc(12px + env(safe-area-inset-bottom))',
       display: 'flex', flexDirection: 'column', gap: '8px',
     }}>
       {children}
