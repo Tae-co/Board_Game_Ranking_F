@@ -117,6 +117,7 @@ export default {
   mvpGames: '최다 참여',
   mvpGamesCount: '{n}판 참여',
   mvpLeaders: '게임별 1위',
+  mvpEmpty: '이번 시즌 기록이 아직 없어요',
   pointsUnit: '{n}점',
   rankingTitle: '게임별 매장 랭킹',
   meBadge: '나',

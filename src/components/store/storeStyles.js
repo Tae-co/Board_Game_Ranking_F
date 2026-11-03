@@ -9,6 +9,11 @@ export const meBadge = badge(V('--th-primary'), '#fff');
 
 export const card = { backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px' };
 
+/** 섹션에 보여줄 게 없을 때 제목 아래 빈 카드 (매장 홈 이벤트·MVP·랭킹) */
+export const emptyCard = {
+  ...card, margin: 0, padding: '24px 16px', textAlign: 'center', fontSize: '13px', color: V('--th-text-sub'),
+};
+
 export const sectionTitle = { margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') };
 
 export const page = { maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' };

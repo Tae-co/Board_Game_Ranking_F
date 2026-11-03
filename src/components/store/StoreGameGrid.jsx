@@ -3,6 +3,7 @@ import StorageImage from '../StorageImage';
 import GameImageFallback from '../shared/GameImageFallback';
 import { STORE_GAME_GRID_LIMIT } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
+import { emptyCard } from './storeStyles';
 
 const GameTile = ({ game, onClick, playersLabel }) => {
   const [imgError, setImgError] = useState(false);
@@ -66,9 +67,7 @@ const StoreGameGrid = ({ games, onGameClick, onMore, showCount, t }) => {
         )}
       </div>
       {games.length === 0 ? (
-        <p style={{ fontSize: '13px', color: V('--th-text-sub'), textAlign: 'center', padding: '16px 0', margin: 0 }}>
-          {t('store', 'noStoreGames')}
-        </p>
+        <p style={emptyCard}>{t('store', 'noStoreGames')}</p>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '12px' }}>
           {visible.map(game => (

@@ -2,6 +2,7 @@
 export default {
   // ── 2 store home event cards ──
   eventsTitle: 'Events',
+  eventsEmpty: 'No events right now',
   badgeRecruiting: 'Open',
   badgeToday: 'Today',
   badgeLive: 'Live',

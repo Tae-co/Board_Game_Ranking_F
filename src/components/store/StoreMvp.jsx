@@ -1,5 +1,6 @@
 import { V } from '../../utils/cssUtils';
 import { fmt, num } from './fmt';
+import { emptyCard } from './storeStyles';
 
 const Tile = ({ icon, label, name, sub }) => (
   <div style={{ backgroundColor: V('--th-bg'), borderRadius: '14px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px', minWidth: 0 }}>
@@ -18,9 +19,16 @@ const CalendarIcon = () => svg(<><rect x="4" y="5" width="16" height="15" rx="2"
 const DiceIcon = () => svg(<><rect x="4" y="4" width="16" height="16" rx="4" /><circle cx="9" cy="9" r="1" fill="currentColor" /><circle cx="15" cy="15" r="1" fill="currentColor" /></>);
 const TrophyIcon = () => svg(<><path d="M8 4h8v5a4 4 0 01-8 0z" /><path d="M8 6H5a3 3 0 003 4M16 6h3a3 3 0 01-3 4M12 13v4M9 20h6" /></>);
 
-/** 이번 시즌 매장 MVP (시안 2): 최다 방문 · 최다 참여 · 게임별 1위 가로 넘김 */
+/** 이번 시즌 매장 MVP (시안 2): 최다 방문 · 최다 참여 · 게임별 1위 가로 넘김. 기록이 없으면(mvp null) 빈 카드 */
 const StoreMvp = ({ mvp, t }) => {
-  if (!mvp) return null;
+  if (!mvp) {
+    return (
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') }}>{t('store', 'mvpTitle')}</h2>
+        <p style={emptyCard}>{t('store', 'mvpEmpty')}</p>
+      </section>
+    );
+  }
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') }}>{t('store', 'mvpTitle')}</h2>

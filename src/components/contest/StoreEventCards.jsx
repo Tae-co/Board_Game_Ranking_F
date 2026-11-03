@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { V } from '../../utils/cssUtils';
 import { fmt } from '../store/fmt';
-import { sectionTitle } from '../store/storeStyles';
+import { emptyCard, sectionTitle } from '../store/storeStyles';
 import { CONTEST_PATH, PILL, contestWhen, pill, shortDate } from './contestUtils';
 
 const cardStyle = {
@@ -31,11 +31,18 @@ const contestState = (c, role) => {
 
 /**
  * 매장 홈 "진행 중 이벤트" (시안 2·2d): 하루 대회 카드 + 매장 이벤트 카드를 옆으로 넘긴다.
- * 구경(2d)은 대회 참가가 잠긴다. 대회 카드는 대회 화면(5a·5b·5d, STAFF는 5e)으로
+ * 구경(2d)은 대회 참가가 잠긴다. 대회 카드는 대회 화면(5a·5b·5d, STAFF는 5e)으로. 둘 다 없으면 빈 카드
  */
 const StoreEventCards = ({ storeId, contests = [], events = [], role, t, lang }) => {
   const navigate = useNavigate();
-  if (contests.length === 0 && events.length === 0) return null;
+  if (contests.length === 0 && events.length === 0) {
+    return (
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <h2 style={sectionTitle}>{t('contest', 'eventsTitle')}</h2>
+        <p style={emptyCard}>{t('contest', 'eventsEmpty')}</p>
+      </section>
+    );
+  }
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
       <h2 style={sectionTitle}>{t('contest', 'eventsTitle')}</h2>

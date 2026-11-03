@@ -117,6 +117,7 @@ export default {
   mvpGames: 'Most games',
   mvpGamesCount: '{n} games',
   mvpLeaders: 'Top by game',
+  mvpEmpty: 'No records this season yet',
   pointsUnit: '{n} pts',
   rankingTitle: 'Store rankings by game',
   meBadge: 'Me',
