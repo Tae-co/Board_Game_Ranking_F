@@ -11,12 +11,18 @@ import { QrIcon } from './StoreIcons';
 const sectionStyle = { display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' };
 const h2Style = { margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') };
 
-/** 입점 매장 미리 보기 (두 곳) + 전체 보기 → 1g. 1e도 같이 쓴다. 내 매장도 빼지 않는다 — 가입해도 섹션이 남아야 한다 */
+/** 입점 매장 미리 보기 (두 곳) + 전체 보기 → 1g. 1e도 같이 쓴다. 내 매장도 빼지 않고 뒤로 보낸다 — 가입해도 섹션이 남아야 한다 */
 export const StoreDirectoryPreview = ({ t }) => {
   const navigate = useNavigate();
   const { data: directory = [] } = useStoreDirectory();
+  const { data: myStores = [] } = useMyStores();
 
   if (directory.length === 0) return null;
+
+  // STAFF의 지정 매장은 가입(store_member)이 아니라 joined가 false다 — 내 매장 목록으로도 본다
+  const mine = new Set(myStores.map(s => s.id));
+  const isMine = (s) => s.joined || mine.has(s.id);
+  const ordered = [...directory.filter(s => !isMine(s)), ...directory.filter(isMine)];
 
   return (
     <section style={sectionStyle}>
@@ -30,7 +36,7 @@ export const StoreDirectoryPreview = ({ t }) => {
         </button>
       </div>
       <div style={{ display: 'flex', gap: '10px' }}>
-        {directory.slice(0, STORE_DIRECTORY_PREVIEW).map(store => (
+        {ordered.slice(0, STORE_DIRECTORY_PREVIEW).map(store => (
           <button
             key={store.id}
             onClick={() => navigate(`/store/${store.id}`)}
