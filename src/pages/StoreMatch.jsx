@@ -15,6 +15,7 @@ import StoreFixedBottom from '../components/store/StoreFixedBottom';
 import { ConfirmDialog } from '../components/store/StorePopup';
 import { fmt, num } from '../components/store/fmt';
 import { card, ghostButton, hintText, meBadge, primaryButton } from '../components/store/storeStyles';
+import { CONTEST_PATH, placementPoints } from '../components/contest/contestUtils';
 
 const GREEN = '#2F6B4C';
 const DRAFT_DEBOUNCE_MS = 600;
@@ -97,8 +98,8 @@ const ElapsedCard = ({ match, now, t, over = false }) => {
   );
 };
 
-/** 순위 · 이름 · 게임 점수 목록 (시안 3i·3j·3n) */
-const ResultList = ({ participants, myId, t, showDelta = false }) => (
+/** 순위 · 이름 · 게임 점수 목록 (시안 3i·3j·3n). 대회 판(contest)이면 순위 점수도 */
+const ResultList = ({ participants, myId, t, showDelta = false, contest = false }) => (
   <section style={{ ...card, padding: '4px 16px' }}>
     {[...participants].sort((a, b) => (a.placement ?? 99) - (b.placement ?? 99)).map((p, i) => (
       <div key={p.memberId ?? `x${i}`} style={{ height: 52, display: 'flex', alignItems: 'center', gap: '12px', borderTop: i ? `1px solid ${V('--th-border')}` : 0 }}>
@@ -109,7 +110,11 @@ const ResultList = ({ participants, myId, t, showDelta = false }) => (
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nickname ?? t('store', 'leftMember')}</span>
           {p.memberId === myId && <span style={meBadge}>{t('store', 'meBadge')}</span>}
         </span>
-        {p.gameScore != null && (
+        {contest && p.placement != null ? (
+          <span style={{ fontSize: '14px', fontWeight: 700, color: V('--th-text') }}>
+            {fmt(t('contest', 'gameScore'), { n: num(p.gameScore) })}{fmt(t('contest', 'pointsSuffix'), { n: placementPoints(participants.length, p.placement) })}
+          </span>
+        ) : p.gameScore != null && (
           <span style={{ fontSize: showDelta ? '13px' : '15px', fontWeight: showDelta ? 500 : 700, color: showDelta ? V('--th-text-sub') : V('--th-text') }}>
             {showDelta ? fmt(t('store', 'gameScoreValue'), { n: num(p.gameScore) }) : num(p.gameScore)}
           </span>
@@ -144,6 +149,7 @@ const useDraftSync = (matchId, enabled) => {
  * 매장 판 화면 `/store/match/:matchId` — 상태·역할로 나눈다 (plan-store §2 3d~3n).
  * PLAYING/DISPUTED: 기록자 점수판(3d·3e·3k) / 같이 하는 사람 읽기 전용(3f)
  * AWAITING_CONFIRM: 기록자 3i / 같이 한 사람 3j · RECORDED 3n · EXPIRED 3m · CANCELLED → 게임방
+ * 대회 판(match.contest): 시간 바·게임 취소 없음, 참가자 확인 뒤 AWAITING_STAFF(STAFF 확인 중), 반영되면 대회 화면(5b)
  */
 const StoreMatch = () => {
   const { matchId } = useParams();
@@ -193,10 +199,17 @@ const StoreMatch = () => {
   if (isError) return <Navigate to="/community" replace />;
   if (!match) return <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }} />;
 
-  const roomPath = `/store/${match.store.id}/rooms/${match.storeRoomId}`;
+  const contest = match.contest;
+  const roomPath = contest ? CONTEST_PATH(match.store.id, contest.id) : `/store/${match.store.id}/rooms/${match.storeRoomId}`;
   if (match.status === 'CANCELLED') return <Navigate to={roomPath} replace state={{ notice: 'cancelled' }} />;
+  // 대회 판은 STAFF가 반영하면 대회 화면(5b)에서 그 판 순위 점수·현재 순위를 본다
+  if (contest && match.status === 'RECORDED') return <Navigate to={roomPath} replace />;
+  const inMatch = match.participants.some(p => p.memberId === myId);
+  // 같이 하지 않은 STAFF는 5c에서 본다
+  if (contest && !inMatch) return <Navigate to={`${roomPath}/confirm/${match.id}`} replace />;
 
   const game = match.gameName;
+  const contestRound = contest ? { game, n: contest.round } : null;
   const confirmedCount = match.participants.filter(p => p.memberId != null && p.confirmed).length;
   const activeCount = match.participants.filter(p => p.memberId != null).length;
   const mine = match.participants.find(p => p.memberId === myId);
@@ -211,10 +224,10 @@ const StoreMatch = () => {
     const draft = parseDraft(match.draftJson);
     const header = (
       <StoreTopBar
-        title={fmt(t('store', 'playingTitle'), { game })}
+        title={contest ? fmt(t('contest', 'playingTitle'), contestRound) : fmt(t('store', 'playingTitle'), { game })}
         onBack={back}
         backLabel={t('common', 'back')}
-        right={isRecorder ? (
+        right={isRecorder && !contest ? (
           <button onClick={() => setDialog('cancel')} style={{ height: 44, padding: '0 10px', border: 'none', background: 'none', cursor: 'pointer', color: '#B91C1C', fontSize: '14px', fontWeight: 700 }}>
             {t('store', 'cancelGame')}
           </button>
@@ -230,7 +243,9 @@ const StoreMatch = () => {
         )}
         {isRecorder && disputed && (
           <section style={{ backgroundColor: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '16px', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '15px', fontWeight: 700, color: '#9A3412' }}>{fmt(t('store', 'disputedBy'), { name: match.disputedByNickname })}</span>
+            <span style={{ fontSize: '15px', fontWeight: 700, color: '#9A3412' }}>
+              {contest?.staffReturned ? t('contest', 'staffReturned') : fmt(t('store', 'disputedBy'), { name: match.disputedByNickname })}
+            </span>
             <span style={{ fontSize: '13px', lineHeight: 1.5, color: '#7C2D12' }}>{t('store', 'disputedDesc')}</span>
           </section>
         )}
@@ -240,7 +255,11 @@ const StoreMatch = () => {
             <span style={{ fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>{fmt(t('store', 'disputedDoneDesc'), { name: match.recorderNickname })}</span>
           </section>
         )}
-        <ElapsedCard match={match} now={now} t={t} />
+        {contest ? (
+          <section style={{ backgroundColor: `rgba(${V('--th-primary-rgb')}, 0.12)`, borderRadius: '16px', padding: '12px 16px', fontSize: '13px', lineHeight: 1.5, color: V('--th-primary') }}>
+            {t('contest', 'noTimeLimit')}
+          </section>
+        ) : <ElapsedCard match={match} now={now} t={t} />}
       </div>
     );
     const after = (
@@ -260,7 +279,7 @@ const StoreMatch = () => {
             </button>
             <span style={hintText}>
               {!saveOpen ? fmt(t('store', 'saveEarlyHint'), { n: match.minMinutes })
-                : resaving ? t('store', 'resaveHint') : t('store', 'saveResultHint')}
+                : resaving ? (contest ? t('contest', 'resaveHint') : t('store', 'resaveHint')) : t('store', 'saveResultHint')}
             </span>
             {errorLine}
           </>
@@ -325,15 +344,17 @@ const StoreMatch = () => {
 
   // ── 3i 확인 기다리는 중 (기록자) ──
   if (match.status === 'AWAITING_CONFIRM' && isRecorder) {
-    return shell(fmt(t('store', 'confirmWaitTitle'), { game }), (
+    return shell(contest ? fmt(t('contest', 'waitTitle'), { game }) : fmt(t('store', 'confirmWaitTitle'), { game }), (
       <>
         <section style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', padding: '8px 0' }}>
-          <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{fmt(t('store', 'gameTime'), { game, n: gameMinutes })}</span>
+          <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>
+            {contest ? fmt(t('contest', 'gameTime'), { ...contestRound, m: gameMinutes }) : fmt(t('store', 'gameTime'), { game, n: gameMinutes })}
+          </span>
           <span style={{ fontSize: '40px', fontWeight: 700, letterSpacing: '0.02em', color: V('--th-text') }}>{clock(ms(match.confirmDeadline) - now)}</span>
-          <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text') }}>{t('store', 'timeoutRecord')}</span>
+          <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text') }}>{contest ? t('contest', 'countLine') : t('store', 'timeoutRecord')}</span>
           <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-primary') }}>{fmt(t('store', 'confirmCount'), { a: confirmedCount, b: activeCount })}</span>
         </section>
-        <ResultList participants={match.participants} myId={myId} t={t} />
+        <ResultList participants={match.participants} myId={myId} t={t} contest={!!contest} />
         <section style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') }}>{t('store', 'confirmStatus')}</h2>
           <div style={{ ...card, padding: '4px 16px' }}>
@@ -358,7 +379,9 @@ const StoreMatch = () => {
             ))}
           </div>
         </section>
-        <span style={{ fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>{fmt(t('store', 'confirmRule'), { max: match.maxMinutes })}</span>
+        <span style={{ fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>
+          {contest ? t('contest', 'ruleLine') : fmt(t('store', 'confirmRule'), { max: match.maxMinutes })}
+        </span>
       </>
     ), (
       <>
@@ -374,7 +397,9 @@ const StoreMatch = () => {
     return shell(fmt(t('store', 'confirmTitle'), { game }), (
       <>
         <section style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', padding: '8px 0', textAlign: 'center' }}>
-          <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{fmt(t('store', 'gameTime'), { game, n: gameMinutes })}</span>
+          <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>
+            {contest ? fmt(t('contest', 'gameTime'), { ...contestRound, m: gameMinutes }) : fmt(t('store', 'gameTime'), { game, n: gameMinutes })}
+          </span>
           <span style={{ fontSize: '20px', fontWeight: 700, color: V('--th-text') }}>{fmt(t('store', 'savedBy'), { name: match.recorderNickname })}</span>
           <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('store', 'checkTable')}</span>
           <span style={{ fontSize: '14px', fontWeight: 700, color: V('--th-primary') }}>
@@ -383,7 +408,7 @@ const StoreMatch = () => {
               : fmt(t('store', 'timerRecord'), { t: clock(ms(match.confirmDeadline) - now) })}
           </span>
         </section>
-        <ResultList participants={match.participants} myId={myId} t={t} />
+        <ResultList participants={match.participants} myId={myId} t={t} contest={!!contest} />
         <WarnBox text1={fmt(t('store', 'fakeWarnConfirm1'), { game })} strong={t('store', 'fakeWarnReset')} text2={t('store', 'fakeWarnConfirm2')} />
       </>
     ), done ? (
@@ -394,6 +419,24 @@ const StoreMatch = () => {
         <button onClick={() => act(() => disputeStoreMatch(matchId))} disabled={busy} style={{ ...ghostButton, color: '#B91C1C' }}>{t('store', 'disputeButton')}</button>
       </>
     ) : null);
+  }
+
+  // ── 대회 판 STAFF 확인 중 (시안 3i contestStaff) ──
+  if (match.status === 'AWAITING_STAFF') {
+    return shell(fmt(t('contest', 'staffStageTitle'), { game }), (
+      <>
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center', padding: '8px 0', textAlign: 'center' }}>
+          <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>
+            {fmt(t('contest', 'staffStageLine'), { ...contestRound, a: confirmedCount, b: activeCount })}
+          </span>
+          <span style={{ fontSize: '20px', fontWeight: 700, color: V('--th-text') }}>{t('contest', 'staffStageBig')}</span>
+          <span style={{ fontSize: '14px', lineHeight: 1.5, color: V('--th-text-sub') }}>{t('contest', 'staffStageBody')}</span>
+        </section>
+        <ResultList participants={match.participants} myId={myId} t={t} contest />
+      </>
+    ), (
+      <button onClick={back} style={ghostButton}>{t('contest', 'backToContest')}</button>
+    ));
   }
 
   // 끝난 판 다음은 지금 그룹 기록자가 고른다 (판 사이에 기록자가 바뀌었을 수 있다)

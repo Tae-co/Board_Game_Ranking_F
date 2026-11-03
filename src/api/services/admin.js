@@ -62,3 +62,15 @@ export const getAdminStoreMonthlyReport = (storeId, month) =>
 export const getAdminScoreRequests = () => api.get('/admin/score-requests').then(r => r.data);
 export const setAdminScoreRequestStatus = (requestId, status) =>
   api.put(`/admin/score-requests/${requestId}/status`, { status }).then(r => r.data);
+
+// ── 매장 이벤트 (6j) ──
+export const getAdminStoreContests = (storeId) => api.get(`/admin/stores/${storeId}/contests`).then(r => r.data);
+export const createAdminStoreContest = (storeId, form) => api.post(`/admin/stores/${storeId}/contests`, form).then(r => r.data);
+export const updateAdminStoreContest = (storeId, contestId, form) =>
+  api.put(`/admin/stores/${storeId}/contests/${contestId}`, form).then(r => r.data);
+export const deleteAdminStoreContest = (storeId, contestId) => api.delete(`/admin/stores/${storeId}/contests/${contestId}`).then(r => r.data);
+export const getAdminStoreEvents = (storeId) => api.get(`/admin/stores/${storeId}/events`).then(r => r.data);
+export const createAdminStoreEvent = (storeId, form) => api.post(`/admin/stores/${storeId}/events`, form).then(r => r.data);
+export const updateAdminStoreEvent = (storeId, eventId, form) =>
+  api.put(`/admin/stores/${storeId}/events/${eventId}`, form).then(r => r.data);
+export const deleteAdminStoreEvent = (storeId, eventId) => api.delete(`/admin/stores/${storeId}/events/${eventId}`).then(r => r.data);

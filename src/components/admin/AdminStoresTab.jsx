@@ -10,6 +10,7 @@ import AdminStoreRooms from './AdminStoreRooms';
 import AdminStoreDevices from './AdminStoreDevices';
 import AdminTvSettings from './AdminTvSettings';
 import AdminStoreSeason from './AdminStoreSeason';
+import AdminStoreEvents from './AdminStoreEvents';
 import AdminReportReview from './AdminReportReview';
 import AdminScoreRequests from './AdminScoreRequests';
 import { PopularBars, ReportTiles } from '../store/ReportStats';
@@ -37,7 +38,7 @@ const ghostButton = {
 
 /**
  * 6 어드민 매장 탭: 매장 선택 → 매장 정보(수정 6f) · 매장 기기(6g) · STAFF 지정(6h) · 매장 TV 화면(6k) ·
- * 게임방 관리(6i) · 시즌 · 신고(6b) · 점수판 요청(6c) · 통계 · "+ 매장 등록"(6e). 이벤트 칸은 5단계에서 더한다.
+ * 게임방 관리(6i) · 시즌 · 이벤트(6j) · 신고(6b) · 점수판 요청(6c) · 통계 · "+ 매장 등록"(6e).
  */
 const AdminStoresTab = ({ onCreateGame }) => {
   const { t, lang } = useLanguage();
@@ -180,6 +181,8 @@ const AdminStoresTab = ({ onCreateGame }) => {
       )}
 
       {selected && !selected.store.closed && <AdminStoreSeason store={selected.store} />}
+
+      {selected && !selected.store.closed && <AdminStoreEvents key={selected.store.id} store={selected.store} />}
 
       {selected && (
         <section style={{ ...sectionCard, gap: '4px' }}>

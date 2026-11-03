@@ -15,6 +15,7 @@ import StoreMvp from '../components/store/StoreMvp';
 import StoreGameRankings from '../components/store/StoreGameRankings';
 import { ChartIcon, MonitorIcon, QrIcon, ShopIcon } from '../components/store/StoreIcons';
 import StoreClosedView from '../components/store/StoreClosedView';
+import StoreEventCards from '../components/contest/StoreEventCards';
 import { fmt } from '../components/store/fmt';
 import { Skeleton } from '../components/Skeleton';
 
@@ -25,7 +26,6 @@ const noteStyle = {
 
 /**
  * 매장 홈 `/store/:storeId` — 2(멤버·STAFF) · 2d(구경) · 2j(방금 가입) · 2h(운영 끝남). viewer.role로 나눈다.
- * 대회·이벤트 카드(5단계)는 아직 없다.
  */
 /** 10/30 14:20 */
 const matchWhen = (iso) => {
@@ -233,6 +233,8 @@ const StoreHome = () => {
                   </button>
                 </section>
               )}
+
+              <StoreEventCards storeId={storeId} contests={home.contests} events={home.events} role={role} t={t} lang={lang} />
 
               <StoreMvp mvp={home.mvp} t={t} />
 

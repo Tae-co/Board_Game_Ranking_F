@@ -8,11 +8,11 @@ import { fmt, num } from '../store/fmt';
 import { deviceSeen } from '../store/deviceSeen';
 import { ArrowDownIcon, ArrowUpIcon, BackIcon, CloseIcon, NextIcon } from '../store/StoreIcons';
 import AdminSubPage, { AdminPopup } from './AdminSubPage';
+import AdminStoreEvents from './AdminStoreEvents';
+import { contestWhen } from '../contest/contestUtils';
 
 const SCREENS = ['MVP', 'TOP10', 'QR', 'EVENT', 'CONTEST', 'SEASON'];
 const INTERVALS = [5, 10, 15, 20];
-// 매장 이벤트·대회는 5단계에서 내용이 생긴다. 지금은 TV에서 늘 건너뛴다
-const NOT_YET = { EVENT: 'tvSkipEvent', CONTEST: 'tvSkipContest' };
 
 const cardStyle = {
   backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px',
@@ -39,7 +39,7 @@ const PvTile = ({ label, name, value }) => (
   </span>
 );
 
-const Preview = ({ screen, data, top10Game, t }) => {
+const Preview = ({ screen, data, top10Game, lang, t }) => {
   const label = (text) => <span style={{ fontSize: 9, fontWeight: 700, color: PV.label }}>{text}</span>;
   if (screen === 'MVP') {
     const leader = data.mvp?.gameLeaders?.[0];
@@ -96,15 +96,47 @@ const Preview = ({ screen, data, top10Game, t }) => {
       </>
     );
   }
+  if (screen === 'EVENT') {
+    const e = data.events?.[0];
+    const c = data.recruiting?.[0];
+    if (!e && !c) return label(t('admin', 'tvScreenEVENT'));
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
+        {label(t('contest', c && !e ? 'tvContestBadge' : 'badgeStoreEvent'))}
+        <span style={{ fontSize: 17, fontWeight: 700 }}>{e ? e.title : c.title}</span>
+        <span style={{ fontSize: 9, color: PV.sub }}>
+          {e ? (e.benefitText ?? '') : fmt(t('contest', 'tvContestWhen'), { when: contestWhen(c.startsAt, lang), a: c.applied, b: c.capacity, r: c.rounds })}
+        </span>
+      </div>
+    );
+  }
+  if (screen === 'CONTEST' && data.contestBoard) {
+    const b = data.contestBoard;
+    return (
+      <>
+        {label(fmt(t('contest', 'tvBoardBadge'), { n: b.rounds, d: b.roundsDone }))}
+        <span style={{ fontSize: 13, fontWeight: 700 }}>{b.title}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {b.standings.slice(0, 4).map(s => (
+            <span key={s.memberId ?? s.nickname} style={{ display: 'flex', gap: 6, fontSize: 9 }}>
+              <span style={{ width: 10, fontWeight: 700, color: s.rank === 1 ? PV.gold : PV.text }}>{s.rank}</span>
+              <span style={{ flex: 1 }}>{s.nickname ?? '—'}</span>
+              <span style={{ fontWeight: 700, color: PV.label }}>{s.total}</span>
+            </span>
+          ))}
+        </div>
+      </>
+    );
+  }
   return label(t('admin', `tvScreen${screen}`));
 };
 
 /**
  * 6k 매장 TV 화면 (전체 화면, 관리자만): 미리 보기 · 돌아가는 순서(↑↓·빼기·다시 넣기) · 방금 끝난 경기 ·
- * 넘기는 간격 · TOP 10 게임. 저장하면 TV가 30초 재조회 때 반영. 매장 이벤트 목록은 이벤트(5단계)와 함께 더한다.
+ * 넘기는 간격 · TOP 10 게임 · 매장 이벤트 목록(추가·수정·삭제 → 6j). 저장하면 TV가 30초 재조회 때 반영.
  */
 const AdminTvSettings = ({ store, onBack }) => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState(null);
   const [pv, setPv] = useState(0);
@@ -142,7 +174,8 @@ const AdminTvSettings = ({ store, onBack }) => {
   const pvIdx = Math.min(pv, pvList.length - 1);
   const pk = pvList[pvIdx];
   const pvName = pk === 'NONE' ? t('admin', 'tvPreviewQrOnly') : t('admin', `tvScreen${pk}`);
-  const skipKey = NOT_YET[pk]
+  const skipKey = (pk === 'EVENT' && !data.events?.length && !data.recruiting?.length ? 'tvSkipEvent' : null)
+    ?? (pk === 'CONTEST' && !data.contestBoard ? 'tvSkipContest' : null)
     ?? (pk === 'TOP10' && !top10Game ? 'tvSkipTop10' : null)
     ?? (pk === 'MVP' && !data.mvp ? 'tvSkipMvp' : null)
     ?? (pk === 'SEASON' && !data.seasonResult ? 'tvSkipSeason' : null);
@@ -183,7 +216,7 @@ const AdminTvSettings = ({ store, onBack }) => {
           position: 'relative', width: '100%', aspectRatio: '16 / 9', borderRadius: '12px', overflow: 'hidden',
           backgroundColor: PV.bg, color: PV.text, boxSizing: 'border-box', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px',
         }}>
-          <Preview screen={pk} data={data} top10Game={top10Game} t={t} />
+          <Preview screen={pk} data={data} top10Game={top10Game} lang={lang} t={t} />
         </div>
         {skipKey && <span style={{ fontSize: '12px', lineHeight: 1.5, color: '#B4500A' }}>{t('admin', skipKey)}</span>}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -197,6 +230,8 @@ const AdminTvSettings = ({ store, onBack }) => {
         </div>
         <span style={{ fontSize: '12px', lineHeight: 1.5, color: V('--th-text-sub') }}>{t('admin', 'tvPreviewNote')}</span>
       </section>
+
+      <AdminStoreEvents store={store} eventsOnly />
 
       <section style={cardStyle}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>

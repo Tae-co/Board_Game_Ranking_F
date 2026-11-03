@@ -97,3 +97,19 @@ export const uploadScoreRequestImage = async (file) => {
   if (!res.ok) throw new Error('Image upload failed');
   return (await res.json()).url;
 };
+
+// ── 5단계: 하루 대회 ──
+
+export const getStoreContest = (storeId, contestId) => api.get(`/stores/${storeId}/contests/${contestId}`).then(r => r.data);
+export const applyStoreContest = (storeId, contestId) => api.post(`/stores/${storeId}/contests/${contestId}/entry`).then(r => r.data);
+export const withdrawStoreContest = (storeId, contestId) => api.delete(`/stores/${storeId}/contests/${contestId}/entry`).then(r => r.data);
+// STAFF (5e·5c)
+export const setContestArrived = (storeId, contestId, memberId, arrived) =>
+  api.put(`/stores/${storeId}/contests/${contestId}/arrivals/${memberId}`, { arrived }).then(r => r.data);
+export const startStoreContest = (storeId, contestId, recorderMemberId) =>
+  api.post(`/stores/${storeId}/contests/${contestId}/start`, { recorderMemberId }).then(r => r.data);
+export const cancelStoreContest = (storeId, contestId) => api.post(`/stores/${storeId}/contests/${contestId}/cancel`).then(r => r.data);
+export const approveContestMatch = (storeId, contestId, matchId) =>
+  api.post(`/stores/${storeId}/contests/${contestId}/matches/${matchId}/approve`).then(r => r.data);
+export const sendBackContestMatch = (storeId, contestId, matchId) =>
+  api.post(`/stores/${storeId}/contests/${contestId}/matches/${matchId}/send-back`).then(r => r.data);

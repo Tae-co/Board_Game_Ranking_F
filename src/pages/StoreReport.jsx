@@ -8,6 +8,7 @@ import { V } from '../utils/cssUtils';
 import StoreTopBar from '../components/store/StoreTopBar';
 import { HeatGrid, PopularBars, ReportTiles } from '../components/store/ReportStats';
 import { fmt } from '../components/store/fmt';
+import { shortDate } from '../components/contest/contestUtils';
 import { card, sectionTitle } from '../components/store/storeStyles';
 import { Skeleton } from '../components/Skeleton';
 
@@ -28,6 +29,20 @@ const monthButton = {
  * 요일×시간 붐비는 시간, 단골 TOP 3. 이 매장 STAFF가 아니면 서버가 403 → 매장 홈으로.
  * 이번 달 이벤트 결과는 하루 대회(5단계)가 생기면 더한다.
  */
+/** 이번 달 이벤트 결과 한 줄 (시안 8): 대회는 참가 인원·우승, 매장 이벤트는 기간 */
+const eventLine = (e, t) => {
+  if (e.kind === 'EVENT') {
+    const [from, to] = e.date.split('~');
+    return fmt(t('contest', 'reportEventLine'), { period: `${shortDate(from)} ~ ${shortDate(to)}` });
+  }
+  const date = shortDate(e.date);
+  if (e.status === 'FINISHED') {
+    return fmt(t('contest', 'reportContestLine'), { date, n: e.participants, winners: e.winners.join(', ') || '—' });
+  }
+  if (e.status === 'CANCELLED') return fmt(t('contest', 'reportContestCancelled'), { date });
+  return fmt(t('contest', 'reportContestOther'), { date, status: t('contest', `status${e.status}`) });
+};
+
 const StoreReport = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
@@ -94,6 +109,16 @@ const StoreReport = () => {
                 ))}
               </section>
             )}
+            <section style={{ ...card, padding: '18px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              <h2 style={{ ...sectionTitle, marginBottom: 8 }}>{t('contest', 'reportEvents')}</h2>
+              {(report.events ?? []).length === 0 && <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('contest', 'reportNoEvents')}</span>}
+              {(report.events ?? []).map((e, i) => (
+                <div key={`${e.kind}-${e.title}-${i}`} style={{ minHeight: 52, padding: '8px 0', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2px', borderTop: `1px solid ${V('--th-border')}` }}>
+                  <span style={{ fontSize: '15px', fontWeight: 500, color: V('--th-text') }}>{e.title}</span>
+                  <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{eventLine(e, t)}</span>
+                </div>
+              ))}
+            </section>
             <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>{t('store', 'reportPrivacy')}</span>
           </>
         )}

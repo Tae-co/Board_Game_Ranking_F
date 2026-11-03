@@ -10,8 +10,9 @@ const EDGE = 8;
 // 로그인·QR 진입·관리자·매장 기기(4j) 화면엔 띄우지 않는다
 const HIDDEN = ['/login', '/s/', '/admin', '/oauth-callback', '/join', '/device'];
 
-/** 지금 그룹이 있는 곳: 내가 낀 판이 열려 있으면 그 판, 아니면 그룹 기다리는 화면(3b) */
+/** 지금 그룹이 있는 곳: 대회 중이면 대회 화면(5b), 내가 낀 판이 열려 있으면 그 판, 아니면 그룹 기다리는 화면(3b) */
 const partyTarget = (party, myId) => {
+  if (party.contestId) return `/store/${party.store.id}/contest/${party.contestId}`;
   const m = party?.currentMatch;
   if (m && m.participantIds.includes(myId)) return `/store/match/${m.id}`;
   return `/store/${party.store.id}/party`;

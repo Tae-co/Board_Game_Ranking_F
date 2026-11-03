@@ -107,7 +107,7 @@ export const TvQr = ({ store, url, remainingMs, t }) => (
 
 const signed = (n) => (n > 0 ? `+${num(n)} ▲` : n < 0 ? `−${num(Math.abs(n))}` : '0');
 
-/** 4e 방금 끝난 경기 (8초) */
+/** 4e 방금 끝난 경기 (8초). 대회 판은 점수 변동 대신 순위 점수 */
 export const TvJustFinished = ({ match, t }) => {
   const minutes = match.startedAt && match.endedAt
     ? Math.max(1, Math.round((new Date(match.endedAt) - new Date(match.startedAt)) / 60000)) : null;
@@ -119,7 +119,9 @@ export const TvJustFinished = ({ match, t }) => {
           <span style={{ alignSelf: 'flex-start', fontSize: '26px', fontWeight: 700, padding: '8px 22px', borderRadius: 999, backgroundColor: D.accent, color: D.bg }}>
             {t('store', 'tvJustFinished')}
           </span>
-          <h1 style={{ margin: 0, fontSize: '88px', fontWeight: 700, letterSpacing: '-0.02em' }}>{match.gameName}</h1>
+          <h1 style={{ margin: 0, fontSize: '88px', fontWeight: 700, letterSpacing: '-0.02em' }}>
+            {match.contestTitle ? fmt(t('contest', 'tvJustContest'), { title: match.contestTitle, n: match.contestRound }) : match.gameName}
+          </h1>
         </div>
         <span style={{ fontSize: '34px', color: D.accentText }}>
           {fmt(t('store', 'tvJustMeta'), { time, m: minutes ?? '—' })}
@@ -139,8 +141,10 @@ export const TvJustFinished = ({ match, t }) => {
             <span style={{ fontSize: '40px', color: D.accentSoft, textAlign: 'right' }}>
               {p.gameScore != null ? fmt(t('store', 'tvGameScore'), { n: num(p.gameScore) }) : ''}
             </span>
-            <span style={{ fontSize: '44px', fontWeight: 700, textAlign: 'right', color: p.ratingChange > 0 ? D.up : D.sub }}>
-              {p.ratingChange != null ? signed(p.ratingChange) : ''}
+            <span style={{ fontSize: '44px', fontWeight: 700, textAlign: 'right', color: match.contestTitle || p.ratingChange > 0 ? D.up : D.sub }}>
+              {match.contestTitle
+                ? (p.placement ? fmt(t('contest', 'tvPointsN'), { n: Math.max(0, match.players.length - p.placement + 1) }) : '')
+                : p.ratingChange != null ? signed(p.ratingChange) : ''}
             </span>
           </div>
         ))}
