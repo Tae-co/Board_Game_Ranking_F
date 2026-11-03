@@ -12,17 +12,23 @@ const SIDE = 16;
 // 로그인·QR 진입·관리자·매장 기기(4j) 화면엔 띄우지 않는다
 const HIDDEN = ['/login', '/s/', '/admin', '/oauth-callback', '/join', '/device'];
 
-/** 지금 그룹이 있는 곳: 대회 중이면 대회 화면(5b), 내가 낀 판이 열려 있으면 그 판, 아니면 그룹 기다리는 화면(3b) */
-const partyTarget = (party, myId) => {
+/** 그룹 화면 두 곳: 3b 그룹 만들기·기다리기, 2i 오늘의 그룹(관리) */
+const partyScreens = (storeId) => [`/store/${storeId}/party`, `/store/${storeId}/party/manage`];
+
+/**
+ * 지금 그룹이 있는 곳: 대회 중이면 대회 화면(5b), 내가 낀 판이 열려 있으면 그 판,
+ * 아니면 마지막으로 있던 그룹 화면(3b·2i, 처음엔 3b)
+ */
+const partyTarget = (party, myId, lastScreen) => {
   if (party.contestId) return `/store/${party.store.id}/contest/${party.contestId}`;
   const m = party?.currentMatch;
   if (m && m.participantIds.includes(myId)) return `/store/match/${m.id}`;
-  return `/store/${party.store.id}/party`;
+  return lastScreen ?? partyScreens(party.store.id)[0];
 };
 
 /**
  * 그룹 바로가기 주사위 (시안 2k). 그룹에 있는 동안 앱 어느 화면에나 떠 있고, 누르면 지금 그룹이 있는 곳으로.
- * 그 화면에 있으면 숨김. 끌어서 옮기고, 놓으면 가까운 왼쪽·오른쪽 끝에 붙는다. 그룹 변경 실시간 신호도 여기서 한 번만 받는다
+ * 그 화면이나 그룹 화면(3b·2i)에 있으면 숨김. 끌어서 옮기고, 놓으면 가까운 왼쪽·오른쪽 끝에 붙는다. 그룹 변경 실시간 신호도 여기서 한 번만 받는다
  */
 const PartyBubble = () => {
   const navigate = useNavigate();
@@ -33,10 +39,16 @@ const PartyBubble = () => {
   usePartyRealtime(party?.id);
   const [pos, setPos] = useState(null);
   const drag = useRef(null);
+  // 마지막으로 있던 그룹 화면. 그룹이 바뀌면 버린다
+  const [lastScreen, setLastScreen] = useState(null);
+  const storeId = party?.store.id;
+  if (storeId && partyScreens(storeId).includes(pathname) && (lastScreen?.partyId !== party.id || lastScreen.path !== pathname)) {
+    setLastScreen({ partyId: party.id, path: pathname });
+  }
 
   if (!party || HIDDEN.some(p => pathname.startsWith(p))) return null;
-  const target = partyTarget(party, myId);
-  if (pathname === target) return null;
+  const target = partyTarget(party, myId, lastScreen?.partyId === party.id ? lastScreen.path : null);
+  if (pathname === target || partyScreens(storeId).includes(pathname)) return null;
 
   // 끄는 중엔 x 그대로, 놓은 뒤엔 붙은 쪽(side)으로 계산해서 화면 폭이 바뀌어도 끝에 붙어 있다
   const edgeX = (side) => (side === 'left' ? SIDE : window.innerWidth - SIZE - SIDE);
@@ -76,7 +88,7 @@ const PartyBubble = () => {
       style={{
         position: 'fixed', left: x, top: y, zIndex: 150, width: SIZE, height: SIZE, borderRadius: 999,
         border: 'none', cursor: 'grab', touchAction: 'none', backgroundColor: V('--th-primary'),
-        transition: drag.current ? 'none' : 'left 0.2s ease-out',
+        transition: pos?.x != null ? 'none' : 'left 0.2s ease-out',
         boxShadow: `0 6px 18px rgba(${V('--th-primary-rgb')}, 0.4)`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
