@@ -95,7 +95,7 @@ const StoreHome = () => {
 
   let bottomBar = null;
   if (role === 'STAFF_OTHER') {
-    bottomBar = <StoreBottomBar icon={false} title={t('store', 'staffOtherTitle')} desc={t('store', 'staffOtherDesc')} />;
+    bottomBar = <StoreBottomBar title={t('store', 'staffOtherTitle')} desc={t('store', 'staffOtherDesc')} />;
   } else if (role === 'VISITOR' && !store.closed) {
     bottomBar = <StoreBottomBar title={t('store', 'qrBar')} />;
   } else if (checkinExpired) {

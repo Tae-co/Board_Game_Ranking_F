@@ -1,37 +1,21 @@
 import { V } from '../../utils/cssUtils';
-import { CameraIcon } from './StoreIcons';
 
 /**
- * 매장 홈 아래 고정 안내 (시안 2 체크인 만료 · 2d 구경 · 2d STAFF).
- * icon이 있으면 카메라 아이콘 + 한 줄(QR 안내), 없으면 제목·설명
+ * 매장 홈 아래 고정 안내 (시안 2 체크인 만료 · 2d 구경 · 2d STAFF). 제목 한 줄 + 있으면 설명.
+ * 아이콘은 두지 않는다 — 카메라 아이콘이 있으면 누르면 카메라가 열리는 버튼으로 착각한다 (앱 안 스캐너 없음)
  */
-const StoreBottomBar = ({ title, desc, icon = true }) => (
+const StoreBottomBar = ({ title, desc }) => (
   <div style={{
     position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 20,
     backgroundColor: V('--th-nav-bg'), borderTop: `1px solid ${V('--th-border')}`,
   }}>
     <div style={{
       maxWidth: 430, margin: '0 auto', boxSizing: 'border-box',
-      padding: '12px 20px calc(12px + env(safe-area-inset-bottom))',
+      padding: '14px 20px calc(14px + env(safe-area-inset-bottom))',
       display: 'flex', flexDirection: 'column', gap: '8px',
     }}>
-      {icon ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span style={{
-            width: 32, height: 32, borderRadius: '10px', flexShrink: 0,
-            backgroundColor: `rgba(${V('--th-primary-rgb')}, 0.12)`, color: V('--th-primary'),
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <CameraIcon />
-          </span>
-          <span style={{ fontSize: '14px', fontWeight: 700, color: V('--th-text') }}>{title}</span>
-        </div>
-      ) : (
-        <>
-          <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text') }}>{title}</span>
-          <span style={{ fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>{desc}</span>
-        </>
-      )}
+      <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text') }}>{title}</span>
+      {desc && <span style={{ fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>{desc}</span>}
     </div>
   </div>
 );
