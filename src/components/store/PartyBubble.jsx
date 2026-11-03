@@ -7,6 +7,8 @@ import { V } from '../../utils/cssUtils';
 
 const SIZE = 56;
 const EDGE = 8;
+// 놓으면 왼쪽·오른쪽 끝에서 이만큼 떨어져 붙는다
+const SIDE = 16;
 // 로그인·QR 진입·관리자·매장 기기(4j) 화면엔 띄우지 않는다
 const HIDDEN = ['/login', '/s/', '/admin', '/oauth-callback', '/join', '/device'];
 
@@ -20,7 +22,7 @@ const partyTarget = (party, myId) => {
 
 /**
  * 그룹 바로가기 주사위 (시안 2k). 그룹에 있는 동안 앱 어느 화면에나 떠 있고, 누르면 지금 그룹이 있는 곳으로.
- * 그 화면에 있으면 숨김. 어디든 끌어서 옮긴다. 그룹 변경 실시간 신호도 여기서 한 번만 받는다
+ * 그 화면에 있으면 숨김. 끌어서 옮기고, 놓으면 가까운 왼쪽·오른쪽 끝에 붙는다. 그룹 변경 실시간 신호도 여기서 한 번만 받는다
  */
 const PartyBubble = () => {
   const navigate = useNavigate();
@@ -36,7 +38,9 @@ const PartyBubble = () => {
   const target = partyTarget(party, myId);
   if (pathname === target) return null;
 
-  const x = pos?.x ?? window.innerWidth - SIZE - 16;
+  // 끄는 중엔 x 그대로, 놓은 뒤엔 붙은 쪽(side)으로 계산해서 화면 폭이 바뀌어도 끝에 붙어 있다
+  const edgeX = (side) => (side === 'left' ? SIDE : window.innerWidth - SIZE - SIDE);
+  const x = pos?.x ?? edgeX(pos?.side);
   const y = pos?.y ?? Math.round(window.innerHeight * 0.45);
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
@@ -63,11 +67,16 @@ const PartyBubble = () => {
       onPointerUp={() => {
         const moved = drag.current?.moved;
         drag.current = null;
-        if (!moved) navigate(target);
+        if (!moved) {
+          navigate(target);
+          return;
+        }
+        setPos({ side: x + SIZE / 2 < window.innerWidth / 2 ? 'left' : 'right', y });
       }}
       style={{
         position: 'fixed', left: x, top: y, zIndex: 150, width: SIZE, height: SIZE, borderRadius: 999,
         border: 'none', cursor: 'grab', touchAction: 'none', backgroundColor: V('--th-primary'),
+        transition: drag.current ? 'none' : 'left 0.2s ease-out',
         boxShadow: `0 6px 18px rgba(${V('--th-primary-rgb')}, 0.4)`,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}
