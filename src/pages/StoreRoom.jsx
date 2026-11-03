@@ -91,7 +91,6 @@ const StoreRoom = () => {
   const game = room?.game;
   const st = room?.start;
   const recorderName = st?.party?.recorderNickname;
-  const others = st?.party?.nicknames.filter(n => n !== getNickname()) ?? [];
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
@@ -168,23 +167,11 @@ const StoreRoom = () => {
               {fmt(t('store', 'expiredNotice'), { names: st.expiredNicknames.join(', ') })}
             </span>
           )}
-          {st.party && st.block !== 'STAFF' && (
-            <button onClick={() => navigate(`/store/${storeId}/party/manage`)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: V('--th-text-sub'), fontSize: '13px' }}>
-              <span>
-                <b style={{ color: V('--th-text') }}>{fmt(t('store', 'partyLine'), { n: st.party.size })}</b>
-                {others.length > 0 && ` · ${others.join('·')}`}
-              </span>
-              <span style={{ color: V('--th-primary'), fontWeight: 700 }}>{t('store', 'partyLineManage')}</span>
-            </button>
-          )}
           {st.block === null && (
-            <>
-              <button onClick={start} disabled={busy} style={{ ...primaryButton(!busy) }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M7 5l12 7-12 7z" /></svg>
-                {fmt(t('store', 'startWith'), { n: st.party.size })}
-              </button>
-              <span style={hintText}>{t('store', 'startHint')}</span>
-            </>
+            <button onClick={start} disabled={busy} style={{ ...primaryButton(!busy) }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M7 5l12 7-12 7z" /></svg>
+              {fmt(t('store', 'startWith'), { n: st.party.size })}
+            </button>
           )}
           {st.block === 'NOT_RECORDER' && (
             <>
