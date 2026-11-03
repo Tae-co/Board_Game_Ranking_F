@@ -1,19 +1,22 @@
 import { useState } from 'react';
 import { Share } from '@capacitor/share';
 import StorageImage from '../StorageImage';
+import GameImageFallback from '../shared/GameImageFallback';
 import { storeShareUrl, storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
 import { ShareIcon } from './StoreIcons';
 
 const subStyle = { fontSize: '14px', color: V('--th-text-sub') };
 
-/** 매장 홈 위쪽 대표 사진 (전체 폭 180px). 사진이 없으면 빈 칸 */
+/** 매장 홈 위쪽 대표 사진 (전체 폭 180px). 사진이 없으면 주사위 로고 */
 export const StorePhoto = ({ store }) => (
-  <div style={{ height: 180, flexShrink: 0, backgroundColor: V('--th-bg-deep'), overflow: 'hidden' }}>
-    {store?.imageUrl && (
+  <div style={{ height: 180, flexShrink: 0, backgroundColor: V('--th-bg-deep'), overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    {store?.imageUrl ? (
       <StorageImage src={store.imageUrl} alt={store.name} decoding="async"
         transform={{ width: 860, height: 360, quality: 75 }}
         style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+    ) : (
+      <GameImageFallback size={72} />
     )}
   </div>
 );

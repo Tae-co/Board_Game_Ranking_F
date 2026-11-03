@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { V } from '../../utils/cssUtils';
 import { ShopIcon } from './StoreIcons';
+import GameImageFallback from '../shared/GameImageFallback';
 import StoreGameChips from './StoreGameChips';
 import { fmt, num } from './fmt';
 import { card, sectionTitle } from './storeStyles';
@@ -25,8 +26,10 @@ const StoreClosedView = ({ home, lang, t }) => {
 
   return (
     <>
-      <div style={{ height: 140, backgroundColor: V('--th-bg-deep'), filter: 'grayscale(1)', overflow: 'hidden' }}>
-        {store.imageUrl && <img src={store.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+      <div style={{ height: 140, backgroundColor: V('--th-bg-deep'), filter: 'grayscale(1)', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {store.imageUrl
+          ? <img src={store.imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          : <GameImageFallback size={56} />}
       </div>
       <main style={{ boxSizing: 'border-box', padding: '20px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
         <section style={{
