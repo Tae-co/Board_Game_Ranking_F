@@ -97,9 +97,9 @@ const StoreHome = () => {
   if (role === 'STAFF_OTHER') {
     bottomBar = <StoreBottomBar icon={false} title={t('store', 'staffOtherTitle')} desc={t('store', 'staffOtherDesc')} />;
   } else if (role === 'VISITOR' && !store.closed) {
-    bottomBar = <StoreBottomBar title={t('store', 'visitorBarTitle')} desc={t('store', 'visitorBarDesc')} note={t('store', 'visitorBarNote')} />;
+    bottomBar = <StoreBottomBar title={t('store', 'qrBar')} />;
   } else if (checkinExpired) {
-    bottomBar = <StoreBottomBar title={t('store', 'checkinExpiredTitle')} desc={t('store', 'checkinExpiredDesc')} note={t('store', 'checkinExpiredNote')} />;
+    bottomBar = <StoreBottomBar title={t('store', 'qrBar')} />;
   }
 
   return (
@@ -125,7 +125,7 @@ const StoreHome = () => {
           <>
             <StorePhoto store={store} />
             <main style={{
-              boxSizing: 'border-box', padding: bottomBar ? '20px 20px 150px' : '20px 20px 40px',
+              boxSizing: 'border-box', padding: bottomBar ? (role === 'STAFF_OTHER' ? '20px 20px 150px' : '20px 20px 110px') : '20px 20px 40px',
               display: 'flex', flexDirection: 'column', gap: '28px',
             }}>
               {home.resetNotice && !resetDismissed && (

@@ -75,7 +75,7 @@ const StoreGames = () => {
           </button>
         )}
       />
-      <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: isVisitor ? '20px 20px 150px' : '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+      <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: isVisitor ? '20px 20px 110px' : '20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <section style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <h1 style={{ margin: 0, fontSize: '22px', fontWeight: 700, color: V('--th-text') }}>
             {fmt(t('store', 'gamesHeading'), { store: storeName })}{' '}
@@ -114,7 +114,7 @@ const StoreGames = () => {
           </nav>
         )}
       </main>
-      {isVisitor && <StoreBottomBar title={t('store', 'visitorBarTitle')} desc={t('store', 'visitorBarDesc')} note={t('store', 'visitorBarNote')} />}
+      {isVisitor && <StoreBottomBar title={t('store', 'qrBar')} />}
     </div>
   );
 };

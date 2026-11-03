@@ -40,7 +40,7 @@ const StoreRanking = () => {
         backLabel={t('common', 'back')}
         right={<InfoButton onClick={() => setInfo(true)} label={t('store', 'infoAria')} />}
       />
-      <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: isVisitor ? '20px 20px 150px' : '20px 20px 40px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: isVisitor ? '20px 20px 110px' : '20px 20px 40px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <section style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>
             {season
@@ -86,7 +86,7 @@ const StoreRanking = () => {
           </section>
         )}
       </main>
-      {isVisitor && <StoreBottomBar title={t('store', 'visitorBarTitle')} desc={t('store', 'visitorBarDesc')} note={t('store', 'visitorBarNote')} />}
+      {isVisitor && <StoreBottomBar title={t('store', 'qrBar')} />}
       {info && <InfoPopup title={t('store', 'infoTitle')} text={t('store', isVisitor ? 'rankingInfoVisitor' : 'rankingInfo')} okLabel={t('store', 'infoOk')} onClose={() => setInfo(false)} />}
     </div>
   );
