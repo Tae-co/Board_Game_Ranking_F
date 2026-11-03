@@ -18,7 +18,6 @@ import StoreClosedView from '../components/store/StoreClosedView';
 import StoreEventCards from '../components/contest/StoreEventCards';
 import { fmt } from '../components/store/fmt';
 import { Skeleton } from '../components/Skeleton';
-import { useGoBack } from '../hooks/useGoBack';
 
 const noteStyle = {
   fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub'),
@@ -38,7 +37,6 @@ const matchWhen = (iso) => {
 const StoreHome = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
-  const goBack = useGoBack();
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const [creating, setCreating] = useState(false);
@@ -51,7 +49,8 @@ const StoreHome = () => {
     staleTime: 1000 * 30,
   });
 
-  const goCommunity = () => goBack('/community');
+  // 매장 홈 뒤로 가기는 직전 화면이 아니라 항상 메인(커뮤니티)으로
+  const goCommunity = () => navigate('/community');
 
   // 신고 초기화 안내 카드(2)는 확인을 누르면 다시 안 뜬다
   const dismissReset = () => {
