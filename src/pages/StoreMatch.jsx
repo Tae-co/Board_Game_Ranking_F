@@ -189,8 +189,10 @@ const StoreMatch = () => {
 
   const isRecorder = match?.recorderMemberId === myId;
   const editable = match && (match.status === 'PLAYING' || match.status === 'DISPUTED');
-  // 기록 마감(처음 저장 전 = 저장 마감, 다시 저장 중 = 영업 마감)이 지나면 15초 주기를 기다리지 않고 바로 다시 받는다 → 3m
-  const due = editable && !match.contest ? ms(match.firstSavedAt ? match.closesAt : match.saveDeadline) : null;
+  // 마감이 지나면 15초 주기를 기다리지 않고 바로 다시 받는다.
+  // 기록 마감(처음 저장 전 = 저장 마감, 다시 저장 중 = 영업 마감) → 3m, 5분 확인 → 3n(대회 판은 STAFF 확인)
+  const due = editable ? (match.contest ? null : ms(match.firstSavedAt ? match.closesAt : match.saveDeadline))
+    : match?.status === 'AWAITING_CONFIRM' ? ms(match.confirmDeadline) : null;
   useEffect(() => {
     if (due != null && now > due && !isFetching) refetch();
   }, [due, now, isFetching, refetch]);
