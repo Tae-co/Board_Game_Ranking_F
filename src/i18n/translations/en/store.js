@@ -83,7 +83,7 @@ export default {
   staffNoPlay: 'STAFF accounts can’t play store games · Only guests join today’s group and contests',
   staffOnly: 'Only visible to STAFF',
   staffQrButton: 'Show check-in QR (when the TV is off)',
-  qrBar: 'Scan the QR on the store TV or table to verify',
+  qrBar: 'Scan the QR code on the store TV or table to verify',
   visitorBannerTitle: 'You’re browsing',
   visitorBannerDesc: 'Visit the store and scan its QR to take part. Members record matches and appear in the ranking',
   staffOtherTitle: 'STAFF accounts can only browse',

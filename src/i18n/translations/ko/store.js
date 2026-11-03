@@ -83,7 +83,7 @@ export default {
   staffNoPlay: 'STAFF 계정은 매장 게임에 참가할 수 없어요 · 오늘의 그룹과 대회 참가는 손님만 해요',
   staffOnly: 'STAFF 계정에만 보임',
   staffQrButton: '체크인 QR 띄우기 (TV가 꺼졌을 때)',
-  qrBar: '매장 TV나 테이블 화면의 QR을 찍어 인증해 주세요',
+  qrBar: '매장 TV나 테이블 화면의 QR 코드를 찍어 인증해 주세요',
   visitorBannerTitle: '구경하는 중이에요',
   visitorBannerDesc: '매장에 방문해서 QR을 찍으면 참여할 수 있어요. 참여하면 게임을 기록하고 랭킹에 들어가요',
   staffOtherTitle: 'STAFF 계정이라 구경만 할 수 있어요',
