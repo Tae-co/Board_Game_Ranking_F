@@ -30,52 +30,71 @@ const contestState = (c, role) => {
 };
 
 /**
- * 매장 홈 "진행 중 이벤트" (시안 2·2d): 하루 대회 카드 + 매장 이벤트 카드를 옆으로 넘긴다.
+ * 매장 홈 "이벤트" (시안 2·2d): 하루 대회 카드 + 매장 이벤트 카드를 옆으로 넘긴다. 더보기(onMore)는 늘 → 이벤트 목록.
+ * vertical = 이벤트 목록 화면: 제목 없이 세로로 전부 (화면 위 막대가 제목).
  * 구경(2d)은 대회 참가가 잠긴다. 대회 카드는 대회 화면(5a·5b·5d, STAFF는 5e)으로. 둘 다 없으면 빈 카드
  */
-const StoreEventCards = ({ storeId, contests = [], events = [], role, t, lang }) => {
+const StoreEventCards = ({ storeId, contests = [], events = [], role, t, lang, onMore, vertical = false }) => {
   const navigate = useNavigate();
+  const header = !vertical && (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <h2 style={sectionTitle}>{t('contest', 'eventsTitle')}</h2>
+      {onMore && (
+        <button onClick={onMore} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: V('--th-primary') }}>
+          {t('store', 'more')}
+        </button>
+      )}
+    </div>
+  );
   if (contests.length === 0 && events.length === 0) {
     return (
       <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <h2 style={sectionTitle}>{t('contest', 'eventsTitle')}</h2>
+        {header}
         <p style={emptyCard}>{t('contest', 'eventsEmpty')}</p>
       </section>
     );
   }
+  const card = vertical ? { ...cardStyle, width: '100%' } : cardStyle;
+  // 목록 화면은 끝난·취소된 대회를 매장 이벤트 뒤로 (진행 중 → 모집 중 → 매장 이벤트 → 끝남)
+  const isDone = (c) => c.status === 'FINISHED' || c.status === 'CANCELLED';
+  const active = vertical ? contests.filter(c => !isDone(c)) : contests;
+  const done = vertical ? contests.filter(isDone) : [];
+  const contestCard = (c) => {
+    const [badgeKey, color, ctaKey] = contestState(c, role);
+    const locked = ctaKey === 'ctaMembersOnly' || ctaKey === 'ctaFull';
+    const open = () => navigate(CONTEST_PATH(storeId, c.id));
+    return (
+      <div key={`c${c.id}`} style={card}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <span style={pill(color)}>{t('contest', badgeKey)}</span>
+            {c.roomClosed && c.status === 'RECRUITING' && <span style={pill(PILL.gray)}>{t('contest', 'badgeRoomClosed')}</span>}
+          </div>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: V('--th-text') }}>{c.title}</span>
+          <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>
+            {fmt(t('contest', 'cardWhen'), { when: contestWhen(c.startsAt, lang), a: c.applied, b: c.capacity })}
+          </span>
+        </div>
+        <div style={{ height: 6, borderRadius: 999, backgroundColor: V('--th-bg-deep'), overflow: 'hidden' }}>
+          <div style={{ width: `${Math.min(100, (c.applied / c.capacity) * 100)}%`, height: '100%', backgroundColor: V('--th-primary') }} />
+        </div>
+        {ctaKey && (
+          locked
+            ? <span style={cta(false)}>{t('contest', ctaKey)}</span>
+            : <button onClick={open} style={cta(true)}>{t('contest', ctaKey)}</button>
+        )}
+      </div>
+    );
+  };
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <h2 style={sectionTitle}>{t('contest', 'eventsTitle')}</h2>
-      <div style={{ display: 'flex', gap: '12px', marginRight: -20, paddingRight: 20, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
-        {contests.map(c => {
-          const [badgeKey, color, ctaKey] = contestState(c, role);
-          const locked = ctaKey === 'ctaMembersOnly' || ctaKey === 'ctaFull';
-          const open = () => navigate(CONTEST_PATH(storeId, c.id));
-          return (
-            <div key={`c${c.id}`} style={cardStyle}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                <div style={{ display: 'flex', gap: '6px' }}>
-                  <span style={pill(color)}>{t('contest', badgeKey)}</span>
-                  {c.roomClosed && c.status === 'RECRUITING' && <span style={pill(PILL.gray)}>{t('contest', 'badgeRoomClosed')}</span>}
-                </div>
-                <span style={{ fontSize: '18px', fontWeight: 700, color: V('--th-text') }}>{c.title}</span>
-                <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>
-                  {fmt(t('contest', 'cardWhen'), { when: contestWhen(c.startsAt, lang), a: c.applied, b: c.capacity })}
-                </span>
-              </div>
-              <div style={{ height: 6, borderRadius: 999, backgroundColor: V('--th-bg-deep'), overflow: 'hidden' }}>
-                <div style={{ width: `${Math.min(100, (c.applied / c.capacity) * 100)}%`, height: '100%', backgroundColor: V('--th-primary') }} />
-              </div>
-              {ctaKey && (
-                locked
-                  ? <span style={cta(false)}>{t('contest', ctaKey)}</span>
-                  : <button onClick={open} style={cta(true)}>{t('contest', ctaKey)}</button>
-              )}
-            </div>
-          );
-        })}
+      {header}
+      <div style={vertical
+        ? { display: 'flex', flexDirection: 'column', gap: '12px' }
+        : { display: 'flex', gap: '12px', marginRight: -20, paddingRight: 20, overflowX: 'auto', scrollSnapType: 'x mandatory', scrollbarWidth: 'none' }}>
+        {active.map(contestCard)}
         {events.map(e => (
-          <div key={`e${e.id}`} style={cardStyle}>
+          <div key={`e${e.id}`} style={card}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
               <span style={pill(PILL.blue)}>{t('contest', 'badgeStoreEvent')}</span>
               <span style={{ fontSize: '18px', fontWeight: 700, color: V('--th-text') }}>{e.title}</span>
@@ -91,6 +110,7 @@ const StoreEventCards = ({ storeId, contests = [], events = [], role, t, lang })
             )}
           </div>
         ))}
+        {done.map(contestCard)}
       </div>
     </section>
   );

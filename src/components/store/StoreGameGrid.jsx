@@ -39,7 +39,7 @@ const GameTile = ({ game, onClick, playersLabel }) => {
 };
 
 /**
- * 매장 게임 2열 그리드 (시안 2 · 2d). 4개 먼저. 더보기는 onMore가 있으면 2c로, 없으면 그 자리에서 전부.
+ * 매장 게임 2열 그리드 (시안 2 · 2d). 4개 먼저. 더보기는 onMore가 있으면 개수와 상관없이 늘 2c로, 없으면 4개 넘을 때 그 자리에서 전부.
  * 구경(2d)은 제목 옆에 개수가 붙고 누를 수 없다. 멤버는 누르면 게임방(3)
  */
 const StoreGameGrid = ({ games, onGameClick, onMore, showCount, t }) => {
@@ -57,7 +57,7 @@ const StoreGameGrid = ({ games, onGameClick, onMore, showCount, t }) => {
             </span>
           )}
         </h2>
-        {!expanded && games.length > STORE_GAME_GRID_LIMIT && (
+        {!expanded && (onMore ? games.length > 0 : games.length > STORE_GAME_GRID_LIMIT) && (
           <button
             onClick={() => (onMore ? onMore() : setExpanded(true))}
             style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: '13px', fontWeight: 500, color: V('--th-primary') }}

@@ -39,6 +39,7 @@ const StorePartyManage = lazy(() => import('./pages/StorePartyManage'));
 const StoreRoom = lazy(() => import('./pages/StoreRoom'));
 const StoreRanking = lazy(() => import('./pages/StoreRanking'));
 const StoreGames = lazy(() => import('./pages/StoreGames'));
+const StoreEvents = lazy(() => import('./pages/StoreEvents'));
 const StoreMatch = lazy(() => import('./pages/StoreMatch'));
 const StoreDevices = lazy(() => import('./pages/StoreDevices'));
 const StoreScoreRequest = lazy(() => import('./pages/StoreScoreRequest'));
@@ -276,6 +277,7 @@ function App() {
             <Route path="/store/:storeId/party/join" element={isAuthenticated ? <StorePartyJoin /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/party/manage" element={isAuthenticated ? <StorePartyManage /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/games" element={isAuthenticated ? <StoreGames /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/events" element={isAuthenticated ? <StoreEvents /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/rooms/:roomId" element={isAuthenticated ? <StoreRoom /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/rooms/:roomId/ranking" element={isAuthenticated ? <StoreRanking /> : <Navigate to="/login" replace />} />
             <Route path="/store/match/:matchId" element={isAuthenticated ? <StoreMatch /> : <Navigate to="/login" replace />} />

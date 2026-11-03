@@ -1,7 +1,7 @@
 // 하루 대회 · 매장 이벤트 (plan-store §2 2·4d·4g·5a~5e·6j)
 export default {
   // ── 2 매장 홈 이벤트 카드 ──
-  eventsTitle: '진행 중 이벤트',
+  eventsTitle: '이벤트',
   eventsEmpty: '진행 중인 이벤트가 없어요',
   badgeRecruiting: '모집 중',
   badgeToday: '오늘',

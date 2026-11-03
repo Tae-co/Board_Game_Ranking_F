@@ -12,6 +12,7 @@ export const getStores = (q) =>
   api.get('/stores', { params: q ? { q } : undefined }).then(r => r.data);
 export const getMyStores = () => api.get('/stores/mine').then(r => r.data);
 export const getStoreHome = (storeId) => api.get(`/stores/${storeId}/home`).then(r => r.data);
+export const getStoreEvents = (storeId) => api.get(`/stores/${storeId}/events`).then(r => r.data);
 
 export const joinStore = (storeId, ticket, consentVersion) =>
   api.post(`/stores/${storeId}/join`, { ticket, consentVersion }).then(r => r.data);

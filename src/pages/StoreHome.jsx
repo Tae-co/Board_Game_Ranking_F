@@ -235,7 +235,8 @@ const StoreHome = () => {
                 </section>
               )}
 
-              <StoreEventCards storeId={storeId} contests={home.contests} events={home.events} role={role} t={t} lang={lang} />
+              <StoreEventCards storeId={storeId} contests={home.contests} events={home.events} role={role} t={t} lang={lang}
+                onMore={() => navigate(`/store/${storeId}/events`)} />
 
               <StoreMvp mvp={home.mvp} t={t} />
 
