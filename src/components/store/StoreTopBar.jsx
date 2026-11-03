@@ -8,7 +8,7 @@ const StoreTopBar = ({ title, onBack, showProfile = false, backLabel, right = nu
   const navigate = useNavigate();
   return (
     <header style={{
-      position: 'sticky', top: 0, zIndex: 10, paddingTop: 'env(safe-area-inset-top)',
+      position: 'sticky', top: 'env(safe-area-inset-top)', zIndex: 10,
       backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid ${V('--th-border')}`,
     }}>
       <div style={{

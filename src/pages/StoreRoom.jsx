@@ -93,7 +93,7 @@ const StoreRoom = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 10, paddingTop: 'env(safe-area-inset-top)', backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid ${V('--th-border')}` }}>
+      <header style={{ position: 'sticky', top: 'env(safe-area-inset-top)', zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid ${V('--th-border')}` }}>
         <div style={{ maxWidth: 430, margin: '0 auto', height: 70, boxSizing: 'border-box', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <button onClick={() => navigate(`/store/${storeId}`)} aria-label={t('common', 'back')} style={{ width: 44, height: 44, border: 'none', background: 'none', cursor: 'pointer', color: V('--th-primary'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
