@@ -15,6 +15,7 @@ import StoreSeasonTab from '../components/store/StoreSeasonTab';
 import { fmt } from '../components/store/fmt';
 import { card, hintText, primaryButton } from '../components/store/storeStyles';
 import { Skeleton } from '../components/Skeleton';
+import { useGoBack } from '../hooks/useGoBack';
 
 const blockText = (start, game, room, t) => {
   const p = start.party;
@@ -42,6 +43,7 @@ const blockText = (start, game, room, t) => {
 const StoreRoom = () => {
   const { storeId, roomId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const myId = Number(getAuthUserId());
@@ -95,7 +97,7 @@ const StoreRoom = () => {
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
       <header style={{ position: 'sticky', top: 'env(safe-area-inset-top)', zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid ${V('--th-border')}` }}>
         <div style={{ maxWidth: 430, margin: '0 auto', height: 70, boxSizing: 'border-box', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => navigate(`/store/${storeId}`)} aria-label={t('common', 'back')} style={{ width: 44, height: 44, border: 'none', background: 'none', cursor: 'pointer', color: V('--th-primary'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => goBack(`/store/${storeId}`)} aria-label={t('common', 'back')} style={{ width: 44, height: 44, border: 'none', background: 'none', cursor: 'pointer', color: V('--th-primary'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
           </button>
           <span style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '16px', fontWeight: 700, color: V('--th-primary') }}>

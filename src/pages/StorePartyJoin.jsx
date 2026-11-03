@@ -11,6 +11,7 @@ import StoreFixedBottom from '../components/store/StoreFixedBottom';
 import { ConfirmDialog } from '../components/store/StorePopup';
 import { fmt } from '../components/store/fmt';
 import { card, meBadge, primaryButton, recorderBadge } from '../components/store/storeStyles';
+import { useGoBack } from '../hooks/useGoBack';
 
 /**
  * 코드로 그룹 합류 (시안 3c). 코드 입력 → 합류 완료(그룹 목록) → "그룹 화면으로" 3b.
@@ -19,6 +20,7 @@ import { card, meBadge, primaryButton, recorderBadge } from '../components/store
 const StorePartyJoin = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const myId = Number(getAuthUserId());
@@ -61,7 +63,7 @@ const StorePartyJoin = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
-      <StoreTopBar title={t('store', 'codeJoinTitle')} onBack={() => navigate(`/store/${storeId}`)} backLabel={t('common', 'back')} />
+      <StoreTopBar title={t('store', 'codeJoinTitle')} onBack={() => goBack(`/store/${storeId}`)} backLabel={t('common', 'back')} />
       {!joined ? (
         <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: '40px 24px 140px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

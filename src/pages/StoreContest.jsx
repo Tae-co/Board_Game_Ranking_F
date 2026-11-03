@@ -15,6 +15,7 @@ import ContestDetail from '../components/contest/ContestDetail';
 import ContestLive from '../components/contest/ContestLive';
 import ContestResult from '../components/contest/ContestResult';
 import ContestStaff from '../components/contest/ContestStaff';
+import { useGoBack } from '../hooks/useGoBack';
 
 /**
  * 하루 대회 `/store/:storeId/contest/:contestId` — 상태·역할로 나눈다 (plan-store §2 5a·5b·5d·5e).
@@ -24,6 +25,7 @@ const StoreContest = () => {
   const { storeId, contestId } = useParams();
   const [search] = useSearchParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t, lang } = useLanguage();
   const myId = Number(getAuthUserId());
@@ -49,7 +51,7 @@ const StoreContest = () => {
     }
   }, [c, navigate]);
 
-  const home = () => navigate(`/store/${storeId}`);
+  const home = () => goBack(`/store/${storeId}`);
   const act = async (fn) => {
     setBusy(true);
     setError(null);

@@ -9,6 +9,7 @@ import StoreFixedBottom from '../components/store/StoreFixedBottom';
 import { InfoButton, InfoPopup } from '../components/store/StorePopup';
 import { fmt } from '../components/store/fmt';
 import { hintText, meBadge, primaryButton, recorderBadge } from '../components/store/storeStyles';
+import { useGoBack } from '../hooks/useGoBack';
 
 /**
  * 오늘의 그룹 만들기 · 기다리는 화면 (시안 3b). 기록자는 "다 모였어요 · 게임 고르러 가기",
@@ -17,6 +18,7 @@ import { hintText, meBadge, primaryButton, recorderBadge } from '../components/s
 const StoreParty = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const { t } = useLanguage();
   const myId = Number(getAuthUserId());
   const [info, setInfo] = useState(false);
@@ -33,7 +35,7 @@ const StoreParty = () => {
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
       <StoreTopBar
         title={t('store', isRecorder ? 'partyCreateTitle' : 'partyTitle')}
-        onBack={goHome}
+        onBack={() => goBack(`/store/${storeId}`)}
         backLabel={t('common', 'back')}
         right={<InfoButton onClick={() => setInfo(true)} label={t('store', 'infoAria')} />}
       />

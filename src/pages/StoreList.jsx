@@ -8,12 +8,14 @@ import StoreTopBar from '../components/store/StoreTopBar';
 import { SearchIcon } from '../components/store/StoreIcons';
 import { storeArea } from '../constants/store';
 import { Skeleton } from '../components/Skeleton';
+import { useGoBack } from '../hooks/useGoBack';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
 /** 1g 입점 매장 전체. 이름 검색, 동네(주소 앞 두 단어)별 묶음. 가입함 → 2, 나머지 → 2d */
 const StoreList = () => {
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const { t } = useLanguage();
   const [input, setInput] = useState('');
   const [query, setQuery] = useState('');
@@ -34,7 +36,7 @@ const StoreList = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
-      <StoreTopBar title={t('store', 'directoryTitle')} onBack={() => navigate('/community')} backLabel={t('common', 'back')} />
+      <StoreTopBar title={t('store', 'directoryTitle')} onBack={() => goBack('/community')} backLabel={t('common', 'back')} />
 
       <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: '16px 20px 40px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         <label style={{

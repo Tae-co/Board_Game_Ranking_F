@@ -16,6 +16,7 @@ import { ConfirmDialog } from '../components/store/StorePopup';
 import { fmt, num } from '../components/store/fmt';
 import { card, ghostButton, hintText, meBadge, primaryButton } from '../components/store/storeStyles';
 import { CONTEST_PATH, placementPoints } from '../components/contest/contestUtils';
+import { useGoBack } from '../hooks/useGoBack';
 
 const GREEN = '#2F6B4C';
 const DRAFT_DEBOUNCE_MS = 600;
@@ -154,6 +155,7 @@ const useDraftSync = (matchId, enabled) => {
 const StoreMatch = () => {
   const { matchId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const myId = Number(getAuthUserId());
@@ -213,7 +215,7 @@ const StoreMatch = () => {
   const confirmedCount = match.participants.filter(p => p.memberId != null && p.confirmed).length;
   const activeCount = match.participants.filter(p => p.memberId != null).length;
   const mine = match.participants.find(p => p.memberId === myId);
-  const back = () => navigate(roomPath);
+  const back = () => goBack(roomPath);
   const errorLine = error && <span role="alert" style={{ textAlign: 'center', fontSize: '13px', fontWeight: 700, color: '#B91C1C' }}>{error}</span>;
 
   // ── 3d·3e·3k 기록자 점수판 / 3f 같이 하는 사람 ──

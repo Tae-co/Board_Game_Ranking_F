@@ -10,6 +10,7 @@ import StoreTopBar from '../components/store/StoreTopBar';
 import { BackIcon, ChevronRightIcon, PlusIcon, SearchIcon } from '../components/store/StoreIcons';
 import StoreBottomBar from '../components/store/StoreBottomBar';
 import { fmt } from '../components/store/fmt';
+import { useGoBack } from '../hooks/useGoBack';
 
 const PER_PAGE = 8;
 
@@ -37,6 +38,7 @@ const Tile = ({ game, onClick, label }) => {
 const StoreGames = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const { t } = useLanguage();
   const [q, setQ] = useState('');
   const [page, setPage] = useState(0);
@@ -63,7 +65,7 @@ const StoreGames = () => {
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
       <StoreTopBar
         title={t('store', 'storeGames')}
-        onBack={() => navigate(-1)}
+        onBack={() => goBack(`/store/${storeId}`)}
         backLabel={t('common', 'back')}
         right={(
           <button onClick={() => navigate(`/store/${storeId}/score-request`)} style={{

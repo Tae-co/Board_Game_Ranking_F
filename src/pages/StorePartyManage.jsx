@@ -11,6 +11,7 @@ import StoreFixedBottom from '../components/store/StoreFixedBottom';
 import { ConfirmDialog } from '../components/store/StorePopup';
 import { fmt } from '../components/store/fmt';
 import { card, meBadge, recorderBadge } from '../components/store/storeStyles';
+import { useGoBack } from '../hooks/useGoBack';
 
 const GREY = '#9CA3AF';
 
@@ -21,6 +22,7 @@ const GREY = '#9CA3AF';
 const StorePartyManage = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const myId = Number(getAuthUserId());
@@ -73,7 +75,7 @@ const StorePartyManage = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
-      <StoreTopBar title={t('store', 'partyTitle')} onBack={() => navigate(`/store/${storeId}`)} backLabel={t('common', 'back')} />
+      <StoreTopBar title={t('store', 'partyTitle')} onBack={() => goBack(`/store/${storeId}`)} backLabel={t('common', 'back')} />
       <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: '20px 20px 170px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         {party.expiredNicknames.length > 0 && (
           <section style={{ backgroundColor: V('--th-bg-deep'), borderRadius: '14px', padding: '12px 14px', fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>

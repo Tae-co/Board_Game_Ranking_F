@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getScoreRequests, requestScoreSheet, uploadScoreRequestImage, voteScoreRequest } from '../api/services/stores';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -9,6 +9,7 @@ import { InfoButton, InfoPopup } from '../components/store/StorePopup';
 import { CameraIcon, CheckIcon, ThumbIcon } from '../components/store/StoreIcons';
 import { card, sectionTitle } from '../components/store/storeStyles';
 import { REQUEST_PILL } from '../components/store/requestStatus';
+import { useGoBack } from '../hooks/useGoBack';
 
 const KEY = ['store', 'scoreRequests'];
 
@@ -30,7 +31,7 @@ const md = (iso) => {
  */
 const StoreScoreRequest = () => {
   const { storeId } = useParams();
-  const navigate = useNavigate();
+  const goBack = useGoBack();
   const { t } = useLanguage();
   const queryClient = useQueryClient();
   const [name, setName] = useState('');
@@ -92,7 +93,7 @@ const StoreScoreRequest = () => {
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
       <StoreTopBar
         title={t('store', 'scoreRequestTitle')}
-        onBack={() => navigate(-1)}
+        onBack={() => goBack(`/store/${storeId}`)}
         backLabel={t('common', 'back')}
         right={<InfoButton onClick={() => setInfo(true)} label={t('store', 'infoAria')} />}
       />

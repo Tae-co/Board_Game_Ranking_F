@@ -12,11 +12,13 @@ import { InfoButton, InfoPopup } from '../components/store/StorePopup';
 import { fmt, num } from '../components/store/fmt';
 import { card } from '../components/store/storeStyles';
 import { Skeleton } from '../components/Skeleton';
+import { useGoBack } from '../hooks/useGoBack';
 
 /** 게임별 매장 랭킹 전체 (시안 2b · 구경 2e). 상위 20명 + 내 순위 카드(구경엔 없음), 게임 칩으로 바꾼다 */
 const StoreRanking = () => {
   const { storeId, roomId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const { t } = useLanguage();
   const [info, setInfo] = useState(false);
 
@@ -36,7 +38,7 @@ const StoreRanking = () => {
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
       <StoreTopBar
         title={t('store', 'rankingPageTitle')}
-        onBack={() => navigate(-1)}
+        onBack={() => goBack(`/store/${storeId}`)}
         backLabel={t('common', 'back')}
         right={<InfoButton onClick={() => setInfo(true)} label={t('store', 'infoAria')} />}
       />
