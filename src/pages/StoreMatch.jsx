@@ -485,7 +485,7 @@ const StoreMatch = () => {
         <ResultList participants={match.participants} myId={myId} t={t} showDelta />
       </>
     ), iAmPartyRecorder ? (
-      <button onClick={() => navigate(`/store/${match.store.id}`)} style={primaryButton()}>{t('store', 'pickNext')}</button>
+      <button onClick={() => navigate(`/store/${match.store.id}/games`)} style={primaryButton()}>{t('store', 'pickNext')}</button>
     ) : waitingNext('bubbleHint'));
   }
 
@@ -522,7 +522,7 @@ const StoreMatch = () => {
   ), iAmPartyRecorder ? (
     <>
       {!byClose && <button onClick={restart} disabled={busy} style={primaryButton(!busy)}>{t('store', 'restart')}</button>}
-      <button onClick={() => navigate(`/store/${match.store.id}`)} style={ghostButton}>{t('store', 'pickOther')}</button>
+      <button onClick={() => navigate(`/store/${match.store.id}/games`)} style={ghostButton}>{t('store', 'pickOther')}</button>
     </>
   ) : waitingNext('nextChoosingHint'));
 };
