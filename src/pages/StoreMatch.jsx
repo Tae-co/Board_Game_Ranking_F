@@ -176,7 +176,7 @@ const StoreMatch = () => {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
-  const { data: match, isError } = useQuery({
+  const { data: match, isError, refetch, isFetching } = useQuery({
     queryKey: ['store', 'match', Number(matchId)],
     queryFn: () => getStoreMatch(matchId),
     refetchInterval: 1000 * 15,
@@ -189,6 +189,11 @@ const StoreMatch = () => {
 
   const isRecorder = match?.recorderMemberId === myId;
   const editable = match && (match.status === 'PLAYING' || match.status === 'DISPUTED');
+  // 기록 마감(처음 저장 전 = 저장 마감, 다시 저장 중 = 영업 마감)이 지나면 15초 주기를 기다리지 않고 바로 다시 받는다 → 3m
+  const due = editable && !match.contest ? ms(match.firstSavedAt ? match.closesAt : match.saveDeadline) : null;
+  useEffect(() => {
+    if (due != null && now > due && !isFetching) refetch();
+  }, [due, now, isFetching, refetch]);
   const { onChange: onScoresChange, flush: flushDraft } = useDraftSync(matchId, !!(isRecorder && editable));
   const players = useMemo(() => (match?.participants ?? [])
     .filter(p => p.memberId != null)
