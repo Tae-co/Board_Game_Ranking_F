@@ -14,6 +14,7 @@ import { V } from '../utils/cssUtils';
 import { getErrorMessage, getTierFromRating, getTierBg } from '../utils/tierUtils';
 import FeedbackModal from '../components/shared/FeedbackModal';
 import DiceAvatar from '../components/shared/DiceAvatar';
+import { getAvatarColorById } from '../utils/avatarUtils';
 import TrophyShelf from '../components/season/TrophyShelf';
 import StoreProfileStats from '../components/store/StoreProfileStats';
 import { InfoPopup } from '../components/store/StorePopup';
@@ -212,7 +213,7 @@ const Profile = () => {
               onClick={() => setShowPhotoMenu(v => !v)}
               style={{
                 width: 84, height: 84, borderRadius: '50%',
-                backgroundColor: 'var(--th-primary)',
+                backgroundColor: getAvatarColorById(userId),
                 border: '3px solid var(--th-primary)',
                 boxShadow: '0 0 0 3px color-mix(in srgb, var(--th-primary) 20%, transparent)',
                 overflow: 'hidden', cursor: 'pointer', flexShrink: 0,

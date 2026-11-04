@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StorageImage from './StorageImage';
 import { getProfileImage } from '../utils/storage';
+import { getAuthUserId } from '../auth/storage';
+import { getAvatarColorById } from '../utils/avatarUtils';
 import DiceAvatar from './shared/DiceAvatar';
 
 const NavAvatar = ({ size = 38 }) => {
@@ -21,7 +23,7 @@ const NavAvatar = ({ size = 38 }) => {
       onClick={() => navigate('/profile')}
       style={{
         width: size, height: size, borderRadius: '50%',
-        backgroundColor: 'var(--th-primary)',
+        backgroundColor: getAvatarColorById(getAuthUserId()),
         border: 'none', cursor: 'pointer', flexShrink: 0,
         overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
