@@ -1,6 +1,7 @@
 import StorageImage from '../StorageImage';
 import MedalBadge from '../shared/MedalBadge';
 import DiceAvatar from '../shared/DiceAvatar';
+import { getAvatarColorById } from '../../utils/avatarUtils';
 import { V } from '../../utils/cssUtils';
 import { formatChipDelta } from '../../utils/chipUtils';
 
@@ -22,7 +23,7 @@ const PodiumRanking = ({ rankings, myUserId, chip = false }) => (
           <div style={{ position: 'relative' }}>
             <div style={{
               width: avatarSize, height: avatarSize, borderRadius: '50%',
-              backgroundColor: V('--th-primary'), color: '#fff',
+              backgroundColor: getAvatarColorById(rank.memberId), color: '#fff',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontWeight: 700, fontSize: Math.round(avatarSize * 0.3),
               border: ring ? `3px solid ${ring}` : 'none',

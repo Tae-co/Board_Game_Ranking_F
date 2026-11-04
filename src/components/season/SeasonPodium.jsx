@@ -1,5 +1,6 @@
 import MedalBadge from '../shared/MedalBadge';
 import InitialAvatar from '../shared/InitialAvatar';
+import { getAvatarColorById } from '../../utils/avatarUtils';
 import { V } from '../../utils/cssUtils';
 
 /**
@@ -32,7 +33,7 @@ const SeasonPodium = ({ entries, myUserId, t }) => {
               style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
             >
               <MedalBadge place={entry.rank} size={26} />
-              <InitialAvatar nickname={entry.nickname} profileImage={entry.profileImage} size={34} />
+              <InitialAvatar nickname={entry.nickname} profileImage={entry.profileImage} size={34} color={getAvatarColorById(entry.memberId)} />
               <div style={{
                 fontSize: 12, fontWeight: isMe ? 800 : 600, maxWidth: '100%',
                 color: isMe ? 'var(--th-primary)' : V('--th-text'),
