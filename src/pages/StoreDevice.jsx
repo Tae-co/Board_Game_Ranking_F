@@ -105,7 +105,12 @@ const buildRotation = (display) => {
   const slides = [];
   for (const key of display.setting.order) {
     if (key === 'MVP' && display.mvp?.mostVisits) slides.push({ key: 'MVP' });
-    if (key === 'TOP10') display.top10.forEach(g => slides.push({ key: `TOP10-${g.boardGameId}`, game: g }));
+    if (key === 'TOP10') {
+      for (let i = 0; i < display.top10.length; i += 2) {
+        const games = display.top10.slice(i, i + 2);
+        slides.push({ key: `TOP10-${games.map(g => g.boardGameId).join('-')}`, games });
+      }
+    }
     if (key === 'QR') slides.push({ key: 'QR' });
     if (key === 'EVENT') {
       const items = [...(display.events ?? []).map(e => ({ event: e })), ...(display.recruiting ?? []).map(c => ({ contest: c }))];
@@ -227,7 +232,7 @@ const DisplayScreen = ({ token, onRevoked, lang, t }) => {
     const slide = rotation[slideIndex % rotation.length];
     if (slide.key === 'MVP') screen = <TvMvp store={display.store} season={display.season} mvp={display.mvp} t={t} />;
     else if (slide.key === 'SEASON') screen = <TvSeasonResult store={display.store} result={display.seasonResult} lang={lang} t={t} />;
-    else if (slide.game) screen = <TvTop10 store={display.store} season={display.season} game={slide.game} t={t} />;
+    else if (slide.games) screen = <TvTop10 store={display.store} season={display.season} games={slide.games} t={t} />;
     else if (slide.event || slide.contest) screen = <TvStoreEvent store={display.store} event={slide.event} contest={slide.contest} dots={slide.dots} lang={lang} t={t} />;
     else if (slide.key === 'CONTEST') screen = <TvContestBoard board={display.contestBoard} t={t} />;
     else screen = <TvQr store={display.store} url={display.qr.url} remainingMs={remainingMs} t={t} />;

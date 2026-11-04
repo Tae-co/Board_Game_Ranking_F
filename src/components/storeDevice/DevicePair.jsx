@@ -47,7 +47,7 @@ const DevicePair = ({ code, leftMs, leftText, onLogin, t }) => (
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
         }}>
           <span style={{ fontSize: '18px', color: D.sub }}>{t('store', 'devicePairCodeLabel')}</span>
-          <span style={{ fontFamily: MONO, fontSize: '80px', fontWeight: 700, letterSpacing: '0.06em', color: '#FFFFFF', whiteSpace: 'nowrap' }}>
+          <span style={{ fontFamily: MONO, fontSize: '80px', fontWeight: 700, letterSpacing: '0.06em', color: D.text, whiteSpace: 'nowrap' }}>
             {code ? `${code.slice(0, 3)} ${code.slice(3)}` : '— — —'}
           </span>
         </div>
