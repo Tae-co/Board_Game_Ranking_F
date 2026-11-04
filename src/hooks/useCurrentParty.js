@@ -41,6 +41,7 @@ export const usePartyRealtime = (partyId) => {
           queryClient.invalidateQueries({ queryKey: CURRENT_PARTY_KEY });
           queryClient.invalidateQueries({ queryKey: ['store', 'match'] });
           queryClient.invalidateQueries({ queryKey: ['store', 'room'] });
+          queryClient.invalidateQueries({ queryKey: ['store', 'contest'] });
         });
       },
     });

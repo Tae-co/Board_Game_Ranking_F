@@ -3,11 +3,19 @@ import { V } from '../../utils/cssUtils';
 import StoreGameChips from './StoreGameChips';
 import StoreRankRow from './StoreRankRow';
 import { fmt } from './fmt';
+import { emptyCard } from './storeStyles';
 
-/** 게임별 매장 랭킹 (시안 2): 게임 칩 + Top 5 + 더보기(→ 2b) */
+/** 게임별 랭킹 (시안 2): 게임 칩 + Top 5 + 더보기(→ 2b). 기록이 없으면 빈 카드 */
 const StoreGameRankings = ({ rankings, onMore, t }) => {
   const [selected, setSelected] = useState(rankings[0]?.storeRoomId);
-  if (rankings.length === 0) return null;
+  if (rankings.length === 0) {
+    return (
+      <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <h2 style={{ margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') }}>{t('store', 'rankingTitle')}</h2>
+        <p style={emptyCard}>{t('store', 'noRankingYet')}</p>
+      </section>
+    );
+  }
   const current = rankings.find(r => r.storeRoomId === selected) ?? rankings[0];
   return (
     <section style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

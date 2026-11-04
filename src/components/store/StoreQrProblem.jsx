@@ -13,7 +13,7 @@ const KINDS = {
 
 /**
  * 1f 쓸 수 없는 QR (+ 매장을 못 찾거나 못 불러온 경우).
- * 운영 끝난 매장의 "지난 기록 보기"(2h)는 4단계 — 그 전엔 홈으로만 보낸다.
+ * 운영 끝난 매장이면 멤버는 "지난 기록 보기"(2h)로, 아니면 홈으로.
  */
 const StoreQrProblem = ({ kind, storeName, primary, onBack, t }) => {
   const [titleKey, descKey] = KINDS[kind];

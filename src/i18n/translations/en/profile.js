@@ -61,4 +61,22 @@ export default {
   themeMode: 'Theme Mode',
   themeDark: 'Dark',
   themeLight: 'Light',
+
+  // ── Store tab (plan-store 7) ──
+  recordKind: 'Record type',
+  tabGeneral: 'General',
+  tabStore: 'Store',
+  seasonTier: 'SEASON TIER',
+  tierInfoAria: 'About tiers',
+  noCommunityRecord: 'No community records yet',
+  noCommunityRecordDesc: 'Create a group with friends and record games to get a tier here',
+  storeSeasonRank: 'Rank this season',
+  storeRankValue: '#{rank} of {n}',
+  storeTopGame: 'Most played',
+  storeTopGameValue: '{game} · {n}',
+  storeResetRow: '{game} score reset',
+  storeResetDesc: 'The reported match on {when} was reviewed and the score reset to 500',
+  storeHomeLink: '{name} store home',
+  tierInfoStore: 'Only matches recorded in store rooms count, separately for each store. Your tier is your highest game score at that store this season. Tier ranges match General (Bronze ~600 · Silver ~850 · Gold ~1200 · Platinum ~1600 · Diamond). Scores restart at 500 when the season ends',
+  tierInfoGeneral: "Only community matches count; store matches don't. Tiers: Bronze ~600 · Silver ~850 · Gold ~1200 · Platinum ~1600 · Diamond",
 };

@@ -1,18 +1,23 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { createParty, getStoreRoom, getStoreRoomMatches, startStoreMatch, storeErrorCode } from '../api/services/stores';
-import { getAuthUserId, getNickname } from '../auth/storage';
+import { createParty, getStoreRoom, startStoreMatch, storeErrorCode } from '../api/services/stores';
+import { getAuthUserId } from '../auth/storage';
 import { CURRENT_PARTY_KEY, useAutoEnterMatch, useCurrentParty } from '../hooks/useCurrentParty';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
+import DiceAvatar from '../components/shared/DiceAvatar';
+import { getAvatarColorById } from '../utils/avatarUtils';
 import StoreRankRow from '../components/store/StoreRankRow';
 import StoreFixedBottom from '../components/store/StoreFixedBottom';
-import { fmt, num } from '../components/store/fmt';
+import StoreMatchHistory from '../components/store/StoreMatchHistory';
+import StoreSeasonTab from '../components/store/StoreSeasonTab';
+import { fmt } from '../components/store/fmt';
 import { card, hintText, primaryButton } from '../components/store/storeStyles';
 import { Skeleton } from '../components/Skeleton';
+import { useGoBack } from '../hooks/useGoBack';
 
 const blockText = (start, game, room, t) => {
   const p = start.party;
@@ -33,39 +38,14 @@ const blockText = (start, game, room, t) => {
   }
 };
 
-const MatchList = ({ storeId, roomId, t }) => {
-  const { data: matches = [], isLoading } = useQuery({
-    queryKey: ['store', 'room', Number(roomId), 'matches'],
-    queryFn: () => getStoreRoomMatches(storeId, roomId),
-  });
-  if (isLoading) return <Skeleton height={120} radius={20} />;
-  if (matches.length === 0) return <p style={{ margin: 0, padding: '24px 0', textAlign: 'center', fontSize: '13px', color: V('--th-text-sub') }}>{t('store', 'noMatches')}</p>;
-  return matches.map(m => (
-    <section key={m.id} style={{ ...card, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-      <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>{new Date(m.endedAt).toLocaleString()}</span>
-      {m.participants.map((p, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: V('--th-text') }}>
-          <span style={{ width: 32, fontWeight: 700, color: p.placement === 1 ? V('--th-primary') : V('--th-text-sub') }}>{fmt(t('store', 'placeN'), { n: p.placement })}</span>
-          <span style={{ flex: 1 }}>{p.nickname ?? t('store', 'leftMember')}</span>
-          {p.gameScore != null && <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{num(p.gameScore)}</span>}
-          {p.ratingChange != null && (
-            <span style={{ width: 44, textAlign: 'right', fontWeight: 700, color: p.ratingChange > 0 ? '#2F6B4C' : V('--th-text-sub') }}>
-              {p.ratingChange > 0 ? `+${p.ratingChange}` : p.ratingChange}
-            </span>
-          )}
-        </div>
-      ))}
-    </section>
-  ));
-};
-
 /**
- * 매장 게임방 (시안 3). 매장 랭킹 / 매치기록 탭 (시즌 탭은 시즌이 생기는 4단계). 아래는 시작 버튼 상태:
+ * 매장 게임방 (시안 3). 매장 랭킹 / 매치기록(3g) / 시즌(3l) 탭. 아래는 시작 버튼 상태:
  * 기록자면 "그룹 N명으로 게임 시작", 아니면 회색 "[기록자]님이 게임을 고르는 중", 막히면 이유, 그룹 없으면 만들기/합류
  */
 const StoreRoom = () => {
   const { storeId, roomId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const myId = Number(getAuthUserId());
@@ -113,13 +93,12 @@ const StoreRoom = () => {
   const game = room?.game;
   const st = room?.start;
   const recorderName = st?.party?.recorderNickname;
-  const others = st?.party?.nicknames.filter(n => n !== getNickname()) ?? [];
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
-      <header style={{ position: 'sticky', top: 0, zIndex: 10, paddingTop: 'env(safe-area-inset-top)', backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid ${V('--th-border')}` }}>
+      <header style={{ position: 'sticky', top: 'env(safe-area-inset-top)', zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid ${V('--th-border')}` }}>
         <div style={{ maxWidth: 430, margin: '0 auto', height: 70, boxSizing: 'border-box', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => navigate(`/store/${storeId}`)} aria-label={t('common', 'back')} style={{ width: 44, height: 44, border: 'none', background: 'none', cursor: 'pointer', color: V('--th-primary'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => goBack(`/store/${storeId}`)} aria-label={t('common', 'back')} style={{ width: 44, height: 44, border: 'none', background: 'none', cursor: 'pointer', color: V('--th-primary'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M11 6l-6 6 6 6" /></svg>
           </button>
           <span style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '16px', fontWeight: 700, color: V('--th-primary') }}>
@@ -128,8 +107,8 @@ const StoreRoom = () => {
               {room ? `${[room.store.name, room.store.branch].filter(Boolean).join(' ')} · ${game.name}` : ''}
             </span>
           </span>
-          <button onClick={() => navigate('/profile')} aria-label="profile" style={{ width: 40, height: 40, borderRadius: 999, border: 'none', cursor: 'pointer', backgroundColor: V('--th-primary'), color: '#fff', fontSize: '16px', fontWeight: 700 }}>
-            {(getNickname() || '?')[0]}
+          <button onClick={() => navigate('/profile')} aria-label="profile" style={{ width: 40, height: 40, borderRadius: 999, border: 'none', cursor: 'pointer', backgroundColor: getAvatarColorById(getAuthUserId()), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <DiceAvatar size={40} />
           </button>
         </div>
       </header>
@@ -150,12 +129,12 @@ const StoreRoom = () => {
         )}
 
         <div style={{ display: 'flex', gap: '4px', padding: '4px', backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: 999 }}>
-          {['ranking', 'matches'].map(k => (
+          {['ranking', 'matches', 'season'].map(k => (
             <button key={k} onClick={() => setTab(k)} style={{
               flex: 1, height: 40, border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: '14px',
               fontWeight: tab === k ? 700 : 500, backgroundColor: tab === k ? V('--th-primary') : 'transparent',
               color: tab === k ? '#fff' : V('--th-text-sub'),
-            }}>{t('store', k === 'ranking' ? 'tabRanking' : 'tabMatches')}</button>
+            }}>{t('store', { ranking: 'tabRanking', matches: 'tabMatches', season: 'tabSeason' }[k])}</button>
           ))}
         </div>
 
@@ -179,7 +158,8 @@ const StoreRoom = () => {
             )}
           </>
         )}
-        {tab === 'matches' && <MatchList storeId={storeId} roomId={roomId} t={t} />}
+        {tab === 'matches' && <StoreMatchHistory storeId={storeId} roomId={roomId} gameName={game?.name ?? ''} t={t} />}
+        {tab === 'season' && <StoreSeasonTab storeId={storeId} roomId={roomId} t={t} />}
       </main>
 
       {st && (
@@ -189,23 +169,11 @@ const StoreRoom = () => {
               {fmt(t('store', 'expiredNotice'), { names: st.expiredNicknames.join(', ') })}
             </span>
           )}
-          {st.party && st.block !== 'STAFF' && (
-            <button onClick={() => navigate(`/store/${storeId}/party/manage`)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: V('--th-text-sub'), fontSize: '13px' }}>
-              <span>
-                <b style={{ color: V('--th-text') }}>{fmt(t('store', 'partyLine'), { n: st.party.size })}</b>
-                {others.length > 0 && ` · ${others.join('·')}`}
-              </span>
-              <span style={{ color: V('--th-primary'), fontWeight: 700 }}>{t('store', 'partyLineManage')}</span>
-            </button>
-          )}
           {st.block === null && (
-            <>
-              <button onClick={start} disabled={busy} style={{ ...primaryButton(!busy) }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M7 5l12 7-12 7z" /></svg>
-                {fmt(t('store', 'startWith'), { n: st.party.size })}
-              </button>
-              <span style={hintText}>{t('store', 'startHint')}</span>
-            </>
+            <button onClick={start} disabled={busy} style={{ ...primaryButton(!busy) }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round"><path d="M7 5l12 7-12 7z" /></svg>
+              {fmt(t('store', 'startWith'), { n: st.party.size })}
+            </button>
           )}
           {st.block === 'NOT_RECORDER' && (
             <>

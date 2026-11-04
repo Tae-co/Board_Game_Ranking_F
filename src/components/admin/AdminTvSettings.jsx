@@ -8,11 +8,11 @@ import { fmt, num } from '../store/fmt';
 import { deviceSeen } from '../store/deviceSeen';
 import { ArrowDownIcon, ArrowUpIcon, BackIcon, CloseIcon, NextIcon } from '../store/StoreIcons';
 import AdminSubPage, { AdminPopup } from './AdminSubPage';
+import AdminStoreEvents from './AdminStoreEvents';
+import { contestWhen } from '../contest/contestUtils';
 
 const SCREENS = ['MVP', 'TOP10', 'QR', 'EVENT', 'CONTEST', 'SEASON'];
 const INTERVALS = [5, 10, 15, 20];
-// 매장 이벤트·대회·시즌은 4·5단계에서 내용이 생긴다. 지금은 TV에서 늘 건너뛴다
-const NOT_YET = { EVENT: 'tvSkipEvent', CONTEST: 'tvSkipContest', SEASON: 'tvSkipSeason' };
 
 const cardStyle = {
   backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px',
@@ -31,25 +31,29 @@ const iconButton = (enabled, danger) => ({
 
 const PV = { bg: '#0F0F1F', card: '#1A1A2E', text: '#F8FAFC', sub: '#94A3B8', label: '#A5B4FC', gold: '#FCD34D', bar: '#818CF8' };
 
-const PvTile = ({ label, name, value }) => (
-  <span style={{ backgroundColor: PV.card, borderRadius: 8, padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+const PvTile = ({ label, name, value, span }) => (
+  <span style={{ gridColumn: span ? `span ${span}` : undefined, backgroundColor: PV.card, borderRadius: 8, padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
     <span style={{ fontSize: 8, color: PV.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
     <span style={{ fontSize: 11, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
     <span style={{ fontSize: 8, color: PV.gold }}>{value}</span>
   </span>
 );
 
-const Preview = ({ screen, data, top10Game, t }) => {
+const Preview = ({ screen, data, top10Game, lang, t }) => {
   const label = (text) => <span style={{ fontSize: 9, fontWeight: 700, color: PV.label }}>{text}</span>;
   if (screen === 'MVP') {
-    const leader = data.mvp?.gameLeaders?.[0];
+    const m = data.mvp;
+    const cnt = (item, key) => (item ? fmt(t('store', key), { n: item.count }) : '');
     return (
       <>
         {label(t('store', 'tvMvpTitle'))}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
-          <PvTile label={leader ? fmt(t('store', 'tvLeaderOf'), { game: leader.name }) : t('store', 'tvGameLeaders')} name={leader?.nickname ?? '—'} value={leader ? num(leader.score) : ''} />
-          <PvTile label={t('store', 'tvMostVisits')} name={data.mvp?.mostVisits?.nickname ?? '—'} value={data.mvp?.mostVisits ? fmt(t('store', 'tvDays'), { n: data.mvp.mostVisits.count }) : ''} />
-          <PvTile label={t('store', 'tvMostGames')} name={data.mvp?.mostGames?.nickname ?? '—'} value={data.mvp?.mostGames ? fmt(t('store', 'tvGames'), { n: data.mvp.mostGames.count }) : ''} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 6 }}>
+          <PvTile span={3} label={t('store', 'tvMostVisits')} name={m?.mostVisits?.nickname ?? '—'} value={cnt(m?.mostVisits, 'tvDays')} />
+          <PvTile span={3} label={t('store', 'tvMostGames')} name={m?.mostGames?.nickname ?? '—'} value={cnt(m?.mostGames, 'tvGames')} />
+          <PvTile span={2} label={t('store', 'tvMostWins')} name={m?.mostWins?.nickname ?? '—'} value={cnt(m?.mostWins, 'tvWins')} />
+          <PvTile span={2} label={t('store', 'tvBestStreak')} name={m?.bestStreak?.nickname ?? '—'} value={cnt(m?.bestStreak, 'tvStreak')} />
+          <PvTile span={2} label={t('store', 'tvBestWinRate')} name={m?.bestWinRate?.nickname ?? '—'}
+            value={m?.bestWinRate ? fmt(t('store', 'tvWinRate'), { p: m.bestWinRate.percent }) : ''} />
         </div>
       </>
     );
@@ -83,15 +87,60 @@ const Preview = ({ screen, data, top10Game, t }) => {
       </div>
     );
   }
+  if (screen === 'SEASON' && data.seasonResult) {
+    const r = data.seasonResult;
+    return (
+      <>
+        {label(fmt(t('store', 'tvSeasonFinal'), { name: r.name }))}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
+          {r.winners.slice(0, 3).map(w => (
+            <PvTile key={w.boardGameId} label={fmt(t('store', 'tvWinnerOf'), { game: w.name })} name={w.nickname ?? '—'} value={num(w.score)} />
+          ))}
+        </div>
+      </>
+    );
+  }
+  if (screen === 'EVENT') {
+    const e = data.events?.[0];
+    const c = data.recruiting?.[0];
+    if (!e && !c) return label(t('admin', 'tvScreenEVENT'));
+    return (
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 6 }}>
+        {label(t('contest', c && !e ? 'tvContestBadge' : 'badgeStoreEvent'))}
+        <span style={{ fontSize: 17, fontWeight: 700 }}>{e ? e.title : c.title}</span>
+        <span style={{ fontSize: 9, color: PV.sub }}>
+          {e ? (e.benefitText ?? '') : fmt(t('contest', 'tvContestWhen'), { when: contestWhen(c.startsAt, lang), a: c.applied, b: c.capacity, r: c.rounds })}
+        </span>
+      </div>
+    );
+  }
+  if (screen === 'CONTEST' && data.contestBoard) {
+    const b = data.contestBoard;
+    return (
+      <>
+        {label(fmt(t('contest', 'tvBoardBadge'), { n: b.rounds, d: b.roundsDone }))}
+        <span style={{ fontSize: 13, fontWeight: 700 }}>{b.title}</span>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {b.standings.slice(0, 4).map(s => (
+            <span key={s.memberId ?? s.nickname} style={{ display: 'flex', gap: 6, fontSize: 9 }}>
+              <span style={{ width: 10, fontWeight: 700, color: s.rank === 1 ? PV.gold : PV.text }}>{s.rank}</span>
+              <span style={{ flex: 1 }}>{s.nickname ?? '—'}</span>
+              <span style={{ fontWeight: 700, color: PV.label }}>{s.total}</span>
+            </span>
+          ))}
+        </div>
+      </>
+    );
+  }
   return label(t('admin', `tvScreen${screen}`));
 };
 
 /**
  * 6k 매장 TV 화면 (전체 화면, 관리자만): 미리 보기 · 돌아가는 순서(↑↓·빼기·다시 넣기) · 방금 끝난 경기 ·
- * 넘기는 간격 · TOP 10 게임. 저장하면 TV가 30초 재조회 때 반영. 매장 이벤트 목록은 이벤트(5단계)와 함께 더한다.
+ * 넘기는 간격 · TOP 10 게임 · 매장 이벤트 목록(추가·수정·삭제 → 6j). 저장하면 TV가 30초 재조회 때 반영.
  */
 const AdminTvSettings = ({ store, onBack }) => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState(null);
   const [pv, setPv] = useState(0);
@@ -129,9 +178,11 @@ const AdminTvSettings = ({ store, onBack }) => {
   const pvIdx = Math.min(pv, pvList.length - 1);
   const pk = pvList[pvIdx];
   const pvName = pk === 'NONE' ? t('admin', 'tvPreviewQrOnly') : t('admin', `tvScreen${pk}`);
-  const skipKey = NOT_YET[pk]
+  const skipKey = (pk === 'EVENT' && !data.events?.length && !data.recruiting?.length ? 'tvSkipEvent' : null)
+    ?? (pk === 'CONTEST' && !data.contestBoard ? 'tvSkipContest' : null)
     ?? (pk === 'TOP10' && !top10Game ? 'tvSkipTop10' : null)
-    ?? (pk === 'MVP' && !data.mvp ? 'tvSkipMvp' : null);
+    ?? (pk === 'MVP' && !data.mvp ? 'tvSkipMvp' : null)
+    ?? (pk === 'SEASON' && !data.seasonResult ? 'tvSkipSeason' : null);
 
   const lastTv = data.tvLastSeenAt
     ? deviceSeen({ connected: true, lastSeenAt: data.tvLastSeenAt }, t).text
@@ -169,7 +220,7 @@ const AdminTvSettings = ({ store, onBack }) => {
           position: 'relative', width: '100%', aspectRatio: '16 / 9', borderRadius: '12px', overflow: 'hidden',
           backgroundColor: PV.bg, color: PV.text, boxSizing: 'border-box', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px',
         }}>
-          <Preview screen={pk} data={data} top10Game={top10Game} t={t} />
+          <Preview screen={pk} data={data} top10Game={top10Game} lang={lang} t={t} />
         </div>
         {skipKey && <span style={{ fontSize: '12px', lineHeight: 1.5, color: '#B4500A' }}>{t('admin', skipKey)}</span>}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -183,6 +234,8 @@ const AdminTvSettings = ({ store, onBack }) => {
         </div>
         <span style={{ fontSize: '12px', lineHeight: 1.5, color: V('--th-text-sub') }}>{t('admin', 'tvPreviewNote')}</span>
       </section>
+
+      <AdminStoreEvents store={store} eventsOnly />
 
       <section style={cardStyle}>
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>

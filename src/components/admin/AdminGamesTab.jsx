@@ -6,11 +6,11 @@ import { useGameManagement } from '../../hooks/useGameManagement';
 import AdminSchemaBuilder from './AdminSchemaBuilder';
 import GameImageFallback from '../shared/GameImageFallback';
 
-const AdminGamesTab = () => {
+const AdminGamesTab = ({ prefillName = '' }) => {
   const navigate = useNavigate();
   const { t } = useLanguage();
   const schemaBuilder = useSchemaBuilder();
-  const gm = useGameManagement(schemaBuilder, t);
+  const gm = useGameManagement(schemaBuilder, t, prefillName);
 
   const inputStyle = {
     backgroundColor: 'var(--th-bg)',

@@ -6,11 +6,13 @@ import { getAuthUserId } from '../auth/storage';
 import { CURRENT_PARTY_KEY, useCurrentParty } from '../hooks/useCurrentParty';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import MemberDiceAvatar from '../components/shared/MemberDiceAvatar';
 import StoreTopBar from '../components/store/StoreTopBar';
 import StoreFixedBottom from '../components/store/StoreFixedBottom';
 import { ConfirmDialog } from '../components/store/StorePopup';
 import { fmt } from '../components/store/fmt';
 import { card, meBadge, primaryButton, recorderBadge } from '../components/store/storeStyles';
+import { useGoBack } from '../hooks/useGoBack';
 
 /**
  * 코드로 그룹 합류 (시안 3c). 코드 입력 → 합류 완료(그룹 목록) → "그룹 화면으로" 3b.
@@ -19,6 +21,7 @@ import { card, meBadge, primaryButton, recorderBadge } from '../components/store
 const StorePartyJoin = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const myId = Number(getAuthUserId());
@@ -61,7 +64,7 @@ const StorePartyJoin = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg') }}>
-      <StoreTopBar title={t('store', 'codeJoinTitle')} onBack={() => navigate(`/store/${storeId}`)} backLabel={t('common', 'back')} />
+      <StoreTopBar title={t('store', 'codeJoinTitle')} onBack={() => goBack(`/store/${storeId}`)} backLabel={t('common', 'back')} />
       {!joined ? (
         <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: '40px 24px 140px', display: 'flex', flexDirection: 'column', gap: '28px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -105,7 +108,7 @@ const StorePartyJoin = () => {
             <div style={{ ...card, padding: '4px 16px' }}>
               {joined.members.map((m, i) => (
                 <div key={m.memberId} style={{ height: 52, display: 'flex', alignItems: 'center', gap: '12px', borderTop: i ? `1px solid ${V('--th-border')}` : 0 }}>
-                  <span style={{ width: 32, height: 32, borderRadius: 999, flexShrink: 0, backgroundColor: m.memberId === myId ? `rgba(${V('--th-primary-rgb')}, 0.3)` : V('--th-bg-deep') }} />
+                  <MemberDiceAvatar memberId={m.memberId} nickname={m.nickname} size={32} />
                   <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', fontWeight: 500, color: V('--th-text') }}>
                     {m.nickname}
                     {m.recorder && <span style={recorderBadge}>{t('store', 'recorderBadge')}</span>}

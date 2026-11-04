@@ -4,6 +4,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { assignStoreStaff, getStaffCandidates, unassignStoreStaff } from '../../api/services/admin';
 import { storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
+import MemberDiceAvatar from '../shared/MemberDiceAvatar';
 import AdminSubPage from './AdminSubPage';
 import { SearchIcon } from '../store/StoreIcons';
 
@@ -16,9 +17,9 @@ const formatDay = (iso) => {
   return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 };
 
-const Row = ({ first, name, sub, action }) => (
+const Row = ({ memberId, first, name, sub, action }) => (
   <div style={{ height: 60, display: 'flex', alignItems: 'center', gap: '12px', borderTop: first ? 'none' : `1px solid ${V('--th-border')}` }}>
-    <span style={{ width: 36, height: 36, borderRadius: 999, flexShrink: 0, backgroundColor: V('--th-bg-deep') }} />
+    <MemberDiceAvatar memberId={memberId} nickname={name} size={36} />
     <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
       <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
       <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>{sub}</span>
@@ -77,6 +78,7 @@ const AdminStoreStaff = ({ store, staff, onBack }) => {
             {staff.map((member, i) => (
               <Row
                 key={member.memberId}
+                memberId={member.memberId}
                 first={i === 0}
                 name={member.nickname}
                 sub={t('admin', 'staffAssignedOn').replace('{date}', formatDay(member.assignedAt))}
@@ -117,6 +119,7 @@ const AdminStoreStaff = ({ store, staff, onBack }) => {
               {shown.map((c, i) => (
                 <Row
                   key={c.memberId}
+                  memberId={c.memberId}
                   first={i === 0}
                   name={c.nickname}
                   sub={t('admin', 'staffCandidateSub')}

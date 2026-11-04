@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, Pencil, X } from 'lucide-react';
 import StorageImage from '../StorageImage';
+import DiceAvatar from '../shared/DiceAvatar';
 import NavAvatar from '../NavAvatar';
 import { V } from '../../utils/cssUtils';
 import { getAvatarColorById as getAvatarColor } from '../../utils/avatarUtils';
@@ -106,7 +107,7 @@ const RoomSettingsOverlay = ({
                   <div style={{ width: 44, height: 44, borderRadius: '50%', backgroundColor: getAvatarColor(member.memberId), display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', fontWeight: '700', color: '#FFFFFF', overflow: 'hidden' }}>
                     {member.profileImage
                       ? <StorageImage src={member.profileImage} alt={member.nickname} loading="lazy" decoding="async" transform={{ width: 72, height: 72, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                      : member.nickname[0].toUpperCase()}
+                      : <DiceAvatar size={44} />}
                   </div>
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>

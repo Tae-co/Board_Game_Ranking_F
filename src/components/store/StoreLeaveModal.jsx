@@ -1,17 +1,26 @@
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
-import { leaveStore } from '../../api/services/stores';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { getStoreHome, leaveStore } from '../../api/services/stores';
 import { MY_STORES_KEY } from '../../hooks/useMyStores';
 import { storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
 
 /**
- * 1c 매장 나가기 확인. 점수·순위·경기 수 숫자, 그룹·대회 줄과 "판이 끝난 뒤에" 막힘은 2·5단계에서 더한다.
+ * 1c 매장 나가기 확인. 신청한 대회·진행 중 대회가 있으면 줄을 더한다 (매장 홈 응답의 대회 카드).
+ * 점수·순위·경기 수 숫자와 그룹 줄은 아직 없다. "판이 끝난 뒤에" 막힘은 서버 오류 문구로 보여 준다
  */
 const StoreLeaveModal = ({ store, onClose, t }) => {
   const queryClient = useQueryClient();
   const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState('');
+  const { data: home } = useQuery({
+    queryKey: ['store', store.id, 'home'],
+    queryFn: () => getStoreHome(store.id),
+    staleTime: 1000 * 30,
+  });
+  const contestLines = (home?.contests ?? [])
+    .filter(c => (c.myStatus === 'APPLIED' && c.status === 'RECRUITING') || (c.myStatus === 'PLAYING' && c.status === 'PLAYING'))
+    .map(c => t('contest', c.status === 'PLAYING' ? 'leaveLive' : 'leaveApplied').replace('{title}', c.title));
 
   const handleLeave = async () => {
     setLeaving(true);
@@ -65,6 +74,7 @@ const StoreLeaveModal = ({ store, onClose, t }) => {
           display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '14px',
         }}>
           {['leaveItemScore', 'leaveItemRank', 'leaveItemMatches'].map(key => <li key={key}>{t('store', key)}</li>)}
+          {contestLines.map(line => <li key={line}>{line}</li>)}
         </ul>
         <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>{t('store', 'leaveKeepNote')}</p>
         {error && <p style={{ fontSize: '12px', color: '#ef4444', margin: 0, textAlign: 'center' }}>{error}</p>}

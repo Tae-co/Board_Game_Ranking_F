@@ -5,6 +5,7 @@ import { ArrowLeft, Users, X } from 'lucide-react';
 import StorageImage from '../components/StorageImage';
 import NavAvatar from '../components/NavAvatar';
 import RoleBadge from '../components/shared/RoleBadge';
+import DiceAvatar from '../components/shared/DiceAvatar';
 import { getCommunity, getCommunityMembers, kickCommunityMember } from '../api/services/communities';
 import { V } from '../utils/cssUtils';
 import { getAuthUserId } from '../auth/storage';
@@ -86,7 +87,7 @@ const CommunityMemberManage = () => {
               {t('community', 'manageMembers')}
             </span>
           </div>
-          <NavAvatar size={36} fontSize={14} />
+          <NavAvatar size={36} />
         </div>
       </div>
 
@@ -130,7 +131,7 @@ const CommunityMemberManage = () => {
                     }}>
                       {member.profileImage
                         ? <StorageImage src={member.profileImage} alt={member.nickname} loading="lazy" decoding="async" transform={{ width: 88, height: 88, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                        : member.nickname[0].toUpperCase()
+                        : <DiceAvatar size={44} />
                       }
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>

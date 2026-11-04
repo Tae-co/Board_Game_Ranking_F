@@ -13,7 +13,12 @@ import { TierBadge } from '../components/TierBadge';
 import { V } from '../utils/cssUtils';
 import { getErrorMessage, getTierFromRating, getTierBg } from '../utils/tierUtils';
 import FeedbackModal from '../components/shared/FeedbackModal';
+import DiceAvatar from '../components/shared/DiceAvatar';
+import { getAvatarColorById } from '../utils/avatarUtils';
 import TrophyShelf from '../components/season/TrophyShelf';
+import StoreProfileStats from '../components/store/StoreProfileStats';
+import { InfoPopup } from '../components/store/StorePopup';
+import { InfoIcon } from '../components/store/StoreIcons';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -40,6 +45,20 @@ const Profile = () => {
     staleTime: 1000 * 60 * 10,
   });
 
+  // 프로필 매장 탭 (plan-store 7): 가입한 매장마다 이번 시즌 기록
+  const { data: storeProfiles = [] } = useQuery({
+    queryKey: ['storeProfile', userId],
+    queryFn: () => import('../api/services/stores').then(m => m.getStoreProfile()),
+    staleTime: 1000 * 60,
+  });
+  const hasStores = storeProfiles.length > 0;
+  const hasCommunityRecord = !stats || (stats.totalWin ?? 0) + (stats.totalLose ?? 0) > 0;
+  const [mode, setMode] = useState(null); // null = 커뮤니티 기록이 없으면 매장 탭으로 열림
+  const isStore = hasStores && (mode ?? (hasCommunityRecord ? 'general' : 'store')) === 'store';
+  const [storeIdx, setStoreIdx] = useState(0);
+  const curStore = isStore ? storeProfiles[Math.min(storeIdx, storeProfiles.length - 1)] : null;
+  const [tierInfo, setTierInfo] = useState(false);
+
   useEffect(() => {
     if (profileData?.profileImage !== undefined) {
       setProfileImage(profileData.profileImage || null);
@@ -48,7 +67,8 @@ const Profile = () => {
 
   const currentNickname = profileData?.nickname || getNickname() || '';
   const maxRating = Math.round(profileData?.overallRating ?? 500);
-  const tier = getTierFromRating(maxRating);
+  const shownRating = curStore ? curStore.bestScore : maxRating;
+  const tier = getTierFromRating(shownRating);
   const tierStyle = getTierBg(tier.label);
   const tierName = t('profile', `tier${tier.label}`);
 
@@ -190,27 +210,26 @@ const Profile = () => {
           {/* Avatar */}
           <div style={{ position: 'relative' }}>
             <div
-              onClick={() => setShowPhotoMenu(v => !v)}
+              onClick={isStore ? undefined : () => setShowPhotoMenu(v => !v)}
               style={{
                 width: 84, height: 84, borderRadius: '50%',
-                backgroundColor: 'var(--th-primary)',
+                backgroundColor: getAvatarColorById(userId),
                 border: '3px solid var(--th-primary)',
                 boxShadow: '0 0 0 3px color-mix(in srgb, var(--th-primary) 20%, transparent)',
-                overflow: 'hidden', cursor: 'pointer', flexShrink: 0,
+                overflow: 'hidden', cursor: isStore ? 'default' : 'pointer', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 position: 'relative',
               }}
             >
-              {profileData?.profileImage ? (
+              {/* 매장 탭은 사진을 쓰지 않고 늘 기본(주사위) 프로필 */}
+              {profileData?.profileImage && !isStore ? (
                 <img
                   src={profileData.profileImage}
                   alt="profile"
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
               ) : (
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: 34 }}>
-                  {(currentNickname[0] || '?').toUpperCase()}
-                </span>
+                <DiceAvatar size={84} />
               )}
               {isUploadingPhoto && (
                 <div style={{
@@ -224,7 +243,7 @@ const Profile = () => {
             </div>
 
             {/* Camera button */}
-            <button
+            {!isStore && <button
               onClick={() => setShowPhotoMenu(v => !v)}
               style={{
                 position: 'absolute', bottom: 0, left: 0,
@@ -235,10 +254,10 @@ const Profile = () => {
               }}
             >
               <Camera size={12} color="var(--th-primary)" />
-            </button>
+            </button>}
 
             {/* Photo action menu */}
-            {showPhotoMenu && (
+            {showPhotoMenu && !isStore && (
               <>
                 <div
                   onClick={() => setShowPhotoMenu(false)}
@@ -310,27 +329,75 @@ const Profile = () => {
               {currentNickname}
             </div>
             <div style={{ fontSize: 13, color: V('--th-text-sub') }}>
+              {curStore ? `${curStore.branch || curStore.name} ` : ''}
               {t('profile', 'tierMember').replace('{tier}', tierName.charAt(0) + tierName.slice(1).toLowerCase())}
             </div>
           </div>
 
+          {hasStores && (
+            <div role="tablist" aria-label={t('profile', 'recordKind')} style={{
+              width: '100%', boxSizing: 'border-box', display: 'flex', gap: 4, padding: 4,
+              backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`, borderRadius: 999,
+            }}>
+              {[['general', 'tabGeneral'], ['store', 'tabStore']].map(([key, label]) => {
+                const on = (key === 'store') === isStore;
+                return (
+                  <button key={key} role="tab" aria-selected={on} onClick={() => setMode(key)} style={{
+                    flex: 1, height: 36, border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: 14, fontWeight: 700,
+                    backgroundColor: on ? 'var(--th-primary)' : 'transparent', color: on ? '#fff' : V('--th-text-sub'),
+                  }}>{t('profile', label)}</button>
+                );
+              })}
+            </div>
+          )}
+
+          {isStore && (
+            <div style={{ width: '100%', display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
+              {storeProfiles.map((sp, i) => {
+                const on = sp.storeId === curStore.storeId;
+                return (
+                  <button key={sp.storeId} onClick={() => setStoreIdx(i)} aria-pressed={on} style={{
+                    height: 34, padding: '0 14px', flexShrink: 0, borderRadius: 999, cursor: 'pointer', fontSize: 13, fontWeight: 700,
+                    border: `1px solid ${on ? 'var(--th-primary)' : 'var(--th-border)'}`,
+                    backgroundColor: on ? 'rgba(var(--th-primary-rgb), 0.12)' : V('--th-card'), color: on ? 'var(--th-primary)' : V('--th-text-sub'),
+                  }}>{[sp.name, sp.branch].filter(Boolean).join(' ')}</button>
+                );
+              })}
+            </div>
+          )}
+
+          {!isStore && !hasCommunityRecord && hasStores && (
+            <div style={{ width: '100%', boxSizing: 'border-box', borderRadius: 14, border: `1px dashed var(--th-border)`, padding: 18, textAlign: 'center', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: V('--th-text') }}>{t('profile', 'noCommunityRecord')}</span>
+              <span style={{ fontSize: 12, lineHeight: 1.5, color: V('--th-text-sub') }}>{t('profile', 'noCommunityRecordDesc')}</span>
+            </div>
+          )}
+
           {/* Current Tier box */}
-          <div style={{
+          {(isStore || hasCommunityRecord || !hasStores) && <div style={{
             width: '100%', borderRadius: 14,
             backgroundColor: tierStyle.bg,
             padding: '14px 18px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <div>
-              <div style={{ fontSize: 10, fontWeight: 700, color: tierStyle.text, letterSpacing: '0.08em', marginBottom: 3 }}>
-                {t('profile', 'currentTier')}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 2, marginBottom: 3 }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: tierStyle.text, letterSpacing: '0.08em' }}>
+                  {t('profile', isStore ? 'seasonTier' : 'currentTier')}
+                </span>
+                {hasStores && (
+                  <button onClick={() => setTierInfo(true)} aria-label={t('profile', 'tierInfoAria')} style={{
+                    width: 24, height: 24, padding: 0, border: 'none', borderRadius: 999, background: 'none', cursor: 'pointer',
+                    color: tierStyle.text, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}><InfoIcon size={14} /></button>
+                )}
               </div>
               <div style={{ fontSize: 20, fontWeight: 900, color: tierStyle.text }}>
                 {tierName}
               </div>
             </div>
             <TierBadge tier={tier} size="lg" />
-          </div>
+          </div>}
 
           {trophies.length > 0 && (
             <div style={{ width: '100%' }}>
@@ -374,8 +441,11 @@ const Profile = () => {
           )}
         </div>
 
+        {/* 매장 탭: 승·패·승률·점수 + 이번 시즌 순위·가장 많이 한 게임·초기화·방문 */}
+        {curStore && <StoreProfileStats sp={curStore} navigate={navigate} t={t} />}
+
         {/* Stats Row */}
-        {stats && (
+        {!isStore && hasCommunityRecord && stats && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
             {[
               { label: 'WINS', value: stats.totalWin ?? 0, color: V('--th-text') },
@@ -488,6 +558,15 @@ const Profile = () => {
         </div>
 
       </div>
+
+      {tierInfo && (
+        <InfoPopup
+          title={t('store', 'infoTitle')}
+          text={t('profile', isStore ? 'tierInfoStore' : 'tierInfoGeneral')}
+          okLabel={t('store', 'infoOk')}
+          onClose={() => setTierInfo(false)}
+        />
+      )}
 
       {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} />}
     </div>

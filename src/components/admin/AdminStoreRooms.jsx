@@ -56,6 +56,12 @@ const AdminStoreRooms = ({ store, onBack }) => {
                   ? t('admin', 'roomNoMinutes')
                   : t('admin', 'roomSub').replace('{a}', r.minMinutes).replace('{b}', r.maxMinutes).replace('{n}', r.matchCount)}
               </span>
+              {/* 6i: 닫으면 다시 열기 전엔 예정된 대회를 시작할 수 없다 */}
+              {r.upcomingContests > 0 && (
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#B4500A' }}>
+                  {t('contest', 'upcomingContests').replace('{n}', r.upcomingContests)}
+                </span>
+              )}
             </span>
             <button onClick={() => toggle(r)} disabled={busyId === r.storeRoomId} style={{
               height: 36, padding: '0 12px', borderRadius: 999, cursor: 'pointer', flexShrink: 0,

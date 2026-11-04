@@ -9,6 +9,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { useSwipePaging } from '../hooks/useSwipePaging';
 import NavAvatar from '../components/NavAvatar';
 import RoleBadge from '../components/shared/RoleBadge';
+import DiceAvatar from '../components/shared/DiceAvatar';
 import { V } from '../utils/cssUtils';
 import { REGION_NAMES } from '../constants/regions';
 import { getAuthUserId } from '../auth/storage';
@@ -255,7 +256,7 @@ const CommunitySettings = () => {
               {t('community', 'editCommunity')}
             </span>
           </div>
-          <NavAvatar size={36} fontSize={14} />
+          <NavAvatar size={36} />
         </div>
       </div>
 
@@ -457,7 +458,7 @@ const CommunitySettings = () => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '14px', fontWeight: '700', color: '#fff',
               }}>
-                {ownerInfo.nickname[0].toUpperCase()}
+                <DiceAvatar size={36} />
               </div>
               <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{
@@ -504,7 +505,7 @@ const CommunitySettings = () => {
                       color: isSelected ? '#fff' : V('--th-text-sub'),
                       transition: 'all 0.15s',
                     }}>
-                      {m.nickname[0].toUpperCase()}
+                      <DiceAvatar size={36} color="currentColor" />
                     </div>
                     <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{

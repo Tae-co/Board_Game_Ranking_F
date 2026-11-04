@@ -39,8 +39,14 @@ const StorePartyManage = lazy(() => import('./pages/StorePartyManage'));
 const StoreRoom = lazy(() => import('./pages/StoreRoom'));
 const StoreRanking = lazy(() => import('./pages/StoreRanking'));
 const StoreGames = lazy(() => import('./pages/StoreGames'));
+const StoreEvents = lazy(() => import('./pages/StoreEvents'));
+const StoreEventDetail = lazy(() => import('./pages/StoreEventDetail'));
 const StoreMatch = lazy(() => import('./pages/StoreMatch'));
 const StoreDevices = lazy(() => import('./pages/StoreDevices'));
+const StoreScoreRequest = lazy(() => import('./pages/StoreScoreRequest'));
+const StoreReport = lazy(() => import('./pages/StoreReport'));
+const StoreContest = lazy(() => import('./pages/StoreContest'));
+const StoreContestConfirm = lazy(() => import('./pages/StoreContestConfirm'));
 const StoreDevice = lazy(() => import('./pages/StoreDevice'));
 const PartyBubble = lazy(() => import('./components/store/PartyBubble'));
 
@@ -272,10 +278,16 @@ function App() {
             <Route path="/store/:storeId/party/join" element={isAuthenticated ? <StorePartyJoin /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/party/manage" element={isAuthenticated ? <StorePartyManage /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/games" element={isAuthenticated ? <StoreGames /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/events" element={isAuthenticated ? <StoreEvents /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/events/:eventId" element={isAuthenticated ? <StoreEventDetail /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/rooms/:roomId" element={isAuthenticated ? <StoreRoom /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/rooms/:roomId/ranking" element={isAuthenticated ? <StoreRanking /> : <Navigate to="/login" replace />} />
             <Route path="/store/match/:matchId" element={isAuthenticated ? <StoreMatch /> : <Navigate to="/login" replace />} />
             <Route path="/store/:storeId/devices" element={isAuthenticated ? <StoreDevices /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/score-request" element={isAuthenticated ? <StoreScoreRequest /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/report" element={isAuthenticated ? <StoreReport /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/contest/:contestId" element={isAuthenticated ? <StoreContest /> : <Navigate to="/login" replace />} />
+            <Route path="/store/:storeId/contest/:contestId/confirm/:matchId" element={isAuthenticated ? <StoreContestConfirm /> : <Navigate to="/login" replace />} />
             {/* 4j 매장 기기로 쓰기 — 로그인 없이 (기기 토큰을 받으면 위의 기기 모드로 바뀐다) */}
             <Route path="/device" element={<StoreDevice />} />
 
