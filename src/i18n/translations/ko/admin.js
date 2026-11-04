@@ -260,6 +260,7 @@ export default {
   requestChangeStatus: '상태 바꾸기',
   requestCreateGame: '이 게임 점수판 만들기 ›',
   requestPages: '요청 페이지',
+  pagesAria: '페이지',
   stats: '통계',
   thisMonth: '이번 달',
   peakTime: '피크 시간',

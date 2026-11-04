@@ -6,6 +6,8 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
 import AdminSubPage, { AdminPopup } from './AdminSubPage';
+import AdminPager from './AdminPager';
+import usePaged from '../../hooks/usePaged';
 import AdminEventForm from './AdminEventForm';
 import { fmt } from '../store/fmt';
 import { PILL, pill, shortDate } from '../contest/contestUtils';
@@ -22,6 +24,8 @@ const smallButton = (danger) => ({
 
 /** "2026-11-28" "13:00" → 11/28 13:00 */
 const contestWhenAdmin = (c) => `${shortDate(c.date)} ${c.time}`;
+const PER_PAGE = 5;
+const SUMMARY_ROWS = 3;
 const sectionCard = {
   backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px',
   padding: '18px', display: 'flex', flexDirection: 'column', gap: '12px',
@@ -40,7 +44,7 @@ const useStoreEventLists = (store, eventsOnly = false) => {
   return { shownContests, events };
 };
 
-/** 6 어드민 매장 탭의 "이벤트" 요약: 한 줄씩 이름·상태만, 줄이나 관리하기 → 6m */
+/** 6 어드민 매장 탭의 "이벤트" 요약: 위에서 3줄, 한 줄씩 이름·상태만. 줄이나 관리하기 → 6m */
 export const AdminStoreEventsSummary = ({ store, onManage }) => {
   const { t } = useLanguage();
   const { shownContests, events } = useStoreEventLists(store);
@@ -66,10 +70,10 @@ export const AdminStoreEventsSummary = ({ store, onManage }) => {
       {shownContests.length === 0 && events.length === 0 && (
         <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('contest', 'adminEmpty')}</span>
       )}
-      {shownContests.map(c => line(c.title, fmt(t('contest', 'adminContestShort'), { when: contestWhenAdmin(c), a: c.applied, b: c.capacity }),
-        STATUS_PILL[c.status], t('contest', `status${c.status}`), `c${c.id}`))}
-      {events.map(e => line(e.title, fmt(t('contest', 'adminEventShort'), { from: shortDate(e.startsOn), to: shortDate(e.endsOn) }),
-        e.active ? PILL.blue : PILL.gray, t('contest', e.active ? 'badgeStoreEvent' : 'adminEventUpcoming'), `e${e.id}`))}
+      {[...shownContests.map(c => line(c.title, fmt(t('contest', 'adminContestShort'), { when: contestWhenAdmin(c), a: c.applied, b: c.capacity }),
+        STATUS_PILL[c.status], t('contest', `status${c.status}`), `c${c.id}`)),
+        ...events.map(e => line(e.title, fmt(t('contest', 'adminEventShort'), { from: shortDate(e.startsOn), to: shortDate(e.endsOn) }),
+        e.active ? PILL.blue : PILL.gray, t('contest', e.active ? 'badgeStoreEvent' : 'adminEventUpcoming'), `e${e.id}`))].slice(0, SUMMARY_ROWS)}
     </section>
   );
 };
@@ -77,7 +81,7 @@ export const AdminStoreEventsSummary = ({ store, onManage }) => {
 /**
  * 하루 대회·매장 이벤트 목록(줄마다 수정 → 6j / 삭제 확인창) + "+ 이벤트 등록" → 6j.
  * 끝났거나 취소된 대회는 목록에서 뺀다 (기록은 대회 화면·리포트에서).
- * eventsOnly = 6k의 매장 이벤트 목록, manage = 6m 이벤트 관리 화면 (매장 이름 줄 + 제목 없는 카드)
+ * eventsOnly = 6k의 매장 이벤트 목록, manage = 6m 이벤트 관리 화면 (매장 이름 줄 + 제목 없는 카드). 5개씩 쪽 번호
  */
 const AdminStoreEvents = ({ store, eventsOnly = false, manage = false }) => {
   const { t } = useLanguage();
@@ -87,6 +91,7 @@ const AdminStoreEvents = ({ store, eventsOnly = false, manage = false }) => {
   const [deleting, setDeleting] = useState(null);
 
   const { shownContests, events } = useStoreEventLists(store, eventsOnly);
+  const paged = usePaged([...shownContests.map(c => ({ c })), ...events.map(e => ({ e }))], PER_PAGE);
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['adminStoreContests', store.id] });
@@ -108,7 +113,7 @@ const AdminStoreEvents = ({ store, eventsOnly = false, manage = false }) => {
       {shownContests.length === 0 && events.length === 0 && (
         <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('contest', 'adminEmpty')}</span>
       )}
-      {shownContests.map(c => (
+      {paged.items.filter(x => x.c).map(({ c }) => (
         <div key={`c${c.id}`} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <button onClick={() => navigate(`/store/${store.id}/contest/${c.id}`)} style={rowLink}>
             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
@@ -128,7 +133,7 @@ const AdminStoreEvents = ({ store, eventsOnly = false, manage = false }) => {
           )}
         </div>
       ))}
-      {events.map(e => (
+      {paged.items.filter(x => x.e).map(({ e }) => (
         <div key={`e${e.id}`} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <button onClick={() => navigate(`/store/${store.id}/events/${e.id}`)} style={rowLink}>
             <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', width: '100%' }}>
@@ -145,6 +150,7 @@ const AdminStoreEvents = ({ store, eventsOnly = false, manage = false }) => {
           </div>
         </div>
       ))}
+      <AdminPager {...paged} label={t('admin', 'pagesAria')} t={t} />
     </>
   );
   const dialogs = (

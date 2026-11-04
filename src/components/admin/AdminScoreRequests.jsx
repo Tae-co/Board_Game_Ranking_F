@@ -4,9 +4,9 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { setAdminScoreRequestStatus } from '../../api/services/admin';
 import { V } from '../../utils/cssUtils';
 import { fmt } from '../store/fmt';
-import { BackIcon, NextIcon } from '../store/StoreIcons';
 import { REQUEST_PILL, REQUEST_STATUSES, SCORE_REQUESTS_KEY, storeCounts } from '../store/requestStatus';
 import AdminSubPage from './AdminSubPage';
+import AdminPager from './AdminPager';
 
 const PER_PAGE = 5;
 
@@ -124,22 +124,7 @@ const AdminScoreRequests = ({ requests, onBack, onCreateGame }) => {
         );
       })}
 
-      {pageCount > 1 && (
-        <nav aria-label={t('admin', 'requestPages')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}>
-          <button onClick={() => go(cur - 1)} aria-label={t('store', 'prevPage')} style={{ width: 40, height: 40, border: 'none', borderRadius: 999, background: 'none', cursor: 'pointer', color: cur === 0 ? V('--th-border') : V('--th-primary'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <BackIcon size={18} />
-          </button>
-          {Array.from({ length: pageCount }, (_, i) => (
-            <button key={i} onClick={() => go(i)} aria-current={i === cur ? 'page' : undefined} style={{
-              width: 40, height: 40, border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: '14px', fontWeight: 700,
-              backgroundColor: i === cur ? V('--th-primary') : 'transparent', color: i === cur ? '#fff' : V('--th-text-sub'),
-            }}>{i + 1}</button>
-          ))}
-          <button onClick={() => go(cur + 1)} aria-label={t('store', 'nextPage')} style={{ width: 40, height: 40, border: 'none', borderRadius: 999, background: 'none', cursor: 'pointer', color: cur === pageCount - 1 ? V('--th-border') : V('--th-primary'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <NextIcon />
-          </button>
-        </nav>
-      )}
+      <AdminPager cur={cur} pageCount={pageCount} go={go} label={t('admin', 'requestPages')} t={t} />
     </AdminSubPage>
   );
 };

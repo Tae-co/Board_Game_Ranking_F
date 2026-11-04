@@ -260,6 +260,7 @@ export default {
   requestChangeStatus: 'Change status',
   requestCreateGame: 'Make this score sheet ›',
   requestPages: 'Request pages',
+  pagesAria: 'Pages',
   stats: 'Stats',
   thisMonth: 'This month',
   peakTime: 'Peak time',
