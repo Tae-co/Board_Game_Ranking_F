@@ -8,11 +8,12 @@ import AdminStoreStaff from './AdminStoreStaff';
 import AdminStoreRooms from './AdminStoreRooms';
 import AdminStoreDevices from './AdminStoreDevices';
 import AdminTvSettings from './AdminTvSettings';
-import AdminStoreSeason from './AdminStoreSeason';
-import AdminStoreEvents from './AdminStoreEvents';
+import AdminStoreSeason, { AdminSeasonManage } from './AdminStoreSeason';
+import { AdminEventManage, AdminStoreEventsSummary } from './AdminStoreEvents';
 import AdminReportReview from './AdminReportReview';
 import AdminScoreRequests from './AdminScoreRequests';
 import AdminStoreSelect from './AdminStoreSelect';
+import AdminReportsAll, { ReportRow } from './AdminReportsAll';
 import { REQUEST_PILL, SCORE_REQUESTS_KEY } from '../store/requestStatus';
 import { fmt } from '../store/fmt';
 
@@ -25,6 +26,7 @@ const rowButton = {
   height: 56, display: 'flex', alignItems: 'center', gap: '12px', padding: 0, border: 'none', background: 'none',
   borderTop: `1px solid ${V('--th-border')}`, cursor: 'pointer', textAlign: 'left',
 };
+const linkButton = { marginTop: 8, alignSelf: 'center', border: 'none', background: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: V('--th-primary') };
 const mmdd = (iso) => {
   const d = new Date(iso);
   return `${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -36,13 +38,14 @@ const ghostButton = {
 
 /**
  * 6 어드민 매장 탭: 매장 선택 → 매장 정보(수정 6f) · 매장 기기(6g) · STAFF 지정(6h) · 매장 TV 화면(6k) ·
- * 게임방 관리(6i) · 시즌 · 이벤트(6j) · 신고(6b) · 점수판 요청(6c) · "+ 매장 등록"(6e).
+ * 게임방 관리(6i) · 시즌(요약 → 6l) · 이벤트(요약 → 6m) · 신고(2줄 → 6n 전체 → 6b) · 점수판 요청(6c) · "+ 매장 등록"(6e).
  */
 const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(null); // null | 'create' | 'edit' | 'staff' | 'rooms' | 'devices' | 'tv' | 'report' | 'requests'
+  const [page, setPage] = useState(null); // null | 'create' | 'edit' | 'staff' | 'rooms' | 'devices' | 'tv' | 'season' | 'events' | 'reports' | 'report' | 'requests'
   const [reportGroup, setReportGroup] = useState(null);
+  const [reportBack, setReportBack] = useState(null); // 6b에서 뒤로 → 매장 탭(null) 또는 신고 전체('reports')
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['adminStores'],
@@ -72,6 +75,8 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
   const { data: requests = [] } = useQuery({ queryKey: SCORE_REQUESTS_KEY, queryFn: getAdminScoreRequests });
   const openReports = reports.filter(r => r.status === 'OPEN').length;
   const newRequests = requests.filter(r => r.status === 'REVIEW').length;
+
+  const openReport = (group, back) => { setReportGroup(group); setReportBack(back); setPage('report'); };
 
   const formatDate = (iso) => new Date(iso).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US');
 
@@ -157,9 +162,9 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
         </section>
       )}
 
-      {selected && !selected.store.closed && <AdminStoreSeason store={selected.store} />}
+      {selected && !selected.store.closed && <AdminStoreSeason store={selected.store} onManage={() => setPage('season')} />}
 
-      {selected && !selected.store.closed && <AdminStoreEvents key={selected.store.id} store={selected.store} />}
+      {selected && !selected.store.closed && <AdminStoreEventsSummary key={selected.store.id} store={selected.store} onManage={() => setPage('events')} />}
 
       {selected && (
         <section style={{ ...sectionCard, gap: '4px' }}>
@@ -173,18 +178,10 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
           </div>
           <div style={{ height: 8 }} />
           {reports.length === 0 && <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('admin', 'reportsEmpty')}</span>}
-          {reports.map(g => (
-            <button key={`${g.boardGameId}-${g.targetMemberId}`} onClick={() => { setReportGroup(g); setPage('report'); }} style={rowButton}>
-              <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '15px', fontWeight: 500, color: V('--th-text') }}>{g.targetNickname ?? t('store', 'leftMember')} · {g.gameName}</span>
-                <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>
-                  {fmt(t('admin', g.count > 1 ? 'reportsLineMany' : 'reportsLineOne'), { n: g.count, last: mmdd(g.lastAt) })}
-                  {g.status !== 'OPEN' ? ` · ${t('admin', `reportStatus${g.status}`)}` : ''}
-                </span>
-              </span>
-              <span style={{ fontSize: '13px', fontWeight: 700, color: V('--th-primary') }}>{t('admin', 'reportCheck')}</span>
-            </button>
-          ))}
+          {reports.slice(0, 2).map(g => <ReportRow key={`${g.boardGameId}-${g.targetMemberId}`} group={g} onOpen={(grp) => openReport(grp, null)} t={t} />)}
+          {reports.length > 0 && (
+            <button onClick={() => setPage('reports')} style={linkButton}>{t('admin', 'reportsAll')}</button>
+          )}
         </section>
       )}
 
@@ -214,7 +211,7 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
           );
         })}
         {requests.length > 0 && (
-          <button onClick={() => setPage('requests')} style={{ marginTop: 8, alignSelf: 'center', border: 'none', background: 'none', cursor: 'pointer', fontSize: '14px', fontWeight: 700, color: V('--th-primary') }}>
+          <button onClick={() => setPage('requests')} style={linkButton}>
             {t('admin', 'requestsAll')}
           </button>
         )}
@@ -234,8 +231,13 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
       {page === 'devices' && selected && <AdminStoreDevices store={selected.store} onBack={() => setPage(null)} />}
       {page === 'tv' && selected && <AdminTvSettings store={selected.store} onBack={() => setPage(null)} />}
       {page === 'report' && selected && reportGroup && (
-        <AdminReportReview store={selected.store} group={reportGroup} onBack={() => setPage(null)} />
+        <AdminReportReview store={selected.store} group={reportGroup} onBack={() => setPage(reportBack)} />
       )}
+      {page === 'reports' && selected && (
+        <AdminReportsAll store={selected.store} reports={reports} onOpen={(grp) => openReport(grp, 'reports')} onBack={() => setPage(null)} />
+      )}
+      {page === 'season' && selected && <AdminSeasonManage store={selected.store} onBack={() => setPage(null)} />}
+      {page === 'events' && selected && <AdminEventManage store={selected.store} onBack={() => setPage(null)} />}
       {page === 'requests' && (
         <AdminScoreRequests requests={requests} onBack={() => setPage(null)} onCreateGame={onCreateGame} />
       )}
