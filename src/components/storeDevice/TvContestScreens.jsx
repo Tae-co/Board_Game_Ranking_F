@@ -1,5 +1,5 @@
 import { D } from './deviceTheme';
-import DiceAvatar from '../shared/DiceAvatar';
+import MemberDiceAvatar from '../shared/MemberDiceAvatar';
 import { fmt, num } from '../store/fmt';
 import { storeTitle } from '../../constants/store';
 import { contestWhen, shortDate } from '../contest/contestUtils';
@@ -76,7 +76,7 @@ export const TvContestBoard = ({ board, t }) => {
         {rows.map((s, i) => (
           <div key={s.memberId ?? i} style={{ display: 'grid', gridTemplateColumns: cols, alignItems: 'center', gap: '24px', padding: '24px 40px', borderTop: `1px solid ${D.border}` }}>
             <span style={{ fontSize: '56px', fontWeight: 700, color: s.rank === 1 ? D.gold : D.text }}>{s.rank}</span>
-            <span style={{ width: 80, height: 80, borderRadius: 999, backgroundColor: D.border, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DiceAvatar size={80} color={D.sub} /></span>
+            <MemberDiceAvatar memberId={s.memberId} nickname={s.nickname} size={80} />
             <span style={{ fontSize: '48px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.nickname ?? t('contest', 'leftMember')}</span>
             {s.points.map((p, r) => (
               <span key={r} style={{ fontSize: '44px', textAlign: 'center', color: p == null ? D.foot : D.text }}>{p ?? '–'}</span>

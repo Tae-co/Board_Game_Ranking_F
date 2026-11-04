@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { V } from '../../utils/cssUtils';
-import DiceAvatar from '../shared/DiceAvatar';
+import MemberDiceAvatar from '../shared/MemberDiceAvatar';
 import { ShopIcon } from './StoreIcons';
 import GameImageFallback from '../shared/GameImageFallback';
 import StoreGameChips from './StoreGameChips';
@@ -69,7 +69,7 @@ const StoreClosedView = ({ home, lang, t }) => {
                 <div key={item.memberId} style={{ height: 52, display: 'flex', alignItems: 'center', gap: '12px', borderTop: i === 0 ? 'none' : `1px solid ${V('--th-border')}` }}>
                   <span style={{ width: 24, fontSize: '15px', fontWeight: 700, color: i < 3 ? V('--th-primary') : V('--th-text-sub') }}>{item.rank}</span>
                   <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '10px', fontSize: '15px', fontWeight: 500, color: V('--th-text') }}>
-                    <span style={{ width: 32, height: 32, borderRadius: 999, backgroundColor: V('--th-bg-deep'), flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DiceAvatar size={32} color={V('--th-text-sub')} /></span>
+                    <MemberDiceAvatar memberId={item.memberId} nickname={item.nickname} size={32} />
                     {item.nickname}
                   </span>
                   <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text') }}>{num(item.score)}</span>

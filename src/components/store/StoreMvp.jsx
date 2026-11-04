@@ -1,5 +1,5 @@
 import { V } from '../../utils/cssUtils';
-import DiceAvatar from '../shared/DiceAvatar';
+import MemberDiceAvatar from '../shared/MemberDiceAvatar';
 import { fmt, num } from './fmt';
 import { emptyCard } from './storeStyles';
 
@@ -55,7 +55,7 @@ const StoreMvp = ({ mvp, t }) => {
                   borderRadius: '14px', padding: '14px 12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', textAlign: 'center',
                 }}>
                   <span style={{ fontSize: '13px', fontWeight: 700, color: V('--th-primary') }}>{g.name}</span>
-                  <span style={{ width: 44, height: 44, borderRadius: 999, backgroundColor: V('--th-bg-deep'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DiceAvatar size={44} color={V('--th-text-sub')} /></span>
+                  <MemberDiceAvatar memberId={g.memberId} nickname={g.nickname} size={44} />
                   <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text') }}>{g.nickname}</span>
                   <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{fmt(t('store', 'pointsUnit'), { n: num(g.score) })}</span>
                 </div>

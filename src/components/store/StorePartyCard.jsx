@@ -1,8 +1,7 @@
 import { V } from '../../utils/cssUtils';
+import { AVATAR_COLORS } from '../../utils/avatarUtils';
 import DiceAvatar from '../shared/DiceAvatar';
 import { fmt } from './fmt';
-
-const avatarColors = [`rgba(var(--th-primary-rgb), 0.3)`, 'var(--th-bg-deep)', 'var(--th-border)'];
 
 /**
  * 매장 홈 오늘의 그룹 (시안 2 · 2j). 그룹이 있으면 "오늘의 그룹 N명 · 이름들 · 그룹 관리" 줄(→ 2i),
@@ -16,12 +15,12 @@ const StorePartyCard = ({ party, onManage, onCreate, onJoin, creating, t }) => {
         borderRadius: '20px', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: '12px', color: V('--th-text'),
       }}>
         <span style={{ display: 'flex', flexShrink: 0 }}>
-          {avatarColors.slice(0, Math.min(3, party.size)).map((c, i) => (
+          {AVATAR_COLORS.slice(0, Math.min(3, party.size)).map((c, i) => (
             <span key={i} style={{
               width: 32, height: 32, borderRadius: 999, backgroundColor: c, border: `2px solid ${V('--th-card')}`,
               marginLeft: i ? -10 : 0, position: 'relative', zIndex: 3 - i, display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}>
-              <DiceAvatar size={28} color={i ? V('--th-text-sub') : V('--th-primary')} />
+              <DiceAvatar size={28} />
             </span>
           ))}
         </span>

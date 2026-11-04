@@ -1,5 +1,5 @@
 import { D, clock } from './deviceTheme';
-import DiceAvatar from '../shared/DiceAvatar';
+import MemberDiceAvatar from '../shared/MemberDiceAvatar';
 import { DiceLogo } from '../store/StoreIcons';
 import { fmt, num } from '../store/fmt';
 import { storeTitle } from '../../constants/store';
@@ -13,12 +13,6 @@ const frame = (padding, gap) => ({
 });
 
 const cardStyle = { backgroundColor: D.card, border: `1px solid ${D.border}`, borderRadius: '28px' };
-
-const Avatar = ({ size = 88 }) => (
-  <span style={{ width: size, height: size, borderRadius: 999, backgroundColor: D.border, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-    <DiceAvatar size={size} color={D.sub} />
-  </span>
-);
 
 /** 4·4i 머리: 로고 + "[매장] 랭킹" · 오른쪽 "[시즌] · 종료까지 N일" */
 const RankingHeader = ({ store, season, t }) => (
@@ -54,7 +48,7 @@ export const TvLeaders = ({ store, season, mvp, t }) => {
           <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridTemplateRows: 'repeat(2, minmax(0, 1fr))', gap: '20px' }}>
             {leaders.map(l => (
               <div key={l.boardGameId} style={{ ...cardStyle, padding: '32px 36px', display: 'flex', alignItems: 'center', gap: '24px' }}>
-                <Avatar />
+                <MemberDiceAvatar memberId={l.memberId} nickname={l.nickname} size={88} />
                 <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   <span style={{ fontSize: '26px', color: D.accentText, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {fmt(t('store', 'tvLeaderOf'), { game: l.name })}
@@ -139,7 +133,7 @@ export const TvJustFinished = ({ match, t }) => {
             <span style={{ fontSize: '56px', fontWeight: 700, color: p.placement === 1 ? D.gold : D.text }}>
               {p.placement ? fmt(t('store', 'tvPlace'), { n: p.placement }) : ''}
             </span>
-            <Avatar />
+            <MemberDiceAvatar nickname={p.nickname} size={88} />
             <span style={{ fontSize: '52px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.nickname}</span>
             <span style={{ fontSize: '40px', color: D.accentSoft, textAlign: 'right' }}>
               {p.gameScore != null ? fmt(t('store', 'tvGameScore'), { n: num(p.gameScore) }) : ''}
@@ -185,7 +179,7 @@ export const TvSeasonResult = ({ store, result, lang, t }) => {
             <span style={{ fontSize: '26px', color: D.accentText, fontWeight: 500, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {fmt(t('store', 'tvWinnerOf'), { game: w.name })}
             </span>
-            <Avatar size={120} />
+            <MemberDiceAvatar memberId={w.memberId} nickname={w.nickname} size={120} />
             <span style={{ fontSize: '40px', fontWeight: 700, maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{w.nickname ?? t('store', 'leftMember')}</span>
             <span style={{ fontSize: '30px', fontWeight: 700, color: D.gold }}>{num(w.score)}</span>
           </div>
