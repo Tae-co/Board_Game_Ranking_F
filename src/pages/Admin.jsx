@@ -7,6 +7,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import AdminGamesTab from '../components/admin/AdminGamesTab';
 import AdminMembersTab from '../components/admin/AdminMembersTab';
 import AdminStoresTab from '../components/admin/AdminStoresTab';
+import AdminStatsTab from '../components/admin/AdminStatsTab';
 
 const Admin = () => {
   const navigate = useNavigate();
@@ -14,6 +15,8 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState('games');
   // 점수판 요청(6c) → 게임 추가 폼 (이름 미리 채움)
   const [gamePrefill, setGamePrefill] = useState('');
+  // 매장 탭·통계 탭이 같은 매장을 본다
+  const [storeId, setStoreId] = useState(null);
 
   const handleLogout = () => {
     setAccessToken(null);
@@ -25,7 +28,7 @@ const Admin = () => {
     { key: 'games', label: t('admin', 'gamesTab') },
     { key: 'members', label: t('admin', 'membersTab') },
     { key: 'stores', label: t('admin', 'storesTab') },
-    { key: 'settings', label: t('admin', 'settingsTab') },
+    { key: 'stats', label: t('admin', 'statsTab') },
   ];
 
   return (
@@ -59,7 +62,8 @@ const Admin = () => {
       <div className="px-6">
         {activeTab === 'games' && <AdminGamesTab key={gamePrefill} prefillName={gamePrefill} />}
         {activeTab === 'members' && <AdminMembersTab />}
-        {activeTab === 'stores' && <AdminStoresTab onCreateGame={(name) => { setGamePrefill(name); setActiveTab('games'); }} />}
+        {activeTab === 'stores' && <AdminStoresTab selectedId={storeId} onSelect={setStoreId} onCreateGame={(name) => { setGamePrefill(name); setActiveTab('games'); }} />}
+        {activeTab === 'stats' && <AdminStatsTab selectedId={storeId} onSelect={setStoreId} />}
       </div>
     </div>
   );

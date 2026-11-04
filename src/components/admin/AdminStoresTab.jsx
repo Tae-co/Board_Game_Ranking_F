@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../i18n/LanguageContext';
-import { getAdminScoreRequests, getAdminStoreMonthlyReport, getAdminStoreReports, getAdminStores, getAdminTvSetting } from '../../api/services/admin';
-import { storeTitle } from '../../constants/store';
+import { getAdminScoreRequests, getAdminStoreReports, getAdminStores, getAdminTvSetting } from '../../api/services/admin';
 import { V } from '../../utils/cssUtils';
 import AdminStoreForm from './AdminStoreForm';
 import AdminStoreStaff from './AdminStoreStaff';
@@ -13,8 +12,7 @@ import AdminStoreSeason from './AdminStoreSeason';
 import AdminStoreEvents from './AdminStoreEvents';
 import AdminReportReview from './AdminReportReview';
 import AdminScoreRequests from './AdminScoreRequests';
-import { PopularBars, ReportTiles } from '../store/ReportStats';
-import { peakText } from '../store/reportUtils';
+import AdminStoreSelect from './AdminStoreSelect';
 import { REQUEST_PILL, SCORE_REQUESTS_KEY } from '../store/requestStatus';
 import { fmt } from '../store/fmt';
 
@@ -38,12 +36,11 @@ const ghostButton = {
 
 /**
  * 6 어드민 매장 탭: 매장 선택 → 매장 정보(수정 6f) · 매장 기기(6g) · STAFF 지정(6h) · 매장 TV 화면(6k) ·
- * 게임방 관리(6i) · 시즌 · 이벤트(6j) · 신고(6b) · 점수판 요청(6c) · 통계 · "+ 매장 등록"(6e).
+ * 게임방 관리(6i) · 시즌 · 이벤트(6j) · 신고(6b) · 점수판 요청(6c) · "+ 매장 등록"(6e).
  */
-const AdminStoresTab = ({ onCreateGame }) => {
+const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
-  const [selectedId, setSelectedId] = useState(null);
   const [page, setPage] = useState(null); // null | 'create' | 'edit' | 'staff' | 'rooms' | 'devices' | 'tv' | 'report' | 'requests'
   const [reportGroup, setReportGroup] = useState(null);
 
@@ -65,7 +62,7 @@ const AdminStoresTab = ({ onCreateGame }) => {
   });
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ['adminStores'] });
-  const handleSaved = (item) => { refresh(); setSelectedId(item.store.id); };
+  const handleSaved = (item) => { refresh(); onSelect(item.store.id); };
 
   const { data: reports = [] } = useQuery({
     queryKey: ['adminStoreReports', selected?.store.id],
@@ -73,11 +70,6 @@ const AdminStoresTab = ({ onCreateGame }) => {
     enabled: !!selected,
   });
   const { data: requests = [] } = useQuery({ queryKey: SCORE_REQUESTS_KEY, queryFn: getAdminScoreRequests });
-  const { data: stats } = useQuery({
-    queryKey: ['adminStoreStats', selected?.store.id],
-    queryFn: () => getAdminStoreMonthlyReport(selected.store.id),
-    enabled: !!selected,
-  });
   const openReports = reports.filter(r => r.status === 'OPEN').length;
   const newRequests = requests.filter(r => r.status === 'REVIEW').length;
 
@@ -95,22 +87,7 @@ const AdminStoresTab = ({ onCreateGame }) => {
             + {t('admin', 'addStore')}
           </button>
         </div>
-        {items.length > 0 && (
-          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '13px', fontWeight: 500, color: V('--th-text') }}>{t('admin', 'storeSelect')}</span>
-            <select
-              value={selected.store.id}
-              onChange={(e) => setSelectedId(Number(e.target.value))}
-              style={{ height: 48, borderRadius: '12px', border: `1px solid ${V('--th-border')}`, backgroundColor: V('--th-card'), padding: '0 12px', fontSize: '15px', color: V('--th-text') }}
-            >
-              {items.map(({ store }) => (
-                <option key={store.id} value={store.id}>
-                  {storeTitle(store)}{store.closed ? ` (${t('store', 'closedBadge')})` : ''}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
+        {items.length > 0 && <AdminStoreSelect items={items} value={selected.store.id} onChange={onSelect} />}
       </section>
 
       {isLoading ? (
@@ -243,30 +220,6 @@ const AdminStoresTab = ({ onCreateGame }) => {
         )}
       </section>
 
-      {stats && (
-        <section style={{ ...sectionCard, gap: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <h2 style={h2Style}>{t('admin', 'stats')}</h2>
-            <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>{t('admin', 'thisMonth')}</span>
-          </div>
-          <ReportTiles report={stats} size={20} t={t} />
-          {stats.popular.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 500, color: V('--th-text') }}>{t('store', 'reportPopular')}</span>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <PopularBars popular={stats.popular.slice(0, 3)} labelWidth={64} />
-              </div>
-            </div>
-          )}
-          {stats.matches > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 500, color: V('--th-text') }}>{t('admin', 'peakTime')}</span>
-              <span style={{ fontSize: '14px', color: V('--th-text') }}>{peakText(stats, t)}</span>
-            </div>
-          )}
-        </section>
-      )}
-
       {(page === 'create' || (page === 'edit' && selected)) && (
         <AdminStoreForm
           key={page === 'edit' ? selected.store.id : 'new'}
@@ -274,7 +227,7 @@ const AdminStoresTab = ({ onCreateGame }) => {
           onBack={() => setPage(null)}
           onSaved={handleSaved}
           onClosed={() => { refresh(); setPage(null); }}
-          onAssignStaff={(item) => { setSelectedId(item.store.id); setPage('staff'); }}
+          onAssignStaff={(item) => { onSelect(item.store.id); setPage('staff'); }}
         />
       )}
       {page === 'rooms' && selected && <AdminStoreRooms store={selected.store} onBack={() => setPage(null)} />}

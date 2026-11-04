@@ -2,7 +2,7 @@ export default {
   title: '관리자',
   gamesTab: '보드게임 관리',
   membersTab: '멤버 관리',
-  settingsTab: '설정',
+  statsTab: '통계',
   registeredGames: '등록된 게임',
   addGame: '게임 추가',
   addGameTitle: '새 게임 추가',
