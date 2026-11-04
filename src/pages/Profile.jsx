@@ -210,18 +210,19 @@ const Profile = () => {
           {/* Avatar */}
           <div style={{ position: 'relative' }}>
             <div
-              onClick={() => setShowPhotoMenu(v => !v)}
+              onClick={isStore ? undefined : () => setShowPhotoMenu(v => !v)}
               style={{
                 width: 84, height: 84, borderRadius: '50%',
                 backgroundColor: getAvatarColorById(userId),
                 border: '3px solid var(--th-primary)',
                 boxShadow: '0 0 0 3px color-mix(in srgb, var(--th-primary) 20%, transparent)',
-                overflow: 'hidden', cursor: 'pointer', flexShrink: 0,
+                overflow: 'hidden', cursor: isStore ? 'default' : 'pointer', flexShrink: 0,
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 position: 'relative',
               }}
             >
-              {profileData?.profileImage ? (
+              {/* 매장 탭은 사진을 쓰지 않고 늘 기본(주사위) 프로필 */}
+              {profileData?.profileImage && !isStore ? (
                 <img
                   src={profileData.profileImage}
                   alt="profile"
@@ -242,7 +243,7 @@ const Profile = () => {
             </div>
 
             {/* Camera button */}
-            <button
+            {!isStore && <button
               onClick={() => setShowPhotoMenu(v => !v)}
               style={{
                 position: 'absolute', bottom: 0, left: 0,
@@ -253,10 +254,10 @@ const Profile = () => {
               }}
             >
               <Camera size={12} color="var(--th-primary)" />
-            </button>
+            </button>}
 
             {/* Photo action menu */}
-            {showPhotoMenu && (
+            {showPhotoMenu && !isStore && (
               <>
                 <div
                   onClick={() => setShowPhotoMenu(false)}
