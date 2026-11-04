@@ -188,8 +188,6 @@ const StoreHome = () => {
               )}
               {actionError && <span role="status" style={{ ...noteStyle, color: '#B91C1C' }}>{actionError}</span>}
 
-              {role === 'STAFF' && <span style={noteStyle}>{t('store', 'staffNoPlay')}</span>}
-
               {role === 'STAFF' && !store.closed && (
                 <section style={{
                   backgroundColor: `rgba(${V('--th-primary-rgb')}, 0.1)`,
