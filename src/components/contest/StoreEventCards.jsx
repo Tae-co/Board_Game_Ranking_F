@@ -96,7 +96,10 @@ const StoreEventCards = ({ storeId, contests = [], events = [], role, t, lang, o
         {events.map(e => (
           <div key={`e${e.id}`} style={card}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <span style={pill(PILL.blue)}>{t('contest', 'badgeStoreEvent')}</span>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <span style={pill(PILL.blue)}>{t('contest', 'badgeStoreEvent')}</span>
+                {e.oneTime && <span style={pill(e.usedAt ? PILL.gray : PILL.orange)}>{t('contest', e.usedAt ? 'badgeCouponUsed' : 'badgeCoupon')}</span>}
+              </div>
               <span style={{ fontSize: '18px', fontWeight: 700, color: V('--th-text') }}>{e.title}</span>
               <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>
                 {fmt(t('contest', 'eventPeriod'), { from: shortDate(e.startsOn), to: shortDate(e.endsOn) })}

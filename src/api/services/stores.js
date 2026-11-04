@@ -13,6 +13,9 @@ export const getStores = (q) =>
 export const getMyStores = () => api.get('/stores/mine').then(r => r.data);
 export const getStoreHome = (storeId) => api.get(`/stores/${storeId}/home`).then(r => r.data);
 export const getStoreEvents = (storeId) => api.get(`/stores/${storeId}/events`).then(r => r.data);
+/** 1회용 쿠폰 사용 완료 → 바뀐 이벤트 카드 (usedAt) */
+export const redeemStoreEventCoupon = (storeId, eventId) =>
+  api.post(`/stores/${storeId}/events/${eventId}/use`).then(r => r.data);
 
 export const joinStore = (storeId, ticket, consentVersion) =>
   api.post(`/stores/${storeId}/join`, { ticket, consentVersion }).then(r => r.data);

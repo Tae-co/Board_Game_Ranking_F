@@ -46,7 +46,7 @@ const AdminEventForm = ({ store, contest, event, defaultKind = 'contest', onBack
     time: contest?.time ?? '13:00', capacity: contest?.capacity ?? '', rounds: contest?.rounds ?? 3, prizeText: contest?.prizeText ?? '',
   }));
   const [e, setE] = useState(() => ({
-    title: event?.title ?? '', benefitText: event?.benefitText ?? '', howToUse: event?.howToUse ?? '', imageUrl: event?.imageUrl ?? '',
+    title: event?.title ?? '', benefitText: event?.benefitText ?? '', howToUse: event?.howToUse ?? '', imageUrl: event?.imageUrl ?? '', oneTime: event?.oneTime ?? false,
     startsOn: event?.startsOn ?? today(), endsOn: event?.endsOn ?? today(),
   }));
   const [imageFile, setImageFile] = useState(null);
@@ -176,6 +176,25 @@ const AdminEventForm = ({ store, contest, event, defaultKind = 'contest', onBack
               placeholder={t('contest', 'fHowToUsePh')} value={e.howToUse} onChange={setEField('howToUse')} maxLength={500}
             />
           </label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
+              <span style={{ fontSize: '13px', fontWeight: 700, color: V('--th-text') }}>{t('contest', 'fOneTime')}</span>
+              <span style={{ fontSize: '12px', lineHeight: 1.5, color: V('--th-text-sub') }}>{t('contest', 'fOneTimeSub')}</span>
+            </span>
+            <button
+              role="switch"
+              aria-checked={e.oneTime}
+              aria-label={t('contest', 'fOneTime')}
+              onClick={() => setE(p => ({ ...p, oneTime: !p.oneTime }))}
+              style={{
+                width: 52, height: 32, flexShrink: 0, padding: 3, border: 'none', borderRadius: 999, cursor: 'pointer',
+                backgroundColor: e.oneTime ? V('--th-primary') : '#D1D5DB',
+                display: 'flex', justifyContent: e.oneTime ? 'flex-end' : 'flex-start',
+              }}
+            >
+              <span style={{ width: 26, height: 26, borderRadius: 999, backgroundColor: '#fff', boxShadow: '0 1px 3px rgba(17,24,39,0.2)' }} />
+            </button>
+          </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             <span style={{ fontSize: '13px', fontWeight: 700, color: V('--th-text') }}>{t('contest', 'fPhoto')}</span>
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
