@@ -29,7 +29,7 @@ const iconButton = (enabled, danger) => ({
 
 // ── 미리 보기 (16:9 작은 TV) ──
 
-const PV = { bg: '#0F0F1F', card: '#1A1A2E', text: '#F8FAFC', sub: '#94A3B8', label: '#A5B4FC', gold: '#FCD34D', bar: '#818CF8' };
+const PV = { bg: '#FFFFFF', card: '#F8F8FD', border: '#D1D5DB', text: '#111827', sub: '#6B7280', label: '#4F46E5', gold: '#B45309', bar: '#4F46E5' };
 
 const PvTile = ({ label, name, value, span }) => (
   <span style={{ gridColumn: span ? `span ${span}` : undefined, backgroundColor: PV.card, borderRadius: 8, padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
@@ -39,7 +39,7 @@ const PvTile = ({ label, name, value, span }) => (
   </span>
 );
 
-const Preview = ({ screen, data, top10Game, lang, t }) => {
+const Preview = ({ screen, data, top10Games, lang, t }) => {
   const label = (text) => <span style={{ fontSize: 9, fontWeight: 700, color: PV.label }}>{text}</span>;
   if (screen === 'MVP') {
     const m = data.mvp;
@@ -59,21 +59,25 @@ const Preview = ({ screen, data, top10Game, lang, t }) => {
     );
   }
   if (screen === 'TOP10') {
-    if (!top10Game) return label(t('admin', 'tvPreviewNoData'));
-    const max = top10Game.items[0]?.score || 1;
+    if (!top10Games.length) return label(t('admin', 'tvPreviewNoData'));
     return (
-      <>
-        {label(fmt(t('store', 'tvTop10'), { game: top10Game.name }))}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          {top10Game.items.slice(0, 5).map(item => (
-            <span key={item.memberId} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 9 }}>
-              <span style={{ width: 10, fontWeight: 700, color: item.rank === 1 ? PV.gold : PV.text }}>{item.rank}</span>
-              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.nickname}</span>
-              <span style={{ height: 5, width: Math.max(8, Math.round((item.score / max) * 60)), borderRadius: 999, backgroundColor: PV.bar }} />
-            </span>
-          ))}
-        </div>
-      </>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+        {top10Games.map(game => {
+          const max = game.items[0]?.score || 1;
+          return (
+            <div key={game.boardGameId} style={{ minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4 }}>
+              {label(fmt(t('store', 'tvTop10'), { game: game.name }))}
+              {game.items.slice(0, 5).map(item => (
+                <span key={item.memberId} style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 9 }}>
+                  <span style={{ width: 10, fontWeight: 700, color: item.rank === 1 ? PV.gold : PV.text }}>{item.rank}</span>
+                  <span style={{ flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.nickname}</span>
+                  <span style={{ height: 5, width: Math.max(8, Math.round((item.score / max) * 40)), borderRadius: 999, backgroundColor: PV.bar }} />
+                </span>
+              ))}
+            </div>
+          );
+        })}
+      </div>
     );
   }
   if (screen === 'QR' || screen === 'NONE') {
@@ -83,7 +87,7 @@ const Preview = ({ screen, data, top10Game, lang, t }) => {
           <span style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.25, whiteSpace: 'pre-line' }}>{t('store', 'deviceQrTitle')}</span>
           <span style={{ fontSize: 8, color: PV.sub }}>{t('admin', 'tvPreviewQrSteps')}</span>
         </span>
-        <span style={{ width: 92, height: 92, borderRadius: 8, backgroundColor: '#FFFFFF', color: PV.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700 }}>QR</span>
+        <span style={{ width: 92, height: 92, borderRadius: 8, backgroundColor: '#FFFFFF', border: `1px solid ${PV.border}`, boxSizing: 'border-box', color: PV.text, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 9, fontWeight: 700 }}>QR</span>
       </div>
     );
   }
@@ -165,7 +169,7 @@ const AdminTvSettings = ({ store, onBack }) => {
   const offList = SCREENS.filter(s => !order.includes(s));
   const hidden = setting.top10HiddenGameIds;
   const shownGames = data.games.filter(g => !hidden.includes(g.boardGameId));
-  const top10Game = data.top10.find(g => !hidden.includes(g.boardGameId));
+  const top10Games = data.top10.filter(g => !hidden.includes(g.boardGameId)).slice(0, 2);
 
   const move = (i, d) => {
     const next = order.slice();
@@ -180,7 +184,7 @@ const AdminTvSettings = ({ store, onBack }) => {
   const pvName = pk === 'NONE' ? t('admin', 'tvPreviewQrOnly') : t('admin', `tvScreen${pk}`);
   const skipKey = (pk === 'EVENT' && !data.events?.length && !data.recruiting?.length ? 'tvSkipEvent' : null)
     ?? (pk === 'CONTEST' && !data.contestBoard ? 'tvSkipContest' : null)
-    ?? (pk === 'TOP10' && !top10Game ? 'tvSkipTop10' : null)
+    ?? (pk === 'TOP10' && !top10Games.length ? 'tvSkipTop10' : null)
     ?? (pk === 'MVP' && !data.mvp ? 'tvSkipMvp' : null)
     ?? (pk === 'SEASON' && !data.seasonResult ? 'tvSkipSeason' : null);
 
@@ -217,10 +221,10 @@ const AdminTvSettings = ({ store, onBack }) => {
           </span>
         </div>
         <div role="img" aria-label={fmt(t('admin', 'tvPreviewAria'), { name: pvName })} style={{
-          position: 'relative', width: '100%', aspectRatio: '16 / 9', borderRadius: '12px', overflow: 'hidden',
+          position: 'relative', width: '100%', aspectRatio: '16 / 9', borderRadius: '12px', overflow: 'hidden', border: `1px solid ${PV.border}`,
           backgroundColor: PV.bg, color: PV.text, boxSizing: 'border-box', padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: '8px',
         }}>
-          <Preview screen={pk} data={data} top10Game={top10Game} lang={lang} t={t} />
+          <Preview screen={pk} data={data} top10Games={top10Games} lang={lang} t={t} />
         </div>
         {skipKey && <span style={{ fontSize: '12px', lineHeight: 1.5, color: '#B4500A' }}>{t('admin', skipKey)}</span>}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

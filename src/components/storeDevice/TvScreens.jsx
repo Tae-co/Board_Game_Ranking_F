@@ -67,21 +67,24 @@ export const TvMvp = ({ store, season, mvp, t }) => (
 const rankColor = (rank) => (rank === 1 ? D.gold : rank <= 3 ? D.silver : D.sub);
 
 /** 4i 게임별 TOP 10 (게임 하나) */
-export const TvTop10 = ({ store, season, game, t }) => (
+/** 4i 게임별 TOP 10 — 한 화면에 두 게임씩 (홀수면 마지막 화면은 왼쪽 하나) */
+export const TvTop10 = ({ store, season, games, t }) => (
   <div style={frame('56px 64px', '40px')}>
     <RankingHeader store={store} season={season} t={t} />
-    <section style={{ ...cardStyle, flex: 1, padding: '32px 40px', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', paddingBottom: '16px' }}>
-        <h2 style={{ margin: 0, fontSize: '36px', fontWeight: 700 }}>{fmt(t('store', 'tvTop10'), { game: game.name })}</h2>
-      </div>
-      {game.items.map(item => (
-        <div key={item.memberId} style={{ height: 64, display: 'flex', alignItems: 'center', gap: '20px', borderTop: `1px solid ${D.border}` }}>
-          <span style={{ width: 40, fontSize: '28px', fontWeight: 700, color: rankColor(item.rank) }}>{item.rank}</span>
-          <span style={{ flex: 1, fontSize: '28px', fontWeight: 500 }}>{item.nickname}</span>
-          <span style={{ fontSize: '28px', fontWeight: 700 }}>{num(item.score)}</span>
-        </div>
+    <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: '32px' }}>
+      {games.map(game => (
+        <section key={game.boardGameId} style={{ ...cardStyle, padding: '28px 36px', display: 'flex', flexDirection: 'column', minHeight: 0, minWidth: 0 }}>
+          <h2 style={{ margin: 0, paddingBottom: '16px', fontSize: '36px', fontWeight: 700 }}>{fmt(t('store', 'tvTop10'), { game: game.name })}</h2>
+          {game.items.map(item => (
+            <div key={item.memberId} style={{ height: 64, display: 'flex', alignItems: 'center', gap: '20px', borderTop: `1px solid ${D.border}` }}>
+              <span style={{ width: 40, fontSize: '28px', fontWeight: 700, color: rankColor(item.rank) }}>{item.rank}</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: '28px', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.nickname}</span>
+              <span style={{ fontSize: '28px', fontWeight: 700 }}>{num(item.score)}</span>
+            </div>
+          ))}
+        </section>
       ))}
-    </section>
+    </div>
   </div>
 );
 
@@ -107,7 +110,7 @@ export const TvJustFinished = ({ match, t }) => {
     <div style={frame('64px 96px', '40px')}>
       <header style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <span style={{ alignSelf: 'flex-start', fontSize: '26px', fontWeight: 700, padding: '8px 22px', borderRadius: 999, backgroundColor: D.accent, color: D.bg }}>
+          <span style={{ alignSelf: 'flex-start', fontSize: '26px', fontWeight: 700, padding: '8px 22px', borderRadius: 999, backgroundColor: D.accent, color: '#FFFFFF' }}>
             {t('store', 'tvJustFinished')}
           </span>
           <h1 style={{ margin: 0, fontSize: '88px', fontWeight: 700, letterSpacing: '-0.02em' }}>

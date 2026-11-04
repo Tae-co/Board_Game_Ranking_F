@@ -41,7 +41,7 @@ export const TvStoreEvent = ({ store, event, contest, dots, lang, t }) => {
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} aria-hidden="true">
           {dots[1] > 1 && Array.from({ length: dots[1] }, (_, i) => (
-            <span key={i} style={{ width: i === dots[0] ? 48 : 14, height: 14, borderRadius: 999, backgroundColor: i === dots[0] ? D.accent : '#3B3B5C' }} />
+            <span key={i} style={{ width: i === dots[0] ? 48 : 14, height: 14, borderRadius: 999, backgroundColor: i === dots[0] ? D.accent : D.dot }} />
           ))}
         </div>
       </div>
@@ -58,7 +58,7 @@ export const TvContestBoard = ({ board, t }) => {
     <div style={{ width: TV_W, height: TV_H, boxSizing: 'border-box', padding: '64px 96px', display: 'flex', flexDirection: 'column', gap: '40px' }}>
       <header style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
-          <span style={{ alignSelf: 'flex-start', fontSize: '26px', fontWeight: 700, padding: '8px 22px', borderRadius: 999, backgroundColor: D.accent, color: D.bg }}>
+          <span style={{ alignSelf: 'flex-start', fontSize: '26px', fontWeight: 700, padding: '8px 22px', borderRadius: 999, backgroundColor: D.accent, color: '#FFFFFF' }}>
             {fmt(t('contest', 'tvBoardBadge'), { n: board.rounds, d: board.roundsDone })}
           </span>
           <h1 style={{ margin: 0, fontSize: '88px', fontWeight: 700, letterSpacing: '-0.02em' }}>{board.title}</h1>

@@ -1,27 +1,28 @@
 import { fmt } from '../store/fmt';
 
 /**
- * 매장 기기 화면(4·4c·4e·4f·4h·4i·4j) 팔레트. 앱 테마와 상관없이 어두운 화면 하나라 테마 변수 대신 시안 색을 그대로 쓴다.
+ * 매장 기기 화면(4·4c·4e·4f·4h·4i·4j) 팔레트. 앱 테마와 상관없이 흰 화면 하나라 테마 변수 대신 시안 색을 그대로 쓴다.
  */
 export const D = {
-  bg: '#0F0F1F',
-  card: '#1A1A2E',
-  cardAlt: '#1A1A33',
-  border: '#2B2B45',
-  stepBg: '#312E81',
-  stepText: '#E0E7FF',
-  pairStepBg: '#1E1E3A',
-  text: '#F8FAFC',
-  sub: '#94A3B8',
-  soft: '#CBD5E1',
-  accent: '#818CF8',
-  accentText: '#A5B4FC',
-  accentSoft: '#C7D2FE',
-  gold: '#FCD34D',
-  silver: '#E5E7EB',
-  up: '#86EFAC',
+  bg: '#FFFFFF',
+  card: '#F8F8FD',
+  cardAlt: '#F8F8FD',
+  border: '#E5E7EB',
+  stepBg: '#ECEBFF',
+  stepText: '#3730A3',
+  pairStepBg: '#EEEEF8',
+  text: '#111827',
+  sub: '#6B7280',
+  soft: '#4B5563',
+  accent: '#4F46E5',
+  accentText: '#4F46E5',
+  accentSoft: '#3730A3',
+  gold: '#B45309',
+  silver: '#374151',
+  up: '#15803D',
   button: '#4F46E5',
-  foot: '#64748B',
+  foot: '#6B7280',
+  dot: '#D1D5DB',
 };
 
 export const MONO = "'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace";
