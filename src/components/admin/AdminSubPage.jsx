@@ -28,7 +28,7 @@ export const AdminPopup = ({ title, children, onDismiss, actions }) => (
 );
 
 /**
- * 어드민 매장 하위 화면 (시안 6e · 6f · 6h): 위쪽 뒤로 · 제목 · ! 버튼(알아 두세요), 아래로 내용.
+ * 어드민 매장 하위 화면 (시안 6e · 6f · 6h): 위쪽 뒤로 · 제목 · ! 버튼(알아 두세요, info 없으면 빈칸), 아래로 내용.
  * 규칙 설명은 화면에 두지 않고 ! 팝업으로 (plan-store §2)
  */
 const AdminSubPage = ({ title, info, onBack, t, children }) => {
@@ -44,9 +44,11 @@ const AdminSubPage = ({ title, info, onBack, t, children }) => {
             <BackIcon />
           </button>
           <span style={{ fontSize: '17px', fontWeight: 700, color: V('--th-primary') }}>{title}</span>
-          <button onClick={() => setInfoOpen(true)} aria-label={t('admin', 'infoAria')} aria-expanded={infoOpen} style={{ width: 44, height: 44, border: 'none', borderRadius: 999, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: V('--th-text-sub') }}>
-            <InfoIcon />
-          </button>
+          {info ? (
+            <button onClick={() => setInfoOpen(true)} aria-label={t('admin', 'infoAria')} aria-expanded={infoOpen} style={{ width: 44, height: 44, border: 'none', borderRadius: 999, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: V('--th-text-sub') }}>
+              <InfoIcon />
+            </button>
+          ) : <span style={{ width: 44, height: 44 }} />}
         </div>
       </header>
       <main style={{ maxWidth: 430, margin: '0 auto', boxSizing: 'border-box', padding: '16px 20px calc(40px + env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: '16px' }}>

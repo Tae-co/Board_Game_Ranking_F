@@ -247,7 +247,7 @@ const AdminEventForm = ({ store, contest, event, defaultKind = 'contest', onBack
           title={t('contest', event ? 'savedEventEdit' : 'savedEventNew')}
           onDismiss={onBack}
           actions={[
-            { label: t('contest', 'seeStore'), onClick: () => navigate(`/store/${store.id}`) },
+            { label: t('contest', 'seeStore'), onClick: () => navigate(`/store/${store.id}`, { state: { fromAdmin: true } }) },
             { label: t('contest', 'toAdmin'), onClick: onBack, kind: 'ghost' },
           ]}
         >
