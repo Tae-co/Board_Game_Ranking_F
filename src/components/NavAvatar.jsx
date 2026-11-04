@@ -1,21 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StorageImage from './StorageImage';
-import { getNickname, AUTH_CHANGED_EVENT } from '../auth/storage';
 import { getProfileImage } from '../utils/storage';
+import DiceAvatar from './shared/DiceAvatar';
 
-const NavAvatar = ({ size = 38, fontSize = 15 }) => {
+const NavAvatar = ({ size = 38 }) => {
   const navigate = useNavigate();
-  const [nickname, setNickname] = useState(() => getNickname() || '?');
   const [profileImage, setProfileImage] = useState(getProfileImage);
 
   useEffect(() => {
-    const onAuthChanged = () => setNickname(getNickname() || '?');
     const onImageUpdated = () => setProfileImage(getProfileImage());
-    window.addEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
     window.addEventListener('profileImageUpdated', onImageUpdated);
     return () => {
-      window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
       window.removeEventListener('profileImageUpdated', onImageUpdated);
     };
   }, []);
@@ -42,9 +38,7 @@ const NavAvatar = ({ size = 38, fontSize = 15 }) => {
           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
         />
       ) : (
-        <span style={{ color: '#fff', fontWeight: 700, fontSize }}>
-          {nickname[0].toUpperCase()}
-        </span>
+        <DiceAvatar size={size} />
       )}
     </div>
   );

@@ -11,8 +11,8 @@ import { V } from '../utils/cssUtils';
 import GameImageFallback from '../components/shared/GameImageFallback';
 import SeasonFields from '../components/shared/SeasonFields';
 import OnboardingSteps from '../components/shared/OnboardingSteps';
+import DiceAvatar from '../components/shared/DiceAvatar';
 import { defaultEndDate, isSeasonInputValid } from '../utils/seasonUtils';
-import { getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 
 const CreateGroup = () => {
@@ -134,7 +134,7 @@ const CreateGroup = () => {
               fontWeight: 700, fontSize: 14, cursor: 'pointer', flexShrink: 0,
             }}
           >
-            {getNickname()[0]?.toUpperCase()}
+            <DiceAvatar size={36} />
           </div>
         </div>
       </div>

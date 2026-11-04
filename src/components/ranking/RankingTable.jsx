@@ -97,7 +97,7 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
             <div style={{ width: 24, fontSize: 12, fontWeight: 700, color: isMe || isSelected ? 'var(--th-primary)' : V('--th-text-sub'), textAlign: 'center' }}>
               {isUnranked ? '—' : rankNum}
             </div>
-            <InitialAvatar nickname={rank.nickname} profileImage={rank.profileImage} size={28} fontSize={11} />
+            <InitialAvatar nickname={rank.nickname} profileImage={rank.profileImage} size={28} />
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: isMe || isSelected ? 700 : 500, color: isMe || isSelected ? 'var(--th-primary)' : V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {championIds?.has(rank.memberId) && <Crown size={13} color="#F59E0B" fill="#FFD700" strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: '-2px' }} />}

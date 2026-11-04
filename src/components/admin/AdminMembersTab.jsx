@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { getAdminMembers } from '../../api/services/admin';
+import DiceAvatar from '../shared/DiceAvatar';
 
 const AdminMembersTab = () => {
   const { t } = useLanguage();
@@ -25,7 +26,7 @@ const AdminMembersTab = () => {
             <div key={member.memberId || member.id} className="rounded-xl p-4 border" style={{ backgroundColor: 'var(--th-card)', borderColor: 'var(--th-border)' }}>
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style={{ backgroundColor: 'var(--th-primary)', color: '#FFFFFF' }}>
-                  {member.nickname[0]}
+                  <DiceAvatar size={40} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="truncate" style={{ color: 'var(--th-text)' }}>{member.nickname}</p>

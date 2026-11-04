@@ -1,5 +1,6 @@
 import { Users } from 'lucide-react';
 import StorageImage from '../StorageImage';
+import DiceAvatar from '../shared/DiceAvatar';
 import { V } from '../../utils/cssUtils';
 import { getAvatarColorByStr as avatarColor } from '../../utils/avatarUtils';
 
@@ -25,7 +26,7 @@ const AvatarStack = ({ admins = [], memberCount = 0 }) => {
           >
             {admin.profileImage
               ? <StorageImage src={admin.profileImage} alt={admin.nickname} loading="lazy" decoding="async" transform={{ width: 56, height: 56, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-              : (admin.nickname || '?')[0].toUpperCase()
+              : <DiceAvatar size={28} />
             }
           </div>
         ))}

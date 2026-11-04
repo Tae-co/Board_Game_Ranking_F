@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { ArrowLeft, ChevronRight, Plus, Star, Users, Copy, CheckCheck, Settings } from 'lucide-react';
 import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
+import DiceAvatar from '../components/shared/DiceAvatar';
 import { QRCodeSVG } from 'qrcode.react';
 import { useQuery } from '@tanstack/react-query';
 import { getRoomByInviteCode, getMyRooms, getCommunityRooms } from '../api/services/rooms';
@@ -555,7 +556,7 @@ const Lobby = () => {
                           }}>
                             {member.profileImage
                               ? <StorageImage src={member.profileImage} alt={member.nickname} loading="lazy" decoding="async" transform={{ width: 88, height: 88, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                              : member.nickname[0].toUpperCase()
+                              : <DiceAvatar size={44} />
                             }
                           </div>
                           <span style={{

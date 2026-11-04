@@ -243,7 +243,6 @@ const InviteFriends = () => {
                     nickname={member.nickname}
                     profileImage={member.profileImage}
                     size={44}
-                    fontSize={17}
                     color={AVATAR_COLORS[member.memberId % AVATAR_COLORS.length]}
                   />
                   <span style={{

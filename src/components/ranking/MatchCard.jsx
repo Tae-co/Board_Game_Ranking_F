@@ -44,7 +44,7 @@ const MatchCard = ({ match, myUserId, communityTimezone, isHost, onView, onEdit,
         <div style={{ display: 'flex' }}>
           {visibleParticipants.map((p, i) => (
             <div key={p.memberId} style={{ marginLeft: i === 0 ? 0 : -10, zIndex: visibleParticipants.length - i, position: 'relative' }}>
-              <InitialAvatar nickname={p.nickname} profileImage={p.profileImage} size={36} fontSize={14} />
+              <InitialAvatar nickname={p.nickname} profileImage={p.profileImage} size={36} />
               {p.placement >= 1 && p.placement <= (chip ? 1 : 3) && (
                 <div style={{ position: 'absolute', top: -8, left: -4, lineHeight: 0 }}>
                   <MedalBadge place={p.placement} size={18} />

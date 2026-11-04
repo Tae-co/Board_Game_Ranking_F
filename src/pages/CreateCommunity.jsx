@@ -6,8 +6,9 @@ import { createCommunity } from '../api/services/communities';
 import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
-import { getAuthUserId, getNickname } from '../auth/storage';
+import { getAuthUserId } from '../auth/storage';
 import { enterCommunity, setMyCommunity } from '../utils/storage';
+import DiceAvatar from '../components/shared/DiceAvatar';
 
 const REGIONS = [
   'South Korea', 'United States', 'Japan', 'China', 'United Kingdom',
@@ -23,7 +24,6 @@ const CreateCommunity = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
-  const nickname = getNickname() || '?';
 
   const [name, setName] = useState('');
   const [region, setRegion] = useState('South Korea');
@@ -104,7 +104,7 @@ const CreateCommunity = () => {
               boxShadow: '0 2px 8px rgba(123,108,246,0.3)',
             }}
           >
-            {(nickname || '?')[0].toUpperCase()}
+            <DiceAvatar size={36} />
           </div>
         </div>
       </div>

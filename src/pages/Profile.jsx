@@ -13,6 +13,7 @@ import { TierBadge } from '../components/TierBadge';
 import { V } from '../utils/cssUtils';
 import { getErrorMessage, getTierFromRating, getTierBg } from '../utils/tierUtils';
 import FeedbackModal from '../components/shared/FeedbackModal';
+import DiceAvatar from '../components/shared/DiceAvatar';
 import TrophyShelf from '../components/season/TrophyShelf';
 import StoreProfileStats from '../components/store/StoreProfileStats';
 import { InfoPopup } from '../components/store/StorePopup';
@@ -226,9 +227,7 @@ const Profile = () => {
                   style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                 />
               ) : (
-                <span style={{ color: '#fff', fontWeight: 700, fontSize: 34 }}>
-                  {(currentNickname[0] || '?').toUpperCase()}
-                </span>
+                <DiceAvatar size={84} />
               )}
               {isUploadingPhoto && (
                 <div style={{

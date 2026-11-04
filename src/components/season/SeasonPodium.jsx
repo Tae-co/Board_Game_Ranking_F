@@ -32,7 +32,7 @@ const SeasonPodium = ({ entries, myUserId, t }) => {
               style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}
             >
               <MedalBadge place={entry.rank} size={26} />
-              <InitialAvatar nickname={entry.nickname} profileImage={entry.profileImage} size={34} fontSize={13} />
+              <InitialAvatar nickname={entry.nickname} profileImage={entry.profileImage} size={34} />
               <div style={{
                 fontSize: 12, fontWeight: isMe ? 800 : 600, maxWidth: '100%',
                 color: isMe ? 'var(--th-primary)' : V('--th-text'),

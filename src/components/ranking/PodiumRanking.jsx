@@ -1,5 +1,6 @@
 import StorageImage from '../StorageImage';
 import MedalBadge from '../shared/MedalBadge';
+import DiceAvatar from '../shared/DiceAvatar';
 import { V } from '../../utils/cssUtils';
 import { formatChipDelta } from '../../utils/chipUtils';
 
@@ -29,7 +30,7 @@ const PodiumRanking = ({ rankings, myUserId, chip = false }) => (
             }}>
               {rank.profileImage
                 ? <StorageImage src={rank.profileImage} alt={rank.nickname} loading="lazy" decoding="async" transform={{ width: avatarSize * 2, height: avatarSize * 2, quality: 70 }} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                : (rank.nickname || '?')[0].toUpperCase()
+                : <DiceAvatar size={avatarSize} />
               }
             </div>
             <div style={{ position: 'absolute', bottom: medalOffset, right: medalOffset }}>
