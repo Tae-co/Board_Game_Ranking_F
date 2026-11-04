@@ -1,4 +1,6 @@
 import { HP_MAX, TEAM_COLORS } from './constants';
+import DiceAvatar from '../../../components/shared/DiceAvatar';
+import { getAvatarColorById } from '../../../utils/avatarUtils';
 
 const TeamSetup = ({ players, availableModes, gameMode, setGameMode, teamAssign, setTeamAssign, setupHp, setSetupHp, setupChar, setSetupChar, onStart, t }) => (
   <div style={{ padding: '16px' }}>
@@ -25,8 +27,8 @@ const TeamSetup = ({ players, availableModes, gameMode, setGameMode, teamAssign,
     {players.map((p) => (
       <div key={p.memberId} style={{ marginBottom: 16, padding: '14px 16px', borderRadius: 14, border: '1px solid var(--th-border)', background: 'var(--th-card)', overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--th-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14 }}>
-            {p.nickname[0]}
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: getAvatarColorById(p.memberId), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <DiceAvatar size={32} />
           </div>
           <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--th-text)' }}>{p.nickname}</span>
         </div>

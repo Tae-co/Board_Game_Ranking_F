@@ -1,5 +1,7 @@
 import { useNavigate } from 'react-router-dom';
-import { getNickname } from '../../auth/storage';
+import { getAuthUserId } from '../../auth/storage';
+import { getAvatarColorById } from '../../utils/avatarUtils';
+import DiceAvatar from '../shared/DiceAvatar';
 import { V } from '../../utils/cssUtils';
 import { BackIcon } from './StoreIcons';
 
@@ -29,10 +31,11 @@ const StoreTopBar = ({ title, onBack, showProfile = false, backLabel, right = nu
             aria-label="profile"
             style={{
               width: 40, height: 40, marginRight: 2, borderRadius: 999, border: 'none', cursor: 'pointer',
-              backgroundColor: V('--th-primary'), color: '#fff', fontSize: '16px', fontWeight: 700,
+              backgroundColor: getAvatarColorById(getAuthUserId()),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
             }}
           >
-            {(getNickname() || '?')[0]}
+            <DiceAvatar size={40} />
           </button>
         ) : (
           <span style={{ width: 44 }} />

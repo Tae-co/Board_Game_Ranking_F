@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createParty, getStoreRoom, startStoreMatch, storeErrorCode } from '../api/services/stores';
-import { getAuthUserId, getNickname } from '../auth/storage';
+import { getAuthUserId } from '../auth/storage';
 import { CURRENT_PARTY_KEY, useAutoEnterMatch, useCurrentParty } from '../hooks/useCurrentParty';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
+import DiceAvatar from '../components/shared/DiceAvatar';
+import { getAvatarColorById } from '../utils/avatarUtils';
 import StoreRankRow from '../components/store/StoreRankRow';
 import StoreFixedBottom from '../components/store/StoreFixedBottom';
 import StoreMatchHistory from '../components/store/StoreMatchHistory';
@@ -105,8 +107,8 @@ const StoreRoom = () => {
               {room ? `${[room.store.name, room.store.branch].filter(Boolean).join(' ')} · ${game.name}` : ''}
             </span>
           </span>
-          <button onClick={() => navigate('/profile')} aria-label="profile" style={{ width: 40, height: 40, borderRadius: 999, border: 'none', cursor: 'pointer', backgroundColor: V('--th-primary'), color: '#fff', fontSize: '16px', fontWeight: 700 }}>
-            {(getNickname() || '?')[0]}
+          <button onClick={() => navigate('/profile')} aria-label="profile" style={{ width: 40, height: 40, borderRadius: 999, border: 'none', cursor: 'pointer', backgroundColor: getAvatarColorById(getAuthUserId()), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <DiceAvatar size={40} />
           </button>
         </div>
       </header>

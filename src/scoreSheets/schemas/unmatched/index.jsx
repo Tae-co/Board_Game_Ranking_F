@@ -3,6 +3,7 @@ import { useLanguage } from '../../../i18n/LanguageContext';
 import { HP_MAX, TEAM_COLORS, getAvailableModes } from './constants';
 import HpBar from './HpBar';
 import TeamSetup from './TeamSetup';
+import DiceAvatar from '../../../components/shared/DiceAvatar';
 
 export const unmatchedSchema = {
   name: 'Unmatched',
@@ -130,8 +131,8 @@ export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly
             <div key={p.memberId} style={{ marginBottom: 12, padding: '14px 16px', borderRadius: 14, border: `2px solid ${borderColor}`, background: isEliminated ? 'var(--th-bg)' : 'var(--th-card)', opacity: isEliminated ? 0.6 : 1, transition: 'all 0.2s' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: tc ? tc.badge : isEliminated ? 'var(--th-border)' : 'var(--th-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14 }}>
-                    {p.nickname[0]}
+                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: tc ? tc.badge : isEliminated ? 'var(--th-border)' : 'var(--th-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <DiceAvatar size={32} />
                   </div>
                   <div>
                     <span style={{ fontWeight: 700, fontSize: 15, color: isEliminated ? 'var(--th-text-sub)' : 'var(--th-text)' }}>{p.nickname}</span>
