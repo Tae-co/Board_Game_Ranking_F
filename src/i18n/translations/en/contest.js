@@ -21,6 +21,12 @@ export default {
   ctaMembersOnly: 'Store members only',
   ctaFull: 'Full',
   eventPeriod: '{from} – {to}',
+  ctaEventDetail: 'See details',
+
+  // ── store event details ──
+  badgeUpcoming: 'Upcoming',
+  eventBenefit: 'Offer',
+  eventHowToUse: 'How to use',
 
   // ── 5a recruiting ──
   title: 'Event',
@@ -236,8 +242,10 @@ export default {
   fEventNamePh: 'e.g. Weekday drinks 1+1',
   fStart: 'Start date',
   fEnd: 'End date',
-  fBody: 'Details',
-  fBodyPh: 'What customers should know',
+  fBody: 'Offer',
+  fBodyPh: 'e.g. Buy one Americano, get one free (shown on the card)',
+  fHowToUse: 'How to use (optional)',
+  fHowToUsePh: 'e.g. Show this screen at the counter when you pay. Once per person',
   fPhoto: 'Photo (optional)',
   fPhotoAdd: 'Add photo',
   fPhotoChange: 'Change photo',
@@ -245,7 +253,7 @@ export default {
   save: 'Save',
   deleteContest: 'Delete contest',
   infoTitle: 'Good to know',
-  infoBody: "Game contest: players fit the game's range. STAFF confirms every round and total placement points decide the winner. It doesn't affect store rankings. A paused game can be picked but shows as \"Game paused\" and can't start until reopened. Editing overwrites even with sign-ups\nStore event: only shown on the store page and TV. No game room or ranking",
+  infoBody: "Game contest: players fit the game's range. STAFF confirms every round and total placement points decide the winner. It doesn't affect store rankings. A paused game can be picked but shows as \"Game paused\" and can't start until reopened. Editing overwrites even with sign-ups\nStore event: only shown on the store page and TV. How to use appears under See details on the card. No game room or ranking",
   ok: 'OK',
   savedContestNew: 'Contest added',
   savedContestNewBody: 'It shows as open on the store page',

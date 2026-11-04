@@ -46,7 +46,7 @@ const AdminEventForm = ({ store, contest, event, defaultKind = 'contest', onBack
     time: contest?.time ?? '13:00', capacity: contest?.capacity ?? '', rounds: contest?.rounds ?? 3, prizeText: contest?.prizeText ?? '',
   }));
   const [e, setE] = useState(() => ({
-    title: event?.title ?? '', benefitText: event?.benefitText ?? '', imageUrl: event?.imageUrl ?? '',
+    title: event?.title ?? '', benefitText: event?.benefitText ?? '', howToUse: event?.howToUse ?? '', imageUrl: event?.imageUrl ?? '',
     startsOn: event?.startsOn ?? today(), endsOn: event?.endsOn ?? today(),
   }));
   const [imageFile, setImageFile] = useState(null);
@@ -168,6 +168,12 @@ const AdminEventForm = ({ store, contest, event, defaultKind = 'contest', onBack
             <textarea
               style={{ ...inputStyle, height: 104, padding: '12px 14px', resize: 'vertical', lineHeight: 1.5, fontFamily: 'inherit' }}
               placeholder={t('contest', 'fBodyPh')} value={e.benefitText} onChange={setEField('benefitText')} maxLength={300}
+            />
+          </label>
+          <label style={labelStyle}>{t('contest', 'fHowToUse')}
+            <textarea
+              style={{ ...inputStyle, height: 104, padding: '12px 14px', resize: 'vertical', lineHeight: 1.5, fontFamily: 'inherit' }}
+              placeholder={t('contest', 'fHowToUsePh')} value={e.howToUse} onChange={setEField('howToUse')} maxLength={500}
             />
           </label>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

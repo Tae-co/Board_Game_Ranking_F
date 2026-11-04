@@ -32,7 +32,7 @@ const contestState = (c, role) => {
 /**
  * 매장 홈 "이벤트" (시안 2·2d): 하루 대회 카드 + 매장 이벤트 카드를 옆으로 넘긴다. 더보기(onMore)는 늘 → 이벤트 목록.
  * vertical = 이벤트 목록 화면: 제목 없이 세로로 전부 (화면 위 막대가 제목).
- * 구경(2d)은 대회 참가가 잠긴다. 대회 카드는 대회 화면(5a·5b·5d, STAFF는 5e)으로. 둘 다 없으면 빈 카드
+ * 구경(2d)은 대회 참가가 잠긴다. 대회 카드는 대회 화면(5a·5b·5d, STAFF는 5e)으로, 매장 이벤트 카드는 자세히 보기로. 둘 다 없으면 빈 카드
  */
 const StoreEventCards = ({ storeId, contests = [], events = [], role, t, lang, onMore, vertical = false }) => {
   const navigate = useNavigate();
@@ -103,11 +103,15 @@ const StoreEventCards = ({ storeId, contests = [], events = [], role, t, lang, o
               </span>
             </div>
             {e.imageUrl && (
-              <img src={e.imageUrl} alt="" style={{ marginTop: 'auto', height: 96, borderRadius: '14px', objectFit: 'cover', width: '100%' }} />
+              <img src={e.imageUrl} alt="" style={{ height: 96, borderRadius: '14px', objectFit: 'cover', width: '100%' }} />
             )}
             {e.benefitText && (
-              <span style={{ fontSize: '14px', lineHeight: 1.5, color: V('--th-text'), whiteSpace: 'pre-line' }}>{e.benefitText}</span>
+              <span style={{
+                fontSize: '14px', lineHeight: 1.5, color: V('--th-text'), whiteSpace: 'pre-line',
+                display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+              }}>{e.benefitText}</span>
             )}
+            <button onClick={() => navigate(`/store/${storeId}/events/${e.id}`)} style={cta(true)}>{t('contest', 'ctaEventDetail')}</button>
           </div>
         ))}
         {done.map(contestCard)}

@@ -21,6 +21,12 @@ export default {
   ctaMembersOnly: '매장 멤버만 참가할 수 있어요',
   ctaFull: '마감',
   eventPeriod: '{from} ~ {to}',
+  ctaEventDetail: '자세히 보기',
+
+  // ── 매장 이벤트 자세히 보기 ──
+  badgeUpcoming: '예정',
+  eventBenefit: '혜택',
+  eventHowToUse: '사용 방법',
 
   // ── 5a 모집 ──
   title: '이벤트',
@@ -236,8 +242,10 @@ export default {
   fEventNamePh: '예: 평일 음료 1+1',
   fStart: '시작일',
   fEnd: '종료일',
-  fBody: '내용',
-  fBodyPh: '손님에게 보일 안내를 적어 주세요',
+  fBody: '혜택',
+  fBodyPh: '예: 아메리카노 1+1 (카드에 보여요)',
+  fHowToUse: '사용 방법 (선택)',
+  fHowToUsePh: '예: 계산할 때 이 화면을 카운터에 보여 주세요. 1인 1회',
   fPhoto: '사진 (선택)',
   fPhotoAdd: '사진 추가',
   fPhotoChange: '사진 바꾸기',
@@ -245,7 +253,7 @@ export default {
   save: '저장',
   deleteContest: '대회 삭제',
   infoTitle: '알아 두세요',
-  infoBody: '게임 대회: 인원은 그 게임 인원 안에서 정해요. 매판 결과는 STAFF가 확인하고, 순위 점수 합으로 우승을 정해요. 매장 랭킹에는 안 들어가요. 잠시 닫힌 게임도 고를 수 있지만 대회 화면에 "잠시 닫힌 게임"으로 표시되고, 다시 열어야 대회를 시작할 수 있어요. 신청자가 있어도 수정하면 그대로 덮어써요\n매장 이벤트: 매장 홈과 매장 TV에 안내만 떠요. 게임방·랭킹은 없어요',
+  infoBody: '게임 대회: 인원은 그 게임 인원 안에서 정해요. 매판 결과는 STAFF가 확인하고, 순위 점수 합으로 우승을 정해요. 매장 랭킹에는 안 들어가요. 잠시 닫힌 게임도 고를 수 있지만 대회 화면에 "잠시 닫힌 게임"으로 표시되고, 다시 열어야 대회를 시작할 수 있어요. 신청자가 있어도 수정하면 그대로 덮어써요\n매장 이벤트: 매장 홈과 매장 TV에 안내만 떠요. 사용 방법은 카드의 자세히 보기에서 보여요. 게임방·랭킹은 없어요',
   ok: '확인',
   savedContestNew: '대회를 등록했어요',
   savedContestNewBody: '매장 홈에 모집 중으로 떠요',
