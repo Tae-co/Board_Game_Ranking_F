@@ -1,4 +1,5 @@
 import { D, clock } from './deviceTheme';
+import DiceAvatar from '../shared/DiceAvatar';
 import { DiceLogo } from '../store/StoreIcons';
 import { fmt, num } from '../store/fmt';
 import { storeTitle } from '../../constants/store';
@@ -14,7 +15,9 @@ const frame = (padding, gap) => ({
 const cardStyle = { backgroundColor: D.card, border: `1px solid ${D.border}`, borderRadius: '28px' };
 
 const Avatar = ({ size = 88 }) => (
-  <span style={{ width: size, height: size, borderRadius: 999, backgroundColor: D.border, flexShrink: 0 }} />
+  <span style={{ width: size, height: size, borderRadius: 999, backgroundColor: D.border, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <DiceAvatar size={size} color={D.sub} />
+  </span>
 );
 
 /** 4·4i 머리: 로고 + "[매장] 랭킹" · 오른쪽 "[시즌] · 종료까지 N일" */

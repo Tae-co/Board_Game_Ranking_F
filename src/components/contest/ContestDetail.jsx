@@ -1,4 +1,5 @@
 import { V } from '../../utils/cssUtils';
+import DiceAvatar from '../shared/DiceAvatar';
 import { fmt } from '../store/fmt';
 import { card, ghostButton, meBadge, primaryButton, sectionTitle } from '../store/storeStyles';
 import StoreFixedBottom from '../store/StoreFixedBottom';
@@ -108,7 +109,7 @@ const ContestDetail = ({ contest: c, myId, busy, onApply, onWithdraw, error, t, 
           <div style={{ ...card, padding: '4px 16px' }}>
             {c.entries.map((e, i) => (
               <div key={e.memberId ?? `x${i}`} style={{ height: 52, display: 'flex', alignItems: 'center', gap: '12px', borderTop: i ? `1px solid ${V('--th-border')}` : 0 }}>
-                <span style={{ ...avatar, backgroundColor: e.memberId === myId ? '#C7D2FE' : V('--th-bg-deep') }} />
+                <span style={{ ...avatar, backgroundColor: e.memberId === myId ? '#C7D2FE' : V('--th-bg-deep'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DiceAvatar size={32} color={e.memberId === myId ? V('--th-primary') : V('--th-text-sub')} /></span>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', fontWeight: 500, color: V('--th-text') }}>
                   {e.nickname ?? t('contest', 'leftMember')}
                   {e.memberId === myId && <span style={meBadge}>{t('contest', 'meBadge')}</span>}

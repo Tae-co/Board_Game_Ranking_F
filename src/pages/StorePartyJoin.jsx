@@ -6,6 +6,7 @@ import { getAuthUserId } from '../auth/storage';
 import { CURRENT_PARTY_KEY, useCurrentParty } from '../hooks/useCurrentParty';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import DiceAvatar from '../components/shared/DiceAvatar';
 import StoreTopBar from '../components/store/StoreTopBar';
 import StoreFixedBottom from '../components/store/StoreFixedBottom';
 import { ConfirmDialog } from '../components/store/StorePopup';
@@ -107,7 +108,7 @@ const StorePartyJoin = () => {
             <div style={{ ...card, padding: '4px 16px' }}>
               {joined.members.map((m, i) => (
                 <div key={m.memberId} style={{ height: 52, display: 'flex', alignItems: 'center', gap: '12px', borderTop: i ? `1px solid ${V('--th-border')}` : 0 }}>
-                  <span style={{ width: 32, height: 32, borderRadius: 999, flexShrink: 0, backgroundColor: m.memberId === myId ? `rgba(${V('--th-primary-rgb')}, 0.3)` : V('--th-bg-deep') }} />
+                  <span style={{ width: 32, height: 32, borderRadius: 999, flexShrink: 0, backgroundColor: m.memberId === myId ? `rgba(${V('--th-primary-rgb')}, 0.3)` : V('--th-bg-deep'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DiceAvatar size={32} color={m.memberId === myId ? V('--th-primary') : V('--th-text-sub')} /></span>
                   <span style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '6px', fontSize: '15px', fontWeight: 500, color: V('--th-text') }}>
                     {m.nickname}
                     {m.recorder && <span style={recorderBadge}>{t('store', 'recorderBadge')}</span>}

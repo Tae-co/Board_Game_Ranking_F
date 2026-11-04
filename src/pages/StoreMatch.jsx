@@ -9,6 +9,7 @@ import { getAuthUserId } from '../auth/storage';
 import { CURRENT_PARTY_KEY, useAutoEnterMatch, useCurrentParty } from '../hooks/useCurrentParty';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import DiceAvatar from '../components/shared/DiceAvatar';
 import ScoreSheet from './ScoreSheet';
 import StoreTopBar from '../components/store/StoreTopBar';
 import StoreFixedBottom from '../components/store/StoreFixedBottom';
@@ -384,7 +385,7 @@ const StoreMatch = () => {
           <div style={{ ...card, padding: '4px 16px' }}>
             {match.participants.filter(p => p.memberId != null).map((p, i) => (
               <div key={p.memberId} style={{ height: 52, display: 'flex', alignItems: 'center', gap: '12px', borderTop: i ? `1px solid ${V('--th-border')}` : 0 }}>
-                <span style={{ width: 32, height: 32, borderRadius: 999, flexShrink: 0, backgroundColor: V('--th-bg-deep') }} />
+                <span style={{ width: 32, height: 32, borderRadius: 999, flexShrink: 0, backgroundColor: V('--th-bg-deep'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DiceAvatar size={32} color={V('--th-text-sub')} /></span>
                 <span style={{ flex: 1, fontSize: '15px', fontWeight: 500, color: V('--th-text') }}>
                   {p.nickname}{p.memberId === match.recorderMemberId ? t('store', 'recorderSuffix') : ''}
                 </span>

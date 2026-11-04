@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { closeAdminStoreReport, getAdminStoreReport, resetAdminStoreRatings, undoAdminStoreReset } from '../../api/services/admin';
 import { V } from '../../utils/cssUtils';
+import DiceAvatar from '../shared/DiceAvatar';
 import { fmt, num } from '../store/fmt';
 import { CheckIcon } from '../store/StoreIcons';
 import { ConfirmDialog } from '../store/StorePopup';
@@ -61,7 +62,7 @@ const AdminReportReview = ({ store, group, onBack }) => {
   return (
     <AdminSubPage title={t('admin', 'reportReview')} info={fmt(t('admin', 'reportInfo'), { game })} onBack={onBack} t={t}>
       <section style={{ ...listStyle, padding: '18px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <span style={{ width: 44, height: 44, borderRadius: 999, backgroundColor: V('--th-bg-deep'), flexShrink: 0 }} />
+        <span style={{ width: 44, height: 44, borderRadius: 999, backgroundColor: V('--th-bg-deep'), flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DiceAvatar size={44} color={V('--th-text-sub')} /></span>
         <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
           <span style={{ fontSize: '17px', fontWeight: 700, color: V('--th-text') }}>{data.targetNickname ?? leftName}</span>
           <span style={{ fontSize: '13px', color: V('--th-text-sub') }}>

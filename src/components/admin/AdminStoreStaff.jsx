@@ -4,6 +4,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { assignStoreStaff, getStaffCandidates, unassignStoreStaff } from '../../api/services/admin';
 import { storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
+import DiceAvatar from '../shared/DiceAvatar';
 import AdminSubPage from './AdminSubPage';
 import { SearchIcon } from '../store/StoreIcons';
 
@@ -18,7 +19,7 @@ const formatDay = (iso) => {
 
 const Row = ({ first, name, sub, action }) => (
   <div style={{ height: 60, display: 'flex', alignItems: 'center', gap: '12px', borderTop: first ? 'none' : `1px solid ${V('--th-border')}` }}>
-    <span style={{ width: 36, height: 36, borderRadius: 999, flexShrink: 0, backgroundColor: V('--th-bg-deep') }} />
+    <span style={{ width: 36, height: 36, borderRadius: 999, flexShrink: 0, backgroundColor: V('--th-bg-deep'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}><DiceAvatar size={36} color={V('--th-text-sub')} /></span>
     <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
       <span style={{ fontSize: '15px', fontWeight: 700, color: V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
       <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>{sub}</span>

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { cl } from '../shared/scoreUtils';
+import DiceAvatar from '../../components/shared/DiceAvatar';
 
 const AVATAR_COLORS = ['#6B5CE7', '#7B8FF5', '#A78BFA', '#60A5FA', '#34D399', '#F472B6', '#FB923C', '#38BDF8'];
 const avatarColor = (id) => AVATAR_COLORS[id % AVATAR_COLORS.length];
@@ -15,7 +16,7 @@ const PlayerAvatar = ({ player, isWinner }) => {
     }}>
       {player.profileImage && !imgFailed
         ? <img src={player.profileImage} onError={() => setImgFailed(true)} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-        : (player.nickname || '?')[0].toUpperCase()
+        : <DiceAvatar size={44} />
       }
     </div>
   );

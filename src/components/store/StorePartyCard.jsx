@@ -1,4 +1,5 @@
 import { V } from '../../utils/cssUtils';
+import DiceAvatar from '../shared/DiceAvatar';
 import { fmt } from './fmt';
 
 const avatarColors = [`rgba(var(--th-primary-rgb), 0.3)`, 'var(--th-bg-deep)', 'var(--th-border)'];
@@ -18,8 +19,10 @@ const StorePartyCard = ({ party, onManage, onCreate, onJoin, creating, t }) => {
           {avatarColors.slice(0, Math.min(3, party.size)).map((c, i) => (
             <span key={i} style={{
               width: 32, height: 32, borderRadius: 999, backgroundColor: c, border: `2px solid ${V('--th-card')}`,
-              marginLeft: i ? -10 : 0, position: 'relative', zIndex: 3 - i,
-            }} />
+              marginLeft: i ? -10 : 0, position: 'relative', zIndex: 3 - i, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <DiceAvatar size={28} color={i ? V('--th-text-sub') : V('--th-primary')} />
+            </span>
           ))}
         </span>
         <span style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
