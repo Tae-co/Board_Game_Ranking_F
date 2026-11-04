@@ -9,7 +9,7 @@ import { clearDeviceToken, getDeviceToken, setDeviceToken } from '../utils/stora
 import { useLanguage } from '../i18n/LanguageContext';
 import DeviceStage from '../components/storeDevice/DeviceStage';
 import DevicePair from '../components/storeDevice/DevicePair';
-import { TV_H, TV_W, TvJustFinished, TvLeaders, TvQr, TvSeasonResult, TvTop10 } from '../components/storeDevice/TvScreens';
+import { TV_H, TV_W, TvJustFinished, TvMvp, TvQr, TvSeasonResult, TvTop10 } from '../components/storeDevice/TvScreens';
 import { TvContestBoard, TvStoreEvent } from '../components/storeDevice/TvContestScreens';
 import { TABLE_H, TABLE_W, TableOffline, TableQr, TvOffline } from '../components/storeDevice/TableScreens';
 import { clock, minSec } from '../components/storeDevice/deviceTheme';
@@ -104,7 +104,7 @@ const PairScreen = ({ onPaired, t }) => {
 const buildRotation = (display) => {
   const slides = [];
   for (const key of display.setting.order) {
-    if (key === 'MVP' && (display.mvp?.gameLeaders?.length || display.mvp?.mostVisits)) slides.push({ key: 'MVP' });
+    if (key === 'MVP' && display.mvp?.mostVisits) slides.push({ key: 'MVP' });
     if (key === 'TOP10') display.top10.forEach(g => slides.push({ key: `TOP10-${g.boardGameId}`, game: g }));
     if (key === 'QR') slides.push({ key: 'QR' });
     if (key === 'EVENT') {
@@ -225,7 +225,7 @@ const DisplayScreen = ({ token, onRevoked, lang, t }) => {
     screen = <TvJustFinished match={justQueue[0]} t={t} />;
   } else {
     const slide = rotation[slideIndex % rotation.length];
-    if (slide.key === 'MVP') screen = <TvLeaders store={display.store} season={display.season} mvp={display.mvp} t={t} />;
+    if (slide.key === 'MVP') screen = <TvMvp store={display.store} season={display.season} mvp={display.mvp} t={t} />;
     else if (slide.key === 'SEASON') screen = <TvSeasonResult store={display.store} result={display.seasonResult} lang={lang} t={t} />;
     else if (slide.game) screen = <TvTop10 store={display.store} season={display.season} game={slide.game} t={t} />;
     else if (slide.event || slide.contest) screen = <TvStoreEvent store={display.store} event={slide.event} contest={slide.contest} dots={slide.dots} lang={lang} t={t} />;

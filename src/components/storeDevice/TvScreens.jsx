@@ -1,6 +1,6 @@
 import { D, clock } from './deviceTheme';
 import MemberDiceAvatar from '../shared/MemberDiceAvatar';
-import { DiceLogo } from '../store/StoreIcons';
+import { DiceLogo, MvpIcon } from '../store/StoreIcons';
 import { fmt, num } from '../store/fmt';
 import { storeTitle } from '../../constants/store';
 import CheckinQrPanel from './CheckinQrPanel';
@@ -29,46 +29,40 @@ const RankingHeader = ({ store, season, t }) => (
   </header>
 );
 
-/** 4 게임별 1위 · 매장 MVP. 게임 카드는 2×2까지 (TV 한 화면) */
-export const TvLeaders = ({ store, season, mvp, t }) => {
-  const leaders = (mvp?.gameLeaders ?? []).slice(0, 4);
-  const mvpCard = (label, item, unitKey) => (
-    <div style={{ ...cardStyle, flex: 1, padding: '36px 40px', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '8px' }}>
-      <span style={{ fontSize: '28px', color: D.accentText }}>{label}</span>
-      <span style={{ fontSize: '52px', fontWeight: 700 }}>{item?.nickname ?? '—'}</span>
-      <span style={{ fontSize: '28px', color: D.sub }}>{item ? fmt(t('store', unitKey), { n: num(item.count) }) : ''}</span>
-    </div>
-  );
-  return (
-    <div style={frame('56px 64px', '40px')}>
-      <RankingHeader store={store} season={season} t={t} />
-      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 560px', gap: '32px' }}>
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>
-          <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 700, color: D.accentSoft }}>{t('store', 'tvGameLeaders')}</h2>
-          <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridTemplateRows: 'repeat(2, minmax(0, 1fr))', gap: '20px' }}>
-            {leaders.map(l => (
-              <div key={l.boardGameId} style={{ ...cardStyle, padding: '32px 36px', display: 'flex', alignItems: 'center', gap: '24px' }}>
-                <MemberDiceAvatar memberId={l.memberId} nickname={l.nickname} size={88} />
-                <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span style={{ fontSize: '26px', color: D.accentText, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {fmt(t('store', 'tvLeaderOf'), { game: l.name })}
-                  </span>
-                  <span style={{ fontSize: '44px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{l.nickname}</span>
-                </div>
-                <span style={{ fontSize: '44px', fontWeight: 700, color: D.gold }}>{num(l.score)}</span>
-              </div>
-            ))}
+/** 매장 MVP 칸 5개: [kind, 이름표 key, 값, 값 글자] — 4·4b 공통. 최고 승률은 3판 이상만 (없으면 null) */
+const mvpCells = (mvp, t, rateKey) => [
+  ['VISITS', 'tvMostVisits', mvp?.mostVisits, i => fmt(t('store', 'tvDays'), { n: num(i.count) })],
+  ['GAMES', 'tvMostGames', mvp?.mostGames, i => fmt(t('store', 'tvGames'), { n: num(i.count) })],
+  ['WINS', 'tvMostWins', mvp?.mostWins, i => fmt(t('store', 'tvWins'), { n: num(i.count) })],
+  ['STREAK', 'tvBestStreak', mvp?.bestStreak, i => fmt(t('store', 'tvStreak'), { n: num(i.count) })],
+  ['WIN_RATE', 'tvBestWinRate', mvp?.bestWinRate, i => fmt(t('store', rateKey), { p: i.percent, n: num(i.games) })],
+];
+
+/** 4 매장 MVP: 윗줄 최다 방문·최다 참여, 아랫줄 최다승·최대 연승·최고 승률 */
+export const TvMvp = ({ store, season, mvp, t }) => (
+  <div style={frame('56px 64px', '40px')}>
+    <RankingHeader store={store} season={season} t={t} />
+    <section style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+      <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 700, color: D.accentSoft }}>{t('store', 'tvMvpTitle')}</h2>
+      <div style={{ flex: 1, minHeight: 0, display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gridTemplateRows: 'repeat(2, minmax(0, 1fr))', gap: '24px' }}>
+        {mvpCells(mvp, t, 'tvWinRateGames').map(([kind, labelKey, item, text], i) => (
+          <div key={kind} style={{ ...cardStyle, gridColumn: `span ${i < 2 ? 3 : 2}`, padding: '36px 40px', display: 'flex', alignItems: 'center', gap: '32px', minWidth: 0 }}>
+            {item
+              ? <MemberDiceAvatar memberId={item.memberId} nickname={item.nickname} size={120} />
+              : <span style={{ width: 120, height: 120, borderRadius: 999, flexShrink: 0, backgroundColor: D.border }} />}
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '30px', color: D.accentText, fontWeight: 500, whiteSpace: 'nowrap' }}>
+                <MvpIcon kind={kind} size={30} />{t('store', labelKey)}
+              </span>
+              <span style={{ fontSize: '52px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item?.nickname ?? '—'}</span>
+              <span style={{ fontSize: '32px', fontWeight: 700, color: D.gold, whiteSpace: 'nowrap' }}>{item ? text(item) : ''}</span>
+            </div>
           </div>
-        </section>
-        <section style={{ display: 'flex', flexDirection: 'column', gap: '20px', minHeight: 0 }}>
-          <h2 style={{ margin: 0, fontSize: '32px', fontWeight: 700, color: D.accentSoft }}>{t('store', 'tvMvpTitle')}</h2>
-          {mvpCard(t('store', 'tvMostVisits'), mvp?.mostVisits, 'tvDays')}
-          {mvpCard(t('store', 'tvMostGames'), mvp?.mostGames, 'tvGames')}
-        </section>
+        ))}
       </div>
-    </div>
-  );
-};
+    </section>
+  </div>
+);
 
 const rankColor = (rank) => (rank === 1 ? D.gold : rank <= 3 ? D.silver : D.sub);
 
@@ -155,17 +149,9 @@ const CrownIcon = () => (
   <svg width="40" height="40" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke={D.gold} strokeWidth="1.8" strokeLinejoin="round"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z" /></svg>
 );
 
-/** 4b 시즌 결과 (끝나고 1주일): 게임별 우승 4칸 · 최다 방문 · 최다 참여 · 다음 시즌 시작일 */
+/** 4b 시즌 결과 (끝나고 1주일): 게임별 우승 4칸 · 매장 MVP 5칸 · 다음 시즌 시작일 */
 export const TvSeasonResult = ({ store, result, lang, t }) => {
   const next = new Date(`${result.nextStart}T00:00:00`).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US', { month: 'long', day: 'numeric' });
-  const mvpCard = (label, item, unitKey) => (
-    <div style={{ ...cardStyle, padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
-      <span style={{ fontSize: '26px', color: D.accentText, flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: '34px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-        {item ? `${item.nickname ?? t('store', 'leftMember')} · ${fmt(t('store', unitKey), { n: num(item.count) })}` : '—'}
-      </span>
-    </div>
-  );
   return (
     <div style={{ width: TV_W, height: TV_H, boxSizing: 'border-box', padding: '64px', display: 'flex', flexDirection: 'column', gap: '44px' }}>
       <header style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
@@ -185,9 +171,17 @@ export const TvSeasonResult = ({ store, result, lang, t }) => {
           </div>
         ))}
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '28px' }}>
-        {mvpCard(t('store', 'tvMostVisits'), result.mostVisits, 'tvDays')}
-        {mvpCard(t('store', 'tvMostGames'), result.mostGames, 'tvGames')}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '20px 28px' }}>
+        {mvpCells(result, t, 'tvWinRate').map(([kind, labelKey, item, text]) => (
+          <div key={kind} style={{ ...cardStyle, padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '26px', color: D.accentText, flexShrink: 0 }}>
+              <MvpIcon kind={kind} size={28} />{t('store', labelKey)}
+            </span>
+            <span style={{ fontSize: '34px', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {item ? `${item.nickname ?? t('store', 'leftMember')} · ${text(item)}` : '—'}
+            </span>
+          </div>
+        ))}
         <div style={{ borderRadius: '28px', padding: '28px 32px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: D.button }}>
           <span style={{ fontSize: '26px', color: D.stepText }}>{t('store', 'tvNextSeason')}</span>
           <span style={{ fontSize: '34px', fontWeight: 700 }}>{fmt(t('store', 'tvNextStart'), { date: next })}</span>

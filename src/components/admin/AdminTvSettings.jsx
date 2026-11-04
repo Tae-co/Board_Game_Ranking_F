@@ -31,8 +31,8 @@ const iconButton = (enabled, danger) => ({
 
 const PV = { bg: '#0F0F1F', card: '#1A1A2E', text: '#F8FAFC', sub: '#94A3B8', label: '#A5B4FC', gold: '#FCD34D', bar: '#818CF8' };
 
-const PvTile = ({ label, name, value }) => (
-  <span style={{ backgroundColor: PV.card, borderRadius: 8, padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+const PvTile = ({ label, name, value, span }) => (
+  <span style={{ gridColumn: span ? `span ${span}` : undefined, backgroundColor: PV.card, borderRadius: 8, padding: '8px 6px', display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
     <span style={{ fontSize: 8, color: PV.sub, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
     <span style={{ fontSize: 11, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</span>
     <span style={{ fontSize: 8, color: PV.gold }}>{value}</span>
@@ -42,14 +42,18 @@ const PvTile = ({ label, name, value }) => (
 const Preview = ({ screen, data, top10Game, lang, t }) => {
   const label = (text) => <span style={{ fontSize: 9, fontWeight: 700, color: PV.label }}>{text}</span>;
   if (screen === 'MVP') {
-    const leader = data.mvp?.gameLeaders?.[0];
+    const m = data.mvp;
+    const cnt = (item, key) => (item ? fmt(t('store', key), { n: item.count }) : '');
     return (
       <>
         {label(t('store', 'tvMvpTitle'))}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 6 }}>
-          <PvTile label={leader ? fmt(t('store', 'tvLeaderOf'), { game: leader.name }) : t('store', 'tvGameLeaders')} name={leader?.nickname ?? '—'} value={leader ? num(leader.score) : ''} />
-          <PvTile label={t('store', 'tvMostVisits')} name={data.mvp?.mostVisits?.nickname ?? '—'} value={data.mvp?.mostVisits ? fmt(t('store', 'tvDays'), { n: data.mvp.mostVisits.count }) : ''} />
-          <PvTile label={t('store', 'tvMostGames')} name={data.mvp?.mostGames?.nickname ?? '—'} value={data.mvp?.mostGames ? fmt(t('store', 'tvGames'), { n: data.mvp.mostGames.count }) : ''} />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, minmax(0, 1fr))', gap: 6 }}>
+          <PvTile span={3} label={t('store', 'tvMostVisits')} name={m?.mostVisits?.nickname ?? '—'} value={cnt(m?.mostVisits, 'tvDays')} />
+          <PvTile span={3} label={t('store', 'tvMostGames')} name={m?.mostGames?.nickname ?? '—'} value={cnt(m?.mostGames, 'tvGames')} />
+          <PvTile span={2} label={t('store', 'tvMostWins')} name={m?.mostWins?.nickname ?? '—'} value={cnt(m?.mostWins, 'tvWins')} />
+          <PvTile span={2} label={t('store', 'tvBestStreak')} name={m?.bestStreak?.nickname ?? '—'} value={cnt(m?.bestStreak, 'tvStreak')} />
+          <PvTile span={2} label={t('store', 'tvBestWinRate')} name={m?.bestWinRate?.nickname ?? '—'}
+            value={m?.bestWinRate ? fmt(t('store', 'tvWinRate'), { p: m.bestWinRate.percent }) : ''} />
         </div>
       </>
     );

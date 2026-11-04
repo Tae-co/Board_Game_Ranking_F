@@ -1,3 +1,5 @@
+import AwardIcon from '../shared/AwardIcon';
+
 // 매장 시안(캔버스)과 같은 선 아이콘. stroke는 currentColor라 부모 color를 따른다
 const Icon = ({ size = 22, children }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden="true"
@@ -67,3 +69,11 @@ export const ThumbIcon = ({ size = 16, filled }) => (
 export const CheckIcon = ({ size = 26 }) => <Icon size={size}><path d="M5 12l5 5 9-10" /></Icon>;
 
 export const ChartIcon = ({ size = 18 }) => <Icon size={size}><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" /></Icon>;
+
+// 매장 MVP 칸 아이콘 (2·4·4b). 최다승·최대 연승·최고 승률은 모임 시즌 어워드 아이콘 그대로
+const MVP_AWARD = { WINS: 'MOST_WINS', STREAK: 'LONGEST_STREAK', WIN_RATE: 'BEST_WIN_RATE' };
+export const MvpIcon = ({ kind, size = 16 }) => {
+  if (kind === 'VISITS') return <Icon size={size}><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16" /></Icon>;
+  if (kind === 'GAMES') return <Icon size={size}><rect x="4" y="4" width="16" height="16" rx="4" /><circle cx="9" cy="9" r="1" fill="currentColor" /><circle cx="15" cy="15" r="1" fill="currentColor" /></Icon>;
+  return <AwardIcon type={MVP_AWARD[kind]} color="currentColor" size={size} />;
+};

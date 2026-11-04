@@ -1,7 +1,7 @@
 import { forwardRef } from 'react';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { useTheme } from '../../theme/ThemeContext';
-import AwardIcon from './AwardIcon';
+import AwardIcon from '../shared/AwardIcon';
 import { V } from '../../utils/cssUtils';
 import { fill } from '../../utils/seasonUtils';
 

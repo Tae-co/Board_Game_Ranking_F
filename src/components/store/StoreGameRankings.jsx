@@ -5,7 +5,7 @@ import StoreRankRow from './StoreRankRow';
 import { fmt } from './fmt';
 import { emptyCard } from './storeStyles';
 
-/** 게임별 매장 랭킹 (시안 2): 게임 칩 + Top 5 + 더보기(→ 2b). 기록이 없으면 빈 카드 */
+/** 게임별 랭킹 (시안 2): 게임 칩 + Top 5 + 더보기(→ 2b). 기록이 없으면 빈 카드 */
 const StoreGameRankings = ({ rankings, onMore, t }) => {
   const [selected, setSelected] = useState(rankings[0]?.storeRoomId);
   if (rankings.length === 0) {
