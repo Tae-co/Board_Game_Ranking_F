@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createParty, getStoreHome, markStoreResetSeen, storeErrorCode } from '../api/services/stores';
 import { CURRENT_PARTY_KEY } from '../hooks/useCurrentParty';
@@ -37,6 +37,7 @@ const matchWhen = (iso) => {
 const StoreHome = () => {
   const { storeId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
   const [creating, setCreating] = useState(false);
@@ -49,8 +50,8 @@ const StoreHome = () => {
     staleTime: 1000 * 30,
   });
 
-  // 매장 홈 뒤로 가기는 직전 화면이 아니라 항상 메인(커뮤니티)으로
-  const goCommunity = () => navigate('/community');
+  // 매장 홈 뒤로 가기는 직전 화면이 아니라 항상 메인(커뮤니티)으로. 관리자 화면에서 열었을 때만 관리자 화면으로 돌아간다
+  const goCommunity = () => (location.state?.fromAdmin ? navigate(-1) : navigate('/community'));
 
   // 신고 초기화 안내 카드(2)는 확인을 누르면 다시 안 뜬다
   const dismissReset = () => {

@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { getAdminScoreRequests, getAdminStoreReports, getAdminStores, getAdminTvSetting } from '../../api/services/admin';
@@ -40,12 +39,10 @@ const ghostButton = {
  * 6 어드민 매장 탭: 매장 선택 → 매장 정보(수정 6f) · 매장 기기(6g) · STAFF 지정(6h) · 매장 TV 화면(6k) ·
  * 게임방 관리(6i) · 시즌(요약 → 6l) · 이벤트(요약 → 6m) · 신고(2줄 → 6n 전체 → 6b) · 점수판 요청(6c) · "+ 매장 등록"(6e).
  */
-const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
+const AdminStoresTab = ({ selectedId, onSelect, page, reportKey, openPage, closePage, onCreateGame }) => {
   const { t, lang } = useLanguage();
   const queryClient = useQueryClient();
-  const [page, setPage] = useState(null); // null | 'create' | 'edit' | 'staff' | 'rooms' | 'devices' | 'tv' | 'season' | 'events' | 'reports' | 'report' | 'requests'
-  const [reportGroup, setReportGroup] = useState(null);
-  const [reportBack, setReportBack] = useState(null); // 6b에서 뒤로 → 매장 탭(null) 또는 신고 전체('reports')
+  // page (Admin.jsx가 주소에 둔다): null | 'create' | 'edit' | 'staff' | 'rooms' | 'devices' | 'tv' | 'season' | 'events' | 'reports' | 'report' | 'requests'
 
   const { data: items = [], isLoading } = useQuery({
     queryKey: ['adminStores'],
@@ -76,7 +73,9 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
   const openReports = reports.filter(r => r.status === 'OPEN').length;
   const newRequests = requests.filter(r => r.status === 'REVIEW').length;
 
-  const openReport = (group, back) => { setReportGroup(group); setReportBack(back); setPage('report'); };
+  const groupKey = (g) => `${g.boardGameId}-${g.targetMemberId}`;
+  const reportGroup = reports.find(g => groupKey(g) === reportKey) ?? null;
+  const openReport = (group) => openPage('report', { rg: groupKey(group) });
 
   const formatDate = (iso) => new Date(iso).toLocaleDateString(lang === 'ko' ? 'ko-KR' : 'en-US');
 
@@ -86,7 +85,7 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <h2 style={h2Style}>{t('admin', 'storesTab')}</h2>
           <button
-            onClick={() => setPage('create')}
+            onClick={() => openPage('create')}
             style={{ height: 36, padding: '0 16px', borderRadius: '12px', border: 'none', cursor: 'pointer', backgroundColor: V('--th-primary'), color: '#fff', fontSize: '13px', fontWeight: 700 }}
           >
             + {t('admin', 'addStore')}
@@ -109,7 +108,7 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h2 style={h2Style}>{t('admin', 'storeInfo')}</h2>
             {!selected.store.closed && (
-              <button onClick={() => setPage('edit')} style={{ ...ghostButton, height: 36, fontSize: '13px' }}>{t('admin', 'storeEdit')}</button>
+              <button onClick={() => openPage('edit')} style={{ ...ghostButton, height: 36, fontSize: '13px' }}>{t('admin', 'storeEdit')}</button>
             )}
           </div>
           <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>
@@ -125,10 +124,10 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
             </span>
           )}
           <div style={{ display: 'flex', gap: '8px' }}>
-            <button onClick={() => setPage('devices')} style={{ ...ghostButton, height: 44, flex: 1, fontSize: '14px' }}>
+            <button onClick={() => openPage('devices')} style={{ ...ghostButton, height: 44, flex: 1, fontSize: '14px' }}>
               {t('admin', 'storeDevices')}
             </button>
-            <button onClick={() => setPage('staff')} style={{ ...ghostButton, height: 44, flex: 1, fontSize: '14px' }}>
+            <button onClick={() => openPage('staff')} style={{ ...ghostButton, height: 44, flex: 1, fontSize: '14px' }}>
               {t('admin', 'assignStaffTitle')}
             </button>
           </div>
@@ -142,7 +141,7 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <h2 style={h2Style}>{t('admin', 'tvScreen')}</h2>
-            <button onClick={() => setPage('tv')} style={{ ...ghostButton, height: 36, fontSize: '13px' }}>{t('admin', 'tvSettingsButton')}</button>
+            <button onClick={() => openPage('tv')} style={{ ...ghostButton, height: 36, fontSize: '13px' }}>{t('admin', 'tvSettingsButton')}</button>
           </div>
           {tv && (
             <span style={{ fontSize: '14px', lineHeight: 1.5, color: V('--th-text-sub') }}>
@@ -158,13 +157,13 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
           padding: '18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <h2 style={h2Style}>{t('admin', 'storeRooms')}</h2>
-          <button onClick={() => setPage('rooms')} style={{ ...ghostButton, height: 36, fontSize: '13px' }}>{t('admin', 'manageRooms')}</button>
+          <button onClick={() => openPage('rooms')} style={{ ...ghostButton, height: 36, fontSize: '13px' }}>{t('admin', 'manageRooms')}</button>
         </section>
       )}
 
-      {selected && !selected.store.closed && <AdminStoreSeason store={selected.store} onManage={() => setPage('season')} />}
+      {selected && !selected.store.closed && <AdminStoreSeason store={selected.store} onManage={() => openPage('season')} />}
 
-      {selected && !selected.store.closed && <AdminStoreEventsSummary key={selected.store.id} store={selected.store} onManage={() => setPage('events')} />}
+      {selected && !selected.store.closed && <AdminStoreEventsSummary key={selected.store.id} store={selected.store} onManage={() => openPage('events')} />}
 
       {selected && (
         <section style={{ ...sectionCard, gap: '4px' }}>
@@ -178,9 +177,9 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
           </div>
           <div style={{ height: 8 }} />
           {reports.length === 0 && <span style={{ fontSize: '14px', color: V('--th-text-sub') }}>{t('admin', 'reportsEmpty')}</span>}
-          {reports.slice(0, 2).map(g => <ReportRow key={`${g.boardGameId}-${g.targetMemberId}`} group={g} onOpen={(grp) => openReport(grp, null)} t={t} />)}
+          {reports.slice(0, 2).map(g => <ReportRow key={`${g.boardGameId}-${g.targetMemberId}`} group={g} onOpen={openReport} t={t} />)}
           {reports.length > 0 && (
-            <button onClick={() => setPage('reports')} style={linkButton}>{t('admin', 'reportsAll')}</button>
+            <button onClick={() => openPage('reports')} style={linkButton}>{t('admin', 'reportsAll')}</button>
           )}
         </section>
       )}
@@ -199,7 +198,7 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
         {requests.slice(0, 2).map(r => {
           const [bg, color, key] = REQUEST_PILL[r.status];
           return (
-            <button key={r.id} onClick={() => setPage('requests')} style={rowButton}>
+            <button key={r.id} onClick={() => openPage('requests')} style={rowButton}>
               <span style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '15px', fontWeight: 500, color: V('--th-text') }}>{r.name}</span>
                 <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>
@@ -211,7 +210,7 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
           );
         })}
         {requests.length > 0 && (
-          <button onClick={() => setPage('requests')} style={linkButton}>
+          <button onClick={() => openPage('requests')} style={linkButton}>
             {t('admin', 'requestsAll')}
           </button>
         )}
@@ -221,28 +220,28 @@ const AdminStoresTab = ({ selectedId, onSelect, onCreateGame }) => {
         <AdminStoreForm
           key={page === 'edit' ? selected.store.id : 'new'}
           item={page === 'edit' ? selected : null}
-          onBack={() => setPage(null)}
+          onBack={closePage}
           onSaved={handleSaved}
-          onClosed={() => { refresh(); setPage(null); }}
-          onAssignStaff={(item) => { onSelect(item.store.id); setPage('staff'); }}
+          onClosed={() => { refresh(); closePage(); }}
+          onAssignStaff={(item) => { onSelect(item.store.id); openPage('staff', {}, false); }}
         />
       )}
-      {page === 'rooms' && selected && <AdminStoreRooms store={selected.store} onBack={() => setPage(null)} />}
-      {page === 'devices' && selected && <AdminStoreDevices store={selected.store} onBack={() => setPage(null)} />}
-      {page === 'tv' && selected && <AdminTvSettings store={selected.store} onBack={() => setPage(null)} />}
+      {page === 'rooms' && selected && <AdminStoreRooms store={selected.store} onBack={closePage} />}
+      {page === 'devices' && selected && <AdminStoreDevices store={selected.store} onBack={closePage} />}
+      {page === 'tv' && selected && <AdminTvSettings store={selected.store} onBack={closePage} />}
       {page === 'report' && selected && reportGroup && (
-        <AdminReportReview store={selected.store} group={reportGroup} onBack={() => setPage(reportBack)} />
+        <AdminReportReview store={selected.store} group={reportGroup} onBack={closePage} />
       )}
       {page === 'reports' && selected && (
-        <AdminReportsAll store={selected.store} reports={reports} onOpen={(grp) => openReport(grp, 'reports')} onBack={() => setPage(null)} />
+        <AdminReportsAll store={selected.store} reports={reports} onOpen={openReport} onBack={closePage} />
       )}
-      {page === 'season' && selected && <AdminSeasonManage store={selected.store} onBack={() => setPage(null)} />}
-      {page === 'events' && selected && <AdminEventManage store={selected.store} onBack={() => setPage(null)} />}
+      {page === 'season' && selected && <AdminSeasonManage store={selected.store} onBack={closePage} />}
+      {page === 'events' && selected && <AdminEventManage store={selected.store} onBack={closePage} />}
       {page === 'requests' && (
-        <AdminScoreRequests requests={requests} onBack={() => setPage(null)} onCreateGame={onCreateGame} />
+        <AdminScoreRequests requests={requests} onBack={closePage} onCreateGame={onCreateGame} />
       )}
       {page === 'staff' && selected && (
-        <AdminStoreStaff store={selected.store} staff={selected.staff} onBack={() => setPage(null)} />
+        <AdminStoreStaff store={selected.store} staff={selected.staff} onBack={closePage} />
       )}
     </div>
   );
