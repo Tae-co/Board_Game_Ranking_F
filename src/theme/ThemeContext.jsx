@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { getStoredTheme, saveTheme } from '../utils/storage';
 
 export const THEMES = {
   default: {
@@ -59,16 +60,14 @@ function applyTheme(themeKey) {
 const ThemeContext = createContext(null);
 
 export function ThemeProvider({ children }) {
-  const [themeKey, setThemeKeyState] = useState(
-    () => localStorage.getItem('theme') || 'default'
-  );
+  const [themeKey, setThemeKeyState] = useState(getStoredTheme);
 
   useEffect(() => {
     applyTheme(themeKey);
   }, [themeKey]);
 
   const setTheme = (key) => {
-    localStorage.setItem('theme', key);
+    saveTheme(key);
     setThemeKeyState(key);
     applyTheme(key);
   };

@@ -1,4 +1,5 @@
 import api from '../axios';
+import { localizeNicknames } from '../../utils/nickname';
 import { EVENTS, logEvent } from './events';
 
 export const getRoom = (roomId) => api.get(`/rooms/${roomId}`).then(r => r.data);
@@ -33,11 +34,11 @@ export const getRoomRankings = (roomId) =>
 
 // 마감된 시즌의 순위표. 응답 스키마가 현재 랭킹과 같아서 같은 테이블로 그린다.
 export const getRoomSeasonRankings = (roomId, seasonId) =>
-  api.get(`/rooms/${roomId}/rankings?seasonId=${seasonId}`).then(r => r.data || []);
+  api.get(`/rooms/${roomId}/rankings?seasonId=${seasonId}`).then(r => localizeNicknames(r.data || []));
 export const getRoomSeasons = (roomId) =>
   api.get(`/rooms/${roomId}/seasons`).then(r => r.data || []);
 export const getSeasonPodium = (roomId, seasonId) =>
-  api.get(`/rooms/${roomId}/seasons/${seasonId}/podium`).then(r => r.data || []);
+  api.get(`/rooms/${roomId}/seasons/${seasonId}/podium`).then(r => localizeNicknames(r.data || []));
 
 // 진행 중 시즌. 종료 시각이 지났으면 서버가 넘긴 뒤의 시즌을 준다.
 export const getCurrentSeason = (roomId) =>
@@ -46,6 +47,6 @@ export const getCurrentSeason = (roomId) =>
 export const updateCurrentSeason = (roomId, payload) =>
   api.put(`/rooms/${roomId}/seasons/current`, payload).then(r => r.data);
 export const getRoomMatches = (roomId) =>
-  api.get(`/rooms/${roomId}/matches`).then(r => r.data || []);
+  api.get(`/rooms/${roomId}/matches`).then(r => localizeNicknames(r.data || []));
 export const updateMemberRating = (roomId, memberId, payload) =>
   api.put(`/rooms/${roomId}/members/${memberId}/rating`, payload);

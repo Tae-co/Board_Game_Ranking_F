@@ -188,7 +188,7 @@ export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly
       )}
 
       <div style={{ background: 'var(--th-primary)', padding: '12px 16px' }}>
-        <div style={{ fontSize: 11, color: 'var(--th-card)', marginBottom: 8, fontWeight: 700 }}>{t('scoreSheet', 'hpRanking')}</div>
+        <div style={{ fontSize: 11, color: '#fff', marginBottom: 8, fontWeight: 700 }}>{t('scoreSheet', 'hpRanking')}</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {sorted.map((p, i) => {
             const hp = hpMap[p.memberId] ?? 16;

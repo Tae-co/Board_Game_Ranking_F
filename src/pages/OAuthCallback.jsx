@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { setAccessToken } from '../api/axios';
 import { saveAuthSession } from '../auth/storage';
+import { consumePendingRedirect } from '../utils/storage';
 import { exchangeOAuthCode } from '../api/services/auth';
 import { useLanguage } from '../i18n/LanguageContext';
 
@@ -27,8 +28,7 @@ const OAuthCallback = () => {
       .then(({ token, userId, nickname, role, refreshToken }) => {
         setAccessToken(token);
         saveAuthSession({ userId, nickname, role, refreshToken });
-        const redirect = sessionStorage.getItem('pendingRedirect');
-        if (redirect) sessionStorage.removeItem('pendingRedirect');
+        const redirect = consumePendingRedirect();
         navigate(redirect || '/community', { replace: true });
       })
       .catch(() => {

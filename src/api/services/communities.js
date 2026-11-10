@@ -23,5 +23,6 @@ export const joinCommunity = (inviteCode) =>
     if (!r.data?.alreadyMember) logEvent(EVENTS.COMMUNITY_JOIN_COMPLETED, { communityId: r.data?.communityId });
     return r;
   });
+export const leaveCommunity = (communityId) => api.post(`/communities/${communityId}/leave`);
 export const kickCommunityMember = (communityId, memberId) =>
   api.delete(`/communities/${communityId}/members/${memberId}`);

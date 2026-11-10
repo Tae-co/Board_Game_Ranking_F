@@ -6,6 +6,7 @@ import { setAccessToken } from '../api/axios';
 import { updateProfileImage as updateProfileImageApi, updateNickname as updateNicknameApi, deleteMember } from '../api/services/members';
 import { uploadProfileImage } from '../api/uploadImage';
 import { clearAuthSession, getAuthUserId, getNickname, setNickname as persistNickname } from '../auth/storage';
+import { hasOnlyAllowedNicknameChars } from '../utils/nickname';
 import { setProfileImage } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../theme/ThemeContext';
@@ -117,6 +118,7 @@ const Profile = () => {
   };
 
   const checkNickname = async (value) => {
+    if (value.trim() && !hasOnlyAllowedNicknameChars(value.trim())) { setNicknameStatus('invalid'); return; }
     if (!value.trim() || value.length < 2) { setNicknameStatus(null); return; }
     if (value.trim() === currentNickname) { setNicknameStatus('same'); return; }
     setNicknameStatus('checking');
@@ -137,6 +139,7 @@ const Profile = () => {
     if (nickname.trim() === currentNickname) return;
     if (!nickname.trim() || nickname.length < 2) return;
     if (nicknameStatus === 'taken') return;
+    if (!hasOnlyAllowedNicknameChars(nickname.trim())) return;
     setIsNicknameSaving(true);
     try {
       await updateNicknameApi(userId, nickname.trim());
@@ -170,13 +173,15 @@ const Profile = () => {
   const canSaveNickname = nickname.trim().length >= 2
     && nickname.trim() !== currentNickname
     && nicknameStatus !== 'taken'
-    && nicknameStatus !== 'checking';
+    && nicknameStatus !== 'checking'
+    && hasOnlyAllowedNicknameChars(nickname.trim());
 
   const nicknameHint = () => {
     if (nicknameStatus === 'same') return { text: t('profile', 'nicknameIsSame'), color: V('--th-text-sub') };
     if (nicknameStatus === 'checking') return { text: t('profile', 'nicknameChecking'), color: V('--th-text-sub') };
     if (nicknameStatus === 'ok') return { text: t('profile', 'nicknameAvailable'), color: '#16a34a' };
     if (nicknameStatus === 'taken') return { text: t('profile', 'nicknameTaken'), color: '#dc2626' };
+    if (nicknameStatus === 'invalid') return { text: t('profile', 'nicknameInvalidChars'), color: '#dc2626' };
     return null;
   };
 
