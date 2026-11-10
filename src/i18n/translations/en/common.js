@@ -6,6 +6,7 @@ export default {
   edit: 'Edit',
   loading: 'Loading...',
   saving: 'Saving...',
+  leftMember: 'Former member',
   confirm: 'Confirm',
   logout: 'Logout',
 

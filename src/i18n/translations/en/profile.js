@@ -41,9 +41,9 @@ export default {
   feedbackSubmit: 'Send via Email',
   feedbackButton: 'Feedback / Bug Report',
   deleteAccount: 'Delete Account',
-  deleteAccountDesc: 'All your game records and rankings will be permanently deleted.',
+  deleteAccountDesc: 'Your account, scores and rankings will be deleted. Games you played stay in other members’ history as “Former member”.',
   deleteAccountProcessing: 'Deleting...',
-  deleteAccountConfirm: 'Are you sure you want to delete your account?\nAll data will be erased and cannot be recovered.\n\nCommunities you own will be handed to another admin, or to the member who has played the most games if there is no other admin.',
+  deleteAccountConfirm: 'Are you sure you want to delete your account?\nYour account, scores and rankings will be erased and cannot be recovered. Games you played stay as “Former member”.\n\nCommunities you own will be handed to another admin, or to the member who has played the most games if there is no other admin.',
   deleteAccountFailed: 'Failed to delete the account.',
 
   // ── 하드코딩 문구 이관 ──

@@ -379,7 +379,8 @@ const ScoreSheet = () => {
       ]);
       navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
     } catch (err) {
-      alert(t('scoreSheet', 'saveFailed'));
+      // 403: 참가자나 내가 그사이 방을 나갔다 (서버: 방 멤버가 아닌 참가자는 등록할 수 없음)
+      alert(t('scoreSheet', err?.response?.status === 403 && !editMatchId ? 'saveFailedLeft' : 'saveFailed'));
       console.error(err);
     } finally {
       setIsSubmitting(false);
