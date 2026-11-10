@@ -1,4 +1,4 @@
-import api from './axios';
+import { postImage } from './services/uploads';
 
 const MAX_UPLOAD_BYTES = 4 * 1024 * 1024; // 4MB hard cap
 
@@ -55,9 +55,7 @@ const uploadToBackend = async (file, endpoint, oldUrl) => {
   const formData = new FormData();
   formData.append('file', compressed, 'image.jpg');
   if (oldUrl) formData.append('oldUrl', oldUrl);
-  // Content-Type을 undefined로 지정해 브라우저가 multipart/form-data boundary를 자동 설정하게 함
-  const res = await api.post(endpoint, formData, { headers: { 'Content-Type': undefined } });
-  return res.data.url;
+  return postImage(endpoint, formData);
 };
 
 export const uploadImage = (file, oldUrl) => uploadToBackend(file, '/upload/image', oldUrl);

@@ -7,6 +7,7 @@ import { consumeSessionExpired, saveAuthSession } from '../auth/storage';
 import { appleLogin } from '../api/services/auth';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import { setPendingRedirect } from '../utils/storage';
 
 const isWebView = !Capacitor.isNativePlatform() && (
   /FBAN|FBAV|Instagram|Twitter|Line|KAKAOTALK/i.test(navigator.userAgent) ||
@@ -56,8 +57,7 @@ const Login = () => {
       }
       return;
     }
-    const redirect = location.state?.redirectAfterLogin;
-    if (redirect) sessionStorage.setItem('pendingRedirect', redirect);
+    setPendingRedirect(location.state?.redirectAfterLogin);
     const returnTo = encodeURIComponent(window.location.origin);
     window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao/login?returnTo=${returnTo}`;
   };
@@ -165,8 +165,7 @@ const Login = () => {
           {/* Google */}
           <button
             onClick={async () => {
-              const redirect = location.state?.redirectAfterLogin;
-              if (redirect) sessionStorage.setItem('pendingRedirect', redirect);
+              setPendingRedirect(location.state?.redirectAfterLogin);
               if (Capacitor.isNativePlatform()) {
                 try { await Browser.open({ url: googleNativeAuthUrl }); } catch (e) { alert(t('login', 'googleLoginError') + e.message); }
                 return;
