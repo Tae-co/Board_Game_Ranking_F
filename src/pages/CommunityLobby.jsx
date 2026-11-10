@@ -6,11 +6,12 @@ import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
 import { CommunityCardSkeleton } from '../components/Skeleton';
-import { joinCommunity, getMyCommunities, getJoinedCommunities, leaveCommunity } from '../api/services/communities';
+import { joinCommunity, getMyCommunities, getJoinedCommunities } from '../api/services/communities';
 import { EVENTS, logEvent } from '../api/services/events';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
+import CommunityLeaveModal from '../components/community/CommunityLeaveModal';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
 import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit, getSelectedCommunity, removeSelectedCommunity } from '../utils/storage';
 
@@ -33,6 +34,7 @@ const CommunityLobby = () => {
   const [showJoinConfirm, setShowJoinConfirm] = useState(false);
   const [pendingJoinCode, setPendingJoinCode] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
+  const [leavingCommunity, setLeavingCommunity] = useState(null);
 
   useEffect(() => {
     if (showJoinInput) {
@@ -116,16 +118,11 @@ const CommunityLobby = () => {
     setPendingJoinCode('');
   };
 
-  const handleLeave = async (community) => {
-    if (!window.confirm(t('community', 'leaveConfirm').replace('{name}', community.name))) return;
-    try {
-      await leaveCommunity(community.communityId);
-      // 마지막으로 들어갔던 커뮤니티였으면 로비가 나간 곳을 다시 열지 않게 지운다
-      if (getSelectedCommunity()?.communityId === community.communityId) removeSelectedCommunity();
-      queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
-    } catch (e) {
-      alert(e.response?.data?.message || t('community', 'leaveFailed'));
-    }
+  const handleLeft = (community) => {
+    // 마지막으로 들어갔던 커뮤니티였으면 로비가 나간 곳을 다시 열지 않게 지운다
+    if (getSelectedCommunity()?.communityId === community.communityId) removeSelectedCommunity();
+    queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
+    setLeavingCommunity(null);
   };
 
   const handleManage = (community) => {
@@ -342,7 +339,7 @@ const CommunityLobby = () => {
                   community={community}
                   onEnter={handleEnterCommunity}
                   onManage={isAdmin ? handleManage : undefined}
-                  onLeave={handleLeave}
+                  onLeave={setLeavingCommunity}
                   t={t}
                 />
               );
@@ -497,6 +494,14 @@ const CommunityLobby = () => {
         )}
 
       </div>
+      {leavingCommunity && (
+        <CommunityLeaveModal
+          community={leavingCommunity}
+          onClose={() => setLeavingCommunity(null)}
+          onLeft={handleLeft}
+          t={t}
+        />
+      )}
     </div>
   );
 };
