@@ -25,6 +25,7 @@ export default {
   passwordMismatch: 'Passwords do not match.',
   nicknameAvailable: '✓ Nickname available',
   nicknameTaken: '✕ Nickname already taken',
+  nicknameInvalidChars: '✕ Letters, numbers, emoji and single spaces only',
   nicknameChecking: 'Checking...',
   nicknameIsSame: 'This is your current nickname',
   myStats: 'My Play Stats',
