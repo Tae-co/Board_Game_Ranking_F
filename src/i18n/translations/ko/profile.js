@@ -41,9 +41,9 @@ export default {
   feedbackSubmit: '이메일로 보내기',
   feedbackButton: '피드백 / 버그 신고',
   deleteAccount: '회원 탈퇴',
-  deleteAccountDesc: '탈퇴 시 모든 게임 기록과 랭킹이 삭제됩니다.',
+  deleteAccountDesc: '탈퇴하면 계정과 내 점수·랭킹이 삭제돼요. 함께한 경기는 다른 멤버의 기록에 ‘나간 멤버’로 남아요.',
   deleteAccountProcessing: '탈퇴 처리 중...',
-  deleteAccountConfirm: '정말 탈퇴하시겠습니까?\n모든 데이터가 삭제되며 복구할 수 없습니다.\n\n내가 만든 커뮤니티는 다른 어드민에게, 어드민이 없으면 경기를 가장 많이 한 멤버에게 넘어갑니다.',
+  deleteAccountConfirm: '정말 탈퇴하시겠습니까?\n계정과 내 점수·랭킹이 삭제되며 복구할 수 없습니다. 함께한 경기는 ‘나간 멤버’로 남습니다.\n\n내가 만든 커뮤니티는 다른 어드민에게, 어드민이 없으면 경기를 가장 많이 한 멤버에게 넘어갑니다.',
   deleteAccountFailed: '탈퇴에 실패했습니다.',
 
   // ── 하드코딩 문구 이관 ──
