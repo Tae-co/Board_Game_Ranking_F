@@ -1,17 +1,14 @@
 import { createContext, useContext, useState } from 'react';
 import translations from './translations/index';
+import { getLanguage, saveLanguage } from '../utils/storage';
 
 const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
-  // 고른 적 없으면 기기 언어를 따른다 — 한국어 기기에서 첫 화면이 영어로 떠서 영어 앱인 줄 알았다
-  const [lang, setLangState] = useState(
-    () => localStorage.getItem('language')
-      || (navigator.language?.toLowerCase().startsWith('ko') ? 'ko' : 'en')
-  );
+  const [lang, setLangState] = useState(getLanguage);
 
   const setLang = (newLang) => {
-    localStorage.setItem('language', newLang);
+    saveLanguage(newLang);
     setLangState(newLang);
   };
 

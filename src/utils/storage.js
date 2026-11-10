@@ -16,12 +16,36 @@ export const setSelectedCommunity = (community) => {
   }
 };
 
-// LanguageContext와 같은 기준 — 고른 적 없으면 기기 언어
+// 고른 적 없으면 기기 언어 — 한국어 기기에서 첫 화면이 영어로 떠서 영어 앱인 줄 알았다
 export const getLanguage = () => {
   try {
     return localStorage.getItem('language')
       || (navigator.language?.toLowerCase().startsWith('ko') ? 'ko' : 'en');
   } catch { return 'ko'; }
+};
+
+export const saveLanguage = (lang) => {
+  localStorage.setItem('language', lang);
+};
+
+export const getStoredTheme = () => localStorage.getItem('theme') || 'default';
+
+export const saveTheme = (key) => {
+  localStorage.setItem('theme', key);
+};
+
+// 로그인 후 돌아갈 경로. 웹 OAuth는 같은 탭으로 돌아오므로 sessionStorage에 둔다
+const PENDING_REDIRECT_KEY = 'pendingRedirect';
+
+export const setPendingRedirect = (path) => {
+  if (path) sessionStorage.setItem(PENDING_REDIRECT_KEY, path);
+};
+
+/** 한 번만 쓰도록 읽으면서 지운다 */
+export const consumePendingRedirect = () => {
+  const path = sessionStorage.getItem(PENDING_REDIRECT_KEY);
+  if (path) sessionStorage.removeItem(PENDING_REDIRECT_KEY);
+  return path;
 };
 
 export const removeSelectedCommunity = () => {
