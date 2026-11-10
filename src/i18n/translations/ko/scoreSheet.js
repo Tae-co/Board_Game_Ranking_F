@@ -14,6 +14,7 @@ export default {
   submit: '랭킹에 반영하기 →',
   saving: '저장 중...',
   saveFailed: '저장에 실패했습니다.',
+  saveFailedLeft: '방을 나간 사람이 있어 기록할 수 없어요. 참가자를 확인해 주세요.',
   wrongAccess: '잘못된 접근입니다',
   goBack: '돌아가기',
   canWin: '승리 가능',

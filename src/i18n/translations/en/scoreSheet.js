@@ -14,6 +14,7 @@ export default {
   submit: 'Apply to Ranking →',
   saving: 'Saving...',
   saveFailed: 'Failed to save.',
+  saveFailedLeft: 'Someone in this game has left the group, so it can’t be saved. Please check the players.',
   wrongAccess: 'Invalid access',
   goBack: 'Go Back',
   canWin: 'Win Possible',

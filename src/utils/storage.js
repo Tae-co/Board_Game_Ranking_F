@@ -16,6 +16,14 @@ export const setSelectedCommunity = (community) => {
   }
 };
 
+// LanguageContext와 같은 기준 — 고른 적 없으면 기기 언어
+export const getLanguage = () => {
+  try {
+    return localStorage.getItem('language')
+      || (navigator.language?.toLowerCase().startsWith('ko') ? 'ko' : 'en');
+  } catch { return 'ko'; }
+};
+
 export const removeSelectedCommunity = () => {
   localStorage.removeItem(SELECTED_COMMUNITY_KEY);
 };
