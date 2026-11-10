@@ -95,7 +95,7 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly, scor
         <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 48 + players.length * colW }}>
           <thead>
             <tr style={{ background: "var(--th-primary)" }}>
-              <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "var(--th-text-sub)", width: 48 }}>
+              <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#fff", width: 48 }}>
                 {t('scoreSheet', 'round')}
               </th>
               {players.map((p) => (
@@ -106,7 +106,7 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly, scor
                       textAlign: "center",
                       fontSize: 12,
                       fontWeight: 800,
-                      color: "var(--th-card)",
+                      color: "#fff",
                       width: colW,
                     }}
                   >
@@ -173,7 +173,7 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly, scor
 
             {/* 합계 행 */}
             <tr style={{ background: "var(--th-primary)", borderTop: "2px solid var(--th-primary)" }}>
-              <td style={{ padding: "10px 8px", fontSize: 12, fontWeight: 700, color: "var(--th-card)" }}>
+              <td style={{ padding: "10px 8px", fontSize: 12, fontWeight: 700, color: "#fff" }}>
                 {t('scoreSheet', 'totalShort')}
               </td>
               {players.map((p) => {
@@ -181,7 +181,7 @@ export const UnoTable = ({ players, handleChange, onTotalsChange, readOnly, scor
                 const reached = total >= target;
                 return (
                   <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center" }}>
-                    <span style={{ fontSize: 16, fontWeight: 900, color: reached ? "#FFD700" : "var(--th-card)" }}>
+                    <span style={{ fontSize: 16, fontWeight: 900, color: reached ? "#FFD700" : "#fff" }}>
                       {total}
                     </span>
                     {reached && (
