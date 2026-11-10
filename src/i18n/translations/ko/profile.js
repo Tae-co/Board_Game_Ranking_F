@@ -25,7 +25,7 @@ export default {
   passwordMismatch: '비밀번호가 일치하지 않습니다.',
   nicknameAvailable: '✓ 사용 가능한 닉네임이에요',
   nicknameTaken: '✕ 이미 사용 중인 닉네임이에요',
-  nicknameInvalidChars: '✕ 한글·영문·숫자·이모지만 쓸 수 있어요 (공백·특수문자 불가)',
+  nicknameInvalidChars: '✕ 한글·영문·숫자·이모지만 쓸 수 있어요 (특수문자·연속 띄어쓰기 불가)',
   nicknameChecking: '확인 중...',
   nicknameIsSame: '현재 닉네임이에요',
   myStats: '나의 플레이 통계',
