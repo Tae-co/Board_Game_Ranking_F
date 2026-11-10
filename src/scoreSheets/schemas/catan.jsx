@@ -75,12 +75,12 @@ export const CatanTable = ({ schema, players, scores, totals, handleChange, hand
   <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 280 }}>
     <thead>
       <tr style={{ background: "var(--th-primary)" }}>
-        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "var(--th-text-sub)", width: 100, whiteSpace: "nowrap" }}>{t('scoreSheet', 'category')}</th>
+        <th style={{ padding: "10px 8px", textAlign: "left", fontSize: 11, fontWeight: 700, color: "#fff", width: 100, whiteSpace: "nowrap" }}>{t('scoreSheet', 'category')}</th>
         {players.map(p => {
           const total = totals[p.memberId] ?? 0;
           const canWin = total >= 10;
           return (
-            <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: canWin ? "#FFD700" : "var(--th-card)", minWidth: 64, borderLeft: "1px solid rgba(255,255,255,0.15)" }}>
+            <th key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", fontSize: 12, fontWeight: 800, color: canWin ? "#FFD700" : "#fff", minWidth: 64, borderLeft: "1px solid rgba(255,255,255,0.15)" }}>
               {canWin ? "👑 " : ""}{p.nickname}
             </th>
           );
@@ -133,13 +133,13 @@ export const CatanTable = ({ schema, players, scores, totals, handleChange, hand
         </tr>
       ))}
       <tr style={{ background: "var(--th-primary)" }}>
-        <td style={{ padding: "10px 8px", fontWeight: 900, color: "var(--th-card)", fontSize: 13 }}>{t('scoreSheet', 'total')}</td>
+        <td style={{ padding: "10px 8px", fontWeight: 900, color: "#fff", fontSize: 13 }}>{t('scoreSheet', 'total')}</td>
         {players.map(p => {
           const total = totals[p.memberId] ?? 0;
           const canWin = total >= 10;
           return (
             <td key={p.memberId} style={{ padding: "10px 4px", textAlign: "center", borderLeft: "1px solid rgba(255,255,255,0.15)" }}>
-              <div style={{ fontWeight: 900, fontSize: 18, color: canWin ? "#FFD700" : "var(--th-card)" }}>{total}</div>
+              <div style={{ fontWeight: 900, fontSize: 18, color: canWin ? "#FFD700" : "#fff" }}>{total}</div>
               {canWin && <div style={{ fontSize: 9, color: "var(--th-primary)", fontWeight: 700, marginTop: 2 }}>🏆 {t('scoreSheet', 'canWin')}</div>}
             </td>
           );

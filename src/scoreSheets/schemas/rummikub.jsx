@@ -265,7 +265,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly,
 
       {/* 누적 합계 */}
       <div style={{ background: "var(--th-primary)", padding: "12px 16px" }}>
-        <div style={{ fontSize: 11, color: "var(--th-card)", marginBottom: 8, fontWeight: 700 }}>{t('scoreSheet', 'cumulativeTotal')}</div>
+        <div style={{ fontSize: 11, color: "#fff", marginBottom: 8, fontWeight: 700 }}>{t('scoreSheet', 'cumulativeTotal')}</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {players.map((p) => {
               const isLeader = p.memberId === leaderId;
@@ -284,7 +284,7 @@ export const RummikubTable = ({ players, handleChange, onTotalsChange, readOnly,
                   <div style={{ fontSize: 10, color: isLeader ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.6)", marginBottom: 2 }}>
                     {p.nickname}
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 900, color: isLeader ? "#FFD700" : "var(--th-card)" }}>
+                  <div style={{ fontSize: 18, fontWeight: 900, color: isLeader ? "#FFD700" : "#fff" }}>
                     {totals[p.memberId] ?? 0}
                   </div>
                 </div>

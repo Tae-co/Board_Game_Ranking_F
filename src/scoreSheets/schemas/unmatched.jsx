@@ -714,7 +714,7 @@ export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly
         <div
           style={{
             fontSize: 11,
-            color: "var(--th-card)",
+            color: "#fff",
             marginBottom: 8,
             fontWeight: 700,
           }}
@@ -758,7 +758,7 @@ export const UnmatchedTable = ({ players, handleChange, onTotalsChange, readOnly
                   style={{
                     fontSize: 18,
                     fontWeight: 900,
-                    color: isFirst ? "#FFD700" : hp > 0 ? "var(--th-card)" : "#6b7280",
+                    color: isFirst ? "#FFD700" : hp > 0 ? "#fff" : "#6b7280",
                   }}
                 >
                   {hp > 0 ? hp : "✗"}
