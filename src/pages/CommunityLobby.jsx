@@ -6,13 +6,13 @@ import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
 import { CommunityCardSkeleton } from '../components/Skeleton';
-import { joinCommunity, getMyCommunities, getJoinedCommunities } from '../api/services/communities';
+import { joinCommunity, getMyCommunities, getJoinedCommunities, leaveCommunity } from '../api/services/communities';
 import { EVENTS, logEvent } from '../api/services/events';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
-import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit } from '../utils/storage';
+import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit, getSelectedCommunity, removeSelectedCommunity } from '../utils/storage';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -114,6 +114,18 @@ const CommunityLobby = () => {
   const handleJoinCancel = () => {
     setShowJoinConfirm(false);
     setPendingJoinCode('');
+  };
+
+  const handleLeave = async (community) => {
+    if (!window.confirm(t('community', 'leaveConfirm').replace('{name}', community.name))) return;
+    try {
+      await leaveCommunity(community.communityId);
+      // 마지막으로 들어갔던 커뮤니티였으면 로비가 나간 곳을 다시 열지 않게 지운다
+      if (getSelectedCommunity()?.communityId === community.communityId) removeSelectedCommunity();
+      queryClient.invalidateQueries({ queryKey: ['joinedCommunities', userId] });
+    } catch (e) {
+      alert(e.response?.data?.message || t('community', 'leaveFailed'));
+    }
   };
 
   const handleManage = (community) => {
@@ -330,6 +342,7 @@ const CommunityLobby = () => {
                   community={community}
                   onEnter={handleEnterCommunity}
                   onManage={isAdmin ? handleManage : undefined}
+                  onLeave={handleLeave}
                   t={t}
                 />
               );

@@ -1,4 +1,4 @@
-import { Users } from 'lucide-react';
+import { Users, X } from 'lucide-react';
 import StorageImage from '../StorageImage';
 import { V } from '../../utils/cssUtils';
 import { getAvatarColorByStr as avatarColor } from '../../utils/avatarUtils';
@@ -51,7 +51,7 @@ const AvatarStack = ({ admins = [], memberCount = 0 }) => {
   );
 };
 
-const CommunityCard = ({ community, onEnter, onManage, isCarousel, t }) => (
+const CommunityCard = ({ community, onEnter, onManage, onLeave, isCarousel, t }) => (
   <div style={{
     flex: isCarousel ? '0 0 calc(100% - 40px)' : undefined,
     scrollSnapAlign: isCarousel ? 'start' : undefined,
@@ -73,7 +73,8 @@ const CommunityCard = ({ community, onEnter, onManage, isCarousel, t }) => (
         <button
           onClick={() => onManage(community)}
           style={{
-            position: 'absolute', top: 12, right: 12,
+            // 나가기 X가 있으면 그 왼쪽으로 비켜 선다
+            position: 'absolute', top: 12, right: onLeave ? 44 : 12,
             fontSize: '12px', fontWeight: '700', color: V('--th-text'),
             backgroundColor: V('--th-card'), border: 'none',
             borderRadius: '8px', padding: '6px 12px', cursor: 'pointer',
@@ -81,6 +82,21 @@ const CommunityCard = ({ community, onEnter, onManage, isCarousel, t }) => (
           }}
         >
           {t('community', 'manage')}
+        </button>
+      )}
+      {/* 매장 카드의 나가기 X와 같은 모양 */}
+      {onLeave && (
+        <button
+          aria-label={t('community', 'leaveAria').replace('{name}', community.name)}
+          onClick={() => onLeave(community)}
+          style={{
+            position: 'absolute', top: 12, right: 12, width: 24, height: 24, padding: 0,
+            border: 'none', borderRadius: 999, cursor: 'pointer',
+            backgroundColor: 'rgba(17,24,39,0.55)', color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
+        >
+          <X size={14} strokeWidth={2.4} />
         </button>
       )}
     </div>
