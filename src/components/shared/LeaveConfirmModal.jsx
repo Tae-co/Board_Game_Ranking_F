@@ -1,26 +1,24 @@
 import { useState } from 'react';
-import { leaveCommunity } from '../../api/services/communities';
 import { V } from '../../utils/cssUtils';
 import { useTheme } from '../../theme/ThemeContext';
 
 /**
- * 커뮤니티 나가기 확인 (캔버스 UI-CommunityLeave · UI-DarkCommunityLeave).
- * 방장 줄은 카드에 방장 여부가 없어 늘 보여 준다 — "방장인 그룹은 …"이라 방장이 아니어도 틀리지 않는다.
+ * 나가기 확인 팝업 (캔버스 UI-CommunityLeave · UI-RoomLeave, 다크 포함).
+ * 커뮤니티 나가기와 방 나가기가 같이 쓴다. onConfirm이 실패하면 서버 문구(없으면 failText)를 팝업 안에 보여 준다.
  */
-const CommunityLeaveModal = ({ community, onClose, onLeft, t }) => {
+const LeaveConfirmModal = ({ title, desc, items, note, cancelText, confirmText, failText, onClose, onConfirm }) => {
   const { themeKey } = useTheme();
   const dark = themeKey === 'ledger';
   const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLeave = async () => {
+  const handleConfirm = async () => {
     setLeaving(true);
     setError('');
     try {
-      await leaveCommunity(community.communityId);
-      onLeft(community);
+      await onConfirm();
     } catch (e) {
-      setError(e?.response?.data?.message || t('community', 'leaveFailed'));
+      setError(e?.response?.data?.message || failText);
       setLeaving(false);
     }
   };
@@ -34,7 +32,8 @@ const CommunityLeaveModal = ({ community, onClose, onLeft, t }) => {
     <div
       onClick={leaving ? undefined : onClose}
       style={{
-        position: 'fixed', inset: 0, zIndex: 100,
+        // 방 설정 오버레이(zIndex 100) 위에도 떠야 한다
+        position: 'fixed', inset: 0, zIndex: 200,
         backgroundColor: dark ? 'rgba(0,0,0,0.6)' : 'rgba(17,24,39,0.5)',
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px',
       }}
@@ -42,7 +41,7 @@ const CommunityLeaveModal = ({ community, onClose, onLeft, t }) => {
       <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby="community-leave-title"
+        aria-labelledby="leave-confirm-title"
         onClick={(e) => e.stopPropagation()}
         style={{
           backgroundColor: V('--th-card'), borderRadius: '20px', boxSizing: 'border-box',
@@ -51,25 +50,19 @@ const CommunityLeaveModal = ({ community, onClose, onLeft, t }) => {
         }}
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-          <h2 id="community-leave-title" style={{ margin: 0, fontSize: '19px', fontWeight: 700, color: V('--th-text') }}>
-            {t('community', 'leaveTitle').replace('{name}', community.name)}
+          <h2 id="leave-confirm-title" style={{ margin: 0, fontSize: '19px', fontWeight: 700, color: V('--th-text') }}>
+            {title}
           </h2>
-          <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.55, color: dark ? '#CBD5E1' : '#4B5563' }}>
-            {t('community', 'leaveDesc')}
-          </p>
+          <p style={{ margin: 0, fontSize: '14px', lineHeight: 1.55, color: dark ? '#CBD5E1' : '#4B5563' }}>{desc}</p>
         </div>
         <ul style={{
           margin: 0, padding: '14px 16px', listStyle: 'none', borderRadius: '12px',
           backgroundColor: dark ? 'rgba(239,68,68,0.12)' : '#FEF2F2', color: dark ? '#FCA5A5' : '#991B1B',
           display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '14px',
         }}>
-          <li>{t('community', 'leaveGroups')}</li>
-          <li>{t('community', 'leaveScores')}</li>
-          <li>{t('community', 'leaveHost')}</li>
+          {items.map(item => <li key={item}>{item}</li>)}
         </ul>
-        <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>
-          {t('community', 'leaveAnonymous')}
-        </p>
+        {note && <p style={{ margin: 0, fontSize: '13px', lineHeight: 1.5, color: V('--th-text-sub') }}>{note}</p>}
         {error && <p role="alert" style={{ margin: 0, fontSize: '13px', color: '#DC2626' }}>{error}</p>}
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
@@ -82,14 +75,14 @@ const CommunityLeaveModal = ({ community, onClose, onLeft, t }) => {
               color: dark ? V('--th-text') : '#374151',
             }}
           >
-            {t('community', 'leaveCancel')}
+            {cancelText}
           </button>
           <button
-            onClick={handleLeave}
+            onClick={handleConfirm}
             disabled={leaving}
             style={{ ...buttonStyle, backgroundColor: '#DC2626', color: '#FFFFFF', opacity: leaving ? 0.6 : 1 }}
           >
-            {t('community', 'leaveButton')}
+            {confirmText}
           </button>
         </div>
       </div>
@@ -97,4 +90,4 @@ const CommunityLeaveModal = ({ community, onClose, onLeft, t }) => {
   );
 };
 
-export default CommunityLeaveModal;
+export default LeaveConfirmModal;

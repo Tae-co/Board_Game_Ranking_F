@@ -6,12 +6,12 @@ import NavAvatar from '../components/NavAvatar';
 import StorageImage from '../components/StorageImage';
 import GameImageFallback from '../components/shared/GameImageFallback';
 import { CommunityCardSkeleton } from '../components/Skeleton';
-import { joinCommunity, getMyCommunities, getJoinedCommunities } from '../api/services/communities';
+import { joinCommunity, getMyCommunities, getJoinedCommunities, leaveCommunity } from '../api/services/communities';
 import { EVENTS, logEvent } from '../api/services/events';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import CommunityCard from '../components/community/CommunityCard';
-import CommunityLeaveModal from '../components/community/CommunityLeaveModal';
+import LeaveConfirmModal from '../components/shared/LeaveConfirmModal';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
 import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit, getSelectedCommunity, removeSelectedCommunity } from '../utils/storage';
 
@@ -495,11 +495,20 @@ const CommunityLobby = () => {
 
       </div>
       {leavingCommunity && (
-        <CommunityLeaveModal
-          community={leavingCommunity}
+        <LeaveConfirmModal
+          title={t('community', 'leaveTitle').replace('{name}', leavingCommunity.name)}
+          desc={t('community', 'leaveDesc')}
+          // 방장 줄은 카드에 방장 여부가 없어 늘 보여 준다 — "방장인 그룹은 …"이라 방장이 아니어도 틀리지 않는다
+          items={[t('community', 'leaveGroups'), t('community', 'leaveScores'), t('community', 'leaveHost')]}
+          note={t('community', 'leaveAnonymous')}
+          cancelText={t('community', 'leaveCancel')}
+          confirmText={t('community', 'leaveButton')}
+          failText={t('community', 'leaveFailed')}
           onClose={() => setLeavingCommunity(null)}
-          onLeft={handleLeft}
-          t={t}
+          onConfirm={async () => {
+            await leaveCommunity(leavingCommunity.communityId);
+            handleLeft(leavingCommunity);
+          }}
         />
       )}
     </div>

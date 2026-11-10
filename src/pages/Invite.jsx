@@ -16,6 +16,7 @@ import { getSelectedCommunity } from '../utils/storage';
 import { getAuthUserId, getNickname } from '../auth/storage';
 import { REGION_TIMEZONE } from '../constants/regions';
 import RoomSettingsOverlay from '../components/invite/RoomSettingsOverlay';
+import LeaveConfirmModal from '../components/shared/LeaveConfirmModal';
 import GameCard from '../components/invite/GameCard';
 import StatsCard from '../components/ranking/StatsCard';
 import MatchCard from '../components/ranking/MatchCard';
@@ -67,6 +68,7 @@ const Invite = () => {
   const [nudge, setNudge] = useState(null); // null | 'select' | 'deselect'
   const rankingListRef = useRef(null);
   const [showSettings, setShowSettings] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [editRoomName, setEditRoomName] = useState('');
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState(location.state?.activeTab ?? 'group');
@@ -349,23 +351,26 @@ const Invite = () => {
     setIsJoiningRoom(false);
   };
 
-  const handleLeaveRoom = async () => {
-    // 호스트가 나가면 백엔드가 방장을 넘기거나(멤버가 남을 때) 방을 지운다(혼자일 때).
-    const confirmKey = !isHost ? 'leaveConfirm'
-      : members.length <= 1 ? 'leaveConfirmHostAlone' : 'leaveConfirmHost';
-    if (!window.confirm(t('invite', confirmKey))) return;
-    try {
-      await leaveRoom(roomId, userId);
-      const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
-      queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
-      // 커뮤니티 방은 나가도 목록에 남아야 다시 참가할 수 있다.
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
-      // 다시 들어왔을 때 캐시된 목록에 내가 멤버로 남아 있지 않도록 비운다.
-      queryClient.removeQueries({ queryKey: ['roomMembers', roomId] });
-      queryClient.removeQueries({ queryKey: ['rankings', roomId] });
-      navigate('/lobby');
-    } catch { alert(t('invite', 'leaveFailed')); }
+  const handleLeaveRoom = () => setShowLeaveConfirm(true);
+
+  // 팝업의 나가기. 실패하면 팝업이 서버 문구를 보여 주도록 그대로 던진다.
+  const confirmLeaveRoom = async () => {
+    await leaveRoom(roomId, userId);
+    const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
+    queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
+    // 커뮤니티 방은 나가도 목록에 남아야 다시 참가할 수 있다.
+    queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+    // 다시 들어왔을 때 캐시된 목록에 내가 멤버로 남아 있지 않도록 비운다.
+    queryClient.removeQueries({ queryKey: ['roomMembers', roomId] });
+    queryClient.removeQueries({ queryKey: ['rankings', roomId] });
+    navigate('/lobby');
   };
+
+  // 호스트가 나가면 백엔드가 방장을 넘기거나(멤버가 남을 때) 방을 지운다(혼자일 때).
+  const leaveAlone = isHost && members.length <= 1;
+  const leaveItems = leaveAlone
+    ? [t('invite', 'leaveItemAlone')]
+    : [t('invite', 'leaveItemScores'), ...(isHost ? [t('invite', 'leaveItemHost')] : [])];
 
   const handleDeleteRoom = async () => {
     if (!window.confirm(t('invite', 'deleteConfirm'))) return;
@@ -876,6 +881,20 @@ const Invite = () => {
           t={t}
           season={currentSeason}
           onEditSeason={() => setShowSeasonEdit(true)}
+        />
+      )}
+
+      {showLeaveConfirm && (
+        <LeaveConfirmModal
+          title={t('invite', 'leaveTitle').replace('{name}', roomName)}
+          desc={t('invite', leaveAlone ? 'leaveDescAlone' : 'leaveDesc')}
+          items={leaveItems}
+          note={leaveAlone ? null : t('invite', 'leaveAnonymous')}
+          cancelText={t('invite', 'leaveCancel')}
+          confirmText={t('invite', 'leaveRoom')}
+          failText={t('invite', 'leaveFailed')}
+          onClose={() => setShowLeaveConfirm(false)}
+          onConfirm={confirmLeaveRoom}
         />
       )}
 
