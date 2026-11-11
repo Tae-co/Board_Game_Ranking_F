@@ -18,6 +18,7 @@ import { fmt } from '../components/store/fmt';
 import { card, hintText, primaryButton } from '../components/store/storeStyles';
 import { Skeleton } from '../components/Skeleton';
 import { useGoBack } from '../hooks/useGoBack';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 const blockText = (start, game, room, t) => {
   const p = start.party;
@@ -48,6 +49,7 @@ const StoreRoom = () => {
   const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const myId = Number(getAuthUserId());
   const [tab, setTab] = useState('ranking');
   const [busy, setBusy] = useState(false);
@@ -70,7 +72,7 @@ const StoreRoom = () => {
       queryClient.invalidateQueries({ queryKey: CURRENT_PARTY_KEY });
       navigate(`/store/match/${match.id}`, { replace: true });
     } catch (e) {
-      setError(storeErrorCode(e) ? e.response.data.message : t('store', 'actionFailed'));
+      setError(storeErrorCode(e) ? errorText(e, t('store', 'actionFailed')) : t('store', 'actionFailed'));
       refetch();
     } finally {
       setBusy(false);

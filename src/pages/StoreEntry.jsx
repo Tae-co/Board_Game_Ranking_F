@@ -10,6 +10,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import StoreJoinSheet from '../components/store/StoreJoinSheet';
 import StoreQrProblem from '../components/store/StoreQrProblem';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 const TICKET_ERRORS = ['TICKET_INVALID', 'TICKET_EXPIRED'];
 
@@ -23,6 +24,7 @@ const StoreEntry = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const started = useRef(false);
   const { data: myStores = [] } = useMyStores();
 
@@ -128,7 +130,7 @@ const StoreEntry = () => {
       const code = storeErrorCode(e);
       if (ticketProblem(code, storeTitle(consentStore))) { setConsentStore(null); return; }
       if (code === 'STAFF_CANNOT_JOIN') { clearPendingStoreTicket(); goHome(); return; }
-      setJoinError(e?.response?.data?.message || t('store', 'joinFailed'));
+      setJoinError(errorText(e, t('store', 'joinFailed')));
       setJoining(false);
     }
   };

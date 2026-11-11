@@ -18,6 +18,7 @@ import { fmt, num } from '../components/store/fmt';
 import { card, ghostButton, hintText, meBadge, primaryButton } from '../components/store/storeStyles';
 import { CONTEST_PATH, placementPoints } from '../components/contest/contestUtils';
 import { useGoBack } from '../hooks/useGoBack';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 const GREEN = '#2F6B4C';
 const DRAFT_DEBOUNCE_MS = 600;
@@ -172,6 +173,7 @@ const StoreMatch = () => {
   const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const myId = Number(getAuthUserId());
   const [dialog, setDialog] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -212,7 +214,7 @@ const StoreMatch = () => {
     try {
       await refresh(await fn());
     } catch (e) {
-      setError(e?.response?.data?.message ?? t('store', 'actionFailed'));
+      setError(errorText(e, t('store', 'actionFailed')));
       queryClient.invalidateQueries({ queryKey: ['store', 'match', Number(matchId)] });
     } finally {
       setBusy(false);
@@ -321,7 +323,7 @@ const StoreMatch = () => {
         await flushDraft();
         await refresh(await submitStoreMatch(matchId, participants));
       } catch (e) {
-        setError(storeErrorCode(e) ? e.response.data.message : t('store', 'saveFailed'));
+        setError(storeErrorCode(e) ? errorText(e, t('store', 'saveFailed')) : t('store', 'saveFailed'));
         queryClient.invalidateQueries({ queryKey: ['store', 'match', Number(matchId)] });
       }
     };
