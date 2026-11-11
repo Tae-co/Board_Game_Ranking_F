@@ -2,9 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Share } from '@capacitor/share';
-import { QRCodeSVG } from 'qrcode.react';
-import { CheckCheck, Copy, RefreshCw, Share2 } from 'lucide-react';
-import InitialAvatar from '../components/shared/InitialAvatar';
 import OnboardingSteps from '../components/shared/OnboardingSteps';
 import { deleteCommunity, getCommunityMembers } from '../api/services/communities';
 import { EVENTS, logEvent } from '../api/services/events';
@@ -12,8 +9,10 @@ import { getAuthUserId } from '../auth/storage';
 import { getSelectedCommunity, setSelectedCommunity, removeSelectedCommunity, removeMyCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import InviteShareCard from '../components/community/InviteShareCard';
+import GatheredMembers from '../components/community/GatheredMembers';
+import CancelCreationModal from '../components/community/CancelCreationModal';
 
-const AVATAR_COLORS = ['#6B5CE7', '#F5A623', '#22c55e', '#3B82F6', '#EF4444', '#EC4899', '#14B8A6', '#F97316'];
 // 랭킹은 2명부터 의미가 있다. 혼자서는 게임방을 만들어도 기록할 게 없다.
 const MIN_PLAYERS = 2;
 
@@ -169,121 +168,28 @@ const InviteFriends = () => {
 
         {/* QR + 코드 + 공유 */}
         {inviteCode && (
-          <div style={{
-            backgroundColor: V('--th-card'), borderRadius: '20px',
-            border: `1px solid var(--th-border)`, padding: '24px 20px',
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px',
-            marginBottom: '16px',
-          }}>
-            <div style={{ padding: '14px', borderRadius: '16px', backgroundColor: '#fff' }}>
-              <QRCodeSVG value={joinUrl} size={180} bgColor="#ffffff" fgColor="#1a1a2e" />
-            </div>
-            <button
-              onClick={copyCode}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '8px',
-                background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              }}
-            >
-              <span style={{ fontFamily: 'monospace', fontSize: '26px', fontWeight: '800', letterSpacing: '0.2em', color: V('--th-primary') }}>
-                {inviteCode}
-              </span>
-              {codeCopied
-                ? <CheckCheck size={18} color="#22c55e" />
-                : <Copy size={18} color="var(--th-text-sub)" />
-              }
-            </button>
-            <button
-              onClick={shareLink}
-              style={{
-                width: '100%', padding: '15px', borderRadius: '14px', border: 'none', cursor: 'pointer',
-                background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
-                color: '#fff', fontSize: '16px', fontWeight: '700',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              }}
-            >
-              {linkCopied ? <CheckCheck size={18} /> : <Share2 size={18} />}
-              {linkCopied ? t('community', 'onboardLinkCopied') : t('community', 'onboardShare')}
-            </button>
-          </div>
+          <InviteShareCard
+            joinUrl={joinUrl}
+            inviteCode={inviteCode}
+            codeCopied={codeCopied}
+            linkCopied={linkCopied}
+            onCopyCode={copyCode}
+            onShare={shareLink}
+            t={t}
+          />
         )}
 
-        {/* 모인 사람 */}
-        <div style={{
-          backgroundColor: V('--th-card'), borderRadius: '20px',
-          border: `1px solid var(--th-border)`, padding: '18px 20px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-            <p style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text'), margin: 0 }}>
-              {loaded ? t('community', 'onboardMembers').replace('{n}', members.length) : t('common', 'loading')}
-            </p>
-            <button
-              onClick={refresh}
-              disabled={refreshing || isFetching}
-              aria-label={t('community', 'onboardRefresh')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-            >
-              <RefreshCw
-                size={18}
-                color="var(--th-text-sub)"
-                style={{ animation: refreshing || isFetching ? 'spin 0.8s linear infinite' : 'none' }}
-              />
-            </button>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px 6px' }}>
-            {members.map((member) => {
-              const isMe = String(member.memberId) === String(userId);
-              return (
-                <div key={member.memberId} style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px', minWidth: 0,
-                  animation: newMemberIds.has(member.memberId) ? 'member-pop 0.5s ease-out' : 'none',
-                }}>
-                  <InitialAvatar
-                    nickname={member.nickname}
-                    profileImage={member.profileImage}
-                    size={44}
-                    color={AVATAR_COLORS[member.memberId % AVATAR_COLORS.length]}
-                  />
-                  <span style={{
-                    fontSize: '10px', fontWeight: isMe ? '700' : '500',
-                    color: isMe ? V('--th-primary') : V('--th-text'),
-                    textAlign: 'center', width: '100%',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {member.nickname}
-                  </span>
-                </div>
-              );
-            })}
-            {/* 빈자리: 몇 명이 더 와야 하는지 보이게 한다 */}
-            {loaded && Array.from({ length: Math.max(0, MIN_PLAYERS - members.length) }).map((_, i) => (
-              <div key={`empty-${i}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-                <div style={{
-                  width: 44, height: 44, borderRadius: '50%', boxSizing: 'border-box',
-                  border: `2px dashed var(--th-border)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 17, fontWeight: 700, color: V('--th-text-sub'),
-                }}>
-                  ?
-                </div>
-                <span style={{ fontSize: '10px', color: V('--th-text-sub') }}>{t('community', 'onboardEmptySeat')}</span>
-              </div>
-            ))}
-          </div>
-
-          {loaded && !canCreateRoom && (
-            <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: '14px 0 0', textAlign: 'center' }}>
-              {t('community', 'onboardNeedFriend')}
-            </p>
-          )}
-
-          {newcomerName && (
-            <p style={{ fontSize: '13px', fontWeight: '700', color: V('--th-primary'), margin: '14px 0 0', textAlign: 'center' }}>
-              {t('community', 'onboardNewMember').replace('{name}', newcomerName)}
-            </p>
-          )}
-        </div>
+        <GatheredMembers
+          members={members}
+          loaded={loaded}
+          minPlayers={MIN_PLAYERS}
+          userId={userId}
+          newMemberIds={newMemberIds}
+          newcomerName={newcomerName}
+          spinning={refreshing || isFetching}
+          onRefresh={refresh}
+          t={t}
+        />
 
       </div>
 
@@ -308,61 +214,15 @@ const InviteFriends = () => {
         </div>
       </div>
 
-      {/* 취소 확인 — 이미 들어온 친구가 있으면 그 사람들도 빠진다는 걸 알려준다 */}
       {showCancelModal && (
-        <div
-          onClick={() => !isCanceling && setShowCancelModal(false)}
-          style={{
-            position: 'fixed', inset: 0, zIndex: 100,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            padding: '20px',
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              backgroundColor: V('--th-card'), borderRadius: '20px',
-              padding: '28px 24px', width: '100%', maxWidth: '320px',
-              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-            }}
-          >
-            <p style={{ fontSize: '18px', fontWeight: '800', color: V('--th-text'), margin: '0 0 8px', textAlign: 'center' }}>
-              {t('community', 'onboardCancelTitle')}
-            </p>
-            <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: '0 0 24px', textAlign: 'center', lineHeight: 1.5 }}>
-              {t('community', members.length > 1 ? 'onboardCancelDescWithFriends' : 'onboardCancelDesc')}
-            </p>
-            {cancelError && (
-              <p style={{ fontSize: '12px', color: '#ef4444', margin: '-12px 0 12px', textAlign: 'center' }}>{cancelError}</p>
-            )}
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => setShowCancelModal(false)}
-                disabled={isCanceling}
-                style={{
-                  flex: 1, padding: '13px', borderRadius: '12px', border: `1px solid var(--th-border)`,
-                  backgroundColor: V('--th-bg'), color: V('--th-text'),
-                  fontSize: '15px', fontWeight: '700', cursor: 'pointer',
-                }}
-              >
-                {t('community', 'onboardCancelKeep')}
-              </button>
-              <button
-                onClick={cancelCreation}
-                disabled={isCanceling}
-                style={{
-                  flex: 1, padding: '13px', borderRadius: '12px', border: 'none',
-                  backgroundColor: '#ef4444', color: '#fff',
-                  fontSize: '15px', fontWeight: '700', cursor: isCanceling ? 'not-allowed' : 'pointer',
-                  opacity: isCanceling ? 0.7 : 1,
-                }}
-              >
-                {isCanceling ? t('community', 'deleting') : t('community', 'onboardCancelConfirm')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <CancelCreationModal
+          hasFriends={members.length > 1}
+          error={cancelError}
+          isCanceling={isCanceling}
+          onKeep={() => setShowCancelModal(false)}
+          onConfirm={cancelCreation}
+          t={t}
+        />
       )}
     </div>
   );

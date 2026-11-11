@@ -1,23 +1,28 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Globe, Sun, Moon, LogOut, Pencil, ChevronRight, Camera, MessageSquarePlus } from 'lucide-react';
+import { ArrowLeft, LogOut, ChevronRight, MessageSquarePlus } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { setAccessToken } from '../api/axios';
-import { updateProfileImage as updateProfileImageApi, updateNickname as updateNicknameApi, deleteMember } from '../api/services/members';
+import { getMember, getMemberStats, getMemberTrophies, updateProfileImage as updateProfileImageApi, deleteMember } from '../api/services/members';
 import { uploadProfileImage } from '../api/uploadImage';
-import { clearAuthSession, getAuthUserId, getNickname, setNickname as persistNickname } from '../auth/storage';
-import { hasOnlyAllowedNicknameChars } from '../utils/nickname';
+import { clearAuthSession, getAuthUserId, getNickname } from '../auth/storage';
 import { setProfileImage } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useTheme } from '../theme/ThemeContext';
+import { useNicknameEdit } from '../hooks/useNicknameEdit';
 import { TierBadge } from '../components/TierBadge';
 import { V } from '../utils/cssUtils';
 import { getErrorMessage, getTierFromRating, getTierBg } from '../utils/tierUtils';
 import FeedbackModal from '../components/shared/FeedbackModal';
-import DiceAvatar from '../components/shared/DiceAvatar';
 import { getAvatarColorById } from '../utils/avatarUtils';
 import TrophyShelf from '../components/season/TrophyShelf';
+import ProfileAvatar from '../components/profile/ProfileAvatar';
+import NicknameEditor from '../components/profile/NicknameEditor';
+import ProfileStats from '../components/profile/ProfileStats';
+import AccountSettings from '../components/profile/AccountSettings';
+import DeleteAccountCard from '../components/profile/DeleteAccountCard';
 import StoreProfileStats from '../components/store/StoreProfileStats';
+import ProfileStoreSwitcher from '../components/store/ProfileStoreSwitcher';
 import { InfoPopup } from '../components/store/StorePopup';
 import { InfoIcon } from '../components/store/StoreIcons';
 
@@ -30,19 +35,19 @@ const Profile = () => {
 
   const { data: profileData } = useQuery({
     queryKey: ['profile', userId],
-    queryFn: () => import('../api/services/members').then(m => m.getMember(userId)),
+    queryFn: () => getMember(userId),
   });
 
   const { data: stats } = useQuery({
     queryKey: ['memberStats', userId],
-    queryFn: () => import('../api/services/members').then(m => m.getMemberStats(userId)),
+    queryFn: () => getMemberStats(userId),
     staleTime: 1000 * 60 * 5,
   });
 
   // 트로피 선반 — 시상 자격을 통과한 1~3위만 서버가 준다. 없으면 선반 자체를 숨긴다.
   const { data: trophies = [] } = useQuery({
     queryKey: ['trophies', userId],
-    queryFn: () => import('../api/services/members').then(m => m.getMemberTrophies(userId)),
+    queryFn: () => getMemberTrophies(userId),
     staleTime: 1000 * 60 * 10,
   });
 
@@ -73,15 +78,18 @@ const Profile = () => {
   const tierStyle = getTierBg(tier.label);
   const tierName = t('profile', `tier${tier.label}`);
 
-  const [nickname, setNickname] = useState('');
-  const [nicknameStatus, setNicknameStatus] = useState(null);
-  const [isNicknameSaving, setIsNicknameSaving] = useState(false);
+  const nicknameEdit = useNicknameEdit({ userId, currentNickname, t });
+  const [showNicknameEdit, setShowNicknameEdit] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
-  const [showNicknameEdit, setShowNicknameEdit] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
-  const [showPhotoMenu, setShowPhotoMenu] = useState(false);
-  const fileInputRef = useRef(null);
+
+  // 사진을 바꾸거나 기본으로 돌린 뒤: 저장해 두고 헤더 아바타에 알리고 프로필을 다시 받는다
+  const applyProfileImage = (url) => {
+    setProfileImage(url);
+    window.dispatchEvent(new Event('profileImageUpdated'));
+    queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+  };
 
   const handlePhotoSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -91,59 +99,31 @@ const Profile = () => {
     try {
       const url = await uploadProfileImage(file, profileData?.profileImage);
       await updateProfileImageApi(userId, url);
-      setProfileImage(url);
-      window.dispatchEvent(new Event('profileImageUpdated'));
-      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      applyProfileImage(url);
     } catch { alert(t('profile', 'photoUploadFailed')); }
     finally { setIsUploadingPhoto(false); }
   };
 
   const handleResetPhoto = async () => {
-    setShowPhotoMenu(false);
     setIsUploadingPhoto(true);
     try {
       await updateProfileImageApi(userId, null);
-      setProfileImage(null);
-      window.dispatchEvent(new Event('profileImageUpdated'));
-      queryClient.invalidateQueries({ queryKey: ['profile', userId] });
+      applyProfileImage(null);
     } catch { alert(t('profile', 'photoResetFailed')); }
     finally { setIsUploadingPhoto(false); }
   };
 
-  const handleLogout = () => {
+  // 로그아웃·탈퇴 공통: 토큰·캐시·저장된 로그인 정보를 지우고 로그인 화면으로
+  const leaveToLogin = () => {
     setAccessToken(null);
     queryClient.clear();
     clearAuthSession();
     window.location.replace('/login');
   };
 
-  const checkNickname = async (value) => {
-    if (value.trim() && !hasOnlyAllowedNicknameChars(value.trim())) { setNicknameStatus('invalid'); return; }
-    if (!value.trim() || value.length < 2) { setNicknameStatus(null); return; }
-    if (value.trim() === currentNickname) { setNicknameStatus('same'); return; }
-    setNicknameStatus('checking');
-    try {
-      const data = await import('../api/services/members').then(m => m.checkNickname(value));
-      setNicknameStatus(data.available ? 'ok' : 'taken');
-    } catch { setNicknameStatus(null); }
-  };
-
-  const handleNicknameChange = (val) => {
-    setNickname(val);
-    setNicknameStatus(null);
-    clearTimeout(window._nicknameTimer);
-    window._nicknameTimer = setTimeout(() => checkNickname(val), 500);
-  };
-
   const handleSaveNickname = async () => {
-    if (nickname.trim() === currentNickname) return;
-    if (!nickname.trim() || nickname.length < 2) return;
-    if (nicknameStatus === 'taken') return;
-    if (!hasOnlyAllowedNicknameChars(nickname.trim())) return;
-    setIsNicknameSaving(true);
     try {
-      await updateNicknameApi(userId, nickname.trim());
-      persistNickname(nickname.trim());
+      if (!(await nicknameEdit.save())) return;
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       queryClient.invalidateQueries({ queryKey: ['roomMembers'] });
       queryClient.invalidateQueries({ queryKey: ['rankings'] });
@@ -151,7 +131,6 @@ const Profile = () => {
       setShowNicknameEdit(false);
       alert(t('profile', 'nicknameSaved'));
     } catch { alert(t('profile', 'nicknameFailed')); }
-    finally { setIsNicknameSaving(false); }
   };
 
   const handleDeleteAccount = async () => {
@@ -160,29 +139,11 @@ const Profile = () => {
     setIsDeletingAccount(true);
     try {
       await deleteMember(userId);
-      setAccessToken(null);
-      queryClient.clear();
-      clearAuthSession();
-      window.location.replace('/login');
+      leaveToLogin();
     } catch (err) {
       alert(getErrorMessage(err, t('profile', 'deleteAccountFailed')));
       setIsDeletingAccount(false);
     }
-  };
-
-  const canSaveNickname = nickname.trim().length >= 2
-    && nickname.trim() !== currentNickname
-    && nicknameStatus !== 'taken'
-    && nicknameStatus !== 'checking'
-    && hasOnlyAllowedNicknameChars(nickname.trim());
-
-  const nicknameHint = () => {
-    if (nicknameStatus === 'same') return { text: t('profile', 'nicknameIsSame'), color: V('--th-text-sub') };
-    if (nicknameStatus === 'checking') return { text: t('profile', 'nicknameChecking'), color: V('--th-text-sub') };
-    if (nicknameStatus === 'ok') return { text: t('profile', 'nicknameAvailable'), color: '#16a34a' };
-    if (nicknameStatus === 'taken') return { text: t('profile', 'nicknameTaken'), color: '#dc2626' };
-    if (nicknameStatus === 'invalid') return { text: t('profile', 'nicknameInvalidChars'), color: '#dc2626' };
-    return null;
   };
 
   return (
@@ -197,7 +158,7 @@ const Profile = () => {
           <span style={{ flex: 1, fontSize: 17, fontWeight: 700, color: V('--th-primary') }}>
             {t('profile', 'title')}
           </span>
-          <button onClick={handleLogout} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-text-sub'), flexShrink: 0 }}>
+          <button onClick={leaveToLogin} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-text-sub'), flexShrink: 0 }}>
             <LogOut size={20} />
           </button>
         </div>
@@ -212,121 +173,16 @@ const Profile = () => {
           border: '2px solid var(--th-primary)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12,
         }}>
-          {/* Avatar */}
-          <div style={{ position: 'relative' }}>
-            <div
-              onClick={isStore ? undefined : () => setShowPhotoMenu(v => !v)}
-              style={{
-                width: 84, height: 84, borderRadius: '50%',
-                backgroundColor: getAvatarColorById(userId),
-                border: '3px solid var(--th-primary)',
-                boxShadow: '0 0 0 3px color-mix(in srgb, var(--th-primary) 20%, transparent)',
-                overflow: 'hidden', cursor: isStore ? 'default' : 'pointer', flexShrink: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                position: 'relative',
-              }}
-            >
-              {/* 매장 탭은 사진을 쓰지 않고 늘 기본(주사위) 프로필 */}
-              {profileData?.profileImage && !isStore ? (
-                <img
-                  src={profileData.profileImage}
-                  alt="profile"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
-              ) : (
-                <DiceAvatar size={84} />
-              )}
-              {isUploadingPhoto && (
-                <div style={{
-                  position: 'absolute', inset: 0, borderRadius: '50%',
-                  backgroundColor: 'rgba(0,0,0,0.4)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <div style={{ width: 20, height: 20, border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 0.7s linear infinite' }} />
-                </div>
-              )}
-            </div>
-
-            {/* Camera button */}
-            {!isStore && <button
-              onClick={() => setShowPhotoMenu(v => !v)}
-              style={{
-                position: 'absolute', bottom: 0, left: 0,
-                width: 26, height: 26, borderRadius: '50%',
-                backgroundColor: '#fff', border: '2px solid var(--th-primary)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-              }}
-            >
-              <Camera size={12} color="var(--th-primary)" />
-            </button>}
-
-            {/* Photo action menu */}
-            {showPhotoMenu && !isStore && (
-              <>
-                <div
-                  onClick={() => setShowPhotoMenu(false)}
-                  style={{ position: 'fixed', inset: 0, zIndex: 100 }}
-                />
-                <div style={{
-                  position: 'absolute', top: '100%', left: '50%', transform: 'translateX(-50%)',
-                  marginTop: 10, zIndex: 101,
-                  backgroundColor: V('--th-card'), borderRadius: 14,
-                  border: `1px solid var(--th-border)`,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                  overflow: 'hidden', minWidth: 160,
-                }}>
-                  <button
-                    onClick={() => { setShowPhotoMenu(false); fileInputRef.current?.click(); }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 10,
-                      width: '100%', padding: '13px 16px', border: 'none', background: 'none',
-                      cursor: 'pointer', fontSize: 14, fontWeight: 600, color: V('--th-text'),
-                      borderBottom: `1px solid var(--th-border)`,
-                    }}
-                  >
-                    <Camera size={15} color={V('--th-primary')} />
-                    {t('profile', 'changePhoto')}
-                  </button>
-                  {profileData?.profileImage && (
-                    <button
-                      onClick={handleResetPhoto}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 10,
-                        width: '100%', padding: '13px 16px', border: 'none', background: 'none',
-                        cursor: 'pointer', fontSize: 14, fontWeight: 600, color: '#dc2626',
-                      }}
-                    >
-                      <span style={{ fontSize: 15 }}>↩</span>
-                      {t('profile', 'resetPhoto')}
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* Nickname edit button */}
-            <button
-              onClick={() => setShowNicknameEdit(v => !v)}
-              style={{
-                position: 'absolute', bottom: 0, right: 0,
-                width: 26, height: 26, borderRadius: '50%',
-                backgroundColor: 'var(--th-primary)', border: '2px solid #fff',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
-              }}
-            >
-              <Pencil size={12} color="#fff" />
-            </button>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp,image/gif"
-              onChange={handlePhotoSelect}
-              style={{ display: 'none' }}
-            />
-          </div>
+          <ProfileAvatar
+            profileImage={profileData?.profileImage}
+            avatarColor={getAvatarColorById(userId)}
+            storeMode={isStore}
+            isUploading={isUploadingPhoto}
+            onPhotoSelect={handlePhotoSelect}
+            onResetPhoto={handleResetPhoto}
+            onToggleNicknameEdit={() => setShowNicknameEdit(v => !v)}
+            t={t}
+          />
 
           {/* Name & level */}
           <div style={{ textAlign: 'center' }}>
@@ -340,35 +196,14 @@ const Profile = () => {
           </div>
 
           {hasStores && (
-            <div role="tablist" aria-label={t('profile', 'recordKind')} style={{
-              width: '100%', boxSizing: 'border-box', display: 'flex', gap: 4, padding: 4,
-              backgroundColor: V('--th-bg'), border: `1px solid var(--th-border)`, borderRadius: 999,
-            }}>
-              {[['general', 'tabGeneral'], ['store', 'tabStore']].map(([key, label]) => {
-                const on = (key === 'store') === isStore;
-                return (
-                  <button key={key} role="tab" aria-selected={on} onClick={() => setMode(key)} style={{
-                    flex: 1, height: 36, border: 'none', borderRadius: 999, cursor: 'pointer', fontSize: 14, fontWeight: 700,
-                    backgroundColor: on ? 'var(--th-primary)' : 'transparent', color: on ? '#fff' : V('--th-text-sub'),
-                  }}>{t('profile', label)}</button>
-                );
-              })}
-            </div>
-          )}
-
-          {isStore && (
-            <div style={{ width: '100%', display: 'flex', gap: 8, overflowX: 'auto', scrollbarWidth: 'none' }}>
-              {storeProfiles.map((sp, i) => {
-                const on = sp.storeId === curStore.storeId;
-                return (
-                  <button key={sp.storeId} onClick={() => setStoreIdx(i)} aria-pressed={on} style={{
-                    height: 34, padding: '0 14px', flexShrink: 0, borderRadius: 999, cursor: 'pointer', fontSize: 13, fontWeight: 700,
-                    border: `1px solid ${on ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                    backgroundColor: on ? 'rgba(var(--th-primary-rgb), 0.12)' : V('--th-card'), color: on ? 'var(--th-primary)' : V('--th-text-sub'),
-                  }}>{[sp.name, sp.branch].filter(Boolean).join(' ')}</button>
-                );
-              })}
-            </div>
+            <ProfileStoreSwitcher
+              isStore={isStore}
+              onModeChange={setMode}
+              storeProfiles={storeProfiles}
+              currentStoreId={curStore?.storeId}
+              onStoreSelect={setStoreIdx}
+              t={t}
+            />
           )}
 
           {!isStore && !hasCommunityRecord && hasStores && (
@@ -410,120 +245,21 @@ const Profile = () => {
             </div>
           )}
 
-          {/* Nickname edit (toggle) */}
-          {showNicknameEdit && (
-            <div style={{ width: '100%' }}>
-              <input
-                type="text"
-                value={nickname}
-                onChange={(e) => handleNicknameChange(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSaveNickname()}
-                placeholder={t('profile', 'nicknamePlaceholder')}
-                maxLength={20}
-                autoFocus
-                style={{
-                  width: '100%', padding: '11px 14px', borderRadius: 12, fontSize: 14, outline: 'none',
-                  backgroundColor: V('--th-bg'), color: V('--th-text'), boxSizing: 'border-box', marginBottom: 4,
-                  border: `1.5px solid ${nicknameStatus === 'ok' ? '#16a34a' : nicknameStatus === 'taken' ? '#dc2626' : 'var(--th-border)'}`,
-                }}
-              />
-              {nicknameHint() && (
-                <p style={{ fontSize: 12, marginBottom: 8, color: nicknameHint().color, paddingLeft: 4 }}>{nicknameHint().text}</p>
-              )}
-              <button
-                onClick={handleSaveNickname}
-                disabled={!canSaveNickname || isNicknameSaving}
-                style={{
-                  width: '100%', padding: '11px 0', borderRadius: 50, border: 'none',
-                  cursor: canSaveNickname ? 'pointer' : 'not-allowed',
-                  backgroundColor: 'var(--th-primary)', color: '#fff', fontSize: 14, fontWeight: 700,
-                  opacity: canSaveNickname && !isNicknameSaving ? 1 : 0.4,
-                }}
-              >
-                {isNicknameSaving ? t('profile', 'savingNickname') : t('profile', 'saveNickname')}
-              </button>
-            </div>
-          )}
+          {showNicknameEdit && <NicknameEditor edit={nicknameEdit} onSave={handleSaveNickname} t={t} />}
         </div>
 
         {/* 매장 탭: 승·패·승률·점수 + 이번 시즌 순위·가장 많이 한 게임·초기화·방문 */}
         {curStore && <StoreProfileStats sp={curStore} navigate={navigate} t={t} />}
 
-        {/* Stats Row */}
-        {!isStore && hasCommunityRecord && stats && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
-            {[
-              { label: 'WINS', value: stats.totalWin ?? 0, color: V('--th-text') },
-              { label: 'LOSSES', value: stats.totalLose ?? 0, color: V('--th-text') },
-              { label: 'BEST SCORE', value: maxRating.toLocaleString(), color: 'var(--th-primary)' },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{
-                borderRadius: 16, padding: '16px 8px',
-                backgroundColor: V('--th-card'),
-                border: `1px solid var(--th-border)`,
-                textAlign: 'center',
-                boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-              }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.06em', marginBottom: 6 }}>
-                  {label}
-                </div>
-                <div style={{ fontSize: 20, fontWeight: 900, color }}>
-                  {value}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+        {!isStore && hasCommunityRecord && stats && <ProfileStats wins={stats.totalWin ?? 0} losses={stats.totalLose ?? 0} bestScore={maxRating} />}
 
-        {/* Account Settings */}
-        <div>
-          <p style={{ fontSize: 14, fontWeight: 800, color: V('--th-text'), margin: '0 0 10px 4px' }}>
-            {t('profile', 'accountSettings')}
-          </p>
-          <div style={{ borderRadius: 18, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}>
-
-            {/* Theme Mode */}
-            <div style={{ display: 'flex', alignItems: 'center', padding: '16px 18px', borderBottom: `1px solid var(--th-border)` }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                {themeKey === 'ledger'
-                  ? <Moon size={18} style={{ color: V('--th-primary') }} />
-                  : <Sun size={18} style={{ color: V('--th-primary') }} />
-                }
-                <span style={{ fontSize: 14, fontWeight: 600, color: V('--th-text') }}>{t('profile', 'themeMode')}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <span style={{ fontSize: 13, color: V('--th-text-sub') }}>{themeKey === 'ledger' ? t('profile', 'themeDark') : t('profile', 'themeLight')}</span>
-                <button
-                  onClick={() => setTheme(themeKey === 'ledger' ? 'default' : 'ledger')}
-                  style={{
-                    width: 48, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', padding: 3,
-                    backgroundColor: themeKey !== 'ledger' ? 'var(--th-primary)' : 'var(--th-border)',
-                    display: 'flex', alignItems: 'center',
-                    justifyContent: themeKey !== 'ledger' ? 'flex-end' : 'flex-start',
-                    transition: 'background-color 0.25s',
-                  }}
-                >
-                  <div style={{ width: 20, height: 20, borderRadius: '50%', backgroundColor: '#fff', boxShadow: '0 1px 4px rgba(0,0,0,0.2)' }} />
-                </button>
-              </div>
-            </div>
-
-            {/* Language */}
-            <button
-              onClick={() => setLang(lang === 'ko' ? 'en' : 'ko')}
-              style={{ display: 'flex', alignItems: 'center', padding: '16px 18px', width: '100%', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1 }}>
-                <Globe size={18} style={{ color: V('--th-primary') }} />
-                <span style={{ fontSize: 14, fontWeight: 600, color: V('--th-text') }}>{t('profile', 'languageSettings')}</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, color: V('--th-text-sub') }}>{lang === 'ko' ? '한국어' : 'English'}</span>
-                <ChevronRight size={16} style={{ color: V('--th-text-sub') }} />
-              </div>
-            </button>
-          </div>
-        </div>
+        <AccountSettings
+          themeKey={themeKey}
+          onToggleTheme={() => setTheme(themeKey === 'ledger' ? 'default' : 'ledger')}
+          lang={lang}
+          onToggleLang={() => setLang(lang === 'ko' ? 'en' : 'ko')}
+          t={t}
+        />
 
         {/* Feedback / Bug Report */}
         <button
@@ -543,24 +279,7 @@ const Profile = () => {
           <ChevronRight size={16} style={{ color: V('--th-text-sub') }} />
         </button>
 
-        {/* Delete Account */}
-        <div style={{ borderRadius: 18, padding: '16px 18px', backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
-          <div style={{ fontSize: 13, fontWeight: 700, color: '#dc2626', marginBottom: 6 }}>{t('profile', 'deleteAccount')}</div>
-          <p style={{ fontSize: 12, color: V('--th-text-sub'), margin: '0 0 12px' }}>
-            {t('profile', 'deleteAccountDesc')}
-          </p>
-          <button
-            onClick={handleDeleteAccount}
-            disabled={isDeletingAccount}
-            style={{
-              width: '100%', padding: '11px 0', borderRadius: 50, fontSize: 13, fontWeight: 700,
-              backgroundColor: 'transparent', color: '#dc2626', border: '1px solid #dc2626',
-              opacity: isDeletingAccount ? 0.6 : 1, cursor: isDeletingAccount ? 'not-allowed' : 'pointer',
-            }}
-          >
-            {isDeletingAccount ? t('profile', 'deleteAccountProcessing') : t('profile', 'deleteAccount')}
-          </button>
-        </div>
+        <DeleteAccountCard isDeleting={isDeletingAccount} onDelete={handleDeleteAccount} t={t} />
 
       </div>
 
