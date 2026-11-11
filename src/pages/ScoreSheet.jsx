@@ -8,9 +8,10 @@ import { EVENTS, logEvent } from '../api/services/events';
 import { getGame } from '../api/services/games';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
-import FlatTable from '../scoreSheets/tables/FlatTable';
-import SectionedTable from '../scoreSheets/tables/SectionedTable';
-import ConditionTable from '../scoreSheets/tables/ConditionTable';
+import { parseSchema } from '../scoreSheets/parseSchema';
+import ScoreSheetNotice from '../scoreSheets/components/ScoreSheetNotice';
+import InputModeToggle from '../scoreSheets/components/InputModeToggle';
+import SubmitBar from '../scoreSheets/components/SubmitBar';
 import { getAllCategories } from '../scoreSheets/shared/scoreUtils';
 import { ScienceModal } from '../scoreSheets/shared/ScoreCell';
 import WinnerBanner from '../scoreSheets/shared/WinnerBanner';
@@ -18,23 +19,8 @@ import RankInputTable from '../scoreSheets/components/RankInputTable';
 import WinDrawLossTable, { OUTCOME_TIER } from '../scoreSheets/components/WinDrawLossTable';
 import ChipTable from '../scoreSheets/components/ChipTable';
 import ChipCountTable from '../scoreSheets/components/ChipCountTable';
-import { buyInResults, chipModeOf, chipDenominationsOf, chipCountTotal, formatChipDelta, isChipDeltaTooLarge } from '../utils/chipUtils';
-
-// DB에 저장된 스키마(JSON)를 렌더링 가능한 스키마로 변환.
-// simple/outcome/chip은 TableComponent가 없다 → 순위 입력 / 승무패 입력 / 바이인·칩 세기 입력이 그려진다.
-const parseSchema = (raw) => {
-  if (!raw) return null;
-  try {
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (parsed.type === 'flat') return { ...parsed, TableComponent: FlatTable };
-    if (parsed.type === 'sectioned') return { ...parsed, TableComponent: SectionedTable };
-    if (parsed.type === 'conditional') return { ...parsed, TableComponent: ConditionTable };
-    if (parsed.type === 'simple') return { ...parsed, TableComponent: null };
-    if (parsed.type === 'outcome') return { ...parsed, TableComponent: null };
-    if (parsed.type === 'chip') return { ...parsed, TableComponent: null };
-  } catch { /* 깨진 스키마는 없는 것으로 취급 */ }
-  return null;
-};
+import { buyInResults, chipModeOf, chipDenominationsOf, chipCountTotal, formatChipDelta } from '../utils/chipUtils';
+import { buildParticipants, computeTotals } from '../scoreSheets/submitPayload';
 
 /**
  * storeMode가 있으면 매장 판 점수판 (plan-store 3d·3e·3f·3k): 플레이어·저장을 매장 쪽이 넘기고,
@@ -109,9 +95,6 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
     return dbSchema;
   }, [boardGameId, gameName, schemaJson, fetchedGame]);
 
-  // 순위만 입력하는 게임(simple)은 점수 입력 없이 곧바로 순위 모드로 동작한다.
-  const isRankOnly = currentSchema?.type === 'simple';
-
   // 승/무/패만 입력하는 게임(outcome). 저장된 매치를 열면 이전 선택을 복원한다.
   const isOutcomeOnly = currentSchema?.type === 'outcome';
   const [outcomeInputs, setOutcomeInputs] = useState(() => savedScores?.outcome ?? {});
@@ -178,37 +161,16 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
     if (onStoreScoresChange) onStoreScoresChange(scores);
   }, [scores, onStoreScoresChange]);
 
-  const allCategories = useMemo(() => (
-    currentSchema ? getAllCategories(currentSchema) : []
-  ), [currentSchema]);
-
   const handleChange = (catKey, memberId, value) => {
     setScores(prev => ({ ...prev, [catKey]: { ...prev[catKey], [memberId]: value } }));
   };
 
-  const isRoundBased = currentSchema?.type === 'uno' || currentSchema?.type === 'rummikub' || currentSchema?.type === 'dicethrone' || currentSchema?.type === 'saboteur' || currentSchema?.type === 'radlands';
   const lowestWins = !!currentSchema?.lowestWins;
 
-  const totals = useMemo(() => {
-    // 라운드 기반 게임은 테이블 컴포넌트에서 받은 roundTotals 사용
-    if (isRoundBased) return roundTotals;
-    const t = {};
-    players.forEach(p => {
-      if (currentSchema?.type === 'catan') {
-        t[p.memberId] = currentSchema.categories.reduce((sum, cat) => {
-          const v = scores[cat.key]?.[p.memberId];
-          if (cat.type === 'exclusive_check') return sum + (v ? cat.bonus : 0);
-          return sum + (Number(v) || 0) * (cat.multiplier || 1);
-        }, 0);
-      } else {
-        t[p.memberId] = allCategories.reduce((sum, cat) => {
-          const v = Number(scores[cat.key]?.[p.memberId]) || 0;
-          return cat.negative && !cat.allowNegative ? sum - Math.abs(v) : sum + v;
-        }, 0);
-      }
-    });
-    return t;
-  }, [scores, players, allCategories, currentSchema, isRoundBased, roundTotals]);
+  const totals = useMemo(
+    () => computeTotals({ schema: currentSchema, players, scores, roundTotals }),
+    [scores, players, currentSchema, roundTotals],
+  );
 
   // lowestWins(루미큐브)는 낮은 점수가 1위
   const winnerId = useMemo(() => {
@@ -220,157 +182,23 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
     }, players[0])?.memberId;
   }, [totals, players, lowestWins]);
 
-  const calcPlacements = () => {
-    const entries = players.map(p => ({ memberId: p.memberId, score: totals[p.memberId] }));
-    // lowestWins: 낮은 점수가 1위
-    const sorted = [...entries].sort((a, b) => lowestWins ? a.score - b.score : b.score - a.score);
-    const placements = {};
-    let currentRank = 1;
-    for (let i = 0; i < sorted.length; i++) {
-      if (i > 0 && sorted[i].score === sorted[i - 1].score) {
-        placements[sorted[i].memberId] = placements[sorted[i - 1].memberId];
-      } else {
-        placements[sorted[i].memberId] = currentRank;
-      }
-      currentRank++;
-    }
-    return placements;
-  };
-
   const handleSubmit = async () => {
-    let participants;
-    if (currentSchema?.type === "conditional") {
-      if (!duelWinnerId) { alert(t('scoreSheet', 'winnerRequired')); return; }
-      participants = players.map(p => ({
-        memberId: p.memberId,
-        placement: p.memberId === duelWinnerId ? 1 : 2,
-        scoresJson: JSON.stringify({
-          win_condition: duelWinCondition,
-          won: p.memberId === duelWinnerId,
-        }),
-      }));
-    } else if (currentSchema?.type === "duel" || currentSchema?.type === "splendorduel") {
-      if (!duelWinnerId) { alert(t('scoreSheet', 'winnerRequired')); return; }
-      const allCats = getAllCategories(currentSchema);
-      participants = players.map(p => ({
-        memberId: p.memberId,
-        placement: p.memberId === duelWinnerId ? 1 : 2,
-        scoresJson: JSON.stringify({
-          ...Object.fromEntries(allCats.map(cat => [cat.key, scores[cat.key]?.[p.memberId] ?? 0])),
-          win_condition: duelWinCondition,
-          won: p.memberId === duelWinnerId,
-        }),
-      }));
-    } else if (isOutcomeOnly) {
-      // 승=1티어, 무=2티어, 패=3티어로 줄 세운 뒤 같은 티어끼리 동순위로 묶는다.
-      // 동순위 다음 사람은 인원수만큼 건너뛴다 (승/무/무/패 → 1, 2, 2, 4).
-      if (!players.every(p => outcomeInputs[p.memberId])) {
-        alert(t('scoreSheet', 'outcomeRequired'));
-        return;
-      }
-      const sorted = [...players].sort(
-        (a, b) => OUTCOME_TIER[outcomeInputs[a.memberId]] - OUTCOME_TIER[outcomeInputs[b.memberId]]
-      );
-      const placements = {};
-      let currentRank = 1;
-      for (let i = 0; i < sorted.length; i++) {
-        if (i > 0 && outcomeInputs[sorted[i].memberId] === outcomeInputs[sorted[i - 1].memberId]) {
-          placements[sorted[i].memberId] = placements[sorted[i - 1].memberId];
-        } else {
-          placements[sorted[i].memberId] = currentRank;
-        }
-        currentRank++;
-      }
-      participants = players.map(p => ({
-        memberId: p.memberId,
-        placement: placements[p.memberId],
-        scoresJson: JSON.stringify({ outcome: outcomeInputs[p.memberId] }),
-      }));
-    } else if (isChip && chipMode === 'count') {
-      const deltas = chipCountDeltas;
-      if (players.some(p => deltas[p.memberId] == null)) {
-        alert(t('scoreSheet', 'chipCountRequired'));
-        return;
-      }
-      if (isChipDeltaTooLarge(deltas)) { alert(t('scoreSheet', 'chipTooLarge')); return; }
-      // 합계가 0이 아니면 세다가 틀렸을 수 있다 — 경고만 하고 저장은 사용자가 고른다
-      const sum = Object.values(deltas).reduce((a, b) => a + b, 0);
-      if (sum !== 0 && !window.confirm(t('scoreSheet', 'chipSumConfirm').replace('{sum}', formatChipDelta(sum)))) {
-        return;
-      }
-      // 많이 남긴 순서로 등수를 매긴다. 같은 금액은 동순위 (+300, 0, 0, -300 → 1, 2, 2, 4). 1등만 승리
-      const sorted = [...players].sort((a, b) => deltas[b.memberId] - deltas[a.memberId]);
-      const placements = {};
-      sorted.forEach((p, i) => {
-        placements[p.memberId] = i > 0 && deltas[p.memberId] === deltas[sorted[i - 1].memberId]
-          ? placements[sorted[i - 1].memberId]
-          : i + 1;
-      });
-      participants = players.map(p => ({
-        memberId: p.memberId,
-        placement: placements[p.memberId],
-        chipDelta: deltas[p.memberId],
-        buyIns: 1,
-        scoresJson: JSON.stringify({
-          chip: deltas[p.memberId],
-          chipStart: Number(chipStart),
-          chipCounts: chipCounts[p.memberId],
-        }),
-      }));
-    } else if (isChip) {
-      if (!chipResults) {
-        alert(t('scoreSheet', 'chipRequired'));
-        return;
-      }
-      // 전원 우승이면 판돈이 각자에게 그대로 돌아가 아무 의미가 없고, 모두 승으로 잡힌다
-      if (chipWinnerIds.length >= players.length) { alert(t('scoreSheet', 'chipAllWinners')); return; }
-      if (isChipDeltaTooLarge(chipResults)) { alert(t('scoreSheet', 'chipTooLarge')); return; }
-      // 우승자는 모두 1등(승리), 나머지는 모두 2등(패배)
-      participants = players.map(p => ({
-        memberId: p.memberId,
-        placement: chipWinnerIds.includes(p.memberId) ? 1 : 2,
-        chipDelta: chipResults[p.memberId],
-        buyIns: chipBuyIns[p.memberId],
-        scoresJson: JSON.stringify({
-          chip: chipResults[p.memberId],
-          buyIn: Number(chipBuyIn),
-          buyIns: chipBuyIns[p.memberId],
-          chipWon: chipWinnerIds.includes(p.memberId),
-        }),
-      }));
-    } else if (rankMode || isRankOnly) {
-      // 순위 직접 입력 모드: rankInputs에서 placement 사용
-      const allFilled = players.every(p => rankInputs[p.memberId]);
-      if (!allFilled) { alert(t('scoreSheet', 'selectAllRanks')); return; }
-      participants = players.map(p => ({
-        memberId: p.memberId,
-        placement: rankInputs[p.memberId],
-        scoresJson: null,
-      }));
-    } else if (isRoundBased) {
-      // 라운드 기반: roundTotals로 placement 계산, 전체 게임 데이터 scoresJson 전달
-      if ((currentSchema?.type === 'radlands' || currentSchema?.type === 'dicethrone') && Object.keys(roundTotals).length === 0) {
-        alert(t('scoreSheet', 'selectWinLoss'));
-        return;
-      }
-      const placements = calcPlacements();
-      const roundData = scores["_data"]?.["all"] || null;
-      participants = players.map(p => ({
-        memberId: p.memberId,
-        placement: placements[p.memberId],
-        scoresJson: roundData,
-      }));
-    } else {
-      const placements = calcPlacements();
-      const allCats = getAllCategories(currentSchema);
-      participants = players.map(p => ({
-        memberId: p.memberId,
-        placement: placements[p.memberId],
-        scoresJson: JSON.stringify(
-          Object.fromEntries(allCats.map(cat => [cat.key, scores[cat.key]?.[p.memberId]]))
-        ),
-      }));
+    const result = buildParticipants({
+      schema: currentSchema, players, scores,
+      duelWinnerId, duelWinCondition,
+      outcomeInputs,
+      chipCountDeltas, chipStart, chipCounts,
+      chipResults, chipWinnerIds, chipBuyIns, chipBuyIn,
+      rankMode, rankInputs,
+      roundTotals,
+    });
+    if (result.error) { alert(t('scoreSheet', result.error)); return; }
+    // 칩 세기 합계가 0이 아니면 세다가 틀렸을 수 있다 — 경고만 하고 저장은 사용자가 고른다
+    if (result.confirmChipSum != null
+      && !window.confirm(t('scoreSheet', 'chipSumConfirm').replace('{sum}', formatChipDelta(result.confirmChipSum)))) {
+      return;
     }
+    const { participants } = result;
     if (storeMode) {
       // 매장 판: 게임 점수(합계)를 같이 보내 3i·3j·3n에 띄운다
       try {
@@ -424,13 +252,8 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
 
   if (!players.length) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>😅</div>
-        <p style={{ color: "var(--th-text-sub)", marginBottom: 24 }}>{t('scoreSheet', 'wrongAccess')}</p>
-        <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
-          {t('scoreSheet', 'goBack')}
-        </button>
-      </div>
+      <ScoreSheetNotice emoji="😅" desc={t('scoreSheet', 'wrongAccess')}
+        actions={[{ label: t('scoreSheet', 'goBack'), onClick: handleBack }]} />
     );
   }
 
@@ -441,32 +264,18 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
   // 전자를 "준비 안됨"으로 표시하면 사용자가 다시 시도할 방법이 없다.
   if (!currentSchema && isGameError) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)", padding: 24, textAlign: "center" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>📡</div>
-        <p style={{ color: "var(--th-text)", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{t('scoreSheet', 'loadFailed')}</p>
-        <p style={{ color: "var(--th-text-sub)", fontSize: 13, marginBottom: 24 }}>{t('scoreSheet', 'loadFailedDesc')}</p>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => refetchGame()} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
-            {t('scoreSheet', 'retry')}
-          </button>
-          <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-card)", color: "var(--th-text)", border: "1px solid var(--th-border)", cursor: "pointer", fontWeight: 700 }}>
-            {t('scoreSheet', 'goBack')}
-          </button>
-        </div>
-      </div>
+      <ScoreSheetNotice emoji="📡" title={t('scoreSheet', 'loadFailed')} desc={t('scoreSheet', 'loadFailedDesc')}
+        actions={[
+          { label: t('scoreSheet', 'retry'), onClick: () => refetchGame() },
+          { label: t('scoreSheet', 'goBack'), onClick: handleBack, secondary: true },
+        ]} />
     );
   }
 
   if (!currentSchema) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)", padding: 24, textAlign: "center" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🎲</div>
-        <p style={{ color: "var(--th-text)", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{t('scoreSheet', 'schemaNotReady')}</p>
-        <p style={{ color: "var(--th-text-sub)", fontSize: 13, marginBottom: 24 }}>{t('scoreSheet', 'contactAdmin')}</p>
-        <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
-          {t('scoreSheet', 'goBack')}
-        </button>
-      </div>
+      <ScoreSheetNotice emoji="🎲" title={t('scoreSheet', 'schemaNotReady')} desc={t('scoreSheet', 'contactAdmin')}
+        actions={[{ label: t('scoreSheet', 'goBack'), onClick: handleBack }]} />
     );
   }
 
@@ -489,28 +298,12 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
 
       {/* 순위 입력 모드 토글 (supportsRankMode 게임만) */}
       {currentSchema?.supportsRankMode && !readOnly && (
-        <div style={{ margin: "16px 16px 12px", display: "flex", borderRadius: 12, overflow: "hidden", border: "1px solid var(--th-border)" }}>
-          <button
-            onClick={() => { setRankMode(false); setRankInputs({}); }}
-            style={{
-              flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
-              background: !rankMode ? "var(--th-primary)" : "var(--th-card)",
-              color: !rankMode ? "#fff" : "var(--th-text-sub)",
-            }}
-          >
-            {t('scoreSheet', 'scoreInput')}
-          </button>
-          <button
-            onClick={() => setRankMode(true)}
-            style={{
-              flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
-              background: rankMode ? "var(--th-primary)" : "var(--th-card)",
-              color: rankMode ? "#fff" : "var(--th-text-sub)",
-            }}
-          >
-            {t('scoreSheet', 'rankInput')}
-          </button>
-        </div>
+        <InputModeToggle
+          rankMode={rankMode}
+          onScoreMode={() => { setRankMode(false); setRankInputs({}); }}
+          onRankMode={() => setRankMode(true)}
+          t={t}
+        />
       )}
 
       {/* 테이블 */}
@@ -598,22 +391,7 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
       {storeMode?.after}
       {storeMode && storeMode.renderBottom({ submit: handleSubmit, isSubmitting })}
       {!storeMode && !readOnly && !previewMode && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20, background: 'linear-gradient(to top, var(--th-bg) 70%, transparent)' }}>
-          <div style={{ maxWidth: 375, margin: '0 auto', padding: '20px 16px calc(32px + env(safe-area-inset-bottom))' }}>
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              style={{
-                width: '100%', padding: '15px 0', borderRadius: 50, border: 'none',
-                background: isSubmitting ? 'var(--th-border)' : 'var(--th-primary)',
-                color: '#fff', fontSize: 14, fontWeight: 900, cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                boxShadow: isSubmitting ? 'none' : '0 4px 16px rgba(107, 92, 231, 0.4)',
-              }}
-            >
-              {isSubmitting ? t('scoreSheet', 'saving') : editMatchId ? t('scoreSheet', 'submitEdit') : t('scoreSheet', 'submit')}
-            </button>
-          </div>
-        </div>
+        <SubmitBar onSubmit={handleSubmit} isSubmitting={isSubmitting} isEdit={!!editMatchId} t={t} />
       )}
 
       {/* 과학 모달 */}
