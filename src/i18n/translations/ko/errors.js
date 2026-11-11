@@ -45,6 +45,7 @@ export default {
   MATCH_WITHOUT_ROOM: '방 정보가 없는 매치는 삭제할 수 없습니다.',
   ROOM_MEMBER_ONLY_RECORD: '방 멤버만 매치를 등록할 수 있습니다.',
   PARTICIPANT_NOT_ROOM_MEMBER: '방 멤버가 아닌 참가자는 등록할 수 없습니다.',
+  MATCH_GAME_NOT_ROOM_GAME: '이 방의 게임이 아닌 경기는 기록할 수 없습니다.',
   ROOM_OWNER_ONLY_EDIT_MATCH: '방장만 매치를 수정할 수 있습니다.',
   ROOM_OWNER_ONLY_DELETE_MATCH: '방장만 삭제할 수 있습니다.',
   CHIP_DELTA_REQUIRED: '칩 손익을 입력해주세요.',
