@@ -5,6 +5,7 @@ import { useLanguage } from '../../i18n/LanguageContext';
 import { V } from '../../utils/cssUtils';
 import { DEFAULT_CHIP_DENOMINATIONS } from '../../utils/chipUtils';
 import ChipDenominationsField from './ChipDenominationsField';
+import { useApiErrorMessage } from '../../hooks/useApiErrorMessage';
 
 // 항목 색상은 사용자에게 묻지 않고 순서대로 배정한다
 const PALETTE = ['#1d4ed8', '#0f766e', '#7c3aed', '#b91c1c', '#c2410c', '#0369a1', '#4d7c0f', '#a21caf'];
@@ -19,6 +20,7 @@ const newCategory = () => ({ uid: Math.random().toString(36).slice(2, 8), label:
 
 const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) => {
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
 
   const [name, setName] = useState(initialName ?? '');
   const [scoreType, setScoreType] = useState(null); // 'simple' | 'flat' | 'outcome' | 'chip'
@@ -98,7 +100,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
       });
       onCreated(game);
     } catch (err) {
-      alert(err?.response?.data?.message || t('lobby', 'customCreateFailed'));
+      alert(errorText(err, t('lobby', 'customCreateFailed')));
     } finally {
       setIsSubmitting(false);
     }

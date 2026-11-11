@@ -14,10 +14,12 @@ import OnboardingSteps from '../components/shared/OnboardingSteps';
 import { defaultEndDate, isSeasonInputValid } from '../utils/seasonUtils';
 import { getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 const CreateGroup = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const queryClient = useQueryClient();
   const selectedCommunity = getSelectedCommunity();
   const communityId = selectedCommunity?.communityId ?? null;
@@ -78,7 +80,7 @@ const CreateGroup = () => {
       await queryClient.invalidateQueries({ queryKey: ['games', communityId] });
     } catch (err) {
       // 방이나 플레이 기록이 있으면 백엔드가 409로 막는다 — 그 이유를 그대로 보여준다
-      alert(err?.response?.data?.message || t('lobby', 'customDeleteFailed'));
+      alert(errorText(err, t('lobby', 'customDeleteFailed')));
     } finally {
       setDeletingGameId(null);
     }
@@ -102,7 +104,7 @@ const CreateGroup = () => {
       navigate(`/invite/${res.roomId}`);
     } catch (err) {
       // 어드민이 아니면 403 등 — 서버가 보낸 이유를 그대로 보여준다
-      alert(err?.response?.data?.message || t('lobby', 'createFailed'));
+      alert(errorText(err, t('lobby', 'createFailed')));
     } finally {
       setIsSubmitting(false);
     }

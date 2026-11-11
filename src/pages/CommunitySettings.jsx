@@ -14,6 +14,7 @@ import { REGION_NAMES } from '../constants/regions';
 import { getAuthUserId } from '../auth/storage';
 import { getMyCommunity, setMyCommunity, removeMyCommunity, getSelectedCommunity, setSelectedCommunity, removeSelectedCommunity, notifySelectedCommunityUpdated } from '../utils/storage';
 import { EVENTS, logEvent } from '../api/services/events';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 const REGIONS = [...REGION_NAMES, 'Other'];
 
@@ -21,6 +22,7 @@ const CommunitySettings = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const userId = Number(getAuthUserId());
 
   const storedCommunity = getMyCommunity();
@@ -203,7 +205,7 @@ const CommunitySettings = () => {
       navigate('/community', { replace: true });
     } catch (err) {
       // 혼자인 소유자가 내려놓으려 하면 서버가 이유를 담아 거절한다
-      setError(err?.response?.data?.message || t('community', 'updateFailed'));
+      setError(errorText(err, t('community', 'updateFailed')));
     } finally {
       setIsSubmitting(false);
     }

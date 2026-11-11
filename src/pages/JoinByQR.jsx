@@ -6,11 +6,13 @@ import { getAuthUserId } from '../auth/storage';
 import { enterCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 const JoinByQR = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const queryClient = useQueryClient();
   const [error, setError] = useState('');
   const [pendingCode, setPendingCode] = useState(null);
@@ -43,7 +45,7 @@ const JoinByQR = () => {
       enterCommunity(res.data, userId);
       navigate('/lobby', { replace: true, state: { justJoined: !res.data.alreadyMember } });
     } catch (e) {
-      const msg = e?.response?.data?.message || t('community', 'joinFailed');
+      const msg = errorText(e, t('community', 'joinFailed'));
       setError(msg);
       setTimeout(() => navigate('/community'), 2000);
     } finally {

@@ -14,6 +14,7 @@ import CommunityCard from '../components/community/CommunityCard';
 import LeaveConfirmModal from '../components/shared/LeaveConfirmModal';
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
 import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit, getSelectedCommunity, removeSelectedCommunity } from '../utils/storage';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -24,6 +25,7 @@ const CommunityLobby = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const nickname = getNickname() || '?';
   const userId = getAuthUserId();
   const isSystemAdmin = getRole() === 'ADMIN';
@@ -105,7 +107,7 @@ const CommunityLobby = () => {
       navigate('/lobby', { state: { justJoined: !res.data.alreadyMember } });
     } catch (e) {
       // 확인 팝업으로 넘어가며 입력창을 닫았다 — 다시 열어야 오류가 보인다. 코드는 남겨 고쳐 쓰게 한다.
-      setJoinError(e.response?.data?.message || t('community', 'invalidCode'));
+      setJoinError(errorText(e, t('community', 'invalidCode')));
       setJoinCode(pendingJoinCode);
       setShowJoinInput(true);
     } finally {
