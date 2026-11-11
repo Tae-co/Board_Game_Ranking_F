@@ -9,6 +9,7 @@ import StoreFixedBottom from '../components/store/StoreFixedBottom';
 import { fmt, num } from '../components/store/fmt';
 import { card, primaryButton } from '../components/store/storeStyles';
 import { contestKey, placementPoints } from '../components/contest/contestUtils';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 const minutesBetween = (a, b) => Math.round((new Date(b).getTime() - new Date(a).getTime()) / 60000);
 
@@ -21,6 +22,7 @@ const StoreContestConfirm = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
 
@@ -38,7 +40,7 @@ const StoreContestConfirm = () => {
       queryClient.setQueryData(contestKey(contestId), await fn());
       back();
     } catch (e) {
-      setError(storeErrorCode(e) ? e.response.data.message : t('store', 'actionFailed'));
+      setError(storeErrorCode(e) ? errorText(e, t('store', 'actionFailed')) : t('store', 'actionFailed'));
       queryClient.invalidateQueries({ queryKey: ['store', 'match', Number(matchId)] });
     } finally {
       setBusy(false);

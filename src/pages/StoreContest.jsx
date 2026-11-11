@@ -16,6 +16,7 @@ import ContestLive from '../components/contest/ContestLive';
 import ContestResult from '../components/contest/ContestResult';
 import ContestStaff from '../components/contest/ContestStaff';
 import { useGoBack } from '../hooks/useGoBack';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 /**
  * 하루 대회 `/store/:storeId/contest/:contestId` — 상태·역할로 나눈다 (plan-store §2 5a·5b·5d·5e).
@@ -28,6 +29,7 @@ const StoreContest = () => {
   const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t, lang } = useLanguage();
+  const errorText = useApiErrorMessage();
   const myId = Number(getAuthUserId());
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -61,7 +63,7 @@ const StoreContest = () => {
       queryClient.invalidateQueries({ queryKey: CURRENT_PARTY_KEY });
       queryClient.invalidateQueries({ queryKey: ['store', Number(storeId), 'home'] });
     } catch (e) {
-      setError(storeErrorCode(e) ? e.response.data.message : t('store', 'actionFailed'));
+      setError(storeErrorCode(e) ? errorText(e, t('store', 'actionFailed')) : t('store', 'actionFailed'));
       queryClient.invalidateQueries({ queryKey: contestKey(contestId) });
     } finally {
       setBusy(false);

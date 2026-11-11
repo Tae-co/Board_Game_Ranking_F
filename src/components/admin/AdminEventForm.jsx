@@ -10,6 +10,7 @@ import { V } from '../../utils/cssUtils';
 import AdminSubPage, { AdminPopup } from './AdminSubPage';
 import { CameraIcon } from '../store/StoreIcons';
 import { fmt } from '../store/fmt';
+import { useApiErrorMessage } from '../../hooks/useApiErrorMessage';
 
 const sectionStyle = {
   backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px',
@@ -38,6 +39,7 @@ const today = () => {
  */
 const AdminEventForm = ({ store, contest, event, defaultKind = 'contest', onBack, onSaved }) => {
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const navigate = useNavigate();
   const editing = !!(contest || event);
   const [kind, setKind] = useState(event ? 'event' : contest ? 'contest' : defaultKind);
@@ -93,7 +95,7 @@ const AdminEventForm = ({ store, contest, event, defaultKind = 'contest', onBack
       }
       onSaved();
     } catch (err) {
-      setError(err?.response?.data?.message ?? t('contest', 'saveFailed'));
+      setError(errorText(err, t('contest', 'saveFailed')));
     } finally {
       setSaving(false);
     }

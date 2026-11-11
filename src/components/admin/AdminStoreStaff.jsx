@@ -7,6 +7,7 @@ import { V } from '../../utils/cssUtils';
 import MemberDiceAvatar from '../shared/MemberDiceAvatar';
 import AdminSubPage from './AdminSubPage';
 import { SearchIcon } from '../store/StoreIcons';
+import { useApiErrorMessage } from '../../hooks/useApiErrorMessage';
 
 const h2Style = { margin: 0, fontSize: '17px', fontWeight: 700, color: V('--th-text') };
 const listStyle = { backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`, borderRadius: '20px', padding: '4px 16px' };
@@ -34,6 +35,7 @@ const Row = ({ memberId, first, name, sub, action }) => (
  */
 const AdminStoreStaff = ({ store, staff, onBack }) => {
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [busy, setBusy] = useState(false);
@@ -58,7 +60,7 @@ const AdminStoreStaff = ({ store, staff, onBack }) => {
         queryClient.invalidateQueries({ queryKey: ['adminStaffCandidates'] }),
       ]);
     } catch (e) {
-      setError(e?.response?.data?.message || t('admin', 'saveFailed'));
+      setError(errorText(e, t('admin', 'saveFailed')));
     } finally {
       setBusy(false);
     }

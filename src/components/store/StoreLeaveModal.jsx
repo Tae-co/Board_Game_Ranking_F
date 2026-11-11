@@ -4,12 +4,14 @@ import { getStoreHome, leaveStore } from '../../api/services/stores';
 import { MY_STORES_KEY } from '../../hooks/useMyStores';
 import { storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
+import { useApiErrorMessage } from '../../hooks/useApiErrorMessage';
 
 /**
  * 1c 매장 나가기 확인. 신청한 대회·진행 중 대회가 있으면 줄을 더한다 (매장 홈 응답의 대회 카드).
  * 점수·순위·경기 수 숫자와 그룹 줄은 아직 없다. "판이 끝난 뒤에" 막힘은 서버 오류 문구로 보여 준다
  */
 const StoreLeaveModal = ({ store, onClose, t }) => {
+  const errorText = useApiErrorMessage();
   const queryClient = useQueryClient();
   const [leaving, setLeaving] = useState(false);
   const [error, setError] = useState('');
@@ -32,7 +34,7 @@ const StoreLeaveModal = ({ store, onClose, t }) => {
       queryClient.removeQueries({ queryKey: ['store', store.id] });
       onClose();
     } catch (e) {
-      setError(e?.response?.data?.message || t('store', 'leaveFailed'));
+      setError(errorText(e, t('store', 'leaveFailed')));
       setLeaving(false);
     }
   };

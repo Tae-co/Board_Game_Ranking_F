@@ -11,6 +11,7 @@ import { fmt } from '../components/store/fmt';
 import { card, page, primaryButton, sectionTitle } from '../components/store/storeStyles';
 import { PILL, contestWhen, pill, shortDate } from '../components/contest/contestUtils';
 import { useGoBack } from '../hooks/useGoBack';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
 const bodyText = { margin: 0, fontSize: '15px', lineHeight: 1.6, color: V('--th-text'), whiteSpace: 'pre-line' };
 
@@ -23,6 +24,7 @@ const StoreEventDetail = () => {
   const goBack = useGoBack();
   const queryClient = useQueryClient();
   const { t, lang } = useLanguage();
+  const errorText = useApiErrorMessage();
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
@@ -44,7 +46,7 @@ const StoreEventDetail = () => {
       setConfirming(false);
     } catch (err) {
       setConfirming(false);
-      setError(storeErrorCode(err) ? err.response.data.message : t('contest', 'couponFailed'));
+      setError(storeErrorCode(err) ? errorText(err, t('contest', 'couponFailed')) : t('contest', 'couponFailed'));
       queryClient.invalidateQueries({ queryKey: eventsKey });
     } finally {
       setBusy(false);

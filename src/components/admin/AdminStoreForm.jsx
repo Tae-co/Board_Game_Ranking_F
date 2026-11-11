@@ -6,6 +6,7 @@ import { storeTitle } from '../../constants/store';
 import { V } from '../../utils/cssUtils';
 import AdminSubPage, { AdminPopup } from './AdminSubPage';
 import { CameraIcon } from '../store/StoreIcons';
+import { useApiErrorMessage } from '../../hooks/useApiErrorMessage';
 
 const EMPTY = { name: '', branch: '', address: '', region: 'South Korea', phone: '', imageUrl: '', openTime: '14:00', closeTime: '02:00' };
 
@@ -43,6 +44,7 @@ const regionLabel = (region) => {
  */
 const AdminStoreForm = ({ item, onBack, onSaved, onClosed, onAssignStaff }) => {
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const store = item?.store ?? null;
   const [form, setForm] = useState(() => (store ? {
     name: store.name, branch: store.branch ?? '', address: store.address, region: store.region,
@@ -91,7 +93,7 @@ const AdminStoreForm = ({ item, onBack, onSaved, onClosed, onAssignStaff }) => {
       onSaved(result);
       setSaved(result);
     } catch (e) {
-      setError(e?.response?.data?.message || t('admin', 'saveFailed'));
+      setError(errorText(e, t('admin', 'saveFailed')));
     } finally {
       setSaving(false);
     }
@@ -104,7 +106,7 @@ const AdminStoreForm = ({ item, onBack, onSaved, onClosed, onAssignStaff }) => {
       onClosed();
     } catch (e) {
       setClosing(false);
-      setError(e?.response?.data?.message || t('admin', 'saveFailed'));
+      setError(errorText(e, t('admin', 'saveFailed')));
     }
   };
 
