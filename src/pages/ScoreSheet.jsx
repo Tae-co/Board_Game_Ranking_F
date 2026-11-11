@@ -8,9 +8,10 @@ import { EVENTS, logEvent } from '../api/services/events';
 import { getGame } from '../api/services/games';
 import { useLanguage } from '../i18n/LanguageContext';
 import { SCORE_SCHEMAS } from '../scoreSheets/schemas/index';
-import FlatTable from '../scoreSheets/tables/FlatTable';
-import SectionedTable from '../scoreSheets/tables/SectionedTable';
-import ConditionTable from '../scoreSheets/tables/ConditionTable';
+import { parseSchema } from '../scoreSheets/parseSchema';
+import ScoreSheetNotice from '../scoreSheets/components/ScoreSheetNotice';
+import InputModeToggle from '../scoreSheets/components/InputModeToggle';
+import SubmitBar from '../scoreSheets/components/SubmitBar';
 import { getAllCategories } from '../scoreSheets/shared/scoreUtils';
 import { ScienceModal } from '../scoreSheets/shared/ScoreCell';
 import WinnerBanner from '../scoreSheets/shared/WinnerBanner';
@@ -20,22 +21,6 @@ import ChipTable from '../scoreSheets/components/ChipTable';
 import ChipCountTable from '../scoreSheets/components/ChipCountTable';
 import { buyInResults, chipModeOf, chipDenominationsOf, chipCountTotal, formatChipDelta } from '../utils/chipUtils';
 import { buildParticipants, computeTotals } from '../scoreSheets/submitPayload';
-
-// DB에 저장된 스키마(JSON)를 렌더링 가능한 스키마로 변환.
-// simple/outcome/chip은 TableComponent가 없다 → 순위 입력 / 승무패 입력 / 바이인·칩 세기 입력이 그려진다.
-const parseSchema = (raw) => {
-  if (!raw) return null;
-  try {
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (parsed.type === 'flat') return { ...parsed, TableComponent: FlatTable };
-    if (parsed.type === 'sectioned') return { ...parsed, TableComponent: SectionedTable };
-    if (parsed.type === 'conditional') return { ...parsed, TableComponent: ConditionTable };
-    if (parsed.type === 'simple') return { ...parsed, TableComponent: null };
-    if (parsed.type === 'outcome') return { ...parsed, TableComponent: null };
-    if (parsed.type === 'chip') return { ...parsed, TableComponent: null };
-  } catch { /* 깨진 스키마는 없는 것으로 취급 */ }
-  return null;
-};
 
 const ScoreSheet = () => {
   const { boardGameId: boardGameIdStr } = useParams();
@@ -240,13 +225,8 @@ const ScoreSheet = () => {
 
   if (!players.length) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>😅</div>
-        <p style={{ color: "var(--th-text-sub)", marginBottom: 24 }}>{t('scoreSheet', 'wrongAccess')}</p>
-        <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
-          {t('scoreSheet', 'goBack')}
-        </button>
-      </div>
+      <ScoreSheetNotice emoji="😅" desc={t('scoreSheet', 'wrongAccess')}
+        actions={[{ label: t('scoreSheet', 'goBack'), onClick: handleBack }]} />
     );
   }
 
@@ -257,32 +237,18 @@ const ScoreSheet = () => {
   // 전자를 "준비 안됨"으로 표시하면 사용자가 다시 시도할 방법이 없다.
   if (!currentSchema && isGameError) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)", padding: 24, textAlign: "center" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>📡</div>
-        <p style={{ color: "var(--th-text)", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{t('scoreSheet', 'loadFailed')}</p>
-        <p style={{ color: "var(--th-text-sub)", fontSize: 13, marginBottom: 24 }}>{t('scoreSheet', 'loadFailedDesc')}</p>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => refetchGame()} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
-            {t('scoreSheet', 'retry')}
-          </button>
-          <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-card)", color: "var(--th-text)", border: "1px solid var(--th-border)", cursor: "pointer", fontWeight: 700 }}>
-            {t('scoreSheet', 'goBack')}
-          </button>
-        </div>
-      </div>
+      <ScoreSheetNotice emoji="📡" title={t('scoreSheet', 'loadFailed')} desc={t('scoreSheet', 'loadFailedDesc')}
+        actions={[
+          { label: t('scoreSheet', 'retry'), onClick: () => refetchGame() },
+          { label: t('scoreSheet', 'goBack'), onClick: handleBack, secondary: true },
+        ]} />
     );
   }
 
   if (!currentSchema) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", backgroundColor: "var(--th-bg)", padding: 24, textAlign: "center" }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🎲</div>
-        <p style={{ color: "var(--th-text)", fontWeight: 700, fontSize: 16, marginBottom: 8 }}>{t('scoreSheet', 'schemaNotReady')}</p>
-        <p style={{ color: "var(--th-text-sub)", fontSize: 13, marginBottom: 24 }}>{t('scoreSheet', 'contactAdmin')}</p>
-        <button onClick={handleBack} style={{ padding: "12px 32px", borderRadius: 24, backgroundColor: "var(--th-primary)", color: "#FFFFFF", border: "none", cursor: "pointer", fontWeight: 700 }}>
-          {t('scoreSheet', 'goBack')}
-        </button>
-      </div>
+      <ScoreSheetNotice emoji="🎲" title={t('scoreSheet', 'schemaNotReady')} desc={t('scoreSheet', 'contactAdmin')}
+        actions={[{ label: t('scoreSheet', 'goBack'), onClick: handleBack }]} />
     );
   }
 
@@ -303,28 +269,12 @@ const ScoreSheet = () => {
 
       {/* 순위 입력 모드 토글 (supportsRankMode 게임만) */}
       {currentSchema?.supportsRankMode && !readOnly && (
-        <div style={{ margin: "16px 16px 12px", display: "flex", borderRadius: 12, overflow: "hidden", border: "1px solid var(--th-border)" }}>
-          <button
-            onClick={() => { setRankMode(false); setRankInputs({}); }}
-            style={{
-              flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
-              background: !rankMode ? "var(--th-primary)" : "var(--th-card)",
-              color: !rankMode ? "#fff" : "var(--th-text-sub)",
-            }}
-          >
-            {t('scoreSheet', 'scoreInput')}
-          </button>
-          <button
-            onClick={() => setRankMode(true)}
-            style={{
-              flex: 1, padding: "8px 0", fontSize: 13, fontWeight: 700, border: "none", cursor: "pointer",
-              background: rankMode ? "var(--th-primary)" : "var(--th-card)",
-              color: rankMode ? "#fff" : "var(--th-text-sub)",
-            }}
-          >
-            {t('scoreSheet', 'rankInput')}
-          </button>
-        </div>
+        <InputModeToggle
+          rankMode={rankMode}
+          onScoreMode={() => { setRankMode(false); setRankInputs({}); }}
+          onRankMode={() => setRankMode(true)}
+          t={t}
+        />
       )}
 
       {/* 테이블 */}
@@ -410,22 +360,7 @@ const ScoreSheet = () => {
 
       {/* Bottom Fixed Button */}
       {!readOnly && !previewMode && (
-        <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 20, background: 'linear-gradient(to top, var(--th-bg) 70%, transparent)' }}>
-          <div style={{ maxWidth: 375, margin: '0 auto', padding: '20px 16px calc(32px + env(safe-area-inset-bottom))' }}>
-            <button
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-              style={{
-                width: '100%', padding: '15px 0', borderRadius: 50, border: 'none',
-                background: isSubmitting ? 'var(--th-border)' : 'var(--th-primary)',
-                color: '#fff', fontSize: 14, fontWeight: 900, cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                boxShadow: isSubmitting ? 'none' : '0 4px 16px rgba(107, 92, 231, 0.4)',
-              }}
-            >
-              {isSubmitting ? t('scoreSheet', 'saving') : editMatchId ? t('scoreSheet', 'submitEdit') : t('scoreSheet', 'submit')}
-            </button>
-          </div>
-        </div>
+        <SubmitBar onSubmit={handleSubmit} isSubmitting={isSubmitting} isEdit={!!editMatchId} t={t} />
       )}
 
       {/* 과학 모달 */}
