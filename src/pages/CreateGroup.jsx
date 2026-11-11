@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createRoom } from '../api/services/rooms';
 import { getGames, deleteGame } from '../api/services/games';
 import CustomGameBuilder from '../components/lobby/CustomGameBuilder';
 import { useLanguage } from '../i18n/LanguageContext';
-import { useSwipePaging } from '../hooks/useSwipePaging';
 import { V } from '../utils/cssUtils';
-import GameImageFallback from '../components/shared/GameImageFallback';
+import GamePicker from '../components/lobby/GamePicker';
 import SeasonFields from '../components/shared/SeasonFields';
 import OnboardingSteps from '../components/shared/OnboardingSteps';
 import { defaultEndDate, isSeasonInputValid } from '../utils/seasonUtils';
@@ -32,12 +31,12 @@ const CreateGroup = () => {
   const [seasonName, setSeasonName] = useState('');
   const [seasonEndDate, setSeasonEndDate] = useState(() => defaultEndDate(region));
   const [selectedGameId, setSelectedGameId] = useState(null);
-  const [gameSearch, setGameSearch] = useState('');
+  // 점수판 만들기를 열 때의 검색어. 만들고 나면 게임 고르기를 새로 그려(key) 검색·페이지를 처음으로 돌린다
+  const [builderName, setBuilderName] = useState('');
+  const [pickerKey, setPickerKey] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
   const [isBuilderOpen, setIsBuilderOpen] = useState(false);
   const [deletingGameId, setDeletingGameId] = useState(null);
-  const PAGE_SIZE = 15;
 
   // 커뮤니티별로 목록이 다르므로 캐시 키에 communityId를 포함한다
   const { data: games = [] } = useQuery({
@@ -46,25 +45,10 @@ const CreateGroup = () => {
     staleTime: 1000 * 60 * 30,
   });
 
-  const filteredGames = gameSearch
-    ? games.filter(g => g.name.toLowerCase().includes(gameSearch.toLowerCase()))
-    : games;
-
-  const totalPages = Math.ceil(filteredGames.length / PAGE_SIZE);
-  const pagedGames = filteredGames.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  // currentPage는 1부터 센다
-  const swipe = useSwipePaging(currentPage - 1, totalPages, (p) => setCurrentPage(p + 1));
-
-  const handleGameSearch = (value) => {
-    setGameSearch(value);
-    setCurrentPage(1);
-  };
-
   const handleGameCreated = (game) => {
     queryClient.invalidateQueries({ queryKey: ['games', communityId] });
     setIsBuilderOpen(false);
-    setGameSearch('');
-    setCurrentPage(1);
+    setPickerKey(k => k + 1);
     setSelectedGameId(game.id);
   };
 
@@ -178,139 +162,17 @@ const CreateGroup = () => {
           />
         </div>
 
-        {/* Select Game */}
-        <div>
-          <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: '10px' }}>
-            {t('lobby', 'selectGameLabel')}
-          </p>
-
-          {/* Search */}
-          <div style={{ position: 'relative', marginBottom: '12px' }}>
-            <Search style={{
-              position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)',
-              width: 14, height: 14, color: V('--th-text-sub'),
-            }} />
-            <input
-              type="text"
-              value={gameSearch}
-              onChange={(e) => handleGameSearch(e.target.value)}
-              placeholder={t('lobby', 'gameSearchPlaceholder')}
-              style={{
-                width: '100%', padding: '10px 12px 10px 34px', borderRadius: '10px',
-                backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                color: V('--th-text'), fontSize: '13px', outline: 'none', boxSizing: 'border-box',
-              }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--th-primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--th-border)'}
-            />
-          </div>
-
-          {/* Game Grid */}
-          <div {...swipe} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-            {pagedGames.map((game) => {
-              const selected = selectedGameId === game.id;
-              // 커스텀 게임(communityId 있음)만 커뮤니티 어드민이 지울 수 있다
-              const canDelete = canCreateGame && game.communityId != null;
-              return (
-                <div key={game.id} style={{ position: 'relative' }}>
-                  <button
-                    onClick={() => setSelectedGameId(game.id)}
-                    style={{
-                      width: '100%', display: 'block',
-                      borderRadius: '12px', overflow: 'hidden', cursor: 'pointer',
-                      border: `2px solid ${selected ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                      backgroundColor: V('--th-card'),
-                      transition: 'border-color 0.2s',
-                    }}
-                  >
-                    {game.imageUrl ? (
-                      <img src={game.imageUrl} alt={game.name} style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', display: 'block' }} />
-                    ) : (
-                      <div style={{ width: '100%', aspectRatio: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <GameImageFallback size={44} />
-                      </div>
-                    )}
-                    <p style={{
-                      fontSize: '11px', padding: '6px 4px', textAlign: 'center',
-                      color: selected ? V('--th-primary') : V('--th-text'),
-                      fontWeight: selected ? '700' : '400',
-                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                      margin: 0,
-                    }}>
-                      {game.name}
-                    </p>
-                  </button>
-
-                  {canDelete && (
-                    <button
-                      onClick={() => handleDeleteGame(game)}
-                      disabled={deletingGameId === game.id}
-                      aria-label={t('lobby', 'deleteGameAria').replace('{n}', game.name)}
-                      style={{
-                        position: 'absolute', top: 4, right: 4,
-                        width: 22, height: 22, borderRadius: '50%',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        backgroundColor: 'rgba(0,0,0,0.55)', border: 'none', padding: 0,
-                        cursor: deletingGameId === game.id ? 'wait' : 'pointer',
-                      }}
-                    >
-                      <Trash2 style={{ width: 12, height: 12, color: '#fff' }} />
-                    </button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* 목록에 없는 게임: 직접 점수판 만들기 */}
-          {canCreateGame && (
-            <>
-              {filteredGames.length === 0 && (
-                <p style={{
-                  textAlign: 'center', fontSize: '13px', color: V('--th-text-sub'),
-                  margin: '20px 0 12px',
-                }}>
-                  {t('lobby', 'noGameResult')}
-                </p>
-              )}
-              <button
-                onClick={() => setIsBuilderOpen(true)}
-                style={{
-                  width: '100%', marginTop: '12px', padding: '12px', borderRadius: '12px',
-                  backgroundColor: 'transparent', border: `1px dashed var(--th-border)`,
-                  color: V('--th-primary'), fontSize: '13px', fontWeight: '600', cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px',
-                }}
-              >
-                <Plus style={{ width: 16, height: 16 }} />
-                {gameSearch.trim()
-                  ? t('lobby', 'customGameCreate').replace('{n}', gameSearch.trim())
-                  : t('lobby', 'customGameCreateEmpty')}
-              </button>
-            </>
-          )}
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '6px', marginTop: '16px' }}>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  style={{
-                    width: 32, height: 32, borderRadius: '8px', border: 'none',
-                    cursor: 'pointer', fontSize: '13px', fontWeight: currentPage === page ? '700' : '400',
-                    backgroundColor: currentPage === page ? 'var(--th-primary)' : 'var(--th-card)',
-                    color: currentPage === page ? '#fff' : 'var(--th-text-sub)',
-                    transition: 'background-color 0.15s',
-                  }}
-                >
-                  {page}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <GamePicker
+          key={pickerKey}
+          games={games}
+          selectedGameId={selectedGameId}
+          onSelect={setSelectedGameId}
+          canManage={canCreateGame}
+          deletingGameId={deletingGameId}
+          onDelete={handleDeleteGame}
+          onCreateCustom={(name) => { setBuilderName(name); setIsBuilderOpen(true); }}
+          t={t}
+        />
       </div>
 
       {/* Sticky Create Button */}
@@ -333,7 +195,7 @@ const CreateGroup = () => {
 
       {isBuilderOpen && (
         <CustomGameBuilder
-          initialName={gameSearch.trim()}
+          initialName={builderName}
           communityId={communityId}
           onCancel={() => setIsBuilderOpen(false)}
           onCreated={handleGameCreated}
