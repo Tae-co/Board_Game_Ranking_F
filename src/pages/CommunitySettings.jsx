@@ -1,22 +1,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Camera, Search, Check, Trash2, Copy, CheckCheck } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
+import { ArrowLeft, Trash2 } from 'lucide-react';
 import { getCommunity, getCommunityMembers, updateCommunity, deleteCommunity } from '../api/services/communities';
 import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
-import { useSwipePaging } from '../hooks/useSwipePaging';
 import NavAvatar from '../components/NavAvatar';
-import RoleBadge from '../components/shared/RoleBadge';
+import CommunityPhotoPicker from '../components/shared/CommunityPhotoPicker';
+import CommunityInfoFields from '../components/shared/CommunityInfoFields';
+import InviteCodeCard from '../components/community/InviteCodeCard';
+import AdminPicker from '../components/community/AdminPicker';
+import DeleteCommunityModal from '../components/community/DeleteCommunityModal';
 import { V } from '../utils/cssUtils';
-import { REGION_NAMES } from '../constants/regions';
 import { getAuthUserId } from '../auth/storage';
 import { getMyCommunity, setMyCommunity, removeMyCommunity, getSelectedCommunity, setSelectedCommunity, removeSelectedCommunity, notifySelectedCommunityUpdated } from '../utils/storage';
-import { EVENTS, logEvent } from '../api/services/events';
 import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
-
-const REGIONS = [...REGION_NAMES, 'Other'];
 
 const CommunitySettings = () => {
   const navigate = useNavigate();
@@ -57,18 +55,13 @@ const CommunitySettings = () => {
   const [name, setName] = useState('');
   const [region, setRegion] = useState('South Korea');
   const [selectedIds, setSelectedIds] = useState(new Set());
-  const [searchQuery, setSearchQuery] = useState('');
-  const [adminPage, setAdminPage] = useState(0);
-  const ADMIN_PER_PAGE = 10;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [codeCopied, setCodeCopied] = useState(false);
   const [error, setError] = useState('');
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef(null);
   const initialized = useRef(false);
   const adminsTouched = useRef(false);
 
@@ -129,16 +122,6 @@ const CommunitySettings = () => {
   const allMembers = isOwner
     ? communityMembers
     : communityMembers.filter((m) => m.memberId !== detail?.createdBy);
-
-  // 검색어 기준 클라이언트 필터
-  const filteredMembers = searchQuery.trim()
-    ? allMembers.filter((m) =>
-        m.nickname.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : allMembers;
-  const totalAdminPages = Math.ceil(filteredMembers.length / ADMIN_PER_PAGE);
-  const pagedAdminMembers = filteredMembers.slice(adminPage * ADMIN_PER_PAGE, (adminPage + 1) * ADMIN_PER_PAGE);
-  const adminSwipe = useSwipePaging(adminPage, totalAdminPages, setAdminPage);
 
   // 공동 어드민 화면에서 목록 밖의 소유자를 맨 위에 고정해 보여준다
   const ownerInfo = isOwner ? null
@@ -263,98 +246,10 @@ const CommunitySettings = () => {
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '28px 20px' }}>
 
-        {/* Photo upload */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            style={{ display: 'none' }}
-            onChange={handlePhotoSelect}
-          />
-          <div
-            onClick={() => fileInputRef.current.click()}
-            style={{
-              width: 100, height: 100, borderRadius: '18px',
-              border: imagePreview ? 'none' : `2px dashed var(--th-border)`,
-              backgroundColor: V('--th-card'),
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', marginBottom: '12px',
-              overflow: 'hidden', position: 'relative',
-            }}
-          >
-            {imagePreview ? (
-              <>
-                <img
-                  src={imagePreview}
-                  alt="preview"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  backgroundColor: 'rgba(0,0,0,0.35)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Camera size={24} color="#fff" strokeWidth={1.5} />
-                </div>
-              </>
-            ) : (
-              <Camera size={32} color={V('--th-text-sub')} strokeWidth={1.5} />
-            )}
-          </div>
-          <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', textAlign: 'center', margin: 0 }}>
-            {imagePreview ? t('community', 'changePhoto') : t('community', 'uploadPhoto')}
-          </p>
-        </div>
+        <CommunityPhotoPicker imagePreview={imagePreview} onSelect={handlePhotoSelect} t={t} />
 
-        {/* 초대 코드 + QR 카드 */}
         {detail?.inviteCode && (
-          <div style={{
-            backgroundColor: V('--th-card'), borderRadius: '20px',
-            border: `1px solid var(--th-border)`, padding: '20px',
-            marginBottom: '20px', textAlign: 'center',
-          }}>
-            <p style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text'), margin: '0 0 16px' }}>
-              {t('community', 'inviteCode')}
-            </p>
-            <QRCodeSVG
-              value={`${window.location.origin}/join?code=${detail.inviteCode}`}
-              size={140}
-              bgColor="transparent"
-              fgColor="var(--th-text)"
-              style={{ display: 'block', margin: '0 auto 16px' }}
-            />
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-              backgroundColor: V('--th-bg'), borderRadius: '12px',
-              padding: '12px 16px', border: `1px solid var(--th-border)`,
-            }}>
-              <span style={{
-                fontSize: '22px', fontWeight: '800', letterSpacing: '0.18em',
-                color: 'var(--th-primary)', fontFamily: 'monospace',
-              }}>
-                {detail.inviteCode}
-              </span>
-              <button
-                onClick={async () => {
-                  logEvent(EVENTS.INVITE_SHARED, { communityId, props: { kind: 'invite_code' } });
-                  try {
-                    await navigator.clipboard.writeText(detail.inviteCode);
-                    setCodeCopied(true);
-                    setTimeout(() => setCodeCopied(false), 2000);
-                  } catch {
-                    alert(t('invite', 'shareUnavailable'));
-                  }
-                }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
-              >
-                {codeCopied
-                  ? <CheckCheck size={18} color="#22c55e" />
-                  : <Copy size={18} color="var(--th-text-sub)" />
-                }
-              </button>
-            </div>
-          </div>
+          <InviteCodeCard communityId={communityId} inviteCode={detail.inviteCode} t={t} />
         )}
 
         {/* Basic info card */}
@@ -364,193 +259,20 @@ const CommunitySettings = () => {
           display: 'flex', flexDirection: 'column', gap: '22px',
           marginBottom: '20px',
         }}>
-          {/* Community Name */}
-          <div>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: V('--th-text'), display: 'block', marginBottom: '8px' }}>
-              {t('community', 'communityNameLabel')}
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('community', 'communityNamePlaceholder')}
-              style={{
-                width: '100%', padding: '13px 16px', boxSizing: 'border-box',
-                borderRadius: '12px', border: `1px solid var(--th-border)`,
-                backgroundColor: V('--th-bg'), color: V('--th-text'),
-                fontSize: '14px', outline: 'none',
-              }}
-            />
-          </div>
-
-          {/* Region */}
-          <div>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: V('--th-text'), display: 'block', marginBottom: '8px' }}>
-              {t('community', 'regionLabel')}
-            </label>
-            <select
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              style={{
-                width: '100%', padding: '13px 16px', boxSizing: 'border-box',
-                borderRadius: '12px', border: `1px solid var(--th-border)`,
-                backgroundColor: V('--th-bg'), color: V('--th-text'),
-                fontSize: '14px', outline: 'none', cursor: 'pointer',
-                appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 14px center',
-                paddingRight: '40px',
-              }}
-            >
-              {REGIONS.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
+          <CommunityInfoFields name={name} onNameChange={setName} region={region} onRegionChange={setRegion} t={t} />
         </div>
 
-        {/* Admins card */}
-        <div style={{
-          backgroundColor: V('--th-card'), borderRadius: '20px',
-          border: `1px solid var(--th-border)`, padding: '20px',
-          marginBottom: '20px',
-        }}>
-          {/* Header */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-            <span style={{ fontSize: '14px', fontWeight: '700', color: V('--th-text') }}>
-              {t('community', 'adminsLabel')}
-            </span>
-            <span style={{ fontSize: '12px', color: V('--th-text-sub') }}>
-              {totalAdminCount}{t('community', 'adminsSelected')}
-            </span>
-          </div>
-
-          {/* Search */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: '8px',
-            padding: '10px 14px', borderRadius: '12px',
-            border: `1px solid var(--th-border)`,
-            backgroundColor: V('--th-bg'), marginBottom: '12px',
-          }}>
-            <Search size={15} color={V('--th-text-sub')} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => { setSearchQuery(e.target.value); setAdminPage(0); }}
-              placeholder={t('community', 'searchByNickname')}
-              style={{
-                flex: 1, border: 'none', outline: 'none',
-                backgroundColor: 'transparent', color: V('--th-text'), fontSize: '14px',
-              }}
-            />
-          </div>
-
-          {/* 소유자 — 공동 어드민은 해제할 수 없어 체크된 채 고정 */}
-          {ownerInfo && (
-            <div style={{
-              padding: '10px 12px', marginBottom: '2px', borderRadius: '10px',
-              display: 'flex', alignItems: 'center', gap: '12px',
-              backgroundColor: 'rgba(107,92,231,0.08)',
-            }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                backgroundColor: 'var(--th-primary)', border: `2px solid var(--th-primary)`,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '14px', fontWeight: '700', color: '#fff',
-              }}>
-                {ownerInfo.nickname[0].toUpperCase()}
-              </div>
-              <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{
-                  fontSize: '14px', fontWeight: '500', color: 'var(--th-primary)',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {ownerInfo.nickname}
-                </span>
-                <RoleBadge owner />
-              </span>
-              <Check size={16} color="var(--th-primary)" strokeWidth={2.5} />
-            </div>
-          )}
-
-          {/* Member list */}
-          <div {...adminSwipe} style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-            {filteredMembers.length === 0 ? (
-              <p style={{ fontSize: '13px', color: V('--th-text-sub'), textAlign: 'center', padding: '20px 0', margin: 0 }}>
-                {t('community', 'searchNoResult')}
-              </p>
-            ) : (
-              pagedAdminMembers.map((m) => {
-                const isSelected = selectedIds.has(m.memberId);
-                const isDisabled = !isSelected && selectedIds.size >= maxSelected;
-                return (
-                  <button
-                    key={m.memberId}
-                    onClick={() => !isDisabled && toggleAdmin(m.memberId)}
-                    style={{
-                      width: '100%', padding: '10px 12px', border: 'none',
-                      borderRadius: '10px', cursor: isDisabled ? 'default' : 'pointer',
-                      display: 'flex', alignItems: 'center', gap: '12px',
-                      backgroundColor: isSelected ? 'rgba(107,92,231,0.08)' : 'transparent',
-                      transition: 'background-color 0.15s',
-                      opacity: isDisabled ? 0.4 : 1,
-                    }}
-                  >
-                    <div style={{
-                      width: 36, height: 36, borderRadius: '50%', flexShrink: 0,
-                      backgroundColor: isSelected ? 'var(--th-primary)' : 'var(--th-bg)',
-                      border: `2px solid ${isSelected ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: '14px', fontWeight: '700',
-                      color: isSelected ? '#fff' : V('--th-text-sub'),
-                      transition: 'all 0.15s',
-                    }}>
-                      {m.nickname[0].toUpperCase()}
-                    </div>
-                    <span style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{
-                        fontSize: '14px', fontWeight: '500', textAlign: 'left',
-                        color: isSelected ? 'var(--th-primary)' : V('--th-text'),
-                        overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                      }}>
-                        {m.nickname}
-                      </span>
-                      {m.memberId === userId && (
-                        <span style={{ flexShrink: 0, fontSize: '11px', color: V('--th-text-sub') }}>{t('invite', 'me')}</span>
-                      )}
-                      {m.memberId === detail?.createdBy && <RoleBadge owner />}
-                    </span>
-                    {isSelected && (
-                      <Check size={16} color="var(--th-primary)" strokeWidth={2.5} />
-                    )}
-                  </button>
-                );
-              })
-            )}
-          </div>
-
-          {/* Pagination */}
-          {totalAdminPages > 1 && (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginTop: '12px' }}>
-              <button
-                onClick={() => setAdminPage(p => Math.max(0, p - 1))}
-                disabled={adminPage === 0}
-                style={{ padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: `1px solid var(--th-border)`, backgroundColor: V('--th-bg'), color: adminPage === 0 ? V('--th-text-sub') : V('--th-text'), cursor: adminPage === 0 ? 'not-allowed' : 'pointer' }}
-              >
-                ‹
-              </button>
-              <span style={{ fontSize: 12, fontWeight: 700, color: V('--th-text-sub') }}>{adminPage + 1} / {totalAdminPages}</span>
-              <button
-                onClick={() => setAdminPage(p => Math.min(totalAdminPages - 1, p + 1))}
-                disabled={adminPage >= totalAdminPages - 1}
-                style={{ padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: `1px solid var(--th-border)`, backgroundColor: V('--th-bg'), color: adminPage >= totalAdminPages - 1 ? V('--th-text-sub') : V('--th-text'), cursor: adminPage >= totalAdminPages - 1 ? 'not-allowed' : 'pointer' }}
-              >
-                ›
-              </button>
-            </div>
-          )}
-        </div>
+        <AdminPicker
+          members={allMembers}
+          ownerInfo={ownerInfo}
+          ownerId={detail?.createdBy}
+          userId={userId}
+          selectedIds={selectedIds}
+          maxSelected={maxSelected}
+          totalAdminCount={totalAdminCount}
+          onToggle={toggleAdmin}
+          t={t}
+        />
 
         {error && (
           <p style={{ fontSize: '13px', color: '#ef4444', textAlign: 'center', marginBottom: '12px' }}>
@@ -591,79 +313,14 @@ const CommunitySettings = () => {
         </button>}
       </div>
 
-      {/* Delete confirm modal */}
       {showDeleteModal && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 100,
-          backgroundColor: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-          padding: '0 0 0 0',
-        }}
-          onClick={(e) => { if (e.target === e.currentTarget) setShowDeleteModal(false); }}
-        >
-          <div style={{
-            width: '100%', maxWidth: '390px',
-            backgroundColor: V('--th-card'),
-            borderRadius: '24px 24px 0 0',
-            padding: '28px 24px 40px',
-          }}>
-            {/* 빨간 아이콘 */}
-            <div style={{
-              width: 52, height: 52, borderRadius: '50%',
-              backgroundColor: 'rgba(239,68,68,0.1)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              margin: '0 auto 18px',
-            }}>
-              <Trash2 size={24} color="#ef4444" />
-            </div>
-
-            <p style={{ fontSize: '18px', fontWeight: '800', color: V('--th-text'), textAlign: 'center', margin: '0 0 10px' }}>
-              {t('community', 'deleteConfirmTitle')}
-            </p>
-            <p style={{ fontSize: '13px', color: V('--th-text-sub'), textAlign: 'center', margin: '0 0 28px', lineHeight: 1.6 }}>
-              {t('community', 'deleteConfirmDesc')}
-            </p>
-
-            {/* 커뮤니티 이름 표시 */}
-            <div style={{
-              backgroundColor: V('--th-bg'), borderRadius: '12px',
-              padding: '12px 16px', textAlign: 'center', marginBottom: '24px',
-              border: `1px solid var(--th-border)`,
-            }}>
-              <span style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text') }}>
-                {name || storedCommunity?.name}
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                style={{
-                  flex: 1, padding: '14px',
-                  borderRadius: '12px', border: `1px solid var(--th-border)`,
-                  backgroundColor: V('--th-bg'), color: V('--th-text'),
-                  fontSize: '15px', fontWeight: '600', cursor: 'pointer',
-                }}
-              >
-                {t('common', 'cancel')}
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={isDeleting}
-                style={{
-                  flex: 1, padding: '14px',
-                  borderRadius: '12px', border: 'none',
-                  backgroundColor: '#ef4444', color: '#fff',
-                  fontSize: '15px', fontWeight: '700',
-                  cursor: isDeleting ? 'not-allowed' : 'pointer',
-                  opacity: isDeleting ? 0.7 : 1,
-                }}
-              >
-                {isDeleting ? t('community', 'deleting') : t('community', 'deleteConfirmButton')}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteCommunityModal
+          communityName={name || storedCommunity?.name}
+          isDeleting={isDeleting}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={handleDelete}
+          t={t}
+        />
       )}
     </div>
   );
