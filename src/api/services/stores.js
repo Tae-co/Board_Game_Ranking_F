@@ -1,5 +1,6 @@
 import axios from 'axios';
-import api, { getAccessToken } from '../axios';
+import api from '../axios';
+import { postImage } from './uploads';
 
 // 매장 API 오류는 { message, code }로 온다. 화면은 문구가 아니라 code로 나눈다 (plan-store-impl-p1 §3.7).
 export const storeErrorCode = (error) => error?.response?.data?.code ?? null;
@@ -88,18 +89,11 @@ export const requestScoreSheet = (payload) => api.post('/stores/score-requests',
 export const voteScoreRequest = (requestId, storeId) =>
   api.post(`/stores/score-requests/${requestId}/vote`, null, { params: storeId ? { storeId } : undefined }).then(r => r.data);
 
-// 점수표·룰북 사진. 공용 api 인스턴스는 Content-Type을 JSON으로 고정해서 FormData는 fetch로 (games.js uploadGameImage와 같은 이유)
-export const uploadScoreRequestImage = async (file) => {
+// 점수표·룰북 사진. 프로필·커뮤니티 사진과 같은 업로드 (Content-Type을 비워 multipart로 보낸다)
+export const uploadScoreRequestImage = (file) => {
   const formData = new FormData();
   formData.append('file', file);
-  const token = getAccessToken();
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/upload/image`, {
-    method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : {},
-    body: formData,
-  });
-  if (!res.ok) throw new Error('Image upload failed');
-  return (await res.json()).url;
+  return postImage('/upload/image', formData);
 };
 
 // ── 5단계: 하루 대회 ──
