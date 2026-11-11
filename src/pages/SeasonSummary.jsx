@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Download, Share2 } from 'lucide-react';
-import html2canvas from 'html2canvas';
 import NavAvatar from '../components/NavAvatar';
 import SeasonSummaryCard from '../components/season/SeasonSummaryCard';
 import { getCommunityStatus } from '../api/services/seasons';
@@ -11,6 +10,10 @@ import { useSelectedCommunity } from '../hooks/useSelectedCommunity';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import { fill } from '../utils/seasonUtils';
+
+// html2canvas(원본 400KB)는 저장·공유 때만 쓴다. 화면을 먼저 그리고 뒤에서 받아 둔다 —
+// 누른 뒤에 받기 시작하면 느린 망에서 iOS navigator.share가 사용자 동작 만료로 거절될 수 있다.
+const loadHtml2canvas = () => import('html2canvas').then((m) => m.default);
 
 /**
  * 모임 현황 — 전체 기간 (plan-season-reset §22). 방마다 시즌이 따로 돌아서 커뮤니티는
@@ -29,6 +32,10 @@ const SeasonSummary = () => {
   useEffect(() => {
     if (!communityId) navigate('/community', { replace: true });
   }, [communityId, navigate]);
+
+  useEffect(() => {
+    loadHtml2canvas().catch(() => {}); // 미리 받기. 실패하면 누를 때 다시 받는다
+  }, []);
 
   // 경기 등록 시 ScoreSheet가 이 키를 비운다. 그 밖의 변화(남이 등록한 경기)는 1분 뒤 다시 받는다.
   const { data: summary, isLoading: loading } = useQuery({
@@ -51,6 +58,7 @@ const SeasonSummary = () => {
     // html2canvas는 글자 기준선을 원본 문서에 1×1 img를 붙여 잰다. Tailwind preflight의
     // img { display: block } 때문에 기준선이 아래로 잡혀 글자가 밀리고 overflow: hidden 칸에서 잘린다.
     // 캡처하는 동안만 그 측정용 img를 인라인으로 되돌린다.
+    const html2canvas = await loadHtml2canvas();
     const fix = document.createElement('style');
     fix.textContent = 'img[width="1"][height="1"] { display: inline !important; }';
     document.head.appendChild(fix);
