@@ -44,6 +44,7 @@ export default {
   MATCH_WITHOUT_ROOM: 'Game records without a group can’t be deleted.',
   ROOM_MEMBER_ONLY_RECORD: 'Only group members can record games.',
   PARTICIPANT_NOT_ROOM_MEMBER: 'All players must be members of this group.',
+  MATCH_GAME_NOT_ROOM_GAME: 'Only games of this group’s board game can be recorded here.',
   ROOM_OWNER_ONLY_EDIT_MATCH: 'Only the host can edit game records.',
   ROOM_OWNER_ONLY_DELETE_MATCH: 'Only the host can delete this.',
   CHIP_DELTA_REQUIRED: 'Please enter each player’s chip result.',
