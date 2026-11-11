@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getAccessToken } from '../api/axios';
-import { getAdminGames, createAdminGame, updateAdminGame, deleteAdminGame } from '../api/services/admin';
+import { getAdminGames, createAdminGame, updateAdminGame, deleteAdminGame, uploadAdminImage } from '../api/services/admin';
 
 const GAMES_PER_PAGE = 6;
 
@@ -35,19 +34,7 @@ export const useGameManagement = ({ buildSchemaJson, validateSchemaUI, resetSche
     setIsSubmitting(true);
     try {
       let imageUrl = form.imageUrl;
-      if (imageFile) {
-        const fd = new FormData();
-        fd.append('file', imageFile);
-        const token = getAccessToken();
-        const uploadRes = await fetch(`${import.meta.env.VITE_API_URL}/admin/upload-image`, {
-          method: 'POST',
-          headers: token ? { Authorization: `Bearer ${token}` } : {},
-          body: fd,
-        });
-        if (!uploadRes.ok) throw new Error('Image upload failed');
-        const uploadData = await uploadRes.json();
-        imageUrl = uploadData.url;
-      }
+      if (imageFile) imageUrl = await uploadAdminImage(imageFile);
       const schemaJson = buildSchemaJson(form.name);
       const payload = { ...form, imageUrl, schemaJson };
       if (editingId) {
