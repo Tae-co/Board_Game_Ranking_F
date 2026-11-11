@@ -1,9 +1,9 @@
-/** 커뮤니티를 고르지 않은 로비의 인사 배너 */
-const WelcomeBanner = ({ nickname, t }) => (
+/** 로비·커뮤니티 목록 맨 위 인사 배너 */
+const WelcomeBanner = ({ nickname, t, marginBottom = '24px' }) => (
   <div style={{
     borderRadius: '20px',
     padding: '24px 22px',
-    marginBottom: '24px',
+    marginBottom,
     background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
     position: 'relative',
     overflow: 'hidden',
