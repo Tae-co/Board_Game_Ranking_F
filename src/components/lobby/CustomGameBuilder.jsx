@@ -1,22 +1,15 @@
-import { useRef, useState } from 'react';
-import { X, Plus, Minus, Trophy, Hash, Swords, Coins, ImagePlus } from 'lucide-react';
+import { useState } from 'react';
+import { X } from 'lucide-react';
 import { createGame, uploadGameImage } from '../../api/services/games';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { V } from '../../utils/cssUtils';
 import { DEFAULT_CHIP_DENOMINATIONS } from '../../utils/chipUtils';
-import ChipDenominationsField from './ChipDenominationsField';
+import { buildCustomSchemaJson, validateCustomGame, newCategory } from '../../scoreSheets/customSchema';
+import GameImageField from './GameImageField';
+import PlayerCountField from './PlayerCountField';
+import ScoreTypePicker from './ScoreTypePicker';
+import CategoryListField from './CategoryListField';
 import { useApiErrorMessage } from '../../hooks/useApiErrorMessage';
-
-// 항목 색상은 사용자에게 묻지 않고 순서대로 배정한다
-const PALETTE = ['#1d4ed8', '#0f766e', '#7c3aed', '#b91c1c', '#c2410c', '#0369a1', '#4d7c0f', '#a21caf'];
-
-// 항목 하나에 총점을 적는 경우가 있어서 상한을 100 → 999로 올려둔다 (ScoreCell의 maxScore)
-const MAX_SCORE = 999;
-
-// 점수판의 카테고리 열은 좁아서, 길면 두 줄로 넘어가 표가 어긋난다
-const CATEGORY_MAX_LENGTH = 8;
-
-const newCategory = () => ({ uid: Math.random().toString(36).slice(2, 8), label: '', negative: false });
 
 const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) => {
   const { t } = useLanguage();
@@ -33,12 +26,8 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
   // 칩 게임만. 'buyin'(바이인·우승자) | 'count'(칩 종류별로 세기). 세기 방식은 칩 종류도 정한다
   const [chipMode, setChipMode] = useState('buyin');
   const [denominations, setDenominations] = useState(DEFAULT_CHIP_DENOMINATIONS);
-  const fileInputRef = useRef(null);
 
-  const handlePickImage = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith('image/')) { alert(t('lobby', 'customImageOnly')); return; }
+  const handlePickImage = (file) => {
     setImageFile(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -47,42 +36,12 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
     if (imagePreview) URL.revokeObjectURL(imagePreview);
     setImageFile(null);
     setImagePreview('');
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const updateCategory = (uid, patch) =>
-    setCategories(prev => prev.map(c => (c.uid === uid ? { ...c, ...patch } : c)));
-
-  const buildSchemaJson = () => {
-    // chip을 고르면 서버가 랭킹도 Elo 대신 칩 누적으로 만든다. 만든 뒤에는 바꿀 수 없다.
-    if (scoreType === 'chip' && chipMode === 'count') {
-      return JSON.stringify({ name: name.trim(), type: scoreType, chipMode, denominations });
-    }
-    if (scoreType === 'simple' || scoreType === 'outcome' || scoreType === 'chip') {
-      return JSON.stringify({ name: name.trim(), type: scoreType });
-    }
-    return JSON.stringify({
-      name: name.trim(),
-      type: 'flat',
-      categories: categories.map((c, i) => ({
-        key: `c${i + 1}`,
-        label: c.label.trim(),
-        color: PALETTE[i % PALETTE.length],
-        maxScore: MAX_SCORE,
-        ...(c.negative && { negative: true }),
-      })),
-    });
   };
 
   const handleCreate = async () => {
-    if (!name.trim()) { alert(t('lobby', 'customNameRequired')); return; }
-    if (minPlayers < 1 || maxPlayers < minPlayers) { alert(t('lobby', 'customPlayersInvalid')); return; }
-    if (scoreType === 'chip' && chipMode === 'count' && denominations.length === 0) { alert(t('lobby', 'customChipDenomsRequired')); return; }
-    if (scoreType === 'flat') {
-      const filled = categories.filter(c => c.label.trim());
-      if (filled.length === 0) { alert(t('lobby', 'customCategoryRequired')); return; }
-      if (filled.length !== categories.length) { alert(t('lobby', 'customCategoryRequired')); return; }
-    }
+    const form = { name, minPlayers, maxPlayers, scoreType, chipMode, denominations, categories };
+    const invalid = validateCustomGame(form);
+    if (invalid) { alert(t('lobby', invalid)); return; }
 
     setIsSubmitting(true);
     try {
@@ -93,7 +52,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
       const game = await createGame({
         name: name.trim(),
         communityId: Number(communityId),
-        schemaJson: buildSchemaJson(),
+        schemaJson: buildCustomSchemaJson(form),
         imageUrl,
         minPlayers,
         maxPlayers,
@@ -105,6 +64,7 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
       setIsSubmitting(false);
     }
   };
+
 
   const canCreate = !!name.trim() && !!scoreType && !isSubmitting;
 
@@ -148,270 +108,24 @@ const CustomGameBuilder = ({ initialName, communityId, onCancel, onCreated }) =>
           }}
         />
 
-        {/* Thumbnail (optional) */}
-        <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
-          {t('lobby', 'customImage')}
-        </p>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          onChange={handlePickImage}
-          style={{ display: 'none' }}
+        <GameImageField preview={imagePreview} onPick={handlePickImage} onClear={clearImage} t={t} />
+
+        <PlayerCountField
+          minPlayers={minPlayers} setMinPlayers={setMinPlayers}
+          maxPlayers={maxPlayers} setMaxPlayers={setMaxPlayers}
+          t={t}
         />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            style={{
-              width: 72, height: 72, borderRadius: 12, flexShrink: 0, cursor: 'pointer',
-              backgroundColor: V('--th-card'), overflow: 'hidden', padding: 0,
-              border: `1px ${imagePreview ? 'solid' : 'dashed'} var(--th-border)`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}
-          >
-            {imagePreview
-              ? <img src={imagePreview} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <ImagePlus style={{ width: 22, height: 22, color: V('--th-text-sub') }} />}
-          </button>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <p style={{ margin: 0, fontSize: 12, color: V('--th-text-sub'), lineHeight: 1.4 }}>
-              {t('lobby', 'customImageHint')}
-            </p>
-            {imagePreview && (
-              <button
-                onClick={clearImage}
-                style={{
-                  marginTop: 6, padding: 0, background: 'none', border: 'none', cursor: 'pointer',
-                  fontSize: 12, fontWeight: 600, color: '#ef4444',
-                }}
-              >
-                {t('lobby', 'customImageRemove')}
-              </button>
-            )}
-          </div>
-        </div>
 
-        {/* Player count */}
-        <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
-          {t('lobby', 'customPlayers')}
-        </p>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          {[
-            // min은 max를 넘을 수 없고, max는 min 아래로 내려갈 수 없다 (버튼·입력 공용 경계)
-            { key: 'min', value: minPlayers, set: setMinPlayers, label: t('lobby', 'customMinPlayers'), lo: 1, hi: maxPlayers },
-            { key: 'max', value: maxPlayers, set: setMaxPlayers, label: t('lobby', 'customMaxPlayers'), lo: minPlayers, hi: 20 },
-          ].map((f) => {
-            const clamp = (n) => Math.max(f.lo, Math.min(f.hi, n));
-            const atLo = f.value <= f.lo;
-            const atHi = f.value >= f.hi;
-            return (
-            <div key={f.key} style={{ flex: 1 }}>
-              <label style={{ display: 'block', fontSize: 11, color: V('--th-text-sub'), marginBottom: 4 }}>
-                {f.label}
-              </label>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <button
-                  type="button"
-                  aria-label={`${f.label} -1`}
-                  disabled={atLo}
-                  onClick={() => f.set(clamp(f.value - 1))}
-                  style={{
-                    flex: '0 0 auto', width: 38, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    borderRadius: 10, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                    color: V('--th-text'), cursor: atLo ? 'default' : 'pointer', opacity: atLo ? 0.4 : 1,
-                  }}
-                >
-                  <Minus size={16} />
-                </button>
-                <input
-                  type="text"
-                  readOnly
-                  tabIndex={-1}
-                  value={f.value}
-                  style={{
-                    flex: 1, minWidth: 0, width: '100%', padding: '10px 4px', borderRadius: 10,
-                    backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                    color: V('--th-text'), fontSize: 14, textAlign: 'center', outline: 'none',
-                    boxSizing: 'border-box', cursor: 'default', userSelect: 'none',
-                  }}
-                />
-                <button
-                  type="button"
-                  aria-label={`${f.label} +1`}
-                  disabled={atHi}
-                  onClick={() => f.set(clamp(f.value + 1))}
-                  style={{
-                    flex: '0 0 auto', width: 38, height: 40, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    borderRadius: 10, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                    color: V('--th-text'), cursor: atHi ? 'default' : 'pointer', opacity: atHi ? 0.4 : 1,
-                  }}
-                >
-                  <Plus size={16} />
-                </button>
-              </div>
-            </div>
-            );
-          })}
-        </div>
-        <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 24px' }}>
-          {t('lobby', 'customPlayersHint')}
-        </p>
-
-        {/* Score type */}
-        <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
-          {t('lobby', 'customScoreType')}
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: scoreType === 'chip' ? 8 : 24 }}>
-          {[
-            { key: 'simple', Icon: Trophy, label: t('lobby', 'customTypeSimple'), desc: t('lobby', 'customTypeSimpleDesc') },
-            { key: 'flat', Icon: Hash, label: t('lobby', 'customTypeFlat'), desc: t('lobby', 'customTypeFlatDesc') },
-            { key: 'outcome', Icon: Swords, label: t('lobby', 'customTypeOutcome'), desc: t('lobby', 'customTypeOutcomeDesc') },
-            { key: 'chip', Icon: Coins, label: t('lobby', 'customTypeChip'), desc: t('lobby', 'customTypeChipDesc') },
-          ].map((opt) => {
-            const selected = scoreType === opt.key;
-            return (
-              <button
-                key={opt.key}
-                onClick={() => setScoreType(opt.key)}
-                style={{
-                  textAlign: 'left', padding: '14px 10px', borderRadius: 12, cursor: 'pointer',
-                  backgroundColor: V('--th-card'),
-                  border: `2px solid ${selected ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                }}
-              >
-                <opt.Icon style={{ width: 18, height: 18, color: selected ? 'var(--th-primary)' : V('--th-text-sub'), marginBottom: 6 }} />
-                <p style={{
-                  margin: 0, fontSize: 13, fontWeight: 700,
-                  color: selected ? V('--th-primary') : V('--th-text'),
-                }}>
-                  {opt.label}
-                </p>
-                <p style={{ margin: '2px 0 0', fontSize: 11, lineHeight: 1.35, color: V('--th-text-sub') }}>
-                  {opt.desc}
-                </p>
-              </button>
-            );
-          })}
-        </div>
-
-        {scoreType === 'chip' && (
-          <>
-            <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 16px' }}>
-              {t('lobby', 'customChipHint')}
-            </p>
-            <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
-              {t('lobby', 'customChipMode')}
-            </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: chipMode === 'count' ? 16 : 24 }}>
-              {[
-                { key: 'buyin', label: t('lobby', 'customChipModeBuyIn'), desc: t('lobby', 'customChipModeBuyInDesc') },
-                { key: 'count', label: t('lobby', 'customChipModeCount'), desc: t('lobby', 'customChipModeCountDesc') },
-              ].map((opt) => {
-                const selected = chipMode === opt.key;
-                return (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => setChipMode(opt.key)}
-                    style={{
-                      textAlign: 'left', padding: '12px 10px', borderRadius: 12, cursor: 'pointer',
-                      backgroundColor: V('--th-card'),
-                      border: `2px solid ${selected ? 'var(--th-primary)' : 'var(--th-border)'}`,
-                    }}
-                  >
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: selected ? V('--th-primary') : V('--th-text') }}>
-                      {opt.label}
-                    </p>
-                    <p style={{ margin: '2px 0 0', fontSize: 11, lineHeight: 1.35, color: V('--th-text-sub') }}>
-                      {opt.desc}
-                    </p>
-                  </button>
-                );
-              })}
-            </div>
-            {chipMode === 'count' && (
-              <div style={{ marginBottom: 24 }}>
-                <ChipDenominationsField value={denominations} onChange={setDenominations} />
-              </div>
-            )}
-          </>
-        )}
+        <ScoreTypePicker
+          scoreType={scoreType} setScoreType={setScoreType}
+          chipMode={chipMode} setChipMode={setChipMode}
+          denominations={denominations} setDenominations={setDenominations}
+          t={t}
+        />
 
         {/* Categories (flat only) */}
         {scoreType === 'flat' && (
-          <>
-            <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-text-sub'), letterSpacing: '0.08em', marginBottom: 8 }}>
-              {t('lobby', 'customCategories')}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-              {categories.map((cat, idx) => (
-                <div key={cat.uid} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <div style={{ flex: 1, minWidth: 0, position: 'relative' }}>
-                    <input
-                      type="text"
-                      value={cat.label}
-                      maxLength={CATEGORY_MAX_LENGTH}
-                      onChange={(e) => updateCategory(cat.uid, { label: e.target.value.slice(0, CATEGORY_MAX_LENGTH) })}
-                      placeholder={t('lobby', 'customCategoryPlaceholder')}
-                      style={{
-                        width: '100%', padding: '10px 34px 10px 12px', borderRadius: 10,
-                        backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-                        color: V('--th-text'), fontSize: 14, outline: 'none', boxSizing: 'border-box',
-                      }}
-                    />
-                    <span style={{
-                      position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)',
-                      fontSize: 11, color: V('--th-text-sub'), pointerEvents: 'none',
-                    }}>
-                      {cat.label.length}/{CATEGORY_MAX_LENGTH}
-                    </span>
-                  </div>
-                  <button
-                    onClick={() => updateCategory(cat.uid, { negative: !cat.negative })}
-                    title={t('lobby', 'customNegativeHint')}
-                    style={{
-                      flexShrink: 0, padding: '9px 10px', borderRadius: 10, cursor: 'pointer', fontSize: 12, fontWeight: 700,
-                      backgroundColor: cat.negative ? '#ef4444' : V('--th-card'),
-                      color: cat.negative ? '#fff' : V('--th-text-sub'),
-                      border: `1px solid ${cat.negative ? '#ef4444' : 'var(--th-border)'}`,
-                    }}
-                  >
-                    {t('lobby', 'customNegative')}
-                  </button>
-                  <button
-                    onClick={() => setCategories(prev => prev.filter(c => c.uid !== cat.uid))}
-                    disabled={categories.length === 1}
-                    style={{
-                      flexShrink: 0, background: 'none', border: 'none', padding: 4,
-                      cursor: categories.length === 1 ? 'not-allowed' : 'pointer',
-                      opacity: categories.length === 1 ? 0.3 : 1,
-                      color: V('--th-text-sub'),
-                    }}
-                    aria-label={`remove category ${idx + 1}`}
-                  >
-                    <X style={{ width: 16, height: 16 }} />
-                  </button>
-                </div>
-              ))}
-            </div>
-
-            <button
-              onClick={() => setCategories(prev => [...prev, newCategory()])}
-              style={{
-                width: '100%', padding: '10px', borderRadius: 10, marginBottom: 8,
-                backgroundColor: 'transparent', border: `1px dashed var(--th-border)`,
-                color: V('--th-text-sub'), fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-              }}
-            >
-              <Plus style={{ width: 14, height: 14 }} />
-              {t('lobby', 'customAddCategory')}
-            </button>
-
-            <p style={{ fontSize: 11, color: V('--th-text-sub'), lineHeight: 1.4, margin: '0 0 24px' }}>
-              {t('lobby', 'customNegativeHint')}
-            </p>
-          </>
+          <CategoryListField categories={categories} setCategories={setCategories} t={t} />
         )}
 
         {/* Create */}
