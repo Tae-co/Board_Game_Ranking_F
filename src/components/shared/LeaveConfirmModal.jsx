@@ -1,12 +1,14 @@
 import { useState } from 'react';
 import { V } from '../../utils/cssUtils';
 import { useTheme } from '../../theme/ThemeContext';
+import { useApiErrorMessage } from '../../hooks/useApiErrorMessage';
 
 /**
  * 나가기 확인 팝업 (캔버스 UI-CommunityLeave · UI-RoomLeave, 다크 포함).
  * 커뮤니티 나가기와 방 나가기가 같이 쓴다. onConfirm이 실패하면 서버 문구(없으면 failText)를 팝업 안에 보여 준다.
  */
 const LeaveConfirmModal = ({ title, desc, items, note, cancelText, confirmText, failText, onClose, onConfirm }) => {
+  const errorText = useApiErrorMessage();
   const { themeKey } = useTheme();
   const dark = themeKey === 'ledger';
   const [leaving, setLeaving] = useState(false);
@@ -18,7 +20,7 @@ const LeaveConfirmModal = ({ title, desc, items, note, cancelText, confirmText, 
     try {
       await onConfirm();
     } catch (e) {
-      setError(e?.response?.data?.message || failText);
+      setError(errorText(e, failText));
       setLeaving(false);
     }
   };

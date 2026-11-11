@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { V } from '../../utils/cssUtils';
 import SeasonFields from '../shared/SeasonFields';
 import { isSeasonInputValid, seasonLabel } from '../../utils/seasonUtils';
+import { useApiErrorMessage } from '../../hooks/useApiErrorMessage';
 
 /**
  * 호스트 전용 — 진행 중 시즌의 이름·종료일 수정 (plan-season-reset §22).
  * 끝난 시즌은 기록이라 고칠 수 없고, 종료일은 내일 이후만 된다.
  */
 const SeasonEditModal = ({ season, region, onClose, onSave, t }) => {
+  const errorText = useApiErrorMessage();
   // 자동 연장된 시즌은 이름이 비어 있다 — 화면에 보이던 "시즌 N"을 그대로 채워 준다.
   const [name, setName] = useState(() => seasonLabel(season, t));
   const [endDate, setEndDate] = useState(season.endDate);
@@ -27,7 +29,7 @@ const SeasonEditModal = ({ season, region, onClose, onSave, t }) => {
       await onSave({ name: untouchedAutoName ? null : name.trim(), endDate });
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.message || t('season', 'seasonSaveFailed'));
+      setError(errorText(err, t('season', 'seasonSaveFailed')));
       setSaving(false);
     }
   };

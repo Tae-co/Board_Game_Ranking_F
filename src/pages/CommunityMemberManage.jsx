@@ -12,12 +12,14 @@ import { getAuthUserId } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useSwipePaging } from '../hooks/useSwipePaging';
+import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 const COLORS = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
 const PER_PAGE = 10;
 
 const CommunityMemberManage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const errorText = useApiErrorMessage();
   const queryClient = useQueryClient();
   const userId = getAuthUserId();
   const [page, setPage] = useState(0);
@@ -55,7 +57,7 @@ const CommunityMemberManage = () => {
       queryClient.invalidateQueries({ queryKey: ['communityDetail', communityId] });
       setPage(0);
     } catch (err) {
-      alert(err?.response?.data?.message || t('community', 'memberKickFailed'));
+      alert(errorText(err, t('community', 'memberKickFailed')));
     }
   };
 

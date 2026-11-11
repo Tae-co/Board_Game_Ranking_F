@@ -11,6 +11,7 @@ import koAdmin from './ko/admin';
 import koSeason from './ko/season';
 import koStore from './ko/store';
 import koContest from './ko/contest';
+import koErrors from './ko/errors';
 
 import enCommon from './en/common';
 import enLogin from './en/login';
@@ -25,6 +26,7 @@ import enAdmin from './en/admin';
 import enSeason from './en/season';
 import enStore from './en/store';
 import enContest from './en/contest';
+import enErrors from './en/errors';
 
 const translations = {
   ko: {
@@ -41,6 +43,7 @@ const translations = {
     season: koSeason,
     store: koStore,
     contest: koContest,
+    errors: koErrors,
   },
   en: {
     common: enCommon,
@@ -56,6 +59,7 @@ const translations = {
     season: enSeason,
     store: enStore,
     contest: enContest,
+    errors: enErrors,
   },
 };
 
