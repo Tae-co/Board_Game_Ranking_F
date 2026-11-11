@@ -12,7 +12,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import JoinCodeSheet from '../components/lobby/JoinCodeSheet';
 import CommunityHero from '../components/lobby/CommunityHero';
-import WelcomeBanner from '../components/lobby/WelcomeBanner';
+import WelcomeBanner from '../components/shared/WelcomeBanner';
 import SeasonEntryCard from '../components/lobby/SeasonEntryCard';
 import LobbyActionCard from '../components/lobby/LobbyActionCard';
 import RoomGrid from '../components/lobby/RoomGrid';
