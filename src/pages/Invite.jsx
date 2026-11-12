@@ -336,7 +336,6 @@ const Invite = () => {
           userId={userId}
           saving={room.saving}
           onKickMember={room.handleKickMember}
-          navigate={navigate}
           t={t}
           season={currentSeason}
           onEditSeason={() => setShowSeasonEdit(true)}

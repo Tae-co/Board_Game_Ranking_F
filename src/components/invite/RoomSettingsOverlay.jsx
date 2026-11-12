@@ -13,7 +13,7 @@ const RoomSettingsOverlay = ({
   onClose, onSave, onDeleteRoom, onLeaveRoom, isHost,
   editRoomName, setEditRoomName,
   members, userId,
-  saving, onKickMember, navigate, t,
+  saving, onKickMember, t,
   season, onEditSeason,
 }) => {
   const [page, setPage] = useState(0);
