@@ -152,7 +152,7 @@ const RoomSettingsOverlay = ({
       )}
       {isHost && <>
       <button onClick={onDeleteRoom} style={{ width: '100%', padding: '14px', borderRadius: '50px', backgroundColor: 'transparent', color: '#ef4444', border: '1.5px solid #ef4444', cursor: 'pointer', fontSize: '14px', fontWeight: '700' }}>{t('invite', 'deleteRoom')}</button>
-      <button onClick={onSave} disabled={saving || !editRoomName.trim()} style={{ width: '100%', padding: '15px', borderRadius: '50px', cursor: saving ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)', border: 'none', opacity: saving ? 0.7 : 1, fontSize: '15px', fontWeight: '700', color: '#FFFFFF', boxShadow: '0 4px 16px rgba(107, 92, 231, 0.4)' }}>
+      <button onClick={onSave} disabled={saving || !editRoomName.trim()} style={{ width: '100%', padding: '15px', borderRadius: '50px', cursor: saving || !editRoomName.trim() ? 'not-allowed' : 'pointer', background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)', border: 'none', opacity: saving || !editRoomName.trim() ? 0.5 : 1, fontSize: '15px', fontWeight: '700', color: '#FFFFFF', boxShadow: '0 4px 16px rgba(107, 92, 231, 0.4)' }}>
         {saving ? t('common', 'saving') : t('invite', 'saveChanges')}
       </button>
       </>}

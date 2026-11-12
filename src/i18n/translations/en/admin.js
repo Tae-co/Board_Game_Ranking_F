@@ -2,7 +2,6 @@ export default {
   title: 'Admin',
   gamesTab: 'Manage Games',
   membersTab: 'Manage Members',
-  settingsTab: 'Settings',
   registeredGames: 'Registered Games',
   addGame: 'Add Game',
   addGameTitle: 'Add New Game',
