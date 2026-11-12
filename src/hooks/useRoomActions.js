@@ -1,7 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
+import { useApiErrorMessage } from './useApiErrorMessage';
 import { joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, updateCurrentSeason } from '../api/services/rooms';
+
+/** LP 입력값: 비어 있지 않은 0 이상의 숫자. 모달의 저장 버튼도 같은 기준으로 막는다. */
+export const isValidRating = (value) => String(value).trim() !== '' && Number.isFinite(Number(value)) && Number(value) >= 0;
 
 const removeRoomFrom = (roomId) => (old) =>
   Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
@@ -13,6 +17,7 @@ const removeRoomFrom = (roomId) => (old) =>
 export const useRoomActions = ({ roomId, userId, roomName, inviteCode, t }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const errorText = useApiErrorMessage();
 
   const [isJoiningRoom, setIsJoiningRoom] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -99,13 +104,13 @@ export const useRoomActions = ({ roomId, userId, roomName, inviteCode, t }) => {
   const handleUpdateRating = async () => {
     if (!ratingEditModal) return;
     const val = Number(ratingEditValue);
-    if (isNaN(val) || val < 0) return;
+    if (!isValidRating(ratingEditValue)) return;
     setIsRatingEditSaving(true);
     try {
       await updateMemberRating(roomId, ratingEditModal.memberId, { rating: val });
       queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
       setRatingEditModal(null);
-    } catch { alert(t('ranking', 'editRatingFailed')); }
+    } catch (err) { alert(errorText(err, t('ranking', 'editRatingFailed'))); }
     finally { setIsRatingEditSaving(false); }
   };
 
