@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { RankRowSkeleton } from '../components/Skeleton';
 import { useLanguage } from '../i18n/LanguageContext';
@@ -33,6 +33,14 @@ import { useRoomActions } from '../hooks/useRoomActions';
 import { useMatchActions } from '../hooks/useMatchActions';
 
 const PAGE_SIZE = 7;
+
+const findSearchResult = (query, players) => {
+  if (!query.trim()) return null;
+  const q = query.toLowerCase();
+  const idx = players.findIndex(r => r.nickname.toLowerCase().includes(q));
+  if (idx === -1) return null;
+  return { memberId: players[idx].memberId, pageNum: Math.floor(idx / PAGE_SIZE) };
+};
 
 const Invite = () => {
   const { roomId } = useParams();
@@ -85,17 +93,14 @@ const Invite = () => {
   );
   const totalPages = useMemo(() => Math.ceil(mergedPlayers.length / PAGE_SIZE), [mergedPlayers.length]);
 
-  const searchResult = useMemo(() => {
-    if (!searchQuery.trim()) return null;
-    const q = searchQuery.toLowerCase();
-    const idx = mergedPlayers.findIndex(r => r.nickname.toLowerCase().includes(q));
-    if (idx === -1) return null;
-    return { memberId: mergedPlayers[idx].memberId, pageNum: Math.floor(idx / PAGE_SIZE) };
-  }, [searchQuery, mergedPlayers]);
+  const searchResult = useMemo(() => findSearchResult(searchQuery, mergedPlayers), [searchQuery, mergedPlayers]);
 
-  useEffect(() => {
-    if (searchResult) setPage(searchResult.pageNum);
-  }, [searchResult]);
+  // 검색어를 칠 때 찾은 사람이 있는 페이지로 넘긴다
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+    const result = findSearchResult(query, mergedPlayers);
+    if (result) setPage(result.pageNum);
+  };
 
   const minPlayers = gameInfo?.minPlayers ?? 2;
   const maxPlayers = gameInfo?.maxPlayers ?? 99;
@@ -280,6 +285,7 @@ const Invite = () => {
                 setShowSearch={setShowSearch}
                 searchQuery={searchQuery}
                 setSearchQuery={setSearchQuery}
+                onSearchChange={handleSearchChange}
                 onShowRatingInfo={() => setShowRatingInfo(true)}
                 t={t}
               />
