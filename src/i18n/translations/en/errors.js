@@ -126,4 +126,16 @@ export default {
   EVENT_NOT_COUPON: 'This isn’t a one-time coupon event.',
   EVENT_NOT_ACTIVE: 'This can’t be used right now.',
   COUPON_ALREADY_USED: 'This coupon has already been used.',
+
+  // 2026-11 권한·입력 검증
+  INVALID_REQUEST: 'The request wasn’t formatted correctly.',
+  SELF_ONLY: 'You can only view your own information.',
+  ROOM_ACCESS_DENIED: 'You don’t have access to this group.',
+  COMMUNITY_ACCESS_DENIED: 'You don’t have access to this community.',
+  COMMUNITY_MEMBER_ONLY_JOIN_ROOM: 'Only community members can join this group.',
+  NICKNAME_TAKEN: 'That nickname is already taken.',
+  MATCH_REQUEST_INCOMPLETE: 'Game and group information is required.',
+  MATCH_TOO_FEW_PARTICIPANTS: 'A game needs at least 2 players.',
+  MATCH_DUPLICATE_PARTICIPANT: 'The same player can’t be added twice.',
+  MATCH_INVALID_PLACEMENT: 'Placements must be between 1st and the number of players.',
 };

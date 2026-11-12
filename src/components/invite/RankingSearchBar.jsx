@@ -3,7 +3,7 @@ import { Search, X, Info } from 'lucide-react';
 import { V } from '../../utils/cssUtils';
 
 /** 랭킹 표 위의 점수 안내(i) 버튼과 플레이어 검색 */
-const RankingSearchBar = ({ showSearch, setShowSearch, searchQuery, setSearchQuery, onShowRatingInfo, t }) => {
+const RankingSearchBar = ({ showSearch, setShowSearch, searchQuery, setSearchQuery, onSearchChange, onShowRatingInfo, t }) => {
   const inputRef = useRef(null);
 
   useEffect(() => {
@@ -28,7 +28,7 @@ const RankingSearchBar = ({ showSearch, setShowSearch, searchQuery, setSearchQue
           <input
             ref={inputRef}
             value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
+            onChange={e => onSearchChange(e.target.value)}
             placeholder={t('invite', 'searchPlayerPlaceholder')}
             style={{
               flex: 1, background: 'none', border: 'none', outline: 'none',

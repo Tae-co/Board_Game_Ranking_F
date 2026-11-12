@@ -127,4 +127,16 @@ export default {
   EVENT_NOT_COUPON: '1회용 쿠폰 이벤트가 아니에요.',
   EVENT_NOT_ACTIVE: '지금은 쓸 수 있는 기간이 아니에요.',
   COUPON_ALREADY_USED: '이미 사용한 쿠폰이에요.',
+
+  // 2026-11 권한·입력 검증
+  INVALID_REQUEST: '요청 형식이 올바르지 않습니다.',
+  SELF_ONLY: '본인 정보만 볼 수 있습니다.',
+  ROOM_ACCESS_DENIED: '이 게임방을 볼 권한이 없습니다.',
+  COMMUNITY_ACCESS_DENIED: '이 커뮤니티를 볼 권한이 없습니다.',
+  COMMUNITY_MEMBER_ONLY_JOIN_ROOM: '커뮤니티 멤버만 이 게임방에 참가할 수 있습니다.',
+  NICKNAME_TAKEN: '이미 사용 중인 닉네임입니다.',
+  MATCH_REQUEST_INCOMPLETE: '게임과 방 정보가 필요합니다.',
+  MATCH_TOO_FEW_PARTICIPANTS: '참가자는 2명 이상이어야 합니다.',
+  MATCH_DUPLICATE_PARTICIPANT: '같은 참가자가 두 번 들어갈 수 없습니다.',
+  MATCH_INVALID_PLACEMENT: '순위는 1등부터 참가자 수 사이여야 합니다.',
 };

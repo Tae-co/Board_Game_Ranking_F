@@ -49,6 +49,9 @@ const CatanInputCell = ({ catKey, playerId, value, limits, color, handleChange, 
       pattern="[0-9]*"
       value={displayValue}
       placeholder="0"
+      // 칸에 진짜 값 "0"이 들어 있어서, 커서가 0 앞에 놓이면 "2"가 "20"이 되고 최대값으로 잘렸다.
+      // 다른 점수판(ScoreCell)처럼 누르면 전체를 선택해 새로 친 값으로 바뀌게 한다.
+      onFocus={(e) => e.target.select()}
       onChange={(e) => handleChange(catKey, playerId, clampCatanValue(e.target.value, limits))}
       onBlur={(e) => {
         const nextValue = e.target.value === "" ? limits.min : clampCatanValue(e.target.value, limits);
