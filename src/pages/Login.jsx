@@ -7,6 +7,7 @@ import { consumeSessionExpired, saveAuthSession } from '../auth/storage';
 import { appleLogin } from '../api/services/auth';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
+import { setPendingRedirect } from '../utils/storage';
 
 const isWebView = !Capacitor.isNativePlatform() && (
   /FBAN|FBAV|Instagram|Twitter|Line|KAKAOTALK/i.test(navigator.userAgent) ||
@@ -16,7 +17,7 @@ const isWebView = !Capacitor.isNativePlatform() && (
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { t } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
   const [sessionExpired] = useState(consumeSessionExpired);
   const googleAuthUrl = `${import.meta.env.VITE_API_URL}/auth/google`;
   const googleNativeAuthUrl = 'https://meeple-production.up.railway.app/api/auth/google/native/login';
@@ -56,8 +57,7 @@ const Login = () => {
       }
       return;
     }
-    const redirect = location.state?.redirectAfterLogin;
-    if (redirect) sessionStorage.setItem('pendingRedirect', redirect);
+    setPendingRedirect(location.state?.redirectAfterLogin);
     const returnTo = encodeURIComponent(window.location.origin);
     window.location.href = `${import.meta.env.VITE_API_URL}/auth/kakao/login?returnTo=${returnTo}`;
   };
@@ -72,8 +72,32 @@ const Login = () => {
         justifyContent: 'center',
         backgroundColor: V('--th-bg'),
         padding: '48px 24px 32px',
+        position: 'relative',
       }}
     >
+      {/* Language — 로그인 전에도 바꿀 수 있게. 라벨은 각 언어 그대로 둔다 */}
+      <div style={{
+        position: 'absolute', top: '16px', right: '16px',
+        display: 'flex', gap: '2px', padding: '3px', borderRadius: '999px',
+        backgroundColor: V('--th-card'), border: `1px solid ${V('--th-border')}`,
+      }}>
+        {[['ko', '한국어'], ['en', 'English']].map(([code, label]) => (
+          <button
+            key={code}
+            onClick={() => setLang(code)}
+            aria-pressed={lang === code}
+            style={{
+              padding: '6px 12px', borderRadius: '999px', border: 'none', cursor: 'pointer',
+              fontSize: '12px', fontWeight: '700',
+              backgroundColor: lang === code ? V('--th-primary') : 'transparent',
+              color: lang === code ? '#fff' : V('--th-text-sub'),
+            }}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ width: '100%', maxWidth: '360px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
 
         {/* Logo */}
@@ -141,8 +165,7 @@ const Login = () => {
           {/* Google */}
           <button
             onClick={async () => {
-              const redirect = location.state?.redirectAfterLogin;
-              if (redirect) sessionStorage.setItem('pendingRedirect', redirect);
+              setPendingRedirect(location.state?.redirectAfterLogin);
               if (Capacitor.isNativePlatform()) {
                 try { await Browser.open({ url: googleNativeAuthUrl }); } catch (e) { alert(t('login', 'googleLoginError') + e.message); }
                 return;

@@ -1,23 +1,15 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { ArrowLeft, Camera } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { createCommunity } from '../api/services/communities';
 import { uploadImage } from '../api/uploadImage';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import { getAuthUserId, getNickname } from '../auth/storage';
 import { enterCommunity, setMyCommunity } from '../utils/storage';
-
-const REGIONS = [
-  'South Korea', 'United States', 'Japan', 'China', 'United Kingdom',
-  'Germany', 'France', 'Canada', 'Australia', 'Singapore',
-  'Hong Kong', 'Taiwan', 'Thailand', 'Vietnam', 'Indonesia',
-  'Philippines', 'Malaysia', 'India', 'Brazil', 'Mexico',
-  'Netherlands', 'Sweden', 'Norway', 'Denmark', 'Finland',
-  'Spain', 'Italy', 'Poland', 'Russia', 'Other',
-];
-
+import CommunityPhotoPicker from '../components/shared/CommunityPhotoPicker';
+import CommunityInfoFields from '../components/shared/CommunityInfoFields';
 
 const CreateCommunity = () => {
   const navigate = useNavigate();
@@ -32,7 +24,6 @@ const CreateCommunity = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [uploadedImageUrl, setUploadedImageUrl] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef(null);
 
   const handlePhotoSelect = async (e) => {
     const file = e.target.files?.[0];
@@ -111,49 +102,7 @@ const CreateCommunity = () => {
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '28px 20px' }}>
 
-        {/* Photo upload */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '28px' }}>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
-            style={{ display: 'none' }}
-            onChange={handlePhotoSelect}
-          />
-          <div
-            onClick={() => fileInputRef.current.click()}
-            style={{
-              width: 100, height: 100, borderRadius: '18px',
-              border: imagePreview ? 'none' : `2px dashed var(--th-border)`,
-              backgroundColor: V('--th-card'),
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', marginBottom: '12px',
-              overflow: 'hidden', position: 'relative',
-            }}
-          >
-            {imagePreview ? (
-              <>
-                <img
-                  src={imagePreview}
-                  alt="preview"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
-                <div style={{
-                  position: 'absolute', inset: 0,
-                  backgroundColor: 'rgba(0,0,0,0.35)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <Camera size={24} color="#fff" strokeWidth={1.5} />
-                </div>
-              </>
-            ) : (
-              <Camera size={32} color={V('--th-text-sub')} strokeWidth={1.5} />
-            )}
-          </div>
-          <p style={{ fontSize: '11px', fontWeight: '700', color: V('--th-text-sub'), letterSpacing: '0.08em', textAlign: 'center', margin: 0 }}>
-            {imagePreview ? t('community', 'changePhoto') : t('community', 'uploadPhoto')}
-          </p>
-        </div>
+        <CommunityPhotoPicker imagePreview={imagePreview} onSelect={handlePhotoSelect} t={t} />
 
         {/* Card */}
         <div style={{
@@ -162,50 +111,7 @@ const CreateCommunity = () => {
           display: 'flex', flexDirection: 'column', gap: '22px',
         }}>
 
-          {/* Community Name */}
-          <div>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: V('--th-text'), display: 'block', marginBottom: '8px' }}>
-              {t('community', 'communityNameLabel')}
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder={t('community', 'communityNamePlaceholder')}
-              style={{
-                width: '100%', padding: '13px 16px', boxSizing: 'border-box',
-                borderRadius: '12px', border: `1px solid var(--th-border)`,
-                backgroundColor: V('--th-bg'), color: V('--th-text'),
-                fontSize: '14px', outline: 'none',
-              }}
-            />
-          </div>
-
-          {/* Region */}
-          <div>
-            <label style={{ fontSize: '14px', fontWeight: '600', color: V('--th-text'), display: 'block', marginBottom: '8px' }}>
-              {t('community', 'regionLabel')}
-            </label>
-            <select
-              value={region}
-              onChange={(e) => setRegion(e.target.value)}
-              style={{
-                width: '100%', padding: '13px 16px', boxSizing: 'border-box',
-                borderRadius: '12px', border: `1px solid var(--th-border)`,
-                backgroundColor: V('--th-bg'), color: V('--th-text'),
-                fontSize: '14px', outline: 'none', cursor: 'pointer',
-                appearance: 'none',
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: 'right 14px center',
-                paddingRight: '40px',
-              }}
-            >
-              {REGIONS.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
+          <CommunityInfoFields name={name} onNameChange={setName} region={region} onRegionChange={setRegion} t={t} />
 
           {/* Terms */}
           <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.6, textAlign: 'center' }}>

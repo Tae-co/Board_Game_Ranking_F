@@ -1,12 +1,12 @@
 import { Suspense, lazy, useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import axios from 'axios';
 import { Capacitor } from '@capacitor/core';
 import { App as CapApp } from '@capacitor/app';
 import { Browser } from '@capacitor/browser';
 import { setAccessToken, ensureToken } from './api/axios';
 import { AUTH_CHANGED_EVENT, enforceSessionExpiry, getStoredAuth, saveAuthSession } from './auth/storage';
 import { EVENTS, logEvent, startNewSession } from './api/services/events';
+import { warmUpServer } from './api/services/system';
 import { useRouteTracking } from './hooks/useRouteTracking';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
@@ -113,8 +113,7 @@ function App() {
   const isAdmin = authState.role === 'ADMIN';
 
   useEffect(() => {
-    // Railway 서버 워밍업 - 콜드 스타트 방지
-    axios.get(`${import.meta.env.VITE_API_URL}/health`).catch(() => {});
+    warmUpServer();
   }, []);
 
   useEffect(() => {

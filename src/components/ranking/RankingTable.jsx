@@ -145,7 +145,8 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
                 </div>
               ) : null}
             </div>
-            {isHost && !isUnranked && onEditRating && (
+            {/* 서버는 경기 기록이 있으면 LP 수정을 막는다 (SCORE_LOCKED_BY_MATCHES). 누를 수 없는 연필은 숨긴다 */}
+            {isHost && !isUnranked && onEditRating && !rank.playCount && (
               <button
                 onClick={(e) => { e.stopPropagation(); onEditRating(rank); }}
                 style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, flexShrink: 0 }}

@@ -21,7 +21,6 @@ const Admin = () => {
   const tabs = [
     { key: 'games', label: t('admin', 'gamesTab') },
     { key: 'members', label: t('admin', 'membersTab') },
-    { key: 'settings', label: t('admin', 'settingsTab') },
   ];
 
   return (

@@ -1,24 +1,17 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { usePresence } from '../hooks/usePresence';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ArrowLeft, Play, Share2, Search, X, CheckCheck, Info } from 'lucide-react';
-import { Share } from '@capacitor/share';
-import NavAvatar from '../components/NavAvatar';
 import { RankRowSkeleton } from '../components/Skeleton';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { getRoom, getRoomMembers, getRoomRankings, getRoomMatches, joinRoom, leaveRoom, deleteRoom, kickRoomMember, updateRoomName, updateMemberRating, getRoomSeasons, getSeasonPodium, getCurrentSeason, updateCurrentSeason } from '../api/services/rooms';
-import { getGame } from '../api/services/games';
-import { deleteMatch } from '../api/services/matches';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
-import { isChipGame, formatChipDelta } from '../utils/chipUtils';
+import { isChipGame } from '../utils/chipUtils';
+import { mergeRankedMembers, getMyStreak, getWinRate } from '../utils/roomStats';
 import { getSelectedCommunity } from '../utils/storage';
-import { getAuthUserId, getNickname } from '../auth/storage';
+import { getAuthUserId } from '../auth/storage';
 import { REGION_TIMEZONE } from '../constants/regions';
 import RoomSettingsOverlay from '../components/invite/RoomSettingsOverlay';
+import LeaveConfirmModal from '../components/shared/LeaveConfirmModal';
 import GameCard from '../components/invite/GameCard';
 import StatsCard from '../components/ranking/StatsCard';
-import MatchCard from '../components/ranking/MatchCard';
 import { EVENTS, logEvent } from '../api/services/events';
 import PodiumRanking from '../components/ranking/PodiumRanking';
 import RankingTable from '../components/ranking/RankingTable';
@@ -27,29 +20,26 @@ import RatingInfoModal from '../components/ranking/RatingInfoModal';
 import SeasonTab from '../components/season/SeasonTab';
 import SeasonHeader from '../components/season/SeasonHeader';
 import SeasonEditModal from '../components/invite/SeasonEditModal';
-import { isInSeason } from '../utils/seasonUtils';
+import RoomTabs from '../components/invite/RoomTabs';
+import MatchResultBanner from '../components/invite/MatchResultBanner';
+import MatchHistoryTab from '../components/invite/MatchHistoryTab';
+import RankingSearchBar from '../components/invite/RankingSearchBar';
+import StartGameBar from '../components/invite/StartGameBar';
+import InviteHeader from '../components/invite/InviteHeader';
+import MembersSectionHeader from '../components/invite/MembersSectionHeader';
+import { useRoomLobbyData } from '../hooks/useRoomLobbyData';
+import { useInviteShare } from '../hooks/useInviteShare';
+import { useRoomActions } from '../hooks/useRoomActions';
+import { useMatchActions } from '../hooks/useMatchActions';
 
-const buildSavedScores = (participants) => {
-  const first = participants.find(p => p.scoresJson);
-  if (!first) return null;
-  try {
-    const sample = JSON.parse(first.scoresJson);
-    if (Array.isArray(sample.rounds) || sample.hpMap !== undefined) {
-      return { "_data": { "all": first.scoresJson } };
-    }
-  } catch { return null; }
-  const savedScores = {};
-  participants.forEach((p) => {
-    if (!p.scoresJson) return;
-    try {
-      const parsed = JSON.parse(p.scoresJson);
-      Object.entries(parsed).forEach(([catKey, val]) => {
-        if (!savedScores[catKey]) savedScores[catKey] = {};
-        savedScores[catKey][p.memberId] = val;
-      });
-    } catch { /* ignore */ }
-  });
-  return Object.keys(savedScores).length > 0 ? savedScores : null;
+const PAGE_SIZE = 7;
+
+const findSearchResult = (query, players) => {
+  if (!query.trim()) return null;
+  const q = query.toLowerCase();
+  const idx = players.findIndex(r => r.nickname.toLowerCase().includes(q));
+  if (idx === -1) return null;
+  return { memberId: players[idx].memberId, pageNum: Math.floor(idx / PAGE_SIZE) };
 };
 
 const Invite = () => {
@@ -57,7 +47,6 @@ const Invite = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, lang } = useLanguage();
-  const queryClient = useQueryClient();
   const userId = Number(getAuthUserId());
   const matchResult = location.state?.matchResult || null;
   const communityRegion = getSelectedCommunity()?.region;
@@ -66,176 +55,37 @@ const Invite = () => {
   const [selectedPlayers, setSelectedPlayers] = useState(new Set());
   const [nudge, setNudge] = useState(null); // null | 'select' | 'deselect'
   const rankingListRef = useRef(null);
-  const [showSettings, setShowSettings] = useState(false);
-  const [editRoomName, setEditRoomName] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showSeasonEdit, setShowSeasonEdit] = useState(false);
   const [activeTab, setActiveTab] = useState(location.state?.activeTab ?? 'group');
-  const [ratingEditModal, setRatingEditModal] = useState(null);
   const [showRatingInfo, setShowRatingInfo] = useState(false);
-  const [ratingEditValue, setRatingEditValue] = useState('');
-  const [isRatingEditSaving, setIsRatingEditSaving] = useState(false);
   const [page, setPage] = useState(location.state?.matchPage ?? 0);
-  const PAGE_SIZE = 7;
-  const MATCH_PAGE_SIZE = 5;
-  const MAX_MATCH_PAGES = 10;
-  const touchStartX = useRef(null);
-  const [sharedCopiedKind, setSharedCopiedKind] = useState(null);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const searchInputRef = useRef(null);
 
-  const { data: roomInfo = {}, refetch: refetchRoom } = useQuery({
-    queryKey: ['room', roomId],
-    queryFn: () => getRoom(roomId),
-    staleTime: 1000 * 60 * 10,
-    initialData: () => {
-      const cachedRooms = queryClient.getQueryData(['rooms', String(userId)]);
-      const found = cachedRooms?.find(r => String(r.roomId) === String(roomId));
-      if (found) return found;
-      const communityCache = queryClient.getQueriesData({ queryKey: ['communityRooms'] });
-      for (const [, rooms] of communityCache) {
-        if (!Array.isArray(rooms)) continue;
-        const hit = rooms.find(r => String(r.roomId) === String(roomId));
-        if (hit) return hit;
-      }
-      return undefined;
-    },
-  });
-
+  const {
+    roomInfo, members, membersLoading, gameInfo,
+    rankings, isRankingLoading,
+    currentSeason, isSeasonLoading, closedSeasons, latestSeasonId, justReset, championIds,
+    allMatches, isMatchesLoading,
+  } = useRoomLobbyData(roomId, userId);
   const roomName = roomInfo.roomName || '';
-
-  const { data: members = [], isLoading: membersLoading, refetch: refetchMembers } = useQuery({
-    queryKey: ['roomMembers', roomId],
-    queryFn: () => getRoomMembers(roomId),
-    staleTime: 1000 * 60 * 2,
-  });
-
-  const onlineIds = usePresence(userId, roomId);
-
-  useEffect(() => {
-    if (membersLoading || onlineIds.size === 0) return;
-    const memberIdSet = new Set(members.map(m => m.memberId));
-    if ([...onlineIds].some(id => !memberIdSet.has(id))) refetchMembers();
-  }, [onlineIds, members, membersLoading, refetchMembers]);
-
   const isHost = members.find(m => m.memberId === userId)?.isHost ?? false;
   const isMember = members.some(m => m.memberId === userId);
-  const [isJoiningRoom, setIsJoiningRoom] = useState(false);
-
-  // 방의 게임을 id로 직접 가져온다. 커뮤니티 목록을 거치지 않으므로
-  // 초대 링크로 들어온 비(非)커뮤니티 멤버도 커스텀 게임 정보를 볼 수 있다.
-  const { data: gameInfo = null } = useQuery({
-    queryKey: ['game', roomInfo.boardGameId],
-    queryFn: () => getGame(roomInfo.boardGameId),
-    enabled: !!roomInfo.boardGameId,
-    staleTime: 1000 * 60 * 30,
-  });
   // 칩 게임은 점수 대신 누적 손익으로 줄 세우고, LP 수정이 없다
   const isChip = isChipGame(gameInfo);
 
-  const { data: rankings = [], isLoading: isRankingLoading } = useQuery({
-    queryKey: ['rankings', roomId],
-    queryFn: () => getRoomRankings(roomId),
-    staleTime: 1000 * 60 * 3,
-  });
-
-  // 진행 중 시즌 (이름·기간). 종료 시각이 지났으면 서버가 넘긴 뒤의 시즌을 준다.
-  const { data: currentSeason = null, isLoading: isSeasonLoading } = useQuery({
-    queryKey: ['currentSeason', roomId],
-    queryFn: () => getCurrentSeason(roomId),
-    staleTime: 1000 * 60 * 5,
-  });
-
-  // 금관(직전 시즌 1위). 시즌 목록의 첫 항목이 곧 마지막으로 끝난 시즌이므로 날짜 계산이 필요 없고,
-  // 다음 시즌이 끝나면 목록의 첫 항목이 바뀌어 금관이 저절로 옮겨간다 (기획 §4의 "다음 시즌 종료까지").
-  const { data: closedSeasons = [] } = useQuery({
-    queryKey: ['roomSeasons', roomId],
-    queryFn: () => getRoomSeasons(roomId),
-    staleTime: 1000 * 60 * 10,
-  });
-  const latestSeasonId = closedSeasons[0]?.seasonId;
-  const { data: latestPodium = [] } = useQuery({
-    queryKey: ['seasonPodium', roomId, latestSeasonId],
-    queryFn: () => getSeasonPodium(roomId, latestSeasonId),
-    enabled: !!latestSeasonId,
-    staleTime: 1000 * 60 * 10,
-  });
-  // 리셋 직후 = 마감된 시즌이 있는데 이번 시즌 경기가 아직 0판. 한 판이라도 하면 저절로 사라진다.
-  const justReset = closedSeasons.length > 0
-    && rankings.length > 0
-    && rankings.every(r => (r.playCount ?? 0) === 0);
-
-  const championIds = useMemo(
-    () => new Set(latestPodium.filter(e => e.rank === 1).map(e => e.memberId)),
-    [latestPodium],
-  );
-
-  const { data: allMatchesRaw = [], isLoading: isMatchesLoading, refetch: refetchMatches } = useQuery({
-    queryKey: ['matches', roomId],
-    queryFn: () => getRoomMatches(roomId),
-    staleTime: 1000 * 60 * 1,
-  });
-  // 매치기록도 시즌과 함께 새로 시작한다. DB는 그대로 두고 진행 중 시즌 경기만 보여준다.
-  // 지난 시즌 기록은 시즌 탭에서 본다.
-  const allMatches = allMatchesRaw.filter(m =>
-    (!roomInfo.boardGameId || m.boardGameId === roomInfo.boardGameId)
-    && isInSeason(m.playedAt, currentSeason));
-  // 매치기록은 최신 10페이지까지만 보여준다. 기록이 쌓일수록 페이지가 무한정 늘어나는 걸 막는다.
-  // 서버 데이터는 그대로 둔다 — 실제로 지우면 MatchService가 레이팅을 재계산해서 점수가 바뀐다.
-  const visibleMatches = useMemo(
-    () => allMatches.slice(0, MATCH_PAGE_SIZE * MAX_MATCH_PAGES),
-    [allMatches],
-  );
-
-  const totalMatchPages = useMemo(
-    () => Math.ceil(visibleMatches.length / MATCH_PAGE_SIZE),
-    [visibleMatches.length],
-  );
-
-  // 기록이 줄어 현재 페이지가 범위를 벗어나면 마지막 페이지를 보여준다
-  const pagedMatches = useMemo(() => {
-    const safePage = Math.min(page, Math.max(0, totalMatchPages - 1));
-    return visibleMatches.slice(safePage * MATCH_PAGE_SIZE, (safePage + 1) * MATCH_PAGE_SIZE);
-  }, [visibleMatches, page, totalMatchPages]);
+  const room = useRoomActions({ roomId, userId, roomName, inviteCode: roomInfo.inviteCode, t });
+  const { handleViewMatch, handleEditMatch, handleDeleteMatch } = useMatchActions({ roomId, page, t });
 
   const myRank = useMemo(() => rankings.find(r => r.memberId === userId), [rankings, userId]);
   const myRankPosition = useMemo(() => {
     const idx = rankings.findIndex(r => r.memberId === userId);
     return idx >= 0 ? idx + 1 : null;
   }, [rankings, userId]);
-  const myWinRate = useMemo(() => {
-    if (!myRank || myRank.winCount + myRank.loseCount === 0) return 0;
-    return Math.round(myRank.winCount / (myRank.winCount + myRank.loseCount) * 100);
-  }, [myRank]);
-
-  const myStreak = useMemo(() => {
-    const myMatches = allMatches
-      .filter(m => m.participants?.some(p => p.memberId === userId))
-      .sort((a, b) => new Date(b.playedAt) - new Date(a.playedAt));
-    if (myMatches.length === 0) return null;
-    const first = myMatches[0].participants.find(p => p.memberId === userId);
-    const isWin = first?.placement === 1;
-    let count = 1;
-    for (let i = 1; i < myMatches.length; i++) {
-      const p = myMatches[i].participants.find(p => p.memberId === userId);
-      if ((p?.placement === 1) === isWin) count++;
-      else break;
-    }
-    return { count, isWin };
-  }, [allMatches, userId]);
-
-  const mergedPlayers = useMemo(() => {
-    const memberMap = new Map(members.map(m => [m.memberId, m]));
-    const rankedIds = new Set(rankings.map(r => r.memberId));
-    // rankings 순서(rating 내림차순)를 유지
-    const ranked = rankings
-      .map((r, i) => ({ ...memberMap.get(r.memberId), ...r, rankPosition: i + 1 }))
-      .filter(r => r.memberId != null);
-    const unranked = members
-      .filter(m => !rankedIds.has(m.memberId))
-      .map(m => ({ ...m, hasRank: false }));
-    return [...ranked, ...unranked];
-  }, [members, rankings]);
+  const myWinRate = useMemo(() => getWinRate(myRank), [myRank]);
+  const myStreak = useMemo(() => getMyStreak(allMatches, userId), [allMatches, userId]);
+  const mergedPlayers = useMemo(() => mergeRankedMembers(members, rankings), [members, rankings]);
 
   const pagedRankings = useMemo(
     () => mergedPlayers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
@@ -243,22 +93,14 @@ const Invite = () => {
   );
   const totalPages = useMemo(() => Math.ceil(mergedPlayers.length / PAGE_SIZE), [mergedPlayers.length]);
 
-  const searchResult = useMemo(() => {
-    if (!searchQuery.trim()) return null;
-    const q = searchQuery.toLowerCase();
-    const idx = mergedPlayers.findIndex(r => r.nickname.toLowerCase().includes(q));
-    if (idx === -1) return null;
-    return { memberId: mergedPlayers[idx].memberId, pageNum: Math.floor(idx / PAGE_SIZE) };
-  }, [searchQuery, mergedPlayers, PAGE_SIZE]);
+  const searchResult = useMemo(() => findSearchResult(searchQuery, mergedPlayers), [searchQuery, mergedPlayers]);
 
-  useEffect(() => {
-    if (searchResult) setPage(searchResult.pageNum);
-  }, [searchResult]);
-
-  useEffect(() => {
-    if (showSearch) setTimeout(() => searchInputRef.current?.focus(), 50);
-    else setSearchQuery('');
-  }, [showSearch]);
+  // 검색어를 칠 때 찾은 사람이 있는 페이지로 넘긴다
+  const handleSearchChange = (query) => {
+    setSearchQuery(query);
+    const result = findSearchResult(query, mergedPlayers);
+    if (result) setPage(result.pageNum);
+  };
 
   const minPlayers = gameInfo?.minPlayers ?? 2;
   const maxPlayers = gameInfo?.maxPlayers ?? 99;
@@ -291,12 +133,6 @@ const Invite = () => {
   };
 
   const handleTabChange = (tab) => { setActiveTab(tab); setPage(0); };
-
-  const [showSeasonEdit, setShowSeasonEdit] = useState(false);
-  const handleSaveSeason = async (payload) => {
-    const updated = await updateCurrentSeason(roomId, payload);
-    queryClient.setQueryData(['currentSeason', roomId], updated);
-  };
 
   // "기록은 영원히 남는다"를 실제로 쓰는지 보려면 지난 시즌을 조회한 순간을 세야 한다 (§10).
   // season_key는 월간 시절 이벤트(2026-09)와 같은 축으로 묶어 보려고 같이 남긴다 (plan-season-reset §10).
@@ -337,208 +173,22 @@ const Invite = () => {
     });
   };
 
-  const handleJoinRoom = async () => {
-    setIsJoiningRoom(true);
-    try {
-      await joinRoom(roomInfo.inviteCode);
-      queryClient.invalidateQueries({ queryKey: ['roomMembers', roomId] });
-      queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
-      queryClient.invalidateQueries({ queryKey: ['rooms'] });
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
-    } catch { alert(t('invite', 'joinFailed')); }
-    setIsJoiningRoom(false);
-  };
+  // 호스트가 나가면 백엔드가 방장을 넘기거나(멤버가 남을 때) 방을 지운다(혼자일 때).
+  const leaveAlone = isHost && members.length <= 1;
+  const leaveItems = leaveAlone
+    ? [t('invite', 'leaveItemAlone')]
+    : [t('invite', 'leaveItemScores'), ...(isHost ? [t('invite', 'leaveItemHost')] : [])];
 
-  const handleLeaveRoom = async () => {
-    // 호스트가 나가면 백엔드가 방장을 넘기거나(멤버가 남을 때) 방을 지운다(혼자일 때).
-    const confirmKey = !isHost ? 'leaveConfirm'
-      : members.length <= 1 ? 'leaveConfirmHostAlone' : 'leaveConfirmHost';
-    if (!window.confirm(t('invite', confirmKey))) return;
-    try {
-      await leaveRoom(roomId, userId);
-      const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
-      queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
-      // 커뮤니티 방은 나가도 목록에 남아야 다시 참가할 수 있다.
-      queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
-      // 다시 들어왔을 때 캐시된 목록에 내가 멤버로 남아 있지 않도록 비운다.
-      queryClient.removeQueries({ queryKey: ['roomMembers', roomId] });
-      queryClient.removeQueries({ queryKey: ['rankings', roomId] });
-      navigate('/lobby');
-    } catch { alert(t('invite', 'leaveFailed')); }
-  };
-
-  const handleDeleteRoom = async () => {
-    if (!window.confirm(t('invite', 'deleteConfirm'))) return;
-    try {
-      await deleteRoom(roomId);
-      const removeRoom = (old) => Array.isArray(old) ? old.filter(r => String(r.roomId) !== String(roomId)) : old;
-      queryClient.setQueriesData({ queryKey: ['rooms'] }, removeRoom);
-      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, removeRoom);
-      navigate('/lobby');
-    } catch { alert(t('invite', 'deleteFailed')); }
-  };
-
-  const handleKickMember = async (member) => {
-    if (!window.confirm(`${member.nickname}${t('invite', 'kickConfirm')}`)) return;
-    try {
-      await kickRoomMember(roomId, member.memberId);
-      queryClient.setQueryData(['roomMembers', roomId], (old) =>
-        Array.isArray(old) ? old.filter(m => m.memberId !== member.memberId) : old
-      );
-    } catch { alert(t('invite', 'kickFailed')); }
-  };
-
-  const handleSaveSettings = async () => {
-    const trimmed = editRoomName.trim();
-    if (!trimmed) return;
-    setSaving(true);
-    try {
-      await updateRoomName(roomId, trimmed);
-      const updateName = (old) =>
-        Array.isArray(old)
-          ? old.map(r => String(r.roomId) === String(roomId) ? { ...r, roomName: trimmed } : r)
-          : old;
-      queryClient.setQueryData(['room', roomId], (old) => old ? { ...old, roomName: trimmed } : old);
-      queryClient.setQueriesData({ queryKey: ['rooms'] }, updateName);
-      queryClient.setQueriesData({ queryKey: ['communityRooms'] }, updateName);
-      setShowSettings(false);
-    } catch { alert(t('invite', 'renameFailed')); }
-    setSaving(false);
-  };
-
-  const openSettings = () => { setEditRoomName(roomName); setShowSettings(true); };
-
-  // 바이럴 퍼널의 시작점. 그룹 로비 진입이 아니라 "실제로 공유를 시도했다"만 센다.
-  //
-  // @capacitor/share는 네이티브에선 OS 공유 시트를, 웹에선 navigator.share를 쓴다.
-  // 예전에는 navigator.share가 없으면 그냥 return해서 버튼이 죽어 있었다 — 안드로이드
-  // WebView는 Web Share API를 구현하지 않아서 앱 유저가 눌러도 아무 일이 없었다.
-  // 공유 시트가 없는 환경에서는 클립보드로 떨어뜨린다.
-  //
-  // 계측은 분기보다 앞에 둔다. 뒤에 두면 공유 시트가 없는 플랫폼의 시도가 통째로 빠져
-  // 바이럴 퍼널이 iOS 유저만의 것처럼 보인다.
-  const nativeShare = async (title, text, kind) => {
-    logEvent(EVENTS.INVITE_SHARED, { roomId: Number(roomId), props: { kind } });
-
-    let canShare = false;
-    try { canShare = (await Share.canShare()).value; } catch { canShare = false; }
-
-    if (canShare) {
-      // 사용자가 시트를 닫은 것도 reject다. 폴백으로 떨어뜨리면 취소가 곧 복사가 된다.
-      await Share.share({ title, text }).catch(() => {});
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(`${title}\n${text}`);
-      setSharedCopiedKind(kind);
-      setTimeout(() => setSharedCopiedKind(null), 2000);
-    } catch {
-      alert(t('invite', 'shareUnavailable'));
-    }
-  };
-
-  const shareMyRank = useCallback(() => {
-    if (!myRank || !myRankPosition) return;
-    const gameName = gameInfo?.name || roomInfo?.roomName || t('invite', 'defaultGameName');
-    const nickname = getNickname() || myRank.nickname;
-    nativeShare(
-      t('invite', 'shareMyRankTitle').replace('{nickname}', nickname).replace('{game}', gameName),
-      t('invite', isChip ? 'shareMyRankTextChip' : 'shareMyRankText')
-        .replace('{rank}', myRankPosition).replace('{rating}', isChip ? formatChipDelta(myRank.rating) : Math.round(myRank.rating))
-        .replace('{winRate}', myWinRate).replace('{wins}', myRank.winCount).replace('{losses}', myRank.loseCount),
-      'my_rank',
-    );
-  }, [myRank, myRankPosition, gameInfo, roomInfo, myWinRate, isChip, t]);
-
-  const shareMatchResult = useCallback(() => {
-    if (!matchResult) return;
-    const gameName = gameInfo?.name || roomInfo?.roomName || t('invite', 'defaultGameName');
-    const lines = [...matchResult]
-      .sort((a, b) => b.ratingChange - a.ratingChange)
-      .map(r => `${r.nickname} ${isChip ? formatChipDelta(r.ratingChange) : `${r.ratingChange >= 0 ? '+' : ''}${Math.round(r.ratingChange)}`}`)
-      .join(' · ');
-    nativeShare(
-      t('invite', 'shareMatchTitle').replace('{game}', gameName),
-      t('invite', 'shareMatchText').replace('{lines}', lines),
-      'match_result',
-    );
-  }, [matchResult, gameInfo, roomInfo, isChip, t]);
-
-  const handleUpdateRating = async () => {
-    if (!ratingEditModal) return;
-    const val = Number(ratingEditValue);
-    if (isNaN(val) || val < 0) return;
-    setIsRatingEditSaving(true);
-    try {
-      await updateMemberRating(roomId, ratingEditModal.memberId, { rating: val });
-      queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
-      setRatingEditModal(null);
-    } catch { alert(t('ranking', 'editRatingFailed')); }
-    finally { setIsRatingEditSaving(false); }
-  };
-
-  const openScoreSheet = useCallback((match, readOnly = false) => {
-    const savedScores = buildSavedScores(match.participants);
-    navigate(`/score-sheet/${match.boardGameId}`, {
-      state: {
-        roomId: Number(roomId), gameName: match.gameName,
-        players: match.participants.map(p => ({ memberId: p.memberId, nickname: p.nickname })),
-        savedScores, backTo: `/invite/${roomId}`,
-        backState: { activeTab: 'matches', matchPage: page },
-        ...(readOnly ? { readOnly: true } : { editMatchId: match.matchId }),
-      },
-    });
-  }, [navigate, roomId, page]);
-
-  const handleViewMatch = useCallback((match) => openScoreSheet(match, true), [openScoreSheet]);
-  const handleEditMatch = useCallback((match) => openScoreSheet(match, false), [openScoreSheet]);
-
-  const handleDeleteMatch = useCallback(async (matchId) => {
-    if (!window.confirm(t('ranking', 'matchDeleteConfirm'))) return;
-    try {
-      await deleteMatch(matchId);
-      queryClient.setQueryData(['matches', roomId], (old) =>
-        Array.isArray(old) ? old.filter(m => m.matchId !== matchId) : old
-      );
-      queryClient.invalidateQueries({ queryKey: ['rankings', roomId] });
-      queryClient.invalidateQueries({ queryKey: ['communityStatus'] });
-    } catch { alert(t('ranking', 'matchDeleteFailed')); }
-  }, [queryClient, refetchMatches, roomId, t]);
-
-  const handleOpenRatingEdit = useCallback((rank) => {
-    setRatingEditModal(rank);
-    setRatingEditValue(String(Math.round(rank.rating)));
-  }, []);
+  const { sharedCopiedKind, shareMyRank, shareMatchResult } = useInviteShare({
+    roomId, gameInfo, roomInfo, isChip, myRank, myRankPosition, myWinRate, matchResult, t,
+  });
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: V('--th-bg'), paddingBottom: activeTab === 'group'
       ? 'calc(100px + env(safe-area-inset-bottom))'
       : 'calc(28px + env(safe-area-inset-bottom))' }}>
 
-      {/* Header */}
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 10,
-        backgroundColor: V('--th-nav-bg'),
-        borderBottom: `1px solid var(--th-border)`,
-      }}>
-        <div style={{
-          maxWidth: 390, margin: '0 auto',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding: '16px 20px',
-        }}>
-          <button
-            onClick={() => navigate('/lobby')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
-          >
-            <ArrowLeft style={{ width: 24, height: 24 }} />
-          </button>
-          <h1 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--th-primary)', margin: 0 }}>
-            {t('invite', 'lobbyTitle')}
-          </h1>
-          <NavAvatar />
-        </div>
-      </div>
+      <InviteHeader onBack={() => navigate('/lobby')} title={t('invite', 'lobbyTitle')} />
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
@@ -558,98 +208,24 @@ const Invite = () => {
 
         {/* Players section */}
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-            <span style={{ fontSize: '18px', fontWeight: '800', color: V('--th-text') }}>
-              {t('invite', 'members')}
-            </span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {myRank && (
-                <button
-                  onClick={shareMyRank}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: V('--th-text-sub'), display: 'flex', alignItems: 'center' }}
-                >
-                  {sharedCopiedKind === 'my_rank'
-                    ? <CheckCheck style={{ width: 18, height: 18 }} color="#22c55e" />
-                    : <Share2 style={{ width: 18, height: 18 }} />}
-                </button>
-              )}
-              <button
-                onClick={openSettings}
-                style={{
-                  background: 'none', border: 'none', padding: '4px', display: 'flex', alignItems: 'center',
-                  cursor: 'pointer',
-                  color: V('--th-text-sub'),
-                }}
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                  <circle cx="9" cy="7" r="4" />
-                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                </svg>
-              </button>
-            </div>
-          </div>
+          <MembersSectionHeader
+            title={t('invite', 'members')}
+            showShare={!!myRank}
+            shareCopied={sharedCopiedKind === 'my_rank'}
+            onShare={shareMyRank}
+            onOpenSettings={room.openSettings}
+          />
 
-          {/* Tabs */}
-          <div style={{ marginBottom: 12 }}>
-            <div style={{ display: 'flex', borderRadius: 24, padding: 4, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
-              {[
-                { key: 'group', label: t('ranking', 'groupTab') },
-                { key: 'matches', label: t('ranking', 'matchesTab') },
-                { key: 'season', label: t('season', 'seasonTab') },
-              ].map(tab => (
-                <button
-                  key={tab.key}
-                  onClick={() => handleTabChange(tab.key)}
-                  style={{
-                    flex: 1, padding: '8px', borderRadius: 20, fontSize: 12, fontWeight: 700,
-                    border: 'none', cursor: 'pointer', transition: 'all 0.2s',
-                    backgroundColor: activeTab === tab.key ? V('--th-primary') : 'transparent',
-                    color: activeTab === tab.key ? '#fff' : V('--th-text-sub'),
-                  }}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
+          <RoomTabs activeTab={activeTab} onChange={handleTabChange} t={t} />
 
-          {/* Match Result Banner */}
           {matchResult && activeTab === 'group' && (
-            <div style={{ marginBottom: 12 }}>
-              <div style={{ borderRadius: 12, padding: 14, backgroundColor: V('--th-card'), border: `1px solid var(--th-primary)` }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <p style={{ fontSize: 11, fontWeight: 700, color: V('--th-primary'), margin: 0 }}>🎮 {t('ranking', 'matchResult')}</p>
-                  <button
-                    onClick={shareMatchResult}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 5,
-                      padding: '5px 10px', borderRadius: 8,
-                      backgroundColor: 'color-mix(in srgb, var(--th-primary) 10%, transparent)',
-                      border: '1px solid var(--th-primary)', cursor: 'pointer',
-                    }}
-                  >
-                    {sharedCopiedKind === 'match_result'
-                      ? <CheckCheck size={13} color="#22c55e" />
-                      : <Share2 size={13} color="var(--th-primary)" />}
-                    <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--th-primary)' }}>
-                      {sharedCopiedKind === 'match_result' ? t('invite', 'shareCopied') : t('ranking', 'shareResult')}
-                    </span>
-                  </button>
-                </div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                  {matchResult.map((r) => (
-                    <div key={r.memberId} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 10, backgroundColor: V('--th-bg') }}>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: V('--th-text') }}>{r.nickname}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: r.ratingChange > 0 ? '#16a34a' : '#dc2626' }}>
-                        {isChip ? formatChipDelta(r.ratingChange) : `${r.ratingChange > 0 ? '+' : ''}${Math.round(r.ratingChange)}`}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <MatchResultBanner
+              matchResult={matchResult}
+              chip={isChip}
+              copied={sharedCopiedKind === 'match_result'}
+              onShare={shareMatchResult}
+              t={t}
+            />
           )}
 
           {/* Content */}
@@ -671,63 +247,19 @@ const Invite = () => {
               {[0, 1, 2, 3].map(i => <RankRowSkeleton key={i} />)}
             </div>
           ) : activeTab === 'matches' ? (
-            <>
-              <div style={{ fontSize: 11, fontWeight: 800, color: V('--th-text-sub'), textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>{t('invite', 'recentSessions')}</div>
-              {allMatches.length === 0 ? (
-                <div style={{ borderRadius: 16, padding: 40, border: `2px dashed var(--th-border)`, textAlign: 'center' }}>
-                  <div style={{ fontSize: 48, marginBottom: 16 }}>🎲</div>
-                  <p style={{ color: V('--th-text') }}>{t('ranking', 'noMatches')}</p>
-                  <p style={{ fontSize: 13, marginTop: 8, color: V('--th-text-sub') }}>{t('ranking', 'noMatchesDesc')}</p>
-                </div>
-              ) : (
-                <>
-                  <div
-                    style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
-                    onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
-                    onTouchEnd={(e) => {
-                      if (touchStartX.current === null) return;
-                      const delta = touchStartX.current - e.changedTouches[0].clientX;
-                      touchStartX.current = null;
-                      if (delta > 50 && page < totalMatchPages - 1) setPage(p => p + 1);
-                      else if (delta < -50 && page > 0) setPage(p => p - 1);
-                    }}
-                  >
-                    {pagedMatches.map((match) => (
-                      <MatchCard
-                        key={match.matchId}
-                        match={match}
-                        myUserId={userId}
-                        communityTimezone={communityTimezone}
-                        isHost={isHost}
-                        onView={handleViewMatch}
-                        onEdit={handleEditMatch}
-                        onDelete={handleDeleteMatch}
-                        chip={isChip}
-                      />
-                    ))}
-                  </div>
-                  {totalMatchPages > 1 && (
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 14 }}>
-                      <button
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                        style={{ padding: '7px 18px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: `1px solid var(--th-border)`, backgroundColor: V('--th-card'), color: page === 0 ? V('--th-text-sub') : V('--th-text'), cursor: page === 0 ? 'not-allowed' : 'pointer' }}
-                      >
-                        ‹
-                      </button>
-                      <span style={{ fontSize: 12, fontWeight: 700, color: V('--th-text-sub') }}>{page + 1} / {totalMatchPages}</span>
-                      <button
-                        onClick={() => setPage(p => Math.min(totalMatchPages - 1, p + 1))}
-                        disabled={page >= totalMatchPages - 1}
-                        style={{ padding: '7px 18px', borderRadius: 8, fontSize: 12, fontWeight: 700, border: `1px solid var(--th-border)`, backgroundColor: V('--th-card'), color: page >= totalMatchPages - 1 ? V('--th-text-sub') : V('--th-text'), cursor: page >= totalMatchPages - 1 ? 'not-allowed' : 'pointer' }}
-                      >
-                        ›
-                      </button>
-                    </div>
-                  )}
-                </>
-              )}
-            </>
+            <MatchHistoryTab
+              matches={allMatches}
+              page={page}
+              setPage={setPage}
+              myUserId={userId}
+              communityTimezone={communityTimezone}
+              isHost={isHost}
+              onView={handleViewMatch}
+              onEdit={handleEditMatch}
+              onDelete={handleDeleteMatch}
+              chip={isChip}
+              t={t}
+            />
           ) : mergedPlayers.length === 0 ? (
             <div style={{ borderRadius: 16, padding: 40, border: `2px dashed var(--th-border)`, textAlign: 'center' }}>
               <div style={{ fontSize: 48, marginBottom: 16 }}>🎲</div>
@@ -748,46 +280,15 @@ const Invite = () => {
               {rankings.length >= 1 && (
                 <PodiumRanking rankings={rankings} myUserId={userId} chip={isChip} />
               )}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', marginBottom: 6 }}>
-                <button
-                  onClick={() => setShowRatingInfo(true)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', color: V('--th-text-sub') }}
-                >
-                  <Info size={18} />
-                </button>
-                {showSearch ? (
-                  <div style={{
-                    flex: 1, display: 'flex', alignItems: 'center', gap: 8,
-                    backgroundColor: V('--th-card'), border: `1px solid var(--th-primary)`,
-                    borderRadius: 12, padding: '8px 12px',
-                  }}>
-                    <Search size={14} color="var(--th-primary)" style={{ flexShrink: 0 }} />
-                    <input
-                      ref={searchInputRef}
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                      placeholder={t('invite', 'searchPlayerPlaceholder')}
-                      style={{
-                        flex: 1, background: 'none', border: 'none', outline: 'none',
-                        fontSize: 13, fontWeight: 500, color: V('--th-text'),
-                      }}
-                    />
-                    <button
-                      onClick={() => setShowSearch(false)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center' }}
-                    >
-                      <X size={16} color="var(--th-text-sub)" />
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => setShowSearch(true)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', alignItems: 'center', color: V('--th-text-sub') }}
-                  >
-                    <Search size={18} />
-                  </button>
-                )}
-              </div>
+              <RankingSearchBar
+                showSearch={showSearch}
+                setShowSearch={setShowSearch}
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+                onSearchChange={handleSearchChange}
+                onShowRatingInfo={() => setShowRatingInfo(true)}
+                t={t}
+              />
               <div ref={rankingListRef}>
                 <RankingTable
                   pagedRankings={pagedRankings}
@@ -796,7 +297,7 @@ const Invite = () => {
                   totalPages={totalPages}
                   myUserId={userId}
                   isHost={isHost}
-                  onEditRating={isChip ? undefined : handleOpenRatingEdit}
+                  onEditRating={isChip ? undefined : room.handleOpenRatingEdit}
                   PAGE_SIZE={PAGE_SIZE}
                   selectedPlayers={selectedPlayers}
                   onToggle={isMember ? togglePlayer : undefined}
@@ -815,67 +316,49 @@ const Invite = () => {
       {/* Sticky Start Game Button — 플레이어를 고르는 그룹 랭킹 탭에서만 쓴다.
           아직 참가하지 않은 사람에겐 같은 자리에 참가하기 버튼을 보여준다. 멤버 로딩 중엔 어느 쪽인지 모르니 비워둔다. */}
       {activeTab === 'group' && !membersLoading && (
-      <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0 }}>
-        <div style={{ maxWidth: 390, margin: '0 auto', padding: '10px 20px calc(28px + env(safe-area-inset-bottom))' }}>
-          {!isMember ? (
-          <button
-            onClick={handleJoinRoom}
-            disabled={isJoiningRoom || !roomInfo.inviteCode}
-            style={{
-              width: '100%', padding: '15px', borderRadius: '50px',
-              cursor: isJoiningRoom ? 'not-allowed' : 'pointer',
-              background: 'linear-gradient(135deg, #16a34a 0%, #22c55e 100%)',
-              border: 'none',
-              opacity: isJoiningRoom ? 0.7 : 1,
-              boxShadow: '0 4px 16px rgba(34, 197, 94, 0.4)',
-            }}
-          >
-            <span style={{ fontWeight: '700', fontSize: '15px', color: '#FFFFFF' }}>
-              {isJoiningRoom ? '...' : t('invite', 'joinRoom')}
-            </span>
-          </button>
-          ) : (
-          <button
-            onClick={handleStartGame}
-            style={{
-              width: '100%', padding: '15px', borderRadius: '50px',
-              cursor: 'pointer',
-              background: canStart
-                ? 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)'
-                : overMax ? '#ef4444' : V('--th-border'),
-              border: 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
-              boxShadow: canStart ? '0 4px 16px rgba(107, 92, 231, 0.4)' : 'none',
-              transition: 'all 0.2s',
-            }}
-          >
-            {canStart && <Play style={{ color: '#FFFFFF', width: 18, height: 18, fill: '#FFFFFF' }} />}
-            <span style={{ fontWeight: '700', fontSize: '15px', color: '#FFFFFF' }}>
-              {startLabel}
-            </span>
-          </button>
-          )}
-        </div>
-      </div>
+        <StartGameBar
+          isMember={isMember}
+          onJoin={room.handleJoinRoom}
+          isJoining={room.isJoiningRoom}
+          joinDisabled={room.isJoiningRoom || !roomInfo.inviteCode}
+          onStart={handleStartGame}
+          canStart={canStart}
+          overMax={overMax}
+          label={startLabel}
+          t={t}
+        />
       )}
 
-      {showSettings && (
+      {room.showSettings && (
         <RoomSettingsOverlay
-          onClose={() => setShowSettings(false)}
-          onSave={handleSaveSettings}
-          onDeleteRoom={handleDeleteRoom}
-          onLeaveRoom={isMember ? handleLeaveRoom : undefined}
+          onClose={() => room.setShowSettings(false)}
+          onSave={room.handleSaveSettings}
+          onDeleteRoom={room.handleDeleteRoom}
+          onLeaveRoom={isMember ? () => setShowLeaveConfirm(true) : undefined}
           isHost={isHost}
-          editRoomName={editRoomName}
-          setEditRoomName={setEditRoomName}
+          editRoomName={room.editRoomName}
+          setEditRoomName={room.setEditRoomName}
           members={members}
           userId={userId}
-          saving={saving}
-          onKickMember={handleKickMember}
-          navigate={navigate}
+          saving={room.saving}
+          onKickMember={room.handleKickMember}
           t={t}
           season={currentSeason}
           onEditSeason={() => setShowSeasonEdit(true)}
+        />
+      )}
+
+      {showLeaveConfirm && (
+        <LeaveConfirmModal
+          title={t('invite', 'leaveTitle').replace('{name}', roomName)}
+          desc={t('invite', leaveAlone ? 'leaveDescAlone' : 'leaveDesc')}
+          items={leaveItems}
+          note={leaveAlone ? null : t('invite', 'leaveAnonymous')}
+          cancelText={t('invite', 'leaveCancel')}
+          confirmText={t('invite', 'leaveRoom')}
+          failText={t('invite', 'leaveFailed')}
+          onClose={() => setShowLeaveConfirm(false)}
+          onConfirm={room.confirmLeaveRoom}
         />
       )}
 
@@ -884,7 +367,7 @@ const Invite = () => {
           season={currentSeason}
           region={communityRegion}
           onClose={() => setShowSeasonEdit(false)}
-          onSave={handleSaveSeason}
+          onSave={room.handleSaveSeason}
           t={t}
         />
       )}
@@ -892,14 +375,14 @@ const Invite = () => {
       {showRatingInfo && (
         <RatingInfoModal chip={isChip} onClose={() => setShowRatingInfo(false)} t={t} />
       )}
-      {ratingEditModal && (
+      {room.ratingEditModal && (
         <RatingEditModal
-          ratingEditModal={ratingEditModal}
-          onClose={() => setRatingEditModal(null)}
-          ratingEditValue={ratingEditValue}
-          setRatingEditValue={setRatingEditValue}
-          onSave={handleUpdateRating}
-          isSaving={isRatingEditSaving}
+          ratingEditModal={room.ratingEditModal}
+          onClose={() => room.setRatingEditModal(null)}
+          ratingEditValue={room.ratingEditValue}
+          setRatingEditValue={room.setRatingEditValue}
+          onSave={room.handleUpdateRating}
+          isSaving={room.isRatingEditSaving}
           t={t}
         />
       )}

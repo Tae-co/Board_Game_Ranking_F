@@ -1,15 +1,14 @@
 import { createContext, useContext, useState } from 'react';
 import translations from './translations/index';
+import { getLanguage, saveLanguage } from '../utils/storage';
 
 const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
-  const [lang, setLangState] = useState(
-    () => localStorage.getItem('language') || 'en'
-  );
+  const [lang, setLangState] = useState(getLanguage);
 
   const setLang = (newLang) => {
-    localStorage.setItem('language', newLang);
+    saveLanguage(newLang);
     setLangState(newLang);
   };
 
