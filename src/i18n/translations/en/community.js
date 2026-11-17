@@ -96,7 +96,7 @@ export default {
   onboardTitle: 'Bring your friends in',
   onboardReadyTitle: 'Everyone’s here! Ready for the first game?',
   onboardReadyDesc: 'More friends coming? You can keep inviting.',
-  onboardDesc: 'Next to you? Let them scan the QR. Far away? Send the link.',
+  onboardDesc: 'Next to you? Tell them the invite code. Far away? Send the link.',
   onboardShare: 'Send invite link',
   onboardLinkCopied: 'Link copied',
   onboardShareText: 'Join {name} and let’s compete on the board game rankings!',

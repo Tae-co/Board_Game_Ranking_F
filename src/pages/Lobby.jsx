@@ -17,7 +17,7 @@ import SeasonEntryCard from '../components/lobby/SeasonEntryCard';
 import LobbyActionCard from '../components/lobby/LobbyActionCard';
 import RoomGrid from '../components/lobby/RoomGrid';
 import CommunityMemberGrid from '../components/lobby/CommunityMemberGrid';
-import InviteQrPopup from '../components/lobby/InviteQrPopup';
+import InviteCodePopup from '../components/lobby/InviteCodePopup';
 import { EVENTS, logEvent } from '../api/services/events';
 
 const DiceLogo = () => (
@@ -38,9 +38,9 @@ const Lobby = () => {
   const isAdmin = selectedCommunity?.isAdmin ?? false;
   const communityInviteCode = selectedCommunity?.inviteCode ?? null;
   const [codeCopied, setCodeCopied] = useState(false);
-  const [showQrPopup, setShowQrPopup] = useState(false);
+  const [showCodePopup, setShowCodePopup] = useState(false);
 
-  // 초대코드·QR로 막 참가했다면 어디에 들어왔는지 한 번 알려준다.
+  // 초대코드·링크로 막 참가했다면 어디에 들어왔는지 한 번 알려준다.
   // state를 지워두지 않으면 뒤로가기로 돌아올 때마다 다시 뜬다.
   const location = useLocation();
   const [showJoinedToast, setShowJoinedToast] = useState(() => !!location.state?.justJoined);
@@ -195,7 +195,7 @@ const Lobby = () => {
             community={selectedCommunity}
             inviteCode={communityInviteCode}
             codeCopied={codeCopied}
-            onShowQr={() => setShowQrPopup(true)}
+            onShowCode={() => setShowCodePopup(true)}
             onCopy={copyInviteCode}
             t={t}
           />
@@ -260,12 +260,12 @@ const Lobby = () => {
         )}
       </div>
 
-      {showQrPopup && communityInviteCode && (
-        <InviteQrPopup
+      {showCodePopup && communityInviteCode && (
+        <InviteCodePopup
           inviteCode={communityInviteCode}
           codeCopied={codeCopied}
           onCopy={copyInviteCode}
-          onClose={() => setShowQrPopup(false)}
+          onClose={() => setShowCodePopup(false)}
           t={t}
         />
       )}

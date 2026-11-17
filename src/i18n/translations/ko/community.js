@@ -96,7 +96,7 @@ export default {
   onboardTitle: '같이 할 친구를 불러주세요',
   onboardReadyTitle: '다 모였어요! 첫 게임을 시작해볼까요',
   onboardReadyDesc: '더 올 친구가 있다면 계속 불러도 돼요.',
-  onboardDesc: '옆에 있다면 QR을 찍게 하고, 멀리 있다면 링크를 보내세요.',
+  onboardDesc: '옆에 있다면 초대 코드를 알려주고, 멀리 있다면 링크를 보내세요.',
   onboardShare: '초대 링크 보내기',
   onboardLinkCopied: '링크를 복사했어요',
   onboardShareText: '{name} 모임에서 같이 보드게임 랭킹 겨뤄요!',

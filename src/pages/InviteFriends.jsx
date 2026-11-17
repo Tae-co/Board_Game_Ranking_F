@@ -166,10 +166,9 @@ const InviteFriends = () => {
           {t('community', canCreateRoom ? 'onboardReadyDesc' : 'onboardDesc')}
         </p>
 
-        {/* QR + 코드 + 공유 */}
+        {/* 코드 + 공유 */}
         {inviteCode && (
           <InviteShareCard
-            joinUrl={joinUrl}
             inviteCode={inviteCode}
             codeCopied={codeCopied}
             linkCopied={linkCopied}

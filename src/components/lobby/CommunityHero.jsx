@@ -3,8 +3,8 @@ import StorageImage from '../StorageImage';
 
 const coverStyle = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' };
 
-/** 커뮤니티 로비 맨 위 사진 카드. 오른쪽 아래 초대 코드를 누르면 QR, 아이콘을 누르면 복사. */
-const CommunityHero = ({ community, inviteCode, codeCopied, onShowQr, onCopy, t }) => (
+/** 커뮤니티 로비 맨 위 사진 카드. 오른쪽 아래 초대 코드를 누르면 크게, 아이콘을 누르면 복사. */
+const CommunityHero = ({ community, inviteCode, codeCopied, onShowCode, onCopy, t }) => (
   <div style={{
     borderRadius: '20px',
     marginBottom: '24px',
@@ -55,7 +55,7 @@ const CommunityHero = ({ community, inviteCode, codeCopied, onShowQr, onCopy, t 
           border: '1px solid rgba(255,255,255,0.12)',
         }}>
           <button
-            onClick={onShowQr}
+            onClick={onShowCode}
             style={{
               background: 'none', border: 'none', cursor: 'pointer', padding: 0,
               display: 'flex', alignItems: 'center', gap: '5px',

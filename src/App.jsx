@@ -20,7 +20,7 @@ const ScoreSheet = lazy(() => import('./pages/ScoreSheet'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
-const JoinByQR = lazy(() => import('./pages/JoinByQR'));
+const JoinByLink = lazy(() => import('./pages/JoinByLink'));
 const CreateGroup = lazy(() => import('./pages/CreateGroup'));
 const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
@@ -207,8 +207,8 @@ function App() {
             <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
             <Route path="/season" element={isAuthenticated ? <SeasonSummary /> : <Navigate to="/login" replace />} />
 
-            {/* QR 코드 초대 링크 */}
-            <Route path="/join" element={<JoinByQR />} />
+            {/* 초대 링크 참가 확인 */}
+            <Route path="/join" element={<JoinByLink />} />
 
             {/* OAuth2 콜백 */}
             <Route path="/oauth-callback" element={<OAuthCallback />} />
