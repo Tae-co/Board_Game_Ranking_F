@@ -1,9 +1,8 @@
 import { Copy, CheckCheck } from 'lucide-react';
-import { QRCodeSVG } from 'qrcode.react';
 import { V } from '../../utils/cssUtils';
 
-/** 커뮤니티 초대 코드를 크게 보여 주는 QR 팝업. 바깥을 누르면 닫힌다. */
-const InviteQrPopup = ({ inviteCode, codeCopied, onCopy, onClose, t }) => (
+/** 커뮤니티 초대 코드를 크게 보여 주는 팝업. 바깥을 누르면 닫힌다. */
+const InviteCodePopup = ({ inviteCode, codeCopied, onCopy, onClose, t }) => (
   <div
     onClick={onClose}
     style={{
@@ -25,14 +24,6 @@ const InviteQrPopup = ({ inviteCode, codeCopied, onCopy, onClose, t }) => (
       <p style={{ fontSize: '13px', fontWeight: '700', color: V('--th-text-sub'), margin: 0, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
         {t('community', 'inviteCode')}
       </p>
-      <div style={{ padding: '14px', borderRadius: '16px', backgroundColor: '#fff' }}>
-        <QRCodeSVG
-          value={`${import.meta.env.VITE_APP_URL || window.location.origin}/join?code=${inviteCode}`}
-          size={160}
-          bgColor="#ffffff"
-          fgColor="#1a1a2e"
-        />
-      </div>
       <div style={{
         fontFamily: 'monospace', fontSize: '32px', fontWeight: '800',
         letterSpacing: '0.2em', color: V('--th-primary'),
@@ -57,4 +48,4 @@ const InviteQrPopup = ({ inviteCode, codeCopied, onCopy, onClose, t }) => (
   </div>
 );
 
-export default InviteQrPopup;
+export default InviteCodePopup;

@@ -1,7 +1,8 @@
 import { V } from '../../utils/cssUtils';
+import { practiceRing } from '../practice/practiceRing';
 
-/** 게임방 로비의 그룹 랭킹 / 매치기록 / 시즌 탭 */
-const RoomTabs = ({ activeTab, onChange, t }) => (
+/** 게임방 로비의 그룹 랭킹 / 매치기록 / 시즌 탭. highlightTab: 연습에서 눌러야 할 탭 */
+const RoomTabs = ({ activeTab, onChange, highlightTab, t }) => (
   <div style={{ marginBottom: 12 }}>
     <div style={{ display: 'flex', borderRadius: 24, padding: 4, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }}>
       {[
@@ -17,6 +18,7 @@ const RoomTabs = ({ activeTab, onChange, t }) => (
             border: 'none', cursor: 'pointer', transition: 'all 0.2s',
             backgroundColor: activeTab === tab.key ? V('--th-primary') : 'transparent',
             color: activeTab === tab.key ? '#fff' : V('--th-text-sub'),
+            ...practiceRing(highlightTab === tab.key, { pulse: true }),
           }}
         >
           {tab.label}

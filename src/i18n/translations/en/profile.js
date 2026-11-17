@@ -40,6 +40,8 @@ export default {
   feedbackPlaceholder: 'Leave your thoughts freely :)',
   feedbackSubmit: 'Send via Email',
   feedbackButton: 'Feedback / Bug Report',
+  helpSection: 'Help',
+  helpButton: 'How to use',
   deleteAccount: 'Delete Account',
   deleteAccountDesc: 'Your account, scores and rankings will be deleted. Games you played stay in other members’ history as “Former member”.',
   deleteAccountProcessing: 'Deleting...',

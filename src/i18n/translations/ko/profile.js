@@ -40,6 +40,8 @@ export default {
   feedbackPlaceholder: '자유롭게 의견을 남겨주세요 :)',
   feedbackSubmit: '이메일로 보내기',
   feedbackButton: '피드백 / 버그 신고',
+  helpSection: '도움말',
+  helpButton: '사용방법',
   deleteAccount: '회원 탈퇴',
   deleteAccountDesc: '탈퇴하면 계정과 내 점수·랭킹이 삭제돼요. 함께한 경기는 다른 멤버의 기록에 ‘나간 멤버’로 남아요.',
   deleteAccountProcessing: '탈퇴 처리 중...',

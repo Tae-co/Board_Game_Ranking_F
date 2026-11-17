@@ -22,6 +22,8 @@ export const THEMES = {
       '--th-btn-ghost-bg':     '#FFFFFF',
       '--th-btn-ghost-border': '#E5E7EB',
       '--th-btn-ghost-text':   '#6B7280',
+      '--th-practice-bg':      '#FEF3C7',
+      '--th-practice-text':    '#92400E',
     },
   },
   ledger: {
@@ -44,6 +46,8 @@ export const THEMES = {
       '--th-btn-ghost-bg':     '#1A1A2E',
       '--th-btn-ghost-border': '#2D2D4A',
       '--th-btn-ghost-text':   '#94A3B8',
+      '--th-practice-bg':      'rgba(245,158,11,0.16)',
+      '--th-practice-text':    '#FCD34D',
     },
   },
 };

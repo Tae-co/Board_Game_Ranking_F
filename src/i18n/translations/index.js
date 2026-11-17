@@ -10,6 +10,8 @@ import koCommunity from './ko/community';
 import koAdmin from './ko/admin';
 import koSeason from './ko/season';
 import koErrors from './ko/errors';
+import koPractice from './ko/practice';
+import koHelp from './ko/help';
 
 import enCommon from './en/common';
 import enLogin from './en/login';
@@ -23,6 +25,8 @@ import enCommunity from './en/community';
 import enAdmin from './en/admin';
 import enSeason from './en/season';
 import enErrors from './en/errors';
+import enPractice from './en/practice';
+import enHelp from './en/help';
 
 const translations = {
   ko: {
@@ -38,6 +42,8 @@ const translations = {
     admin: koAdmin,
     season: koSeason,
     errors: koErrors,
+    practice: koPractice,
+    help: koHelp,
   },
   en: {
     common: enCommon,
@@ -52,6 +58,8 @@ const translations = {
     admin: enAdmin,
     season: enSeason,
     errors: enErrors,
+    practice: enPractice,
+    help: enHelp,
   },
 };
 

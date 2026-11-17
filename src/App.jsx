@@ -10,6 +10,7 @@ import { warmUpServer } from './api/services/system';
 import { useRouteTracking } from './hooks/useRouteTracking';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
+import { PracticeProvider } from './practice/PracticeContext';
 
 import './App.css';
 
@@ -20,14 +21,15 @@ const ScoreSheet = lazy(() => import('./pages/ScoreSheet'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
-const JoinByQR = lazy(() => import('./pages/JoinByQR'));
+const JoinByLink = lazy(() => import('./pages/JoinByLink'));
 const CreateGroup = lazy(() => import('./pages/CreateGroup'));
 const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
-const InviteFriends = lazy(() => import('./pages/InviteFriends'));
 const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
 const CommunityMemberManage = lazy(() => import('./pages/CommunityMemberManage'));
 const SeasonSummary = lazy(() => import('./pages/SeasonSummary'));
+const Help = lazy(() => import('./pages/Help'));
+const HelpTopic = lazy(() => import('./pages/HelpTopic'));
 
 // 라우트 진입 계측. useLocation을 쓰므로 BrowserRouter 안에 있어야 한다.
 const RouteTracker = ({ isAuthenticated }) => {
@@ -180,6 +182,7 @@ function App() {
     <ThemeProvider>
     <LanguageProvider>
     <BrowserRouter>
+    <PracticeProvider>
       <RouteTracker isAuthenticated={isAuthenticated} />
       <ScrollToTop />
       <div style={{
@@ -199,16 +202,17 @@ function App() {
             <Route path="/lobby" element={isAuthenticated ? <Lobby /> : <Navigate to="/login" replace />} />
             <Route path="/create-group" element={isAuthenticated ? <CreateGroup /> : <Navigate to="/login" replace />} />
             <Route path="/create-community" element={isAuthenticated ? <CreateCommunity /> : <Navigate to="/login" replace />} />
-            <Route path="/invite-friends" element={isAuthenticated ? <InviteFriends /> : <Navigate to="/login" replace />} />
             <Route path="/manage-community" element={isAuthenticated ? <CommunitySettings /> : <Navigate to="/login" replace />} />
             <Route path="/community-members" element={isAuthenticated ? <CommunityMemberManage /> : <Navigate to="/login" replace />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
             <Route path="/invite/:roomId" element={isAuthenticated ? <Invite /> : <Navigate to="/login" replace />} />
             <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
             <Route path="/season" element={isAuthenticated ? <SeasonSummary /> : <Navigate to="/login" replace />} />
+            <Route path="/help" element={isAuthenticated ? <Help /> : <Navigate to="/login" replace />} />
+            <Route path="/help/:topic" element={isAuthenticated ? <HelpTopic /> : <Navigate to="/login" replace />} />
 
-            {/* QR 코드 초대 링크 */}
-            <Route path="/join" element={<JoinByQR />} />
+            {/* 초대 링크 참가 확인 */}
+            <Route path="/join" element={<JoinByLink />} />
 
             {/* OAuth2 콜백 */}
             <Route path="/oauth-callback" element={<OAuthCallback />} />
@@ -220,6 +224,7 @@ function App() {
           </Routes>
         </Suspense>
       </div>
+    </PracticeProvider>
     </BrowserRouter>
     </LanguageProvider>
     </ThemeProvider>

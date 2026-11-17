@@ -1,9 +1,10 @@
 import { ArrowLeft } from 'lucide-react';
 import NavAvatar from '../NavAvatar';
 import { V } from '../../utils/cssUtils';
+import { practiceRing } from '../practice/practiceRing';
 
 // 게임방 로비 상단 바: 뒤로(로비) · 제목 · 내 아바타
-const InviteHeader = ({ onBack, title }) => (
+const InviteHeader = ({ onBack, title, highlightBack = false }) => (
   <div style={{
     position: 'sticky', top: 0, zIndex: 10,
     backgroundColor: V('--th-nav-bg'),
@@ -16,7 +17,7 @@ const InviteHeader = ({ onBack, title }) => (
     }}>
       <button
         onClick={onBack}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)', borderRadius: 10, display: 'flex', ...practiceRing(highlightBack, { pulse: true }) }}
       >
         <ArrowLeft style={{ width: 24, height: 24 }} />
       </button>

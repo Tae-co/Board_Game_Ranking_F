@@ -21,6 +21,9 @@ import ChipTable from '../scoreSheets/components/ChipTable';
 import ChipCountTable from '../scoreSheets/components/ChipCountTable';
 import { buyInResults, chipModeOf, chipDenominationsOf, chipCountTotal, formatChipDelta } from '../utils/chipUtils';
 import { buildParticipants, computeTotals } from '../scoreSheets/submitPayload';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
 
 const ScoreSheet = () => {
   const { boardGameId: boardGameIdStr } = useParams();
@@ -28,6 +31,8 @@ const ScoreSheet = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, lang } = useLanguage();
+  const practice = usePractice();
+  const inPractice = practice.at('score');
   const queryClient = useQueryClient();
   const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null, backState = null, previewMode = false, schemaJson = null } = location.state || {};
 
@@ -205,6 +210,7 @@ const ScoreSheet = () => {
         queryClient.invalidateQueries({ queryKey: ['currentSeason'] }),
         queryClient.invalidateQueries({ queryKey: ['roomSeasons'] }),
       ]);
+      practice.advance('score', 'viewRanking');
       navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
     } catch (err) {
       // 403: 참가자나 내가 그사이 방을 나갔다 (서버: 방 멤버가 아닌 참가자는 등록할 수 없음)
@@ -216,6 +222,10 @@ const ScoreSheet = () => {
   };
 
   const handleBack = () => {
+    if (practice.active) {
+      practice.askExit();
+      return;
+    }
     if (backTo) {
       navigate(backTo, { state: backState });
       return;
@@ -266,6 +276,17 @@ const ScoreSheet = () => {
         <span style={{ flex: 1, fontSize: 17, fontWeight: 700, color: "var(--th-text)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{currentSchema.name}</span>
         <NavAvatar />
       </div>
+
+      <PracticeBand t={t} />
+
+      {inPractice && (
+        <CoachNote
+          title={t('practice', 'scoreTitle')}
+          desc={t('practice', 'scoreDesc')}
+          arrow="down"
+          style={{ margin: '16px 16px 0' }}
+        />
+      )}
 
       {/* 순위 입력 모드 토글 (supportsRankMode 게임만) */}
       {currentSchema?.supportsRankMode && !readOnly && (
@@ -358,9 +379,19 @@ const ScoreSheet = () => {
         lang={lang}
       />}
 
+      {inPractice && (
+        <CoachNote
+          title={t('practice', 'submitTitle')}
+          desc={t('practice', 'submitDesc')}
+          arrow="down"
+          arrowLeft={170}
+          style={{ margin: '16px 16px 0' }}
+        />
+      )}
+
       {/* Bottom Fixed Button */}
       {!readOnly && !previewMode && (
-        <SubmitBar onSubmit={handleSubmit} isSubmitting={isSubmitting} isEdit={!!editMatchId} t={t} />
+        <SubmitBar onSubmit={handleSubmit} isSubmitting={isSubmitting} isEdit={!!editMatchId} highlight={inPractice} t={t} />
       )}
 
       {/* 과학 모달 */}
