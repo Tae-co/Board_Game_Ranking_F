@@ -210,6 +210,7 @@ const CreateGroup = () => {
               backgroundColor: 'var(--th-primary)', color: '#FFFFFF',
               fontWeight: '700', fontSize: '15px', border: 'none', cursor: 'pointer',
               opacity: (isSubmitting || !canCreate) ? 0.4 : 1,
+              ...practiceRing(inPractice && canCreate, { pulse: true }),
             }}
           >
             {isSubmitting ? t('lobby', 'creating') : t('lobby', 'createRoom')}

@@ -12,7 +12,7 @@ const SubmitBar = ({ onSubmit, isSubmitting, isEdit, highlight = false, t }) => 
           background: isSubmitting ? 'var(--th-border)' : 'var(--th-primary)',
           color: '#fff', fontSize: 14, fontWeight: 900, cursor: isSubmitting ? 'not-allowed' : 'pointer',
           boxShadow: isSubmitting ? 'none' : '0 4px 16px rgba(107, 92, 231, 0.4)',
-          ...practiceRing(highlight),
+          ...practiceRing(highlight, { pulse: true }),
         }}
       >
         {isSubmitting ? t('scoreSheet', 'saving') : isEdit ? t('scoreSheet', 'submitEdit') : t('scoreSheet', 'submit')}

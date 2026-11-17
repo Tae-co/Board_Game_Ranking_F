@@ -157,7 +157,7 @@ const CreateCommunity = () => {
               : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
             color: '#fff', fontSize: '16px', fontWeight: '700',
             boxShadow: (isSubmitting || isUploading) ? 'none' : '0 4px 16px rgba(107,92,231,0.35)',
-            ...practiceRing(inPractice),
+            ...practiceRing(inPractice, { pulse: true }),
           }}
         >
           {isUploading ? t('common', 'imageUploading') : isSubmitting ? t('community', 'creating') : t('community', 'createCommunity')}

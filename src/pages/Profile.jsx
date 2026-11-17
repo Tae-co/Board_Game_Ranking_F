@@ -225,7 +225,7 @@ const Profile = () => {
               width: '100%', padding: '15px', borderRadius: '14px', border: 'none', cursor: 'pointer',
               background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
               color: '#fff', fontSize: '16px', fontWeight: 700,
-              ...practiceRing(true),
+              ...practiceRing(true, { pulse: true }),
             }}
           >
             {t('practice', 'finish')}

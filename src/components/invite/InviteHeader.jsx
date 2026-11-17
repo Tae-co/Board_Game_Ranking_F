@@ -17,7 +17,7 @@ const InviteHeader = ({ onBack, title, highlightBack = false }) => (
     }}>
       <button
         onClick={onBack}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)', borderRadius: 10, display: 'flex', ...practiceRing(highlightBack) }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)', borderRadius: 10, display: 'flex', ...practiceRing(highlightBack, { pulse: true }) }}
       >
         <ArrowLeft style={{ width: 24, height: 24 }} />
       </button>

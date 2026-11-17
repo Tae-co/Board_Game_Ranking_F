@@ -266,7 +266,7 @@ const Lobby = () => {
                   border: 'none', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 2px 8px rgba(107,92,231,0.3)',
-                  ...practiceRing(practiceNewRoom),
+                  ...practiceRing(practiceNewRoom, { pulse: true }),
                 }}
               >
                 <Plus size={16} color="#fff" />

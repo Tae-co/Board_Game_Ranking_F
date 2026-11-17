@@ -18,7 +18,7 @@ const RoomTabs = ({ activeTab, onChange, highlightTab, t }) => (
             border: 'none', cursor: 'pointer', transition: 'all 0.2s',
             backgroundColor: activeTab === tab.key ? V('--th-primary') : 'transparent',
             color: activeTab === tab.key ? '#fff' : V('--th-text-sub'),
-            ...practiceRing(highlightTab === tab.key),
+            ...practiceRing(highlightTab === tab.key, { pulse: true }),
           }}
         >
           {tab.label}

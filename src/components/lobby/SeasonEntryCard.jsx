@@ -16,7 +16,7 @@ const SeasonEntryCard = ({ onClick, highlight = false, t }) => (
       backgroundColor: V('--th-card'),
       border: `1px solid var(--th-border)`,
       boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-      ...practiceRing(highlight),
+      ...practiceRing(highlight, { pulse: true }),
     }}
   >
     <div style={{

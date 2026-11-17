@@ -35,7 +35,7 @@ const NavAvatar = ({ size = 38, fontSize = 15 }) => {
         overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         boxShadow: '0 2px 8px rgba(123,108,246,0.3)',
-        ...practiceRing(practiceTarget),
+        ...practiceRing(practiceTarget, { pulse: true }),
       }}
     >
       {profileImage ? (

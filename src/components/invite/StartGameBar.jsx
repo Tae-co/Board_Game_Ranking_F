@@ -39,7 +39,7 @@ const StartGameBar = ({ isMember, onJoin, isJoining, joinDisabled, onStart, canS
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
             boxShadow: canStart ? '0 4px 16px rgba(107, 92, 231, 0.4)' : 'none',
             transition: 'all 0.2s',
-            ...practiceRing(highlight),
+            ...practiceRing(highlight, { pulse: true }),
           }}
         >
           {canStart && <Play style={{ color: '#FFFFFF', width: 18, height: 18, fill: '#FFFFFF' }} />}
