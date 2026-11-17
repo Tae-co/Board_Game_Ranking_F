@@ -2,9 +2,10 @@
 // 응답은 백엔드 DTO와 같은 모양이라 화면 코드는 연습인지 모른 채 그대로 그린다.
 // 아무것도 저장하지 않는다 — 메모리에만 있고, 연습이 끝나면 reset()으로 비운다.
 
-// 실제 id와 겹치지 않게 큰 수를 쓴다. 900000001 % 8 = 1 → 친구 부르기 화면의 아바타 색이 캔버스와 같다
+// 실제 id와 겹치지 않게 큰 수를 쓴다. 900000001 % 8 = 1 → 예시 친구 아바타 색이 캔버스 순서(주황·초록·파랑·빨강)와 같다
 const PRACTICE_ID = 900000001;
-export const EXAMPLE_FRIEND_ID = PRACTICE_ID;
+// 예시 친구 4명 — 카탄(3~4명)에서 최소·최대 인원을 직접 겪게 모임을 5명으로 둔다
+export const EXAMPLE_FRIEND_IDS = [0, 1, 2, 3].map(i => PRACTICE_ID + i);
 export const PRACTICE_INVITE_CODE = 'AB12CD';
 
 // 백엔드 RatingConstants·EloRatingCalculator와 같은 규칙 (캐주얼 규칙)
@@ -79,8 +80,11 @@ const fail = (status, message) => {
 };
 
 const me = (ctx) => ({ memberId: Number(ctx.userId), nickname: ctx.nickname, profileImage: ctx.profileImage ?? null });
-const friend = (ctx) => ({ memberId: EXAMPLE_FRIEND_ID, nickname: ctx.friendName, profileImage: null, isExample: true });
-const members = (ctx) => [me(ctx), friend(ctx)];
+const friends = (ctx) => EXAMPLE_FRIEND_IDS.map((memberId, i) => ({
+  memberId, nickname: ctx.friendNames[i], profileImage: null, isExample: true,
+}));
+const members = (ctx) => [me(ctx), ...friends(ctx)];
+const MEMBER_COUNT = EXAMPLE_FRIEND_IDS.length + 1;
 
 // 매치를 처음부터 다시 돌려 각자 점수와 매치별 변화를 만든다 (수정·삭제가 있어도 늘 맞다)
 const replay = (ctx) => {
@@ -109,7 +113,7 @@ const communityResponse = (ctx) => ({
   region: db.community.region,
   imageUrl: null,
   status: 'ACTIVE',
-  memberCount: 2,
+  memberCount: MEMBER_COUNT,
   groupCount: db.room ? 1 : 0,
   admins: [me(ctx)],
   inviteCode: PRACTICE_INVITE_CODE,
@@ -124,7 +128,7 @@ const roomListItem = () => ({
   imageUrl: db.game?.imageUrl ?? null,
   sessionActive: false,
   isMember: true,
-  memberCount: 2,
+  memberCount: MEMBER_COUNT,
 });
 
 const seasonResponse = () => {
@@ -140,7 +144,7 @@ const seasonResponse = () => {
     closed: false,
     seasonKey: s.endDate.slice(0, 7),
     matchCount: db.matches.length,
-    playerCount: db.matches.length ? 2 : 0,
+    playerCount: new Set(db.matches.flatMap(m => m.participants.map(p => p.memberId))).size,
   };
 };
 
@@ -148,9 +152,10 @@ const rankings = (ctx) => {
   const { stats } = replay(ctx);
   return members(ctx)
     .map(m => ({ ...m, ...stats.get(m.memberId) }))
-    .sort((a, b) => b.rating - a.rating)
+    // 백엔드처럼 뛴 사람이 먼저, 그다음 점수순. 안 뛴 사람도 게임방 멤버라 목록에 있다 (500점)
+    .sort((a, b) => (b.playCount > 0) - (a.playCount > 0) || b.rating - a.rating)
     .map((m, i) => ({
-      rank: i + 1,
+      rank: m.playCount > 0 ? i + 1 : null,
       memberId: m.memberId,
       nickname: m.nickname,
       profileImage: m.profileImage,
@@ -224,7 +229,7 @@ const communityStatus = (ctx) => {
     to: today,
     windowDays: 1,
     totalRooms: db.room ? 1 : 0,
-    totalMembers: 2,
+    totalMembers: MEMBER_COUNT,
     matchCount: history.length,
     leaders: played.length ? [{
       rank: 1, ...pick(played[0]), displayScore: played[0].rating,

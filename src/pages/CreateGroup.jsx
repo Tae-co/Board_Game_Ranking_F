@@ -19,7 +19,7 @@ import CoachNote from '../components/practice/CoachNote';
 import { practiceRing } from '../components/practice/practiceRing';
 
 // 연습 점수판은 스플렌더로 고정한다 (decision-log 28). id는 환경마다 달라 이름으로 찾는다
-const isPracticeGame = (game) => /^(splendor|스플렌더)$/i.test(game.name?.trim() ?? '');
+const isPracticeGame = (game) => /^(catan|카탄)$/i.test(game.name?.trim() ?? '');
 
 const CreateGroup = () => {
   const navigate = useNavigate();

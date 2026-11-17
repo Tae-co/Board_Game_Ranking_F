@@ -20,8 +20,10 @@ import CommunityMemberGrid from '../components/lobby/CommunityMemberGrid';
 import InviteCodePopup from '../components/lobby/InviteCodePopup';
 import { EVENTS, logEvent } from '../api/services/events';
 import { usePractice } from '../practice/usePractice';
+import { EXAMPLE_FRIEND_IDS } from '../practice/practiceServer';
 import PracticeBand from '../components/practice/PracticeBand';
 import CoachNote from '../components/practice/CoachNote';
+import { practiceRing } from '../components/practice/practiceRing';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -44,6 +46,7 @@ const Lobby = () => {
   const [showCodePopup, setShowCodePopup] = useState(false);
   const practice = usePractice();
   const practiceLobby = practice.at('lobby');
+  const practiceNewRoom = practice.at('newRoom');
 
   // 초대코드·링크로 막 참가했다면 어디에 들어왔는지 한 번 알려준다.
   // state를 지워두지 않으면 뒤로가기로 돌아올 때마다 다시 뜬다.
@@ -255,13 +258,15 @@ const Lobby = () => {
             {/* 커뮤니티 모드 + Admin: 그룹 생성 버튼 */}
             {communityId && isAdmin && (
               <button
-                onClick={() => navigate('/create-group')}
+                onClick={() => { practice.advance('newRoom', 'createRoom'); navigate('/create-group'); }}
+                aria-label={t('lobby', 'createGroup')}
                 style={{
                   width: 32, height: 32, borderRadius: '50%',
                   background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
                   border: 'none', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 2px 8px rgba(107,92,231,0.3)',
+                  ...practiceRing(practiceNewRoom),
                 }}
               >
                 <Plus size={16} color="#fff" />
@@ -269,12 +274,23 @@ const Lobby = () => {
             )}
           </div>
 
+          {practiceNewRoom && (
+            <CoachNote
+              title={t('practice', 'newRoomTitle')}
+              desc={t('practice', 'newRoomDesc')}
+              arrow="up"
+              arrowLeft="calc(100% - 23px)"
+              style={{ marginBottom: 14 }}
+            />
+          )}
+
           <RoomGrid rooms={rooms} games={games} communityId={communityId} onEnter={handleEnterRoom} t={t} />
         </div>
 
         {communityId && (
           <CommunityMemberGrid
             members={communityMembers}
+            exampleMemberIds={practice.active ? EXAMPLE_FRIEND_IDS : undefined}
             userId={userId}
             isAdmin={isAdmin}
             onManage={() => navigate('/community-members')}

@@ -4,6 +4,7 @@
 // 띠의 n / 4. 단계 이름 → 몇 번째 칸인지
 export const PRACTICE_STEPS = {
   createCommunity: 1,
+  newRoom: 2,
   createRoom: 2,
   startGame: 3,
   score: 3,

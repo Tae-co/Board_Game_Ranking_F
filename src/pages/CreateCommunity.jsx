@@ -65,10 +65,10 @@ const CreateCommunity = () => {
       });
       setMyCommunity(res);
       enterCommunity(res, getAuthUserId());
-      practice.advance('createCommunity', 'createRoom');
+      practice.advance('createCommunity', 'newRoom');
       queryClient.invalidateQueries({ queryKey: ['myCommunitiesList'] });
-      // 만들면 바로 로비로. 친구는 로비의 초대 코드로 나중에 부른다. 연습은 게임방 만들기로 이어간다
-      navigate(inPractice ? '/create-group' : '/lobby', { replace: true });
+      // 만들면 바로 로비로. 친구는 로비의 초대 코드로 부르고, 연습은 로비에서 「게임방」 옆 + 를 직접 누르게 한다
+      navigate('/lobby', { replace: true });
     } catch {
       setError(t('community', 'createFailed'));
     } finally {

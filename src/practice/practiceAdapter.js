@@ -21,7 +21,7 @@ export const practiceAdapter = async (config) => {
     userId: getAuthUserId(),
     nickname: getNickname() || '?',
     profileImage: getProfileImage(),
-    friendName: text('friendName'),
+    friendNames: text('friendNames').split(','),
     defaultCommunityName: text('communityName'),
     blockedMessage: text('blocked'),
     fetchGame: (id) => realAdapter({ ...config, method: 'get', url: `/games/${id}`, data: undefined, params: undefined })

@@ -35,7 +35,7 @@ import { usePractice } from '../practice/usePractice';
 import PracticeBand from '../components/practice/PracticeBand';
 import CoachNote from '../components/practice/CoachNote';
 import { practiceRing } from '../components/practice/practiceRing';
-import { EXAMPLE_FRIEND_ID } from '../practice/practiceServer';
+import { EXAMPLE_FRIEND_IDS } from '../practice/practiceServer';
 
 const PAGE_SIZE = 7;
 
@@ -101,13 +101,10 @@ const Invite = () => {
   const myStreak = useMemo(() => getMyStreak(allMatches, userId), [allMatches, userId]);
   const mergedPlayers = useMemo(() => mergeRankedMembers(members, rankings), [members, rankings]);
 
-  // 연습: 같이 할 사람(나·예시 친구)을 미리 체크해 둔다 — 「게임 시작」만 누르면 된다
+  // 연습: 같이 할 사람은 미리 체크하지 않는다 — 사용자가 직접 눌러 최소·최대 인원을 겪게 한다.
+  // 인원이 모자란 채로 「게임 시작」을 누른 적이 있으면 말풍선이 최소 인원을 알려준다
   const practiceStart = practice.at('startGame');
-  const [practicePrefilled, setPracticePrefilled] = useState(false);
-  if (practiceStart && members.length && !practicePrefilled) {
-    setPracticePrefilled(true);
-    setSelectedPlayers(new Set(members.map(m => m.memberId)));
-  }
+  const [practiceTriedEarly, setPracticeTriedEarly] = useState(false);
 
   const pagedRankings = useMemo(
     () => mergedPlayers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
@@ -184,6 +181,7 @@ const Invite = () => {
       if (activeTab !== 'group') handleTabChange('group');
       // Point at the rows the user must act on: too few → the empty ones,
       // too many → the ones already picked.
+      if (practiceStart) setPracticeTriedEarly(true);
       setNudge(overMax ? 'deselect' : 'select');
       setTimeout(() => setNudge(null), 1400);
       requestAnimationFrame(() => {
@@ -231,7 +229,7 @@ const Invite = () => {
         )}
 
         {/* Board Game Card */}
-        {roomInfo.boardGameId && <GameCard gameInfo={gameInfo} />}
+        {roomInfo.boardGameId && <GameCard gameInfo={gameInfo} highlightPlayers={practiceStart && selectedPlayers.size === 0 && !practiceTriedEarly} />}
 
         {/* Stats Card */}
         <StatsCard
@@ -244,9 +242,12 @@ const Invite = () => {
           t={t}
         />
 
-        {practiceStart && (
-          <CoachNote title={t('practice', 'startGameTitle')} desc={t('practice', 'startGameDesc')} />
-        )}
+        {practiceStart && (() => {
+          const key = canStart ? 'startReady' : overMax ? 'startOver' : practiceTriedEarly && selectedPlayers.size > 0 ? 'startTooFew' : 'startGame';
+          const fill = (s) => s.replace('{min}', minPlayers).replace('{max}', maxPlayers)
+            .replace('{n}', minPlayers - selectedPlayers.size).replace('{count}', selectedPlayers.size).replace('{over}', maxPlayers + 1);
+          return <CoachNote title={fill(t('practice', `${key}Title`))} desc={fill(t('practice', `${key}Desc`))} />;
+        })()}
 
         {/* Players section */}
         <div>
@@ -356,7 +357,7 @@ const Invite = () => {
                 onShowRatingInfo={() => setShowRatingInfo(true)}
                 t={t}
               />
-              <div ref={rankingListRef} style={practiceStart ? { borderRadius: 16, padding: 8, margin: '0 -8px', ...practiceRing(true) } : undefined}>
+              <div ref={rankingListRef} style={practiceStart && !canStart ? { borderRadius: 16, padding: 8, margin: '0 -8px', ...practiceRing(true) } : undefined}>
                 <RankingTable
                   pagedRankings={pagedRankings}
                   page={page}
@@ -364,7 +365,8 @@ const Invite = () => {
                   totalPages={totalPages}
                   myUserId={userId}
                   isHost={isHost}
-                  onEditRating={isChip ? undefined : room.handleOpenRatingEdit}
+                  // 연습에선 점수 직접 수정(연필)을 숨긴다 — 저장할 수 없고 캔버스에도 없다
+                  onEditRating={isChip || practice.active ? undefined : room.handleOpenRatingEdit}
                   PAGE_SIZE={PAGE_SIZE}
                   selectedPlayers={selectedPlayers}
                   onToggle={isMember ? togglePlayer : undefined}
@@ -373,12 +375,9 @@ const Invite = () => {
                   championIds={championIds}
                   scoreLabel={isChip ? t('ranking', 'chipHolding') : t('season', 'seasonScore')}
                   chip={isChip}
-                  exampleMemberId={practice.active ? EXAMPLE_FRIEND_ID : undefined}
+                  exampleMemberIds={practice.active ? EXAMPLE_FRIEND_IDS : undefined}
                 />
               </div>
-              {practiceStart && (
-                <p style={{ fontSize: 12, color: V('--th-text-sub'), margin: '12px 0 0' }}>{t('practice', 'startGameHint')}</p>
-              )}
             </>
           )}
         </div>
