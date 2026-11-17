@@ -115,7 +115,7 @@ const CreateGroup = () => {
         <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
             <button
-              onClick={() => navigate('/lobby')}
+              onClick={practice.active ? practice.askExit : () => navigate('/lobby')}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', color: 'var(--th-primary)' }}
             >
               <ArrowLeft style={{ width: 24, height: 24 }} />

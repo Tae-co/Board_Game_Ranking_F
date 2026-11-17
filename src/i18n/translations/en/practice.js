@@ -62,6 +62,12 @@ const practice = {
   settingsDesc: 'Change your photo and nickname with the buttons by your avatar, and theme and language in account settings. Send us feedback if anything bugs you.',
   finish: 'Finish practice',
 
+  exitTitle: 'End practice?',
+  exitDesc: 'The practice community and records will be cleared.',
+  exitNote: 'You can practice again anytime from Profile › How to use.',
+  exitContinue: 'Keep practicing',
+  exitConfirm: 'End',
+
   doneTitle: 'Practice done! That is how it works',
   doneDesc: 'You went from making a group to recording and looking around.\nThe practice group and records disappear now.',
   doneQuestion: 'Ready to start for real?',

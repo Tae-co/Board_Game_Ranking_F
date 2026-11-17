@@ -215,7 +215,7 @@ const Invite = () => {
       : 'calc(28px + env(safe-area-inset-bottom))' }}>
 
       <InviteHeader
-        onBack={() => { practice.advance('viewSeason', 'lobby'); navigate('/lobby'); }}
+        onBack={practice.active && !practice.at('viewSeason') ? practice.askExit : () => { practice.advance('viewSeason', 'lobby'); navigate('/lobby'); }}
         title={t('invite', 'lobbyTitle')}
         highlightBack={practice.at('viewSeason')}
       />

@@ -84,7 +84,7 @@ const CreateCommunity = () => {
         <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button
-              onClick={() => navigate(-1)}
+              onClick={practice.active ? practice.askExit : () => navigate(-1)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
             >
               <ArrowLeft size={22} color={V('--th-primary')} />

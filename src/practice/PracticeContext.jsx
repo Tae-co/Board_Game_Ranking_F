@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { getPracticeState, setPracticeState } from './practiceState';
@@ -6,6 +6,7 @@ import { PracticeActions } from './practiceActions';
 import { reset as resetPracticeServer } from './practiceServer';
 import { clearPracticeMemory, notifySelectedCommunityUpdated } from '../utils/storage';
 import { AUTH_CHANGED_EVENT, getAuthUserId } from '../auth/storage';
+import PracticeExitModal from '../components/practice/PracticeExitModal';
 
 /**
  * 연습 시작·진행·끝. 시작과 끝에 react-query 캐시를 비운다 —
@@ -14,6 +15,7 @@ import { AUTH_CHANGED_EVENT, getAuthUserId } from '../auth/storage';
 export const PracticeProvider = ({ children }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [exitOpen, setExitOpen] = useState(false);
 
   const actions = useMemo(() => {
     const wipe = () => {
@@ -33,7 +35,10 @@ export const PracticeProvider = ({ children }) => {
         const { active, step } = getPracticeState();
         if (active && step === from) setPracticeState({ step: to });
       },
+      // 연습 중 헤더 뒤로 가기 — 바로 나가지 않고 종료 확인을 띄운다
+      askExit: () => setExitOpen(true),
       finish: (to = '/community') => {
+        setExitOpen(false);
         setPracticeState({ active: false, step: null });
         wipe();
         notifySelectedCommunityUpdated();
@@ -56,5 +61,10 @@ export const PracticeProvider = ({ children }) => {
     return () => window.removeEventListener(AUTH_CHANGED_EVENT, onAuthChanged);
   }, [queryClient]);
 
-  return <PracticeActions.Provider value={actions}>{children}</PracticeActions.Provider>;
+  return (
+    <PracticeActions.Provider value={actions}>
+      {children}
+      {exitOpen && <PracticeExitModal onClose={() => setExitOpen(false)} onConfirm={() => actions.finish()} />}
+    </PracticeActions.Provider>
+  );
 };

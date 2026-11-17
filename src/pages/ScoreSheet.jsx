@@ -222,6 +222,10 @@ const ScoreSheet = () => {
   };
 
   const handleBack = () => {
+    if (practice.active) {
+      practice.askExit();
+      return;
+    }
     if (backTo) {
       navigate(backTo, { state: backState });
       return;

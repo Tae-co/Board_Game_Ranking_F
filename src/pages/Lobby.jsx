@@ -169,7 +169,7 @@ const Lobby = () => {
       <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
         {selectedCommunity ? (
           <button
-            onClick={() => navigate('/community')}
+            onClick={practice.active ? practice.askExit : () => navigate('/community')}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <ArrowLeft size={22} color="var(--th-primary)" />

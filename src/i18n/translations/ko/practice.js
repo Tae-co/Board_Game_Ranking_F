@@ -62,6 +62,12 @@ const practice = {
   settingsDesc: '아바타 옆 버튼으로 사진과 닉네임을, 계정 설정에서 테마와 언어를 바꿔요. 불편한 점은 피드백으로 보내 주세요.',
   finish: '연습 마치기',
 
+  exitTitle: '연습을 종료할까요?',
+  exitDesc: '지금까지 연습한 모임과 기록은 사라져요.',
+  exitNote: '연습은 프로필 › 사용방법에서 언제든 다시 할 수 있어요.',
+  exitContinue: '계속 연습하기',
+  exitConfirm: '종료하기',
+
   doneTitle: '연습 끝! 이렇게 하면 돼요',
   doneDesc: '모임부터 기록·둘러보기까지 다 해봤어요.\n연습한 모임과 기록은 지금 사라져요.',
   doneQuestion: '이제 진짜로 시작해 볼까요?',
