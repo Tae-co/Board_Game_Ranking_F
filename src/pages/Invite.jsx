@@ -35,7 +35,8 @@ import { usePractice } from '../practice/usePractice';
 import PracticeBand from '../components/practice/PracticeBand';
 import CoachNote from '../components/practice/CoachNote';
 import { practiceRing } from '../components/practice/practiceRing';
-import { EXAMPLE_FRIEND_IDS } from '../practice/practiceServer';
+import { EXAMPLE_FRIEND_IDS } from '../practice/practiceState';
+import { useRoomPractice } from '../practice/useRoomPractice';
 
 const PAGE_SIZE = 7;
 
@@ -45,14 +46,6 @@ const findSearchResult = (query, players) => {
   const idx = players.findIndex(r => r.nickname.toLowerCase().includes(q));
   if (idx === -1) return null;
   return { memberId: players[idx].memberId, pageNum: Math.floor(idx / PAGE_SIZE) };
-};
-
-// 연습 7의 말풍선: 1등 이름과 오른 점수는 방금 넣은 경기 결과에서 가져온다
-const practiceRankingDesc = (matchResult, t) => {
-  const winner = matchResult?.find(r => r.placement === 1);
-  return t('practice', 'rankingDesc')
-    .replace('{name}', winner?.nickname ?? '')
-    .replace('{change}', Math.round(winner?.ratingChange ?? 0));
 };
 
 const Invite = () => {
@@ -101,11 +94,6 @@ const Invite = () => {
   const myStreak = useMemo(() => getMyStreak(allMatches, userId), [allMatches, userId]);
   const mergedPlayers = useMemo(() => mergeRankedMembers(members, rankings), [members, rankings]);
 
-  // 연습: 같이 할 사람은 미리 체크하지 않는다 — 사용자가 직접 눌러 최소·최대 인원을 겪게 한다.
-  // 인원이 모자란 채로 「게임 시작」을 누른 적이 있으면 말풍선이 최소 인원을 알려준다
-  const practiceStart = practice.at('startGame');
-  const [practiceTriedEarly, setPracticeTriedEarly] = useState(false);
-
   const pagedRankings = useMemo(
     () => mergedPlayers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
     [mergedPlayers, page]
@@ -128,6 +116,9 @@ const Invite = () => {
   const isLoading = activeTab === 'matches' ? (isMatchesLoading || isSeasonLoading) : (membersLoading || isRankingLoading);
 
   const overMax = selectedPlayers.size > maxPlayers;
+  const roomPractice = useRoomPractice({
+    selectedCount: selectedPlayers.size, canStart, overMax, minPlayers, maxPlayers, matchResult, t,
+  });
 
   // The button must never claim a state it isn't in: a label promising "start"
   // while the button refuses to act is what left users stuck (see startNeedMore).
@@ -181,7 +172,7 @@ const Invite = () => {
       if (activeTab !== 'group') handleTabChange('group');
       // Point at the rows the user must act on: too few → the empty ones,
       // too many → the ones already picked.
-      if (practiceStart) setPracticeTriedEarly(true);
+      roomPractice.markTriedEarly();
       setNudge(overMax ? 'deselect' : 'select');
       setTimeout(() => setNudge(null), 1400);
       requestAnimationFrame(() => {
@@ -215,7 +206,7 @@ const Invite = () => {
       : 'calc(28px + env(safe-area-inset-bottom))' }}>
 
       <InviteHeader
-        onBack={practice.active && !practice.at('viewSeason') ? practice.askExit : () => { practice.advance('viewSeason', 'lobby'); navigate('/lobby'); }}
+        onBack={practice.at('viewSeason') ? () => { practice.advance('viewSeason', 'lobby'); navigate('/lobby'); } : practice.back(() => navigate('/lobby'))}
         title={t('invite', 'lobbyTitle')}
         highlightBack={practice.at('viewSeason')}
       />
@@ -229,7 +220,7 @@ const Invite = () => {
         )}
 
         {/* Board Game Card */}
-        {roomInfo.boardGameId && <GameCard gameInfo={gameInfo} highlightPlayers={practiceStart && selectedPlayers.size === 0 && !practiceTriedEarly} />}
+        {roomInfo.boardGameId && <GameCard gameInfo={gameInfo} highlightPlayers={roomPractice.highlightPlayers} />}
 
         {/* Stats Card */}
         <StatsCard
@@ -242,12 +233,7 @@ const Invite = () => {
           t={t}
         />
 
-        {practiceStart && (() => {
-          const key = canStart ? 'startReady' : overMax ? 'startOver' : practiceTriedEarly && selectedPlayers.size > 0 ? 'startTooFew' : 'startGame';
-          const fill = (s) => s.replace('{min}', minPlayers).replace('{max}', maxPlayers)
-            .replace('{n}', minPlayers - selectedPlayers.size).replace('{count}', selectedPlayers.size).replace('{over}', maxPlayers + 1);
-          return <CoachNote title={fill(t('practice', `${key}Title`))} desc={fill(t('practice', `${key}Desc`))} />;
-        })()}
+        {roomPractice.startNote && <CoachNote title={roomPractice.startNote.title} desc={roomPractice.startNote.desc} />}
 
         {/* Players section */}
         <div>
@@ -262,14 +248,14 @@ const Invite = () => {
           <RoomTabs
             activeTab={activeTab}
             onChange={handleTabChange}
-            highlightTab={practice.at('viewRanking') ? 'matches' : practice.at('viewMatches') ? 'season' : undefined}
+            highlightTab={roomPractice.highlightTab}
             t={t}
           />
 
           {practice.at('viewRanking') && (
             <CoachNote
               title={t('practice', 'rankingTitle')}
-              desc={practiceRankingDesc(matchResult, t)}
+              desc={roomPractice.rankingDesc}
               arrow="up"
               arrowLeft={160}
               style={{ marginBottom: 12 }}
@@ -357,7 +343,7 @@ const Invite = () => {
                 onShowRatingInfo={() => setShowRatingInfo(true)}
                 t={t}
               />
-              <div ref={rankingListRef} style={practiceStart && !canStart ? { borderRadius: 16, padding: 8, margin: '0 -8px', ...practiceRing(true) } : undefined}>
+              <div ref={rankingListRef} style={roomPractice.highlightList ? { borderRadius: 16, padding: 8, margin: '0 -8px', ...practiceRing(true) } : undefined}>
                 <RankingTable
                   pagedRankings={pagedRankings}
                   page={page}
@@ -395,7 +381,7 @@ const Invite = () => {
           canStart={canStart}
           overMax={overMax}
           label={startLabel}
-          highlight={practiceStart && canStart}
+          highlight={roomPractice.highlightStart}
           t={t}
         />
       )}

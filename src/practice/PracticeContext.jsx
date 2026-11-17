@@ -38,8 +38,8 @@ export const PracticeProvider = ({ children }) => {
         const { active, step } = getPracticeState();
         if (active && step === from) setPracticeState({ step: to });
       },
-      // 연습 중 헤더 뒤로 가기 — 바로 나가지 않고 종료 확인을 띄운다
-      askExit: () => setExitOpen(true),
+      // 헤더 뒤로 가기: 연습 중이면 바로 나가지 않고 종료 확인, 아니면 원래 동작
+      back: (fn) => (getPracticeState().active ? () => setExitOpen(true) : fn),
       finish: (to = '/community') => {
         setExitOpen(false);
         setPracticeState({ active: false, step: null });

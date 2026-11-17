@@ -140,7 +140,7 @@ const Profile = () => {
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
         <div style={{ maxWidth: 390, margin: '0 auto', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={practice.active ? practice.askExit : () => navigate(-1)} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-primary'), flexShrink: 0 }}>
+          <button onClick={practice.back(() => navigate(-1))} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-primary'), flexShrink: 0 }}>
             <ArrowLeft size={22} />
           </button>
           <span style={{ flex: 1, fontSize: 17, fontWeight: 700, color: V('--th-primary') }}>

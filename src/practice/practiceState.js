@@ -17,6 +17,12 @@ export const PRACTICE_STEPS = {
   done: 4,
 };
 
+// 가짜 서버(practiceServer)가 쓰는 id. 화면은 예시 친구에 「예시」를 붙일 때 읽는다
+// 실제 id와 겹치지 않게 큰 수를 쓴다. 900000001 % 8 = 1 → 예시 친구 아바타 색이 캔버스 순서(주황·초록·파랑·빨강)와 같다
+export const PRACTICE_ID = 900000001;
+// 예시 친구 4명 — 카탄(3~4명)에서 최소·최대 인원을 직접 겪게 모임을 5명으로 둔다
+export const EXAMPLE_FRIEND_IDS = [0, 1, 2, 3].map(i => PRACTICE_ID + i);
+
 let state = { active: false, step: null };
 const listeners = new Set();
 
