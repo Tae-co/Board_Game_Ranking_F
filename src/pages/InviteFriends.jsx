@@ -12,6 +12,11 @@ import { V } from '../utils/cssUtils';
 import InviteShareCard from '../components/community/InviteShareCard';
 import GatheredMembers from '../components/community/GatheredMembers';
 import CancelCreationModal from '../components/community/CancelCreationModal';
+import { usePractice } from '../practice/usePractice';
+import { EXAMPLE_FRIEND_ID } from '../practice/practiceServer';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
+import { practiceRing } from '../components/practice/practiceRing';
 
 // 랭킹은 2명부터 의미가 있다. 혼자서는 게임방을 만들어도 기록할 게 없다.
 const MIN_PLAYERS = 2;
@@ -22,6 +27,8 @@ const InviteFriends = () => {
   const queryClient = useQueryClient();
   const { t } = useLanguage();
   const userId = getAuthUserId();
+  const practice = usePractice();
+  const inPractice = practice.at('invite');
   const [community] = useState(() => getSelectedCommunity());
   const communityId = community?.communityId ?? null;
   const inviteCode = community?.inviteCode ?? null;
@@ -139,32 +146,43 @@ const InviteFriends = () => {
 
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
-        <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
-          <button
-            onClick={() => { setCancelError(''); setShowCancelModal(true); }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', fontSize: '14px', fontWeight: '600', color: V('--th-text-sub'), flexShrink: 0 }}
-          >
-            {t('common', 'cancel')}
-          </button>
-          <button
-            onClick={() => leave('/lobby')}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', fontSize: '14px', fontWeight: '600', color: V('--th-text-sub'), flexShrink: 0 }}
-          >
-            {t('community', 'onboardSkip')}
-          </button>
-        </div>
+        {inPractice ? (
+          // 연습: 취소·건너뛰기 없이 제목만 — 다음으로 가는 길은 아래 버튼 하나다
+          <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px 20px' }}>
+            <span style={{ fontSize: '17px', fontWeight: '700', color: V('--th-text') }}>{t('practice', 'inviteHeader')}</span>
+          </div>
+        ) : (
+          <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
+            <button
+              onClick={() => { setCancelError(''); setShowCancelModal(true); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', fontSize: '14px', fontWeight: '600', color: V('--th-text-sub'), flexShrink: 0 }}
+            >
+              {t('common', 'cancel')}
+            </button>
+            <button
+              onClick={() => leave('/lobby')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', fontSize: '14px', fontWeight: '600', color: V('--th-text-sub'), flexShrink: 0 }}
+            >
+              {t('community', 'onboardSkip')}
+            </button>
+          </div>
+        )}
       </div>
+
+      <PracticeBand t={t} />
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 0' }}>
 
-        <OnboardingSteps current={canCreateRoom ? 2 : 1} t={t} />
+        {!inPractice && (<>
+          <OnboardingSteps current={canCreateRoom ? 2 : 1} t={t} />
 
-        <p style={{ fontSize: '24px', fontWeight: '800', color: V('--th-text'), margin: '0 0 6px', letterSpacing: '-0.3px' }}>
-          {t('community', canCreateRoom ? 'onboardReadyTitle' : 'onboardTitle')}
-        </p>
-        <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: '0 0 20px', lineHeight: 1.5 }}>
-          {t('community', canCreateRoom ? 'onboardReadyDesc' : 'onboardDesc')}
-        </p>
+          <p style={{ fontSize: '24px', fontWeight: '800', color: V('--th-text'), margin: '0 0 6px', letterSpacing: '-0.3px' }}>
+            {t('community', canCreateRoom ? 'onboardReadyTitle' : 'onboardTitle')}
+          </p>
+          <p style={{ fontSize: '13px', color: V('--th-text-sub'), margin: '0 0 20px', lineHeight: 1.5 }}>
+            {t('community', canCreateRoom ? 'onboardReadyDesc' : 'onboardDesc')}
+          </p>
+        </>)}
 
         {/* 코드 + 공유 */}
         {inviteCode && (
@@ -174,7 +192,19 @@ const InviteFriends = () => {
             linkCopied={linkCopied}
             onCopyCode={copyCode}
             onShare={shareLink}
+            label={inPractice ? t('practice', 'inviteCodeLabel') : undefined}
+            shareDisabled={inPractice}
             t={t}
+          />
+        )}
+
+        {inPractice && (
+          <CoachNote
+            title={t('practice', 'inviteTitle')}
+            desc={t('practice', 'inviteDesc')}
+            arrow="down"
+            arrowLeft={170}
+            style={{ marginBottom: 16 }}
           />
         )}
 
@@ -187,6 +217,8 @@ const InviteFriends = () => {
           newcomerName={newcomerName}
           spinning={refreshing || isFetching}
           onRefresh={refresh}
+          exampleMemberId={practice.active ? EXAMPLE_FRIEND_ID : undefined}
+          highlight={inPractice}
           t={t}
         />
 
@@ -197,7 +229,7 @@ const InviteFriends = () => {
       <div style={{ position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 10 }}>
         <div style={{ maxWidth: 390, margin: '0 auto', padding: '12px 20px calc(24px + env(safe-area-inset-bottom))' }}>
           <button
-            onClick={() => leave('/create-group', { fromOnboarding: true })}
+            onClick={() => { practice.advance('invite', 'createRoom'); leave('/create-group', { fromOnboarding: true }); }}
             disabled={!canCreateRoom}
             style={{
               width: '100%', padding: '16px', borderRadius: '14px', border: 'none',
@@ -206,6 +238,7 @@ const InviteFriends = () => {
               color: '#fff', fontSize: '16px', fontWeight: '700',
               opacity: canCreateRoom ? 1 : 0.4,
               boxShadow: canCreateRoom ? '0 4px 16px rgba(107,92,231,0.35)' : 'none',
+              ...practiceRing(inPractice && canCreateRoom),
             }}
           >
             {t('community', 'onboardCreateRoom')}

@@ -10,6 +10,9 @@ import { useSelectedCommunity } from '../hooks/useSelectedCommunity';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import { fill } from '../utils/seasonUtils';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
 
 // html2canvas(원본 400KB)는 저장·공유 때만 쓴다. 화면을 먼저 그리고 뒤에서 받아 둔다 —
 // 누른 뒤에 받기 시작하면 느린 망에서 iOS navigator.share가 사용자 동작 만료로 거절될 수 있다.
@@ -24,6 +27,7 @@ const SeasonSummary = () => {
   const { t } = useLanguage();
   const { selectedCommunity } = useSelectedCommunity();
   const communityId = selectedCommunity?.communityId ?? null;
+  const practice = usePractice();
 
   const cardRef = useRef(null);
   const [busy, setBusy] = useState(false);
@@ -143,7 +147,19 @@ const SeasonSummary = () => {
         </div>
       </div>
 
+      <PracticeBand t={t} />
+
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 40px' }}>
+
+        {practice.at('hallOfFame') && (
+          <CoachNote
+            title={t('practice', 'hallTitle')}
+            desc={t('practice', 'hallDesc')}
+            arrow="up"
+            arrowLeft={326}
+            style={{ marginBottom: 20 }}
+          />
+        )}
 
         {loading ? (
           <div style={{ height: 420, borderRadius: 20, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }} />

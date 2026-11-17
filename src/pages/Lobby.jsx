@@ -19,6 +19,9 @@ import RoomGrid from '../components/lobby/RoomGrid';
 import CommunityMemberGrid from '../components/lobby/CommunityMemberGrid';
 import InviteCodePopup from '../components/lobby/InviteCodePopup';
 import { EVENTS, logEvent } from '../api/services/events';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -39,6 +42,8 @@ const Lobby = () => {
   const communityInviteCode = selectedCommunity?.inviteCode ?? null;
   const [codeCopied, setCodeCopied] = useState(false);
   const [showCodePopup, setShowCodePopup] = useState(false);
+  const practice = usePractice();
+  const practiceLobby = practice.at('lobby');
 
   // 초대코드·링크로 막 참가했다면 어디에 들어왔는지 한 번 알려준다.
   // state를 지워두지 않으면 뒤로가기로 돌아올 때마다 다시 뜬다.
@@ -188,6 +193,8 @@ const Lobby = () => {
       </div>
       </div>
 
+      <PracticeBand t={t} />
+
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 24px' }}>
 
         {communityId ? (
@@ -203,7 +210,23 @@ const Lobby = () => {
           <WelcomeBanner nickname={nickname} t={t} />
         )}
 
-        {communityId && <SeasonEntryCard onClick={() => navigate('/season')} t={t} />}
+        {communityId && (
+          <SeasonEntryCard
+            onClick={() => { practice.advance('lobby', 'hallOfFame'); navigate('/season'); }}
+            highlight={practiceLobby}
+            t={t}
+          />
+        )}
+
+        {practiceLobby && (
+          <CoachNote
+            title={t('practice', 'lobbyTitle')}
+            desc={t('practice', 'lobbyDesc')}
+            arrow="up"
+            arrowLeft={160}
+            style={{ marginTop: -10, marginBottom: 24 }}
+          />
+        )}
 
         {/* Action Buttons — 커뮤니티 모드에서는 숨김 */}
         {!communityId && (

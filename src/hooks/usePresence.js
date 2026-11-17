@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Client } from '@stomp/stompjs';
 import { getAccessToken } from '../api/axios';
+import { isPracticeActive } from '../practice/practiceState';
 
 const getWsBrokerUrl = () => {
   const apiUrl = import.meta.env.VITE_API_URL || '';
@@ -18,7 +19,8 @@ export const usePresence = (memberId, roomId) => {
   const [onlineIds, setOnlineIds] = useState(new Set());
 
   useEffect(() => {
-    if (!memberId || !roomId) return;
+    // 연습 게임방은 서버에 없다 — 접속 표시를 열지 않는다
+    if (!memberId || !roomId || isPracticeActive()) return;
 
     const client = new Client({
       brokerURL: getWsBrokerUrl(),

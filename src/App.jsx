@@ -10,6 +10,7 @@ import { warmUpServer } from './api/services/system';
 import { useRouteTracking } from './hooks/useRouteTracking';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
+import { PracticeProvider } from './practice/PracticeContext';
 
 import './App.css';
 
@@ -28,6 +29,8 @@ const InviteFriends = lazy(() => import('./pages/InviteFriends'));
 const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
 const CommunityMemberManage = lazy(() => import('./pages/CommunityMemberManage'));
 const SeasonSummary = lazy(() => import('./pages/SeasonSummary'));
+const Help = lazy(() => import('./pages/Help'));
+const HelpTopic = lazy(() => import('./pages/HelpTopic'));
 
 // 라우트 진입 계측. useLocation을 쓰므로 BrowserRouter 안에 있어야 한다.
 const RouteTracker = ({ isAuthenticated }) => {
@@ -180,6 +183,7 @@ function App() {
     <ThemeProvider>
     <LanguageProvider>
     <BrowserRouter>
+    <PracticeProvider>
       <RouteTracker isAuthenticated={isAuthenticated} />
       <ScrollToTop />
       <div style={{
@@ -206,6 +210,8 @@ function App() {
             <Route path="/invite/:roomId" element={isAuthenticated ? <Invite /> : <Navigate to="/login" replace />} />
             <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
             <Route path="/season" element={isAuthenticated ? <SeasonSummary /> : <Navigate to="/login" replace />} />
+            <Route path="/help" element={isAuthenticated ? <Help /> : <Navigate to="/login" replace />} />
+            <Route path="/help/:topic" element={isAuthenticated ? <HelpTopic /> : <Navigate to="/login" replace />} />
 
             {/* 초대 링크 참가 확인 */}
             <Route path="/join" element={<JoinByLink />} />
@@ -220,6 +226,7 @@ function App() {
           </Routes>
         </Suspense>
       </div>
+    </PracticeProvider>
     </BrowserRouter>
     </LanguageProvider>
     </ThemeProvider>

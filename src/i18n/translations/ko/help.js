@@ -1,0 +1,53 @@
+// 사용방법 (프로필 → 도움말 → 사용방법)
+const help = {
+  title: '사용방법',
+  listTitle: '무엇을 하고 싶으세요?',
+  listDesc: '순서대로 따라 하면 첫 게임 기록까지 갈 수 있어요.',
+  steps: '{n}단계',
+  practice: '연습 해보기',
+
+  startTitle: '처음 시작하기',
+  startDesc: '커뮤니티를 만들고 첫 게임을 기록해요',
+  startIntro: '커뮤니티는 함께 노는 모임, 게임방은 게임마다 따로 쌓이는 랭킹이에요.',
+  start1Title: '커뮤니티 만들기',
+  start1Desc: '커뮤니티 홈의 「내 커뮤니티」 옆 + 를 눌러 이름과 지역을 정해요.',
+  start2Title: '친구 부르기',
+  start2Desc: '초대 코드를 알려주거나 「초대 링크 보내기」로 보내요.',
+  start3Title: '게임방 만들기',
+  start3Desc: '모임 로비의 「게임방」 옆 + 를 누르고 할 게임을 골라요.',
+  start4Title: '친구가 게임방에 참가',
+  start4Desc: '친구가 그 게임방을 누르고 「참가하기」를 눌러요.',
+  start5Title: '게임 시작',
+  start5Desc: '같이 하는 사람을 체크하고 「게임 시작」을 눌러요.',
+  start6Title: '점수 기록',
+  start6Desc: '게임이 끝나면 점수를 넣고 「랭킹에 반영하기」를 눌러요.',
+
+  invitedTitle: '초대를 받았어요',
+  invitedDesc: '초대 코드로 들어가 게임방에 참가해요',
+  invitedIntro: '친구에게 받은 초대 코드나 링크로 모임에 들어가는 방법이에요.',
+  invited1Title: '초대 코드 받기',
+  invited1Desc: '모임을 만든 친구에게 초대 코드나 초대 링크를 받아요.',
+  invited2Title: '모임에 참가',
+  invited2Desc: '커뮤니티 홈 「참가한 커뮤니티」 옆 + 를 눌러 코드를 넣거나, 받은 링크를 눌러요.',
+  invited3Title: '게임방에 참가',
+  invited3Desc: '모임 로비에서 할 게임방을 누르고 「참가하기」를 눌러요.',
+  invited4Title: '같이 기록',
+  invited4Desc: '게임방 멤버가 되면 게임 시작에 체크되고, 점수가 랭킹에 반영돼요.',
+
+  inviteTitle: '친구 더 부르기',
+  inviteDesc: '이미 있는 커뮤니티에 친구를 불러요',
+  inviteIntro: '이미 있는 커뮤니티에 친구를 부르는 방법이에요.',
+  invite1Title: '초대 코드 찾기',
+  invite1Desc: '모임 로비 사진 오른쪽 아래에 초대 코드가 있어요. 커뮤니티 설정에서도 볼 수 있어요.',
+  invite2Title: '코드 알려주기',
+  invite2Desc: '코드를 누르면 크게 보여요. 옆 아이콘을 누르면 복사돼요.',
+  invite3Title: '친구가 참가',
+  invite3Desc: '친구는 커뮤니티 홈 「참가한 커뮤니티」 옆 + 를 눌러 코드를 넣거나, 받은 링크를 눌러요.',
+  invite4Title: '게임방에도 참가',
+  invite4Desc: '들어온 친구가 할 게임방을 누르고 「참가하기」를 누르면 같이 기록할 수 있어요.',
+
+  scoreTitle: '점수는 어떻게 바뀌나요',
+  scoreDesc: '이기고 질 때 랭킹 점수가 바뀌는 방식',
+};
+
+export default help;

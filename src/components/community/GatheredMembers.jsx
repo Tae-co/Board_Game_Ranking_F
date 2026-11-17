@@ -1,6 +1,8 @@
 import { RefreshCw } from 'lucide-react';
 import InitialAvatar from '../shared/InitialAvatar';
 import { V } from '../../utils/cssUtils';
+import { practiceRing } from '../practice/practiceRing';
+import ExampleBadge from '../practice/ExampleBadge';
 
 const AVATAR_COLORS = ['#6B5CE7', '#F5A623', '#22c55e', '#3B82F6', '#EF4444', '#EC4899', '#14B8A6', '#F97316'];
 
@@ -8,12 +10,14 @@ const AVATAR_COLORS = ['#6B5CE7', '#F5A623', '#22c55e', '#3B82F6', '#EF4444', '#
  * 친구 부르기 화면의 '모인 사람' 카드. 새로 들어온 사람은 튀어나오는 효과, 모자란 자리는 ? 빈자리로 보여 준다.
  * loaded 전에는 인원 수·빈자리를 그리지 않는다 (만든 사람은 항상 멤버라 0명은 틀린 숫자다).
  */
-const GatheredMembers = ({ members, loaded, minPlayers, userId, newMemberIds, newcomerName, spinning, onRefresh, t }) => {
+// exampleMemberId·highlight는 연습용: 예시 친구 이름 아래 「예시」, 카드에 테두리
+const GatheredMembers = ({ members, loaded, minPlayers, userId, newMemberIds, newcomerName, spinning, onRefresh, exampleMemberId, highlight = false, t }) => {
   const enough = members.length >= minPlayers;
   return (
     <div style={{
       backgroundColor: V('--th-card'), borderRadius: '20px',
       border: `1px solid var(--th-border)`, padding: '18px 20px',
+      ...practiceRing(highlight),
     }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <p style={{ fontSize: '15px', fontWeight: '700', color: V('--th-text'), margin: 0 }}>
@@ -56,6 +60,7 @@ const GatheredMembers = ({ members, loaded, minPlayers, userId, newMemberIds, ne
               }}>
                 {member.nickname}
               </span>
+              {member.memberId === exampleMemberId && <ExampleBadge t={t} />}
             </div>
           );
         })}

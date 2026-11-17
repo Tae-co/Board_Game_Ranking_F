@@ -31,6 +31,11 @@ import { useRoomLobbyData } from '../hooks/useRoomLobbyData';
 import { useInviteShare } from '../hooks/useInviteShare';
 import { useRoomActions } from '../hooks/useRoomActions';
 import { useMatchActions } from '../hooks/useMatchActions';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
+import { practiceRing } from '../components/practice/practiceRing';
+import { EXAMPLE_FRIEND_ID } from '../practice/practiceServer';
 
 const PAGE_SIZE = 7;
 
@@ -42,6 +47,14 @@ const findSearchResult = (query, players) => {
   return { memberId: players[idx].memberId, pageNum: Math.floor(idx / PAGE_SIZE) };
 };
 
+// 연습 7의 말풍선: 1등 이름과 오른 점수는 방금 넣은 경기 결과에서 가져온다
+const practiceRankingDesc = (matchResult, t) => {
+  const winner = matchResult?.find(r => r.placement === 1);
+  return t('practice', 'rankingDesc')
+    .replace('{name}', winner?.nickname ?? '')
+    .replace('{change}', Math.round(winner?.ratingChange ?? 0));
+};
+
 const Invite = () => {
   const { roomId } = useParams();
   const navigate = useNavigate();
@@ -51,6 +64,7 @@ const Invite = () => {
   const matchResult = location.state?.matchResult || null;
   const communityRegion = getSelectedCommunity()?.region;
   const communityTimezone = REGION_TIMEZONE[communityRegion] || undefined;
+  const practice = usePractice();
 
   const [selectedPlayers, setSelectedPlayers] = useState(new Set());
   const [nudge, setNudge] = useState(null); // null | 'select' | 'deselect'
@@ -86,6 +100,14 @@ const Invite = () => {
   const myWinRate = useMemo(() => getWinRate(myRank), [myRank]);
   const myStreak = useMemo(() => getMyStreak(allMatches, userId), [allMatches, userId]);
   const mergedPlayers = useMemo(() => mergeRankedMembers(members, rankings), [members, rankings]);
+
+  // 연습: 같이 할 사람(나·예시 친구)을 미리 체크해 둔다 — 「게임 시작」만 누르면 된다
+  const practiceStart = practice.at('startGame');
+  const [practicePrefilled, setPracticePrefilled] = useState(false);
+  if (practiceStart && members.length && !practicePrefilled) {
+    setPracticePrefilled(true);
+    setSelectedPlayers(new Set(members.map(m => m.memberId)));
+  }
 
   const pagedRankings = useMemo(
     () => mergedPlayers.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
@@ -132,7 +154,12 @@ const Invite = () => {
     });
   };
 
-  const handleTabChange = (tab) => { setActiveTab(tab); setPage(0); };
+  const handleTabChange = (tab) => {
+    if (tab === 'matches') practice.advance('viewRanking', 'viewMatches');
+    if (tab === 'season') practice.advance('viewMatches', 'viewSeason');
+    setActiveTab(tab);
+    setPage(0);
+  };
 
   // "기록은 영원히 남는다"를 실제로 쓰는지 보려면 지난 시즌을 조회한 순간을 세야 한다 (§10).
   // season_key는 월간 시절 이벤트(2026-09)와 같은 축으로 묶어 보려고 같이 남긴다 (plan-season-reset §10).
@@ -164,6 +191,7 @@ const Invite = () => {
       });
       return;
     }
+    practice.advance('startGame', 'score');
     navigate(`/score-sheet/${roomInfo.boardGameId}`, {
       state: {
         roomId,
@@ -188,9 +216,19 @@ const Invite = () => {
       ? 'calc(100px + env(safe-area-inset-bottom))'
       : 'calc(28px + env(safe-area-inset-bottom))' }}>
 
-      <InviteHeader onBack={() => navigate('/lobby')} title={t('invite', 'lobbyTitle')} />
+      <InviteHeader
+        onBack={() => { practice.advance('viewSeason', 'lobby'); navigate('/lobby'); }}
+        title={t('invite', 'lobbyTitle')}
+        highlightBack={practice.at('viewSeason')}
+      />
+
+      <PracticeBand t={t} />
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+        {practice.at('viewSeason') && (
+          <CoachNote title={t('practice', 'seasonTitle')} desc={t('practice', 'seasonDesc')} arrow="up" arrowLeft={14} />
+        )}
 
         {/* Board Game Card */}
         {roomInfo.boardGameId && <GameCard gameInfo={gameInfo} />}
@@ -206,6 +244,10 @@ const Invite = () => {
           t={t}
         />
 
+        {practiceStart && (
+          <CoachNote title={t('practice', 'startGameTitle')} desc={t('practice', 'startGameDesc')} />
+        )}
+
         {/* Players section */}
         <div>
           <MembersSectionHeader
@@ -216,9 +258,34 @@ const Invite = () => {
             onOpenSettings={room.openSettings}
           />
 
-          <RoomTabs activeTab={activeTab} onChange={handleTabChange} t={t} />
+          <RoomTabs
+            activeTab={activeTab}
+            onChange={handleTabChange}
+            highlightTab={practice.at('viewRanking') ? 'matches' : practice.at('viewMatches') ? 'season' : undefined}
+            t={t}
+          />
 
-          {matchResult && activeTab === 'group' && (
+          {practice.at('viewRanking') && (
+            <CoachNote
+              title={t('practice', 'rankingTitle')}
+              desc={practiceRankingDesc(matchResult, t)}
+              arrow="up"
+              arrowLeft={160}
+              style={{ marginBottom: 12 }}
+            />
+          )}
+          {practice.at('viewMatches') && activeTab === 'matches' && (
+            <CoachNote
+              title={t('practice', 'matchesTitle')}
+              desc={t('practice', 'matchesDesc')}
+              arrow="up"
+              arrowLeft={270}
+              style={{ marginBottom: 12 }}
+            />
+          )}
+
+          {/* 연습은 결과를 말풍선으로 알려 준다 — 같은 내용의 배너는 뺀다 */}
+          {matchResult && activeTab === 'group' && !practice.active && (
             <MatchResultBanner
               matchResult={matchResult}
               chip={isChip}
@@ -289,7 +356,7 @@ const Invite = () => {
                 onShowRatingInfo={() => setShowRatingInfo(true)}
                 t={t}
               />
-              <div ref={rankingListRef}>
+              <div ref={rankingListRef} style={practiceStart ? { borderRadius: 16, padding: 8, margin: '0 -8px', ...practiceRing(true) } : undefined}>
                 <RankingTable
                   pagedRankings={pagedRankings}
                   page={page}
@@ -306,8 +373,12 @@ const Invite = () => {
                   championIds={championIds}
                   scoreLabel={isChip ? t('ranking', 'chipHolding') : t('season', 'seasonScore')}
                   chip={isChip}
+                  exampleMemberId={practice.active ? EXAMPLE_FRIEND_ID : undefined}
                 />
               </div>
+              {practiceStart && (
+                <p style={{ fontSize: 12, color: V('--th-text-sub'), margin: '12px 0 0' }}>{t('practice', 'startGameHint')}</p>
+              )}
             </>
           )}
         </div>
@@ -325,6 +396,7 @@ const Invite = () => {
           canStart={canStart}
           overMax={overMax}
           label={startLabel}
+          highlight={practiceStart && canStart}
           t={t}
         />
       )}

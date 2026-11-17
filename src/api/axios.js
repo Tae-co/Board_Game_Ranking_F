@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { clearAuthSession, getRefreshToken, markSessionExpired, setRefreshToken } from '../auth/storage';
+import { isPracticeActive } from '../practice/practiceState';
+import { practiceAdapter } from '../practice/practiceAdapter';
 
 let accessToken = null;
 let _refreshPromise = null;
@@ -62,6 +64,8 @@ api.interceptors.request.use((config) => {
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
   }
+  // 연습 중에는 실제 서버 대신 가짜 서버가 답한다 — 저장하는 요청이 실제로 나가지 않는다
+  if (isPracticeActive()) config.adapter = practiceAdapter;
   return config;
 });
 

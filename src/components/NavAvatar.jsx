@@ -3,9 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import StorageImage from './StorageImage';
 import { getNickname, AUTH_CHANGED_EVENT } from '../auth/storage';
 import { getProfileImage } from '../utils/storage';
+import { usePractice } from '../practice/usePractice';
+import { practiceRing } from './practice/practiceRing';
 
 const NavAvatar = ({ size = 38, fontSize = 15 }) => {
   const navigate = useNavigate();
+  // 연습의 명예의 전당 단계: 마지막으로 내 사진을 눌러 프로필로 간다
+  const practice = usePractice();
+  const practiceTarget = practice.at('hallOfFame');
   const [nickname, setNickname] = useState(() => getNickname() || '?');
   const [profileImage, setProfileImage] = useState(getProfileImage);
 
@@ -22,7 +27,7 @@ const NavAvatar = ({ size = 38, fontSize = 15 }) => {
 
   return (
     <div
-      onClick={() => navigate('/profile')}
+      onClick={() => { practice.advance('hallOfFame', 'profile'); navigate('/profile'); }}
       style={{
         width: size, height: size, borderRadius: '50%',
         backgroundColor: 'var(--th-primary)',
@@ -30,6 +35,7 @@ const NavAvatar = ({ size = 38, fontSize = 15 }) => {
         overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         boxShadow: '0 2px 8px rgba(123,108,246,0.3)',
+        ...practiceRing(practiceTarget),
       }}
     >
       {profileImage ? (

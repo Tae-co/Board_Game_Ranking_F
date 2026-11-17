@@ -14,6 +14,13 @@ import { defaultEndDate, isSeasonInputValid } from '../utils/seasonUtils';
 import { getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
 import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
+import { practiceRing } from '../components/practice/practiceRing';
+
+// 연습 점수판은 스플렌더로 고정한다 (decision-log 28). id는 환경마다 달라 이름으로 찾는다
+const isPracticeGame = (game) => /^(splendor|스플렌더)$/i.test(game.name?.trim() ?? '');
 
 const CreateGroup = () => {
   const navigate = useNavigate();
@@ -26,9 +33,11 @@ const CreateGroup = () => {
   const region = selectedCommunity?.region;
   // 친구 부르기 대기실에서 넘어왔다면 온보딩의 마지막 단계로 보여준다
   const fromOnboarding = !!useLocation().state?.fromOnboarding;
+  const practice = usePractice();
+  const inPractice = practice.at('createRoom');
 
-  const [roomName, setRoomName] = useState('');
-  const [seasonName, setSeasonName] = useState('');
+  const [roomName, setRoomName] = useState(() => (inPractice ? t('practice', 'roomName') : ''));
+  const [seasonName, setSeasonName] = useState(() => (inPractice ? t('practice', 'seasonName') : ''));
   const [seasonEndDate, setSeasonEndDate] = useState(() => defaultEndDate(region));
   const [selectedGameId, setSelectedGameId] = useState(null);
   // 점수판 만들기를 열 때의 검색어. 만들고 나면 게임 고르기를 새로 그려(key) 검색·페이지를 처음으로 돌린다
@@ -45,6 +54,11 @@ const CreateGroup = () => {
     staleTime: 1000 * 60 * 30,
   });
 
+  // 연습: 스플렌더 하나만 보여 주고 미리 골라 둔다
+  const practiceGames = practice.active ? games.filter(isPracticeGame) : games;
+  const practiceGameId = inPractice ? practiceGames[0]?.id ?? null : null;
+  if (practiceGameId && selectedGameId == null) setSelectedGameId(practiceGameId);
+
   const handleGameCreated = (game) => {
     queryClient.invalidateQueries({ queryKey: ['games', communityId] });
     setIsBuilderOpen(false);
@@ -53,7 +67,7 @@ const CreateGroup = () => {
   };
 
   // 커스텀 점수판은 커뮤니티 어드민만 만들 수 있다 (백엔드도 동일하게 막는다)
-  const canCreateGame = isCommunityAdmin && !!communityId;
+  const canCreateGame = isCommunityAdmin && !!communityId && !practice.active;
 
   const handleDeleteGame = async (game) => {
     if (!window.confirm(t('lobby', 'customDeleteConfirm').replace('{n}', game.name))) return;
@@ -85,6 +99,7 @@ const CreateGroup = () => {
       });
       queryClient.invalidateQueries({ queryKey: ['rooms'] });
       queryClient.invalidateQueries({ queryKey: ['communityRooms'] });
+      practice.advance('createRoom', 'startGame');
       navigate(`/invite/${res.roomId}`);
     } catch (err) {
       // 어드민이 아니면 403 등 — 서버가 보낸 이유를 그대로 보여준다
@@ -125,9 +140,20 @@ const CreateGroup = () => {
         </div>
       </div>
 
+      <PracticeBand t={t} />
+
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '24px 20px' }}>
 
-        {fromOnboarding && <OnboardingSteps current={2} t={t} />}
+        {fromOnboarding && !practice.active && <OnboardingSteps current={2} t={t} />}
+
+        {inPractice && (
+          <CoachNote
+            title={t('practice', 'createRoomTitle')}
+            desc={t('practice', 'createRoomDesc')}
+            arrow="down"
+            style={{ marginBottom: 20 }}
+          />
+        )}
 
         {/* Group Name */}
         <div style={{ marginBottom: '28px' }}>
@@ -162,9 +188,10 @@ const CreateGroup = () => {
           />
         </div>
 
+        <div style={inPractice ? { borderRadius: 16, padding: 12, margin: '0 -12px', ...practiceRing(true) } : undefined}>
         <GamePicker
           key={pickerKey}
-          games={games}
+          games={practiceGames}
           selectedGameId={selectedGameId}
           onSelect={setSelectedGameId}
           canManage={canCreateGame}
@@ -173,6 +200,7 @@ const CreateGroup = () => {
           onCreateCustom={(name) => { setBuilderName(name); setIsBuilderOpen(true); }}
           t={t}
         />
+        </div>
       </div>
 
       {/* Sticky Create Button */}

@@ -19,6 +19,8 @@ import CreateCommunityBanner from '../components/community/CreateCommunityBanner
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
 import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit, getSelectedCommunity, removeSelectedCommunity } from '../utils/storage';
 import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
+import { usePractice } from '../practice/usePractice';
+import PracticeIntroSheet from '../components/practice/PracticeIntroSheet';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -41,6 +43,8 @@ const CommunityLobby = () => {
   const [pendingJoinCode, setPendingJoinCode] = useState('');
   const [showJoinInput, setShowJoinInput] = useState(false);
   const [leavingCommunity, setLeavingCommunity] = useState(null);
+  const [showPracticeIntro, setShowPracticeIntro] = useState(false);
+  const practice = usePractice();
 
   useEffect(() => {
     if (showJoinInput) {
@@ -205,7 +209,12 @@ const CommunityLobby = () => {
             </button>
           </div>
         ) : isFirstVisit ? (
-          <FirstVisitChoices onCreate={() => navigate('/create-community')} onJoin={openJoinInput} t={t} />
+          <FirstVisitChoices
+            onCreate={() => navigate('/create-community')}
+            onJoin={openJoinInput}
+            onPractice={() => setShowPracticeIntro(true)}
+            t={t}
+          />
         ) : (<>
         <CommunitySectionHeader title={t('community', 'joinedCommunities')} onAdd={openJoinInput} />
         {joinedLoading ? (
@@ -290,6 +299,13 @@ const CommunityLobby = () => {
         )}
 
       </div>
+      {showPracticeIntro && (
+        <PracticeIntroSheet
+          onStart={() => { setShowPracticeIntro(false); practice.start(); }}
+          onClose={() => setShowPracticeIntro(false)}
+          t={t}
+        />
+      )}
       {leavingCommunity && (
         <LeaveConfirmModal
           title={t('community', 'leaveTitle').replace('{name}', leavingCommunity.name)}

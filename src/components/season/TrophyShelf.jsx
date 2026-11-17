@@ -1,6 +1,7 @@
 import MedalBadge from '../shared/MedalBadge';
 import { V } from '../../utils/cssUtils';
 import { seasonLabel } from '../../utils/seasonUtils';
+import ExampleBadge from '../practice/ExampleBadge';
 
 /**
  * 프로필 트로피 선반 (기획 §6). 가로 스크롤 한 줄로 `🥇 카탄 · 가을 리그`처럼 놓는다.
@@ -10,11 +11,15 @@ import { seasonLabel } from '../../utils/seasonUtils';
  */
 const TrophyShelf = ({ trophies, t }) => (
   <div>
-    <div style={{
-      fontSize: 10, fontWeight: 800, color: V('--th-text-sub'),
-      textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8,
-    }}>
-      {t('season', 'trophyShelf')}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+      <span style={{
+        fontSize: 10, fontWeight: 800, color: V('--th-text-sub'),
+        textTransform: 'uppercase', letterSpacing: '0.08em',
+      }}>
+        {t('season', 'trophyShelf')}
+      </span>
+      {/* 연습 트로피는 시즌이 끝나기 전에 미리 보여 주는 것이다 */}
+      {trophies.some(tr => tr.isExample) && <ExampleBadge t={t} />}
     </div>
     <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
       {trophies.map((trophy) => (
