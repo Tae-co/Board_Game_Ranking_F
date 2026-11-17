@@ -25,7 +25,6 @@ const JoinByLink = lazy(() => import('./pages/JoinByLink'));
 const CreateGroup = lazy(() => import('./pages/CreateGroup'));
 const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
-const InviteFriends = lazy(() => import('./pages/InviteFriends'));
 const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
 const CommunityMemberManage = lazy(() => import('./pages/CommunityMemberManage'));
 const SeasonSummary = lazy(() => import('./pages/SeasonSummary'));
@@ -203,7 +202,6 @@ function App() {
             <Route path="/lobby" element={isAuthenticated ? <Lobby /> : <Navigate to="/login" replace />} />
             <Route path="/create-group" element={isAuthenticated ? <CreateGroup /> : <Navigate to="/login" replace />} />
             <Route path="/create-community" element={isAuthenticated ? <CreateCommunity /> : <Navigate to="/login" replace />} />
-            <Route path="/invite-friends" element={isAuthenticated ? <InviteFriends /> : <Navigate to="/login" replace />} />
             <Route path="/manage-community" element={isAuthenticated ? <CommunitySettings /> : <Navigate to="/login" replace />} />
             <Route path="/community-members" element={isAuthenticated ? <CommunityMemberManage /> : <Navigate to="/login" replace />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />

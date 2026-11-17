@@ -2,9 +2,9 @@ import { Check } from 'lucide-react';
 import { usePractice } from '../../practice/usePractice';
 import { V } from '../../utils/cssUtils';
 
-const STEP_KEYS = ['step1', 'step2', 'step3', 'step4', 'step5'];
+const STEP_KEYS = ['step1', 'step2', 'step3', 'step4'];
 
-/** 연습 화면마다 헤더 바로 아래 띠: 연습 중 · 실제로 저장되지 않아요 · n / 5, 다섯 칸 진행, 연습 끝내기 */
+/** 연습 화면마다 헤더 바로 아래 띠: 연습 중 · 실제로 저장되지 않아요 · n / 4, 네 칸 진행, 연습 끝내기 */
 const PracticeBand = ({ t }) => {
   const practice = usePractice();
   if (!practice.active || practice.step === 'done') return null;

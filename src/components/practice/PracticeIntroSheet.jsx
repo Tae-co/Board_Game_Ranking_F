@@ -1,7 +1,7 @@
 import { V } from '../../utils/cssUtils';
 import BottomSheet from './BottomSheet';
 
-const ITEMS = ['intro1', 'intro2', 'intro3', 'intro4', 'intro5'];
+const ITEMS = ['intro1', 'intro2', 'intro3', 'intro4'];
 
 /** 연습 1 · 시작 안내. 「연습 시작하기」를 눌러야 연습이 켜진다. */
 const PracticeIntroSheet = ({ onStart, onClose, t }) => (

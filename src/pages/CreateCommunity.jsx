@@ -65,10 +65,10 @@ const CreateCommunity = () => {
       });
       setMyCommunity(res);
       enterCommunity(res, getAuthUserId());
-      practice.advance('createCommunity', 'invite');
+      practice.advance('createCommunity', 'createRoom');
       queryClient.invalidateQueries({ queryKey: ['myCommunitiesList'] });
-      // 혼자서는 쓸 수 없는 앱이다 — 만들자마자 친구 부르기로 이어간다
-      navigate('/invite-friends', { replace: true });
+      // 만들면 바로 로비로. 친구는 로비의 초대 코드로 나중에 부른다. 연습은 게임방 만들기로 이어간다
+      navigate(inPractice ? '/create-group' : '/lobby', { replace: true });
     } catch {
       setError(t('community', 'createFailed'));
     } finally {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { createRoom } from '../api/services/rooms';
@@ -9,7 +9,6 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import GamePicker from '../components/lobby/GamePicker';
 import SeasonFields from '../components/shared/SeasonFields';
-import OnboardingSteps from '../components/shared/OnboardingSteps';
 import { defaultEndDate, isSeasonInputValid } from '../utils/seasonUtils';
 import { getNickname } from '../auth/storage';
 import { getSelectedCommunity } from '../utils/storage';
@@ -32,7 +31,6 @@ const CreateGroup = () => {
   const isCommunityAdmin = selectedCommunity?.isAdmin ?? false;
   const region = selectedCommunity?.region;
   // 친구 부르기 대기실에서 넘어왔다면 온보딩의 마지막 단계로 보여준다
-  const fromOnboarding = !!useLocation().state?.fromOnboarding;
   const practice = usePractice();
   const inPractice = practice.at('createRoom');
 
@@ -143,8 +141,6 @@ const CreateGroup = () => {
       <PracticeBand t={t} />
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '24px 20px' }}>
-
-        {fromOnboarding && !practice.active && <OnboardingSteps current={2} t={t} />}
 
         {inPractice && (
           <CoachNote
