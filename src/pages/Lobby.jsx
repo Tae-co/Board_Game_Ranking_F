@@ -20,7 +20,7 @@ import CommunityMemberGrid from '../components/lobby/CommunityMemberGrid';
 import InviteCodePopup from '../components/lobby/InviteCodePopup';
 import { EVENTS, logEvent } from '../api/services/events';
 import { usePractice } from '../practice/usePractice';
-import { EXAMPLE_FRIEND_IDS } from '../practice/practiceServer';
+import { EXAMPLE_FRIEND_IDS } from '../practice/practiceState';
 import PracticeBand from '../components/practice/PracticeBand';
 import CoachNote from '../components/practice/CoachNote';
 import { practiceRing } from '../components/practice/practiceRing';
@@ -169,7 +169,7 @@ const Lobby = () => {
       <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
         {selectedCommunity ? (
           <button
-            onClick={practice.active ? practice.askExit : () => navigate('/community')}
+            onClick={practice.back(() => navigate('/community'))}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <ArrowLeft size={22} color="var(--th-primary)" />

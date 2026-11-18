@@ -2,10 +2,7 @@
 // 응답은 백엔드 DTO와 같은 모양이라 화면 코드는 연습인지 모른 채 그대로 그린다.
 // 아무것도 저장하지 않는다 — 메모리에만 있고, 연습이 끝나면 reset()으로 비운다.
 
-// 실제 id와 겹치지 않게 큰 수를 쓴다. 900000001 % 8 = 1 → 예시 친구 아바타 색이 캔버스 순서(주황·초록·파랑·빨강)와 같다
-const PRACTICE_ID = 900000001;
-// 예시 친구 4명 — 카탄(3~4명)에서 최소·최대 인원을 직접 겪게 모임을 5명으로 둔다
-export const EXAMPLE_FRIEND_IDS = [0, 1, 2, 3].map(i => PRACTICE_ID + i);
+import { PRACTICE_ID, EXAMPLE_FRIEND_IDS } from './practiceState';
 export const PRACTICE_INVITE_CODE = 'AB12CD';
 
 // 백엔드 RatingConstants·EloRatingCalculator와 같은 규칙 (캐주얼 규칙)

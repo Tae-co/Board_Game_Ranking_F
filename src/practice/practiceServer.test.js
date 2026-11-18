@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { calculateRatingChanges, handlePracticeRequest, reset, EXAMPLE_FRIEND_IDS } from './practiceServer';
+import { calculateRatingChanges, handlePracticeRequest, reset } from './practiceServer';
+import { EXAMPLE_FRIEND_IDS } from './practiceState';
 
 const ctx = {
   userId: '7',

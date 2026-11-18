@@ -221,17 +221,13 @@ const ScoreSheet = () => {
     }
   };
 
-  const handleBack = () => {
-    if (practice.active) {
-      practice.askExit();
-      return;
-    }
+  const handleBack = practice.back(() => {
     if (backTo) {
       navigate(backTo, { state: backState });
       return;
     }
     navigate(-1);
-  };
+  });
 
   if (!players.length) {
     return (

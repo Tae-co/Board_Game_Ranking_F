@@ -2,7 +2,7 @@ import { useContext, useSyncExternalStore } from 'react';
 import { getPracticeState, subscribePractice, PRACTICE_STEPS } from './practiceState';
 import { PracticeActions } from './practiceActions';
 
-/** { active, step, progress(1~5), at(step), start, advance, finish } */
+/** { active, step, progress(1~4), at(step), start, advance, back, finish } */
 export const usePractice = () => {
   const state = useSyncExternalStore(subscribePractice, getPracticeState);
   const actions = useContext(PracticeActions);
