@@ -241,8 +241,8 @@ const Invite = () => {
             title={t('invite', 'members')}
             showShare={!!myRank}
             shareCopied={sharedCopiedKind === 'my_rank'}
-            onShare={shareMyRank}
-            onOpenSettings={room.openSettings}
+            onShare={practice.block(shareMyRank)}
+            onOpenSettings={practice.block(room.openSettings)}
           />
 
           <RoomTabs
@@ -308,9 +308,9 @@ const Invite = () => {
               myUserId={userId}
               communityTimezone={communityTimezone}
               isHost={isHost}
-              onView={handleViewMatch}
-              onEdit={handleEditMatch}
-              onDelete={handleDeleteMatch}
+              onView={practice.block(handleViewMatch)}
+              onEdit={practice.block(handleEditMatch)}
+              onDelete={practice.block(handleDeleteMatch)}
               chip={isChip}
               t={t}
             />
@@ -377,7 +377,7 @@ const Invite = () => {
           onJoin={room.handleJoinRoom}
           isJoining={room.isJoiningRoom}
           joinDisabled={room.isJoiningRoom || !roomInfo.inviteCode}
-          onStart={handleStartGame}
+          onStart={() => practice.block(handleStartGame, 'startGame')()}
           canStart={canStart}
           overMax={overMax}
           label={startLabel}

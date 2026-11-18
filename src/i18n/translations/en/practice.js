@@ -74,6 +74,8 @@ const practice = {
   doneCreate: 'Make a group',
   doneHome: 'Home',
   doneAgain: 'Practice again',
+  blockedTitle: 'Not available during practice',
+  blockedDesc: 'Tap the glowing button to keep going.',
 };
 
 export default practice;
