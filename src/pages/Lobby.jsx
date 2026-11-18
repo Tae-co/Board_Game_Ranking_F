@@ -215,7 +215,7 @@ const Lobby = () => {
 
         {communityId && (
           <SeasonEntryCard
-            onClick={() => { practice.advance('lobby', 'hallOfFame'); navigate('/season'); }}
+            onClick={practice.block(() => { practice.advance('lobby', 'hallOfFame'); navigate('/season'); }, 'lobby')}
             highlight={practiceLobby}
             t={t}
           />
@@ -258,7 +258,7 @@ const Lobby = () => {
             {/* 커뮤니티 모드 + Admin: 그룹 생성 버튼 */}
             {communityId && isAdmin && (
               <button
-                onClick={() => { practice.advance('newRoom', 'createRoom'); navigate('/create-group'); }}
+                onClick={practice.block(() => { practice.advance('newRoom', 'createRoom'); navigate('/create-group'); }, 'newRoom')}
                 aria-label={t('lobby', 'createGroup')}
                 style={{
                   width: 32, height: 32, borderRadius: '50%',
@@ -284,7 +284,7 @@ const Lobby = () => {
             />
           )}
 
-          <RoomGrid rooms={rooms} games={games} communityId={communityId} onEnter={handleEnterRoom} t={t} />
+          <RoomGrid rooms={rooms} games={games} communityId={communityId} onEnter={practice.block(handleEnterRoom)} t={t} />
         </div>
 
         {communityId && (
@@ -293,7 +293,7 @@ const Lobby = () => {
             exampleMemberIds={practice.active ? EXAMPLE_FRIEND_IDS : undefined}
             userId={userId}
             isAdmin={isAdmin}
-            onManage={() => navigate('/community-members')}
+            onManage={practice.block(() => navigate('/community-members'))}
             t={t}
           />
         )}

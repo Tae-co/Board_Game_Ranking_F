@@ -74,6 +74,8 @@ const practice = {
   doneCreate: '모임 만들기',
   doneHome: '홈으로',
   doneAgain: '한 번 더 연습',
+  blockedTitle: '연습 중에는 쓸 수 없어요',
+  blockedDesc: '테두리가 빛나는 버튼을 눌러 계속해 보세요.',
 };
 
 export default practice;

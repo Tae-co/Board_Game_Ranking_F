@@ -9,6 +9,7 @@ import { reset as resetPracticeServer } from './practiceServer';
 import { clearPracticeMemory, notifySelectedCommunityUpdated } from '../utils/storage';
 import { AUTH_CHANGED_EVENT, getAuthUserId } from '../auth/storage';
 import PracticeExitModal from '../components/practice/PracticeExitModal';
+import PracticeBlockedToast from '../components/practice/PracticeBlockedToast';
 
 /**
  * 연습 시작·진행·끝. 시작과 끝에 react-query 캐시를 비운다 —
@@ -18,7 +19,15 @@ export const PracticeProvider = ({ children }) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [exitOpen, setExitOpen] = useState(false);
+  // 막힌 버튼을 누른 횟수. 누를 때마다 토스트를 2초 다시 띄운다
+  const [blockedCount, setBlockedCount] = useState(0);
   const practiceActive = useSyncExternalStore(subscribePractice, () => getPracticeState().active);
+
+  useEffect(() => {
+    if (!blockedCount) return undefined;
+    const id = setTimeout(() => setBlockedCount(0), 2000);
+    return () => clearTimeout(id);
+  }, [blockedCount]);
 
   const actions = useMemo(() => {
     const wipe = () => {
@@ -40,6 +49,16 @@ export const PracticeProvider = ({ children }) => {
       },
       // 헤더 뒤로 가기: 연습 중이면 바로 나가지 않고 종료 확인, 아니면 원래 동작
       back: (fn) => (getPracticeState().active ? () => setExitOpen(true) : fn),
+      // 가이드 밖 버튼: 연습 중이면 막고 「연습 중에는 쓸 수 없어요」 토스트. step을 주면 그 단계에서만 통과
+      // (가이드 밖 화면에서 뒤로 가기를 누르면 바로 종료 확인이 떠서 헷갈렸다)
+      block: (fn, step) => (...args) => {
+        const { active, step: current } = getPracticeState();
+        if (active && current !== step) {
+          setBlockedCount(n => n + 1);
+          return undefined;
+        }
+        return fn(...args);
+      },
       finish: (to = '/community') => {
         setExitOpen(false);
         setPracticeState({ active: false, step: null });
@@ -84,6 +103,7 @@ export const PracticeProvider = ({ children }) => {
     <PracticeActions.Provider value={actions}>
       {children}
       {exitOpen && <PracticeExitModal onClose={() => setExitOpen(false)} onConfirm={() => actions.finish()} />}
+      {blockedCount > 0 && <PracticeBlockedToast />}
     </PracticeActions.Provider>
   );
 };

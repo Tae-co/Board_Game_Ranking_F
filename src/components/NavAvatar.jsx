@@ -27,7 +27,7 @@ const NavAvatar = ({ size = 38, fontSize = 15 }) => {
 
   return (
     <div
-      onClick={() => { practice.advance('hallOfFame', 'profile'); navigate('/profile'); }}
+      onClick={practice.block(() => { practice.advance('hallOfFame', 'profile'); navigate('/profile'); }, 'hallOfFame')}
       style={{
         width: size, height: size, borderRadius: '50%',
         backgroundColor: 'var(--th-primary)',

@@ -146,7 +146,7 @@ const Profile = () => {
           <span style={{ flex: 1, fontSize: 17, fontWeight: 700, color: V('--th-primary') }}>
             {t('profile', 'title')}
           </span>
-          <button onClick={leaveToLogin} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-text-sub'), flexShrink: 0 }}>
+          <button onClick={practice.block(leaveToLogin)} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-text-sub'), flexShrink: 0 }}>
             <LogOut size={20} />
           </button>
         </div>
@@ -169,7 +169,8 @@ const Profile = () => {
             isUploading={isUploadingPhoto}
             onPhotoSelect={handlePhotoSelect}
             onResetPhoto={handleResetPhoto}
-            onToggleNicknameEdit={() => setShowNicknameEdit(v => !v)}
+            onToggleNicknameEdit={practice.block(() => setShowNicknameEdit(v => !v))}
+            guard={practice.block}
             t={t}
           />
 
@@ -241,12 +242,12 @@ const Profile = () => {
         />
 
         <HelpSettings
-          onOpenHelp={() => navigate('/help')}
-          onOpenFeedback={() => setShowFeedbackModal(true)}
+          onOpenHelp={practice.block(() => navigate('/help'))}
+          onOpenFeedback={practice.block(() => setShowFeedbackModal(true))}
           t={t}
         />
 
-        <DeleteAccountCard isDeleting={isDeletingAccount} onDelete={handleDeleteAccount} t={t} />
+        <DeleteAccountCard isDeleting={isDeletingAccount} onDelete={practice.block(handleDeleteAccount)} t={t} />
 
       </div>
 

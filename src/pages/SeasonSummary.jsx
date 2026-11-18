@@ -171,7 +171,7 @@ const SeasonSummary = () => {
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button
-                onClick={handleShare}
+                onClick={practice.block(handleShare)}
                 disabled={busy}
                 style={{
                   flex: 1, padding: '14px 16px', borderRadius: 14, border: 'none',
@@ -185,7 +185,7 @@ const SeasonSummary = () => {
                 {busy ? t('season', 'sharing') : t('season', 'share')}
               </button>
               <button
-                onClick={handleSave}
+                onClick={practice.block(handleSave)}
                 disabled={busy}
                 style={{
                   padding: '14px 16px', borderRadius: 14, cursor: busy ? 'default' : 'pointer',
