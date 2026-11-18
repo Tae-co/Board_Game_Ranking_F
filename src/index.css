@@ -54,3 +54,13 @@ img {
   border-color: var(--th-btn-ghost-border, #E5E7EB);
   color: var(--th-btn-ghost-text, #6B7280);
 }
+
+/* 연습 가이드 — 눌러야 할 버튼 펄스 (practiceRing pulse) */
+@keyframes practice-pulse {
+  0%   { box-shadow: 0 0 0 3px var(--th-primary), 0 0 0 0 rgba(var(--th-primary-rgb), 0.6); }
+  70%  { box-shadow: 0 0 0 3px var(--th-primary), 0 0 0 16px rgba(var(--th-primary-rgb), 0); }
+  100% { box-shadow: 0 0 0 3px var(--th-primary), 0 0 0 0 rgba(var(--th-primary-rgb), 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  [style*="practice-pulse"] { animation: none !important; }
+}

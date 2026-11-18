@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, ChevronRight, MessageSquarePlus } from 'lucide-react';
+import { ArrowLeft, LogOut } from 'lucide-react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { setAccessToken } from '../api/axios';
 import { getMember, getMemberStats, getMemberTrophies, updateProfileImage as updateProfileImageApi, deleteMember } from '../api/services/members';
@@ -20,6 +20,12 @@ import NicknameEditor from '../components/profile/NicknameEditor';
 import ProfileStats from '../components/profile/ProfileStats';
 import AccountSettings from '../components/profile/AccountSettings';
 import DeleteAccountCard from '../components/profile/DeleteAccountCard';
+import HelpSettings from '../components/profile/HelpSettings';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
+import PracticeDoneSheet from '../components/practice/PracticeDoneSheet';
+import { practiceRing } from '../components/practice/practiceRing';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -27,6 +33,8 @@ const Profile = () => {
   const { themeKey, setTheme } = useTheme();
   const queryClient = useQueryClient();
   const userId = getAuthUserId();
+  const practice = usePractice();
+  const practiceProfile = practice.at('profile');
 
   const { data: profileData } = useQuery({
     queryKey: ['profile', userId],
@@ -132,17 +140,19 @@ const Profile = () => {
       {/* Header */}
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
         <div style={{ maxWidth: 390, margin: '0 auto', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={() => navigate(-1)} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-primary'), flexShrink: 0 }}>
+          <button onClick={practice.back(() => navigate(-1))} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-primary'), flexShrink: 0 }}>
             <ArrowLeft size={22} />
           </button>
           <span style={{ flex: 1, fontSize: 17, fontWeight: 700, color: V('--th-primary') }}>
             {t('profile', 'title')}
           </span>
-          <button onClick={leaveToLogin} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-text-sub'), flexShrink: 0 }}>
+          <button onClick={practice.block(leaveToLogin)} style={{ padding: 4, border: 'none', background: 'transparent', cursor: 'pointer', color: V('--th-text-sub'), flexShrink: 0 }}>
             <LogOut size={20} />
           </button>
         </div>
       </div>
+
+      <PracticeBand t={t} />
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -159,7 +169,8 @@ const Profile = () => {
             isUploading={isUploadingPhoto}
             onPhotoSelect={handlePhotoSelect}
             onResetPhoto={handleResetPhoto}
-            onToggleNicknameEdit={() => setShowNicknameEdit(v => !v)}
+            onToggleNicknameEdit={practice.block(() => setShowNicknameEdit(v => !v))}
+            guard={practice.block}
             t={t}
           />
 
@@ -179,6 +190,7 @@ const Profile = () => {
             backgroundColor: tierStyle.bg,
             padding: '14px 18px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            ...practiceRing(practiceProfile),
           }}>
             <div>
               <div style={{ fontSize: 10, fontWeight: 700, color: tierStyle.text, letterSpacing: '0.08em', marginBottom: 3 }}>
@@ -200,7 +212,26 @@ const Profile = () => {
           {showNicknameEdit && <NicknameEditor edit={nicknameEdit} onSave={handleSaveNickname} t={t} />}
         </div>
 
+        {practiceProfile && (
+          <CoachNote title={t('practice', 'profileTitle')} desc={t('practice', 'profileDesc')} />
+        )}
+
         {stats && <ProfileStats wins={stats.totalWin ?? 0} losses={stats.totalLose ?? 0} bestScore={maxRating} />}
+
+        {practiceProfile && (<>
+          <CoachNote title={t('practice', 'settingsTitle')} desc={t('practice', 'settingsDesc')} />
+          <button
+            onClick={() => practice.advance('profile', 'done')}
+            style={{
+              width: '100%', padding: '15px', borderRadius: '14px', border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
+              color: '#fff', fontSize: '16px', fontWeight: 700,
+              ...practiceRing(true, { pulse: true }),
+            }}
+          >
+            {t('practice', 'finish')}
+          </button>
+        </>)}
 
         <AccountSettings
           themeKey={themeKey}
@@ -210,29 +241,26 @@ const Profile = () => {
           t={t}
         />
 
-        {/* Feedback / Bug Report */}
-        <button
-          onClick={() => setShowFeedbackModal(true)}
-          style={{
-            width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-            padding: '16px 18px', borderRadius: 18,
-            backgroundColor: V('--th-card'), border: `1px solid var(--th-border)`,
-            cursor: 'pointer', textAlign: 'left',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
-          }}
-        >
-          <MessageSquarePlus size={18} style={{ color: V('--th-primary'), flexShrink: 0 }} />
-          <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: V('--th-text') }}>
-            {t('profile', 'feedbackButton')}
-          </span>
-          <ChevronRight size={16} style={{ color: V('--th-text-sub') }} />
-        </button>
+        <HelpSettings
+          onOpenHelp={practice.block(() => navigate('/help'))}
+          onOpenFeedback={practice.block(() => setShowFeedbackModal(true))}
+          t={t}
+        />
 
-        <DeleteAccountCard isDeleting={isDeletingAccount} onDelete={handleDeleteAccount} t={t} />
+        <DeleteAccountCard isDeleting={isDeletingAccount} onDelete={practice.block(handleDeleteAccount)} t={t} />
 
       </div>
 
       {showFeedbackModal && <FeedbackModal onClose={() => setShowFeedbackModal(false)} />}
+
+      {practice.at('done') && (
+        <PracticeDoneSheet
+          onCreate={() => practice.finish('/create-community')}
+          onHome={() => practice.finish('/community')}
+          onAgain={() => practice.start()}
+          t={t}
+        />
+      )}
     </div>
   );
 };

@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { practiceRing } from '../practice/practiceRing';
 import { Users } from 'lucide-react';
 import StorageImage from '../StorageImage';
 import GameImageFallback from '../shared/GameImageFallback';
 import { useLanguage } from '../../i18n/LanguageContext';
 
-const GameCard = ({ gameInfo }) => {
+// highlightPlayers: 연습에서 「3-4명」 같은 인원 표시에 테두리를 둘러 최소·최대 인원을 알려준다
+const GameCard = ({ gameInfo, highlightPlayers = false }) => {
   const { t } = useLanguage();
   const [imgLoaded, setImgLoaded] = useState(false);
 
@@ -72,7 +74,10 @@ const GameCard = ({ gameInfo }) => {
               </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                 <Users size={13} color="rgba(255,255,255,0.75)" />
-                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.75)', fontWeight: '500' }}>
+                <span style={{
+                  fontSize: '13px', color: highlightPlayers ? '#fff' : 'rgba(255,255,255,0.75)', fontWeight: highlightPlayers ? 800 : 500,
+                  ...(highlightPlayers && { borderRadius: 8, padding: '2px 8px', background: 'rgba(255,255,255,0.18)', ...practiceRing(true) }),
+                }}>
                   {t('invite', 'playersRange').replace('{min}', gameInfo.minPlayers).replace('{max}', gameInfo.maxPlayers)}
                 </span>
               </div>

@@ -31,6 +31,12 @@ import { useRoomLobbyData } from '../hooks/useRoomLobbyData';
 import { useInviteShare } from '../hooks/useInviteShare';
 import { useRoomActions } from '../hooks/useRoomActions';
 import { useMatchActions } from '../hooks/useMatchActions';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
+import { practiceRing } from '../components/practice/practiceRing';
+import { EXAMPLE_FRIEND_IDS } from '../practice/practiceState';
+import { useRoomPractice } from '../practice/useRoomPractice';
 
 const PAGE_SIZE = 7;
 
@@ -51,6 +57,7 @@ const Invite = () => {
   const matchResult = location.state?.matchResult || null;
   const communityRegion = getSelectedCommunity()?.region;
   const communityTimezone = REGION_TIMEZONE[communityRegion] || undefined;
+  const practice = usePractice();
 
   const [selectedPlayers, setSelectedPlayers] = useState(new Set());
   const [nudge, setNudge] = useState(null); // null | 'select' | 'deselect'
@@ -109,6 +116,9 @@ const Invite = () => {
   const isLoading = activeTab === 'matches' ? (isMatchesLoading || isSeasonLoading) : (membersLoading || isRankingLoading);
 
   const overMax = selectedPlayers.size > maxPlayers;
+  const roomPractice = useRoomPractice({
+    selectedCount: selectedPlayers.size, canStart, overMax, minPlayers, maxPlayers, matchResult, t,
+  });
 
   // The button must never claim a state it isn't in: a label promising "start"
   // while the button refuses to act is what left users stuck (see startNeedMore).
@@ -132,7 +142,12 @@ const Invite = () => {
     });
   };
 
-  const handleTabChange = (tab) => { setActiveTab(tab); setPage(0); };
+  const handleTabChange = (tab) => {
+    if (tab === 'matches') practice.advance('viewRanking', 'viewMatches');
+    if (tab === 'season') practice.advance('viewMatches', 'viewSeason');
+    setActiveTab(tab);
+    setPage(0);
+  };
 
   // "기록은 영원히 남는다"를 실제로 쓰는지 보려면 지난 시즌을 조회한 순간을 세야 한다 (§10).
   // season_key는 월간 시절 이벤트(2026-09)와 같은 축으로 묶어 보려고 같이 남긴다 (plan-season-reset §10).
@@ -157,6 +172,7 @@ const Invite = () => {
       if (activeTab !== 'group') handleTabChange('group');
       // Point at the rows the user must act on: too few → the empty ones,
       // too many → the ones already picked.
+      roomPractice.markTriedEarly();
       setNudge(overMax ? 'deselect' : 'select');
       setTimeout(() => setNudge(null), 1400);
       requestAnimationFrame(() => {
@@ -164,6 +180,7 @@ const Invite = () => {
       });
       return;
     }
+    practice.advance('startGame', 'score');
     navigate(`/score-sheet/${roomInfo.boardGameId}`, {
       state: {
         roomId,
@@ -188,12 +205,22 @@ const Invite = () => {
       ? 'calc(100px + env(safe-area-inset-bottom))'
       : 'calc(28px + env(safe-area-inset-bottom))' }}>
 
-      <InviteHeader onBack={() => navigate('/lobby')} title={t('invite', 'lobbyTitle')} />
+      <InviteHeader
+        onBack={practice.at('viewSeason') ? () => { practice.advance('viewSeason', 'lobby'); navigate('/lobby'); } : practice.back(() => navigate('/lobby'))}
+        title={t('invite', 'lobbyTitle')}
+        highlightBack={practice.at('viewSeason')}
+      />
+
+      <PracticeBand t={t} />
 
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
 
+        {practice.at('viewSeason') && (
+          <CoachNote title={t('practice', 'seasonTitle')} desc={t('practice', 'seasonDesc')} arrow="up" arrowLeft={14} />
+        )}
+
         {/* Board Game Card */}
-        {roomInfo.boardGameId && <GameCard gameInfo={gameInfo} />}
+        {roomInfo.boardGameId && <GameCard gameInfo={gameInfo} highlightPlayers={roomPractice.highlightPlayers} />}
 
         {/* Stats Card */}
         <StatsCard
@@ -206,19 +233,46 @@ const Invite = () => {
           t={t}
         />
 
+        {roomPractice.startNote && <CoachNote title={roomPractice.startNote.title} desc={roomPractice.startNote.desc} />}
+
         {/* Players section */}
         <div>
           <MembersSectionHeader
             title={t('invite', 'members')}
             showShare={!!myRank}
             shareCopied={sharedCopiedKind === 'my_rank'}
-            onShare={shareMyRank}
-            onOpenSettings={room.openSettings}
+            onShare={practice.block(shareMyRank)}
+            onOpenSettings={practice.block(room.openSettings)}
           />
 
-          <RoomTabs activeTab={activeTab} onChange={handleTabChange} t={t} />
+          <RoomTabs
+            activeTab={activeTab}
+            onChange={handleTabChange}
+            highlightTab={roomPractice.highlightTab}
+            t={t}
+          />
 
-          {matchResult && activeTab === 'group' && (
+          {practice.at('viewRanking') && (
+            <CoachNote
+              title={t('practice', 'rankingTitle')}
+              desc={roomPractice.rankingDesc}
+              arrow="up"
+              arrowLeft={160}
+              style={{ marginBottom: 12 }}
+            />
+          )}
+          {practice.at('viewMatches') && activeTab === 'matches' && (
+            <CoachNote
+              title={t('practice', 'matchesTitle')}
+              desc={t('practice', 'matchesDesc')}
+              arrow="up"
+              arrowLeft={270}
+              style={{ marginBottom: 12 }}
+            />
+          )}
+
+          {/* 연습은 결과를 말풍선으로 알려 준다 — 같은 내용의 배너는 뺀다 */}
+          {matchResult && activeTab === 'group' && !practice.active && (
             <MatchResultBanner
               matchResult={matchResult}
               chip={isChip}
@@ -254,9 +308,9 @@ const Invite = () => {
               myUserId={userId}
               communityTimezone={communityTimezone}
               isHost={isHost}
-              onView={handleViewMatch}
-              onEdit={handleEditMatch}
-              onDelete={handleDeleteMatch}
+              onView={practice.block(handleViewMatch)}
+              onEdit={practice.block(handleEditMatch)}
+              onDelete={practice.block(handleDeleteMatch)}
               chip={isChip}
               t={t}
             />
@@ -289,7 +343,7 @@ const Invite = () => {
                 onShowRatingInfo={() => setShowRatingInfo(true)}
                 t={t}
               />
-              <div ref={rankingListRef}>
+              <div ref={rankingListRef} style={roomPractice.highlightList ? { borderRadius: 16, padding: 8, margin: '0 -8px', ...practiceRing(true) } : undefined}>
                 <RankingTable
                   pagedRankings={pagedRankings}
                   page={page}
@@ -297,7 +351,8 @@ const Invite = () => {
                   totalPages={totalPages}
                   myUserId={userId}
                   isHost={isHost}
-                  onEditRating={isChip ? undefined : room.handleOpenRatingEdit}
+                  // 연습에선 점수 직접 수정(연필)을 숨긴다 — 저장할 수 없고 캔버스에도 없다
+                  onEditRating={isChip || practice.active ? undefined : room.handleOpenRatingEdit}
                   PAGE_SIZE={PAGE_SIZE}
                   selectedPlayers={selectedPlayers}
                   onToggle={isMember ? togglePlayer : undefined}
@@ -306,6 +361,7 @@ const Invite = () => {
                   championIds={championIds}
                   scoreLabel={isChip ? t('ranking', 'chipHolding') : t('season', 'seasonScore')}
                   chip={isChip}
+                  exampleMemberIds={practice.active ? EXAMPLE_FRIEND_IDS : undefined}
                 />
               </div>
             </>
@@ -321,10 +377,11 @@ const Invite = () => {
           onJoin={room.handleJoinRoom}
           isJoining={room.isJoiningRoom}
           joinDisabled={room.isJoiningRoom || !roomInfo.inviteCode}
-          onStart={handleStartGame}
+          onStart={() => practice.block(handleStartGame, 'startGame')()}
           canStart={canStart}
           overMax={overMax}
           label={startLabel}
+          highlight={roomPractice.highlightStart}
           t={t}
         />
       )}

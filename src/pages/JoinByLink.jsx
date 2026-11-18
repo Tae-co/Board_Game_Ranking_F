@@ -8,7 +8,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
 
-const JoinByQR = () => {
+const JoinByLink = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -124,4 +124,4 @@ const JoinByQR = () => {
   );
 };
 
-export default JoinByQR;
+export default JoinByLink;
