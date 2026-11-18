@@ -11,8 +11,8 @@ export const useRoomPractice = ({ selectedCount, canStart, overMax, minPlayers, 
   const starting = practice.at('startGame');
   const [triedEarly, setTriedEarly] = useState(false);
 
-  const fill = (s) => s.replace('{min}', minPlayers).replace('{max}', maxPlayers)
-    .replace('{n}', minPlayers - selectedCount).replace('{count}', selectedCount).replace('{over}', maxPlayers + 1);
+  const fill = (s) => s.replaceAll('{min}', minPlayers).replaceAll('{max}', maxPlayers)
+    .replaceAll('{n}', minPlayers - selectedCount).replaceAll('{count}', selectedCount).replaceAll('{over}', maxPlayers + 1);
   const startKey = canStart ? 'startReady'
     : overMax ? 'startOver'
       : triedEarly && selectedCount > 0 ? 'startTooFew'
