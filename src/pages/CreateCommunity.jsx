@@ -94,7 +94,7 @@ const CreateCommunity = () => {
             </span>
           </div>
           <div
-            onClick={() => navigate('/profile')}
+            onClick={practice.block(() => navigate('/profile'))}
             style={{
               width: 36, height: 36, borderRadius: '50%',
               backgroundColor: 'var(--th-primary)', color: '#fff',
