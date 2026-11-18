@@ -22,6 +22,8 @@ import CreateCommunityBanner from '../components/community/CreateCommunityBanner
 import { getNickname, getAuthUserId, getRole } from '../auth/storage';
 import { enterCommunity, setMyCommunity, removeMyCommunity, sortByRecentVisit, getPendingStoreTicket, getLobbyFocus, setLobbyFocus as saveLobbyFocus, getSelectedCommunity, removeSelectedCommunity } from '../utils/storage';
 import { useApiErrorMessage } from '../hooks/useApiErrorMessage';
+import { usePractice } from '../practice/usePractice';
+import PracticeIntroSheet from '../components/practice/PracticeIntroSheet';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -45,6 +47,8 @@ const CommunityLobby = () => {
   const [showJoinInput, setShowJoinInput] = useState(false);
   const [lobbyFocus, setLobbyFocus] = useState(getLobbyFocus);
   const [leavingCommunity, setLeavingCommunity] = useState(null);
+  const [showPracticeIntro, setShowPracticeIntro] = useState(false);
+  const practice = usePractice();
 
   // 매장 QR을 찍고 로그인하러 갔다가(네이티브 OAuth는 redirectAfterLogin 없이 여기로 온다) 돌아오면 가입·체크인을 이어 간다
   useEffect(() => {
@@ -230,7 +234,13 @@ const CommunityLobby = () => {
             t={t}
           />
         ) : isFirstVisit ? (
-          <FirstVisitChoices onCreate={() => navigate('/create-community')} onJoin={openJoinInput} onChooseStore={chooseStoreFocus} t={t} />
+          <FirstVisitChoices
+            onCreate={() => navigate('/create-community')}
+            onJoin={openJoinInput}
+            onChooseStore={chooseStoreFocus}
+            onPractice={() => setShowPracticeIntro(true)}
+            t={t}
+          />
         ) : (<>
         {/* 내 매장 · 입점 매장 (시안 1). 커뮤니티 목록 위 */}
         <MyStoreSection lang={lang} t={t} />
@@ -318,6 +328,13 @@ const CommunityLobby = () => {
         )}
 
       </div>
+      {showPracticeIntro && (
+        <PracticeIntroSheet
+          onStart={() => { setShowPracticeIntro(false); practice.start(); }}
+          onClose={() => setShowPracticeIntro(false)}
+          t={t}
+        />
+      )}
       {leavingCommunity && (
         <LeaveConfirmModal
           title={t('community', 'leaveTitle').replace('{name}', leavingCommunity.name)}

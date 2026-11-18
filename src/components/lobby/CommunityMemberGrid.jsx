@@ -5,12 +5,13 @@ import { useSwipePaging } from '../../hooks/useSwipePaging';
 import StorageImage from '../StorageImage';
 import DiceAvatar from '../shared/DiceAvatar';
 import PageNumbers from './PageNumbers';
+import ExampleBadge from '../practice/ExampleBadge';
 
 const MEMBERS_PER_PAGE = 15; // 5열 × 3행
 const AVATAR_COLORS = ['#6B5CE7','#F5A623','#22c55e','#3B82F6','#EF4444','#EC4899','#14B8A6','#F97316'];
 
-/** 커뮤니티 로비 아래 멤버 목록 (15명씩 페이지). 어드민에게는 멤버 관리 톱니바퀴가 보인다. */
-const CommunityMemberGrid = ({ members, userId, isAdmin, onManage, t }) => {
+/** 커뮤니티 로비 아래 멤버 목록 (15명씩 페이지). 어드민에게는 멤버 관리 톱니바퀴가 보인다. exampleMemberIds: 연습의 예시 친구 */
+const CommunityMemberGrid = ({ members, userId, isAdmin, onManage, exampleMemberIds, t }) => {
   const [page, setPage] = useState(0);
   const totalPages = Math.ceil(members.length / MEMBERS_PER_PAGE);
   const swipe = useSwipePaging(page, totalPages, setPage);
@@ -85,6 +86,7 @@ const CommunityMemberGrid = ({ members, userId, isAdmin, onManage, t }) => {
                   }}>
                     {member.nickname}
                   </span>
+                  {exampleMemberIds?.includes(member.memberId) && <ExampleBadge t={t} />}
                 </div>
               );
             })}

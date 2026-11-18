@@ -1,11 +1,12 @@
 import { Star, ChevronRight } from 'lucide-react';
 import { V } from '../../utils/cssUtils';
+import { practiceRing } from '../practice/practiceRing';
 
 /**
  * 모임 현황(/season) 들어가는 카드 — 커뮤니티 모드에서만. 방마다 시즌이 달라서 커뮤니티는 전체 기간으로 본다 (plan-season-reset §22).
  * 공유자가 많을수록 카드가 많이 나가므로 어드민만이 아니라 멤버 전원에게 보인다.
  */
-const SeasonEntryCard = ({ onClick, t }) => (
+const SeasonEntryCard = ({ onClick, highlight = false, t }) => (
   <button
     onClick={onClick}
     style={{
@@ -15,6 +16,7 @@ const SeasonEntryCard = ({ onClick, t }) => (
       backgroundColor: V('--th-card'),
       border: `1px solid var(--th-border)`,
       boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+      ...practiceRing(highlight, { pulse: true }),
     }}
   >
     <div style={{

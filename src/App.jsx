@@ -11,6 +11,7 @@ import { useRouteTracking } from './hooks/useRouteTracking';
 import { LanguageProvider, useLanguage } from './i18n/LanguageContext';
 import { ThemeProvider } from './theme/ThemeContext';
 import { DEVICE_MODE_CHANGED_EVENT, getDeviceToken } from './utils/storage';
+import { PracticeProvider } from './practice/PracticeContext';
 
 import './App.css';
 
@@ -21,11 +22,10 @@ const ScoreSheet = lazy(() => import('./pages/ScoreSheet'));
 const Profile = lazy(() => import('./pages/Profile'));
 const Admin = lazy(() => import('./pages/Admin'));
 const OAuthCallback = lazy(() => import('./pages/OAuthCallback'));
-const JoinByQR = lazy(() => import('./pages/JoinByQR'));
+const JoinByLink = lazy(() => import('./pages/JoinByLink'));
 const CreateGroup = lazy(() => import('./pages/CreateGroup'));
 const CommunityLobby = lazy(() => import('./pages/CommunityLobby'));
 const CreateCommunity = lazy(() => import('./pages/CreateCommunity'));
-const InviteFriends = lazy(() => import('./pages/InviteFriends'));
 const CommunitySettings = lazy(() => import('./pages/CommunitySettings'));
 const CommunityMemberManage = lazy(() => import('./pages/CommunityMemberManage'));
 const SeasonSummary = lazy(() => import('./pages/SeasonSummary'));
@@ -49,6 +49,8 @@ const StoreContest = lazy(() => import('./pages/StoreContest'));
 const StoreContestConfirm = lazy(() => import('./pages/StoreContestConfirm'));
 const StoreDevice = lazy(() => import('./pages/StoreDevice'));
 const PartyBubble = lazy(() => import('./components/store/PartyBubble'));
+const Help = lazy(() => import('./pages/Help'));
+const HelpTopic = lazy(() => import('./pages/HelpTopic'));
 
 // 라우트 진입 계측. useLocation을 쓰므로 BrowserRouter 안에 있어야 한다.
 const RouteTracker = ({ isAuthenticated }) => {
@@ -240,6 +242,7 @@ function App() {
     <ThemeProvider>
     <LanguageProvider>
     <BrowserRouter>
+    <PracticeProvider>
       <RouteTracker isAuthenticated={isAuthenticated} />
       <DeepLinkHandler />
       <ScrollToTop />
@@ -260,13 +263,14 @@ function App() {
             <Route path="/lobby" element={isAuthenticated ? <Lobby /> : <Navigate to="/login" replace />} />
             <Route path="/create-group" element={isAuthenticated ? <CreateGroup /> : <Navigate to="/login" replace />} />
             <Route path="/create-community" element={isAuthenticated ? <CreateCommunity /> : <Navigate to="/login" replace />} />
-            <Route path="/invite-friends" element={isAuthenticated ? <InviteFriends /> : <Navigate to="/login" replace />} />
             <Route path="/manage-community" element={isAuthenticated ? <CommunitySettings /> : <Navigate to="/login" replace />} />
             <Route path="/community-members" element={isAuthenticated ? <CommunityMemberManage /> : <Navigate to="/login" replace />} />
             <Route path="/profile" element={isAuthenticated ? <Profile /> : <Navigate to="/login" replace />} />
             <Route path="/invite/:roomId" element={isAuthenticated ? <Invite /> : <Navigate to="/login" replace />} />
             <Route path="/score-sheet/:boardGameId" element={isAuthenticated ? <ScoreSheet /> : <Navigate to="/login" replace />} />
             <Route path="/season" element={isAuthenticated ? <SeasonSummary /> : <Navigate to="/login" replace />} />
+            <Route path="/help" element={isAuthenticated ? <Help /> : <Navigate to="/login" replace />} />
+            <Route path="/help/:topic" element={isAuthenticated ? <HelpTopic /> : <Navigate to="/login" replace />} />
 
             {/* 매장 (plan-store-impl-p1 §4.1). /s/:storeId는 로그인 전에도 QR을 확인해야 해서 가드 없이 페이지 안에서 처리 */}
             <Route path="/s/:storeId" element={<StoreEntry />} />
@@ -290,8 +294,8 @@ function App() {
             {/* 4j 매장 기기로 쓰기 — 로그인 없이 (기기 토큰을 받으면 위의 기기 모드로 바뀐다) */}
             <Route path="/device" element={<StoreDevice />} />
 
-            {/* QR 코드 초대 링크 */}
-            <Route path="/join" element={<JoinByQR />} />
+            {/* 초대 링크 참가 확인 */}
+            <Route path="/join" element={<JoinByLink />} />
 
             {/* OAuth2 콜백 */}
             <Route path="/oauth-callback" element={<OAuthCallback />} />
@@ -305,6 +309,7 @@ function App() {
           {isAuthenticated && !isAdmin && <PartyBubble />}
         </Suspense>
       </div>
+    </PracticeProvider>
     </BrowserRouter>
     </LanguageProvider>
     </ThemeProvider>

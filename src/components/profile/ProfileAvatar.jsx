@@ -11,13 +11,13 @@ const menuButton = {
 
 /**
  * 프로필 사진 동그라미. 사진·카메라 버튼을 누르면 [사진 변경 / 기본으로] 메뉴가 열린다.
- * 오른쪽 아래 연필은 닉네임 바꾸기 토글.
+ * 오른쪽 아래 연필은 닉네임 바꾸기 토글. guard로 메뉴 열기를 막을 수 있다(연습 중).
  * storeMode(프로필 매장 탭)는 사진을 쓰지 않고 늘 기본(주사위) 프로필 — 사진 메뉴·카메라 버튼도 없다.
  */
-const ProfileAvatar = ({ profileImage, avatarColor, storeMode, isUploading, onPhotoSelect, onResetPhoto, onToggleNicknameEdit, t }) => {
+const ProfileAvatar = ({ profileImage, avatarColor, storeMode, isUploading, onPhotoSelect, onResetPhoto, onToggleNicknameEdit, guard = (fn) => fn, t }) => {
   const [showMenu, setShowMenu] = useState(false);
   const fileInputRef = useRef(null);
-  const toggleMenu = () => setShowMenu(v => !v);
+  const toggleMenu = guard(() => setShowMenu(v => !v));
 
   return (
     <div style={{ position: 'relative' }}>

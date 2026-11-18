@@ -1,18 +1,32 @@
 // App-level localStorage helpers (auth keys are in auth/storage.js)
+import { isPracticeActive } from '../practice/practiceState';
+
+// 연습 중에는 커뮤니티 관련 값을 메모리에만 둔다 — 연습이 끝나거나 새로고침하면 실제 값이 그대로 남아 있다
+const practiceMemory = new Map();
+const readItem = (key) => (isPracticeActive() ? practiceMemory.get(key) ?? null : localStorage.getItem(key));
+const writeItem = (key, value) => {
+  if (isPracticeActive()) practiceMemory.set(key, value);
+  else localStorage.setItem(key, value);
+};
+const deleteItem = (key) => {
+  if (isPracticeActive()) practiceMemory.delete(key);
+  else localStorage.removeItem(key);
+};
+export const clearPracticeMemory = () => practiceMemory.clear();
 
 const SELECTED_COMMUNITY_KEY = 'selectedCommunity';
 const MY_COMMUNITY_KEY = 'myCommunity';
 const PROFILE_IMAGE_KEY = 'profileImage';
 
 export const getSelectedCommunity = () => {
-  try { return JSON.parse(localStorage.getItem(SELECTED_COMMUNITY_KEY)); } catch { return null; }
+  try { return JSON.parse(readItem(SELECTED_COMMUNITY_KEY)); } catch { return null; }
 };
 
 export const setSelectedCommunity = (community) => {
   if (community == null) {
-    localStorage.removeItem(SELECTED_COMMUNITY_KEY);
+    deleteItem(SELECTED_COMMUNITY_KEY);
   } else {
-    localStorage.setItem(SELECTED_COMMUNITY_KEY, JSON.stringify(community));
+    writeItem(SELECTED_COMMUNITY_KEY, JSON.stringify(community));
   }
 };
 
@@ -49,23 +63,23 @@ export const consumePendingRedirect = () => {
 };
 
 export const removeSelectedCommunity = () => {
-  localStorage.removeItem(SELECTED_COMMUNITY_KEY);
+  deleteItem(SELECTED_COMMUNITY_KEY);
 };
 
 export const getMyCommunity = () => {
-  try { return JSON.parse(localStorage.getItem(MY_COMMUNITY_KEY)); } catch { return null; }
+  try { return JSON.parse(readItem(MY_COMMUNITY_KEY)); } catch { return null; }
 };
 
 export const setMyCommunity = (community) => {
   if (community == null) {
-    localStorage.removeItem(MY_COMMUNITY_KEY);
+    deleteItem(MY_COMMUNITY_KEY);
   } else {
-    localStorage.setItem(MY_COMMUNITY_KEY, JSON.stringify(community));
+    writeItem(MY_COMMUNITY_KEY, JSON.stringify(community));
   }
 };
 
 export const removeMyCommunity = () => {
-  localStorage.removeItem(MY_COMMUNITY_KEY);
+  deleteItem(MY_COMMUNITY_KEY);
 };
 
 export const getProfileImage = () => localStorage.getItem(PROFILE_IMAGE_KEY);
@@ -85,13 +99,13 @@ export const removeProfileImage = () => {
 const COMMUNITY_VISIT_KEY = 'communityVisitOrder';
 
 export const getCommunityVisitOrder = () => {
-  try { return JSON.parse(localStorage.getItem(COMMUNITY_VISIT_KEY)) || {}; } catch { return {}; }
+  try { return JSON.parse(readItem(COMMUNITY_VISIT_KEY)) || {}; } catch { return {}; }
 };
 
 export const recordCommunityVisit = (communityId) => {
   const order = getCommunityVisitOrder();
   order[communityId] = Date.now();
-  localStorage.setItem(COMMUNITY_VISIT_KEY, JSON.stringify(order));
+  writeItem(COMMUNITY_VISIT_KEY, JSON.stringify(order));
 };
 
 export const sortByRecentVisit = (communities) => {

@@ -5,6 +5,7 @@ import { getAvatarColorById } from '../../utils/avatarUtils';
 import { V } from '../../utils/cssUtils';
 import { useLanguage } from '../../i18n/LanguageContext';
 import { formatChipDelta, chipDeltaColor } from '../../utils/chipUtils';
+import ExampleBadge from '../practice/ExampleBadge';
 
 // championIds = 직전 시즌 1위들(동점 가능). 금관은 1등만 붙인다 — 2·3등까지 달면
 // 테이블이 배지 밭이 되어 정작 현재 순위가 안 읽힌다 (기획 §4).
@@ -16,7 +17,7 @@ const avgPlace = (counts) => {
   return (counts.reduce((sum, c, i) => sum + c * (i + 1), 0) / total).toFixed(1);
 };
 
-const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING', showAvgPlace = false, chip = false }) => {
+const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHost, onEditRating, PAGE_SIZE, selectedPlayers, onToggle, highlightMemberId, nudge, championIds, scoreLabel = 'RATING', showAvgPlace = false, chip = false, exampleMemberIds }) => {
   const { t } = useLanguage();
   const touchStartX = useRef(null);
   // 순위 분포 칸 수를 표 전체에서 맞춘다. 4인전 방이면 모든 행이 1~4등을 같은 자리에 보여준다
@@ -100,9 +101,12 @@ const RankingTable = ({ pagedRankings, page, setPage, totalPages, myUserId, isHo
             </div>
             <InitialAvatar nickname={rank.nickname} profileImage={rank.profileImage} size={28} color={getAvatarColorById(rank.memberId)} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 13, fontWeight: isMe || isSelected ? 700 : 500, color: isMe || isSelected ? 'var(--th-primary)' : V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {championIds?.has(rank.memberId) && <Crown size={13} color="#F59E0B" fill="#FFD700" strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: '-2px' }} />}
-                {rank.nickname}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
+                <div style={{ fontSize: 13, fontWeight: isMe || isSelected ? 700 : 500, color: isMe || isSelected ? 'var(--th-primary)' : V('--th-text'), overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {championIds?.has(rank.memberId) && <Crown size={13} color="#F59E0B" fill="#FFD700" strokeWidth={2.2} style={{ marginRight: 3, verticalAlign: '-2px' }} />}
+                  {rank.nickname}
+                </div>
+                {exampleMemberIds?.includes(rank.memberId) && <ExampleBadge t={t} />}
               </div>
               {isUnranked ? (
                 <div style={{ fontSize: 10, color: V('--th-text-sub'), fontWeight: 600, letterSpacing: '0.05em' }}>{t('ranking', 'unranked')}</div>

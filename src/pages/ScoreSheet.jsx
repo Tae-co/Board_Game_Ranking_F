@@ -21,6 +21,9 @@ import ChipTable from '../scoreSheets/components/ChipTable';
 import ChipCountTable from '../scoreSheets/components/ChipCountTable';
 import { buyInResults, chipModeOf, chipDenominationsOf, chipCountTotal, formatChipDelta } from '../utils/chipUtils';
 import { buildParticipants, computeTotals } from '../scoreSheets/submitPayload';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
 
 /**
  * storeMode가 있으면 매장 판 점수판 (plan-store 3d·3e·3f·3k): 플레이어·저장을 매장 쪽이 넘기고,
@@ -34,6 +37,8 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t, lang } = useLanguage();
+  const practice = usePractice();
+  const inPractice = practice.at('score');
   const queryClient = useQueryClient();
   const { players = [], roomId, gameName = '', editMatchId = null, savedScores = null, readOnly = false, backTo = null, backState = null, previewMode = false, schemaJson = null } = storeMode ?? location.state ?? {};
 
@@ -232,6 +237,7 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
         queryClient.invalidateQueries({ queryKey: ['currentSeason'] }),
         queryClient.invalidateQueries({ queryKey: ['roomSeasons'] }),
       ]);
+      practice.advance('score', 'viewRanking');
       navigate(`/invite/${roomId}`, { state: { matchResult: res }, replace: true });
     } catch (err) {
       // 403: 참가자나 내가 그사이 방을 나갔다 (서버: 방 멤버가 아닌 참가자는 등록할 수 없음)
@@ -242,13 +248,13 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
     }
   };
 
-  const handleBack = () => {
+  const handleBack = practice.back(() => {
     if (backTo) {
       navigate(backTo, { state: backState });
       return;
     }
     navigate(-1);
-  };
+  });
 
   if (!players.length) {
     return (
@@ -295,6 +301,17 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
       </div>
       )}
       {storeMode?.top}
+
+      <PracticeBand t={t} />
+
+      {inPractice && (
+        <CoachNote
+          title={t('practice', 'scoreTitle')}
+          desc={t('practice', 'scoreDesc')}
+          arrow="down"
+          style={{ margin: '16px 16px 0' }}
+        />
+      )}
 
       {/* 순위 입력 모드 토글 (supportsRankMode 게임만) */}
       {currentSchema?.supportsRankMode && !readOnly && (
@@ -387,11 +404,21 @@ const ScoreSheet = ({ storeMode = null } = {}) => {
         lang={lang}
       />}
 
+      {inPractice && (
+        <CoachNote
+          title={t('practice', 'submitTitle')}
+          desc={t('practice', 'submitDesc')}
+          arrow="down"
+          arrowLeft={170}
+          style={{ margin: '16px 16px 0' }}
+        />
+      )}
+
       {/* Bottom Fixed Button */}
       {storeMode?.after}
       {storeMode && storeMode.renderBottom({ submit: handleSubmit, isSubmitting })}
       {!storeMode && !readOnly && !previewMode && (
-        <SubmitBar onSubmit={handleSubmit} isSubmitting={isSubmitting} isEdit={!!editMatchId} t={t} />
+        <SubmitBar onSubmit={handleSubmit} isSubmitting={isSubmitting} isEdit={!!editMatchId} highlight={inPractice} t={t} />
       )}
 
       {/* 과학 모달 */}

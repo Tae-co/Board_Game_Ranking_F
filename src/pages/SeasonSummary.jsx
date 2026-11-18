@@ -10,6 +10,9 @@ import { useSelectedCommunity } from '../hooks/useSelectedCommunity';
 import { useLanguage } from '../i18n/LanguageContext';
 import { V } from '../utils/cssUtils';
 import { fill } from '../utils/seasonUtils';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
 
 // html2canvas(원본 400KB)는 저장·공유 때만 쓴다. 화면을 먼저 그리고 뒤에서 받아 둔다 —
 // 누른 뒤에 받기 시작하면 느린 망에서 iOS navigator.share가 사용자 동작 만료로 거절될 수 있다.
@@ -24,6 +27,7 @@ const SeasonSummary = () => {
   const { t } = useLanguage();
   const { selectedCommunity } = useSelectedCommunity();
   const communityId = selectedCommunity?.communityId ?? null;
+  const practice = usePractice();
 
   const cardRef = useRef(null);
   const [busy, setBusy] = useState(false);
@@ -131,7 +135,7 @@ const SeasonSummary = () => {
       <div style={{ position: 'sticky', top: 0, zIndex: 10, backgroundColor: V('--th-nav-bg'), borderBottom: `1px solid var(--th-border)` }}>
         <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
           <button
-            onClick={() => navigate('/lobby')}
+            onClick={practice.back(() => navigate('/lobby'))}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <ArrowLeft size={22} color="var(--th-primary)" />
@@ -143,7 +147,19 @@ const SeasonSummary = () => {
         </div>
       </div>
 
+      <PracticeBand t={t} />
+
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 40px' }}>
+
+        {practice.at('hallOfFame') && (
+          <CoachNote
+            title={t('practice', 'hallTitle')}
+            desc={t('practice', 'hallDesc')}
+            arrow="up"
+            arrowLeft={326}
+            style={{ marginBottom: 20 }}
+          />
+        )}
 
         {loading ? (
           <div style={{ height: 420, borderRadius: 20, backgroundColor: V('--th-card'), border: `1px solid var(--th-border)` }} />
@@ -155,7 +171,7 @@ const SeasonSummary = () => {
 
             <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
               <button
-                onClick={handleShare}
+                onClick={practice.block(handleShare)}
                 disabled={busy}
                 style={{
                   flex: 1, padding: '14px 16px', borderRadius: 14, border: 'none',
@@ -169,7 +185,7 @@ const SeasonSummary = () => {
                 {busy ? t('season', 'sharing') : t('season', 'share')}
               </button>
               <button
-                onClick={handleSave}
+                onClick={practice.block(handleSave)}
                 disabled={busy}
                 style={{
                   padding: '14px 16px', borderRadius: 14, cursor: busy ? 'default' : 'pointer',

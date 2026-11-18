@@ -1,0 +1,51 @@
+// How to use (Profile → Help → How to use)
+const help = {
+  title: 'How to use',
+  listTitle: 'What would you like to do?',
+  listDesc: 'Follow the steps in order to reach your first game record.',
+  steps: '{n} steps',
+  practice: 'Try practice',
+
+  startTitle: 'Getting started',
+  startDesc: 'Make a community and record your first game',
+  startIntro: 'A community is the group you play with. A game room keeps its own ranking for each game.',
+  start1Title: 'Make a community',
+  start1Desc: 'On the community home, tap + next to "My community" and pick a name and region.',
+  start2Title: 'Make a game room',
+  start2Desc: 'In the group lobby, tap + next to "Game rooms" and pick a game.',
+  start3Title: 'Friends join the game room',
+  start3Desc: 'Friends tap that game room and press "Join".',
+  start4Title: 'Start a game',
+  start4Desc: 'Check who is playing and press "Start game".',
+  start5Title: 'Record scores',
+  start5Desc: 'When the game ends, enter scores and press "Apply to ranking".',
+
+  invitedTitle: 'I got invited',
+  invitedDesc: 'Join with an invite code and enter a game room',
+  invitedIntro: 'How to join a group with the invite code or link from a friend.',
+  invited1Title: 'Get the invite code',
+  invited1Desc: 'Get the invite code or invite link from the friend who made the group.',
+  invited2Title: 'Join the group',
+  invited2Desc: 'On the community home, tap + next to "Joined communities" and enter the code, or open the link.',
+  invited3Title: 'Join a game room',
+  invited3Desc: 'In the group lobby, tap the game room you will play and press "Join".',
+  invited4Title: 'Record together',
+  invited4Desc: 'Once you are a room member you can be checked for a game, and scores go to the ranking.',
+
+  inviteTitle: 'Invite more friends',
+  inviteDesc: 'Bring friends into a community you already have',
+  inviteIntro: 'How to bring friends into a community you already have.',
+  invite1Title: 'Find the invite code',
+  invite1Desc: 'The invite code is at the bottom right of the group lobby photo. Community settings show it too.',
+  invite2Title: 'Share the code',
+  invite2Desc: 'Tap the code to show it large. Tap the icon next to it to copy.',
+  invite3Title: 'Friends join',
+  invite3Desc: 'Friends tap + next to "Joined communities" on the community home and enter the code, or open the link.',
+  invite4Title: 'Join game rooms too',
+  invite4Desc: 'Once in, friends tap a game room and press "Join" to record together.',
+
+  scoreTitle: 'How do scores change?',
+  scoreDesc: 'How ranking points change when you win or lose',
+};
+
+export default help;

@@ -17,8 +17,13 @@ import SeasonEntryCard from '../components/lobby/SeasonEntryCard';
 import LobbyActionCard from '../components/lobby/LobbyActionCard';
 import RoomGrid from '../components/lobby/RoomGrid';
 import CommunityMemberGrid from '../components/lobby/CommunityMemberGrid';
-import InviteQrPopup from '../components/lobby/InviteQrPopup';
+import InviteCodePopup from '../components/lobby/InviteCodePopup';
 import { EVENTS, logEvent } from '../api/services/events';
+import { usePractice } from '../practice/usePractice';
+import { EXAMPLE_FRIEND_IDS } from '../practice/practiceState';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
+import { practiceRing } from '../components/practice/practiceRing';
 
 const DiceLogo = () => (
   <img src="/logo.png" width="28" height="28" style={{ objectFit: 'contain' }} alt="logo" />
@@ -38,9 +43,12 @@ const Lobby = () => {
   const isAdmin = selectedCommunity?.isAdmin ?? false;
   const communityInviteCode = selectedCommunity?.inviteCode ?? null;
   const [codeCopied, setCodeCopied] = useState(false);
-  const [showQrPopup, setShowQrPopup] = useState(false);
+  const [showCodePopup, setShowCodePopup] = useState(false);
+  const practice = usePractice();
+  const practiceLobby = practice.at('lobby');
+  const practiceNewRoom = practice.at('newRoom');
 
-  // 초대코드·QR로 막 참가했다면 어디에 들어왔는지 한 번 알려준다.
+  // 초대코드·링크로 막 참가했다면 어디에 들어왔는지 한 번 알려준다.
   // state를 지워두지 않으면 뒤로가기로 돌아올 때마다 다시 뜬다.
   const location = useLocation();
   const [showJoinedToast, setShowJoinedToast] = useState(() => !!location.state?.justJoined);
@@ -161,7 +169,7 @@ const Lobby = () => {
       <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
         {selectedCommunity ? (
           <button
-            onClick={() => navigate('/community')}
+            onClick={practice.back(() => navigate('/community'))}
             style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}
           >
             <ArrowLeft size={22} color="var(--th-primary)" />
@@ -188,6 +196,8 @@ const Lobby = () => {
       </div>
       </div>
 
+      <PracticeBand t={t} />
+
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '20px 20px 24px' }}>
 
         {communityId ? (
@@ -195,7 +205,7 @@ const Lobby = () => {
             community={selectedCommunity}
             inviteCode={communityInviteCode}
             codeCopied={codeCopied}
-            onShowQr={() => setShowQrPopup(true)}
+            onShowCode={() => setShowCodePopup(true)}
             onCopy={copyInviteCode}
             t={t}
           />
@@ -203,7 +213,23 @@ const Lobby = () => {
           <WelcomeBanner nickname={nickname} t={t} />
         )}
 
-        {communityId && <SeasonEntryCard onClick={() => navigate('/season')} t={t} />}
+        {communityId && (
+          <SeasonEntryCard
+            onClick={practice.block(() => { practice.advance('lobby', 'hallOfFame'); navigate('/season'); }, 'lobby')}
+            highlight={practiceLobby}
+            t={t}
+          />
+        )}
+
+        {practiceLobby && (
+          <CoachNote
+            title={t('practice', 'lobbyTitle')}
+            desc={t('practice', 'lobbyDesc')}
+            arrow="up"
+            arrowLeft={160}
+            style={{ marginTop: -10, marginBottom: 24 }}
+          />
+        )}
 
         {/* Action Buttons — 커뮤니티 모드에서는 숨김 */}
         {!communityId && (
@@ -232,13 +258,15 @@ const Lobby = () => {
             {/* 커뮤니티 모드 + Admin: 그룹 생성 버튼 */}
             {communityId && isAdmin && (
               <button
-                onClick={() => navigate('/create-group')}
+                onClick={practice.block(() => { practice.advance('newRoom', 'createRoom'); navigate('/create-group'); }, 'newRoom')}
+                aria-label={t('lobby', 'createGroup')}
                 style={{
                   width: 32, height: 32, borderRadius: '50%',
                   background: 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
                   border: 'none', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   boxShadow: '0 2px 8px rgba(107,92,231,0.3)',
+                  ...practiceRing(practiceNewRoom, { pulse: true }),
                 }}
               >
                 <Plus size={16} color="#fff" />
@@ -246,26 +274,37 @@ const Lobby = () => {
             )}
           </div>
 
-          <RoomGrid rooms={rooms} games={games} communityId={communityId} onEnter={handleEnterRoom} t={t} />
+          {practiceNewRoom && (
+            <CoachNote
+              title={t('practice', 'newRoomTitle')}
+              desc={t('practice', 'newRoomDesc')}
+              arrow="up"
+              arrowLeft="calc(100% - 23px)"
+              style={{ marginBottom: 14 }}
+            />
+          )}
+
+          <RoomGrid rooms={rooms} games={games} communityId={communityId} onEnter={practice.block(handleEnterRoom)} t={t} />
         </div>
 
         {communityId && (
           <CommunityMemberGrid
             members={communityMembers}
+            exampleMemberIds={practice.active ? EXAMPLE_FRIEND_IDS : undefined}
             userId={userId}
             isAdmin={isAdmin}
-            onManage={() => navigate('/community-members')}
+            onManage={practice.block(() => navigate('/community-members'))}
             t={t}
           />
         )}
       </div>
 
-      {showQrPopup && communityInviteCode && (
-        <InviteQrPopup
+      {showCodePopup && communityInviteCode && (
+        <InviteCodePopup
           inviteCode={communityInviteCode}
           codeCopied={codeCopied}
           onCopy={copyInviteCode}
-          onClose={() => setShowQrPopup(false)}
+          onClose={() => setShowCodePopup(false)}
           t={t}
         />
       )}

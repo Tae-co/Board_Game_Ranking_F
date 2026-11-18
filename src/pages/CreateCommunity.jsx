@@ -11,13 +11,20 @@ import { enterCommunity, setMyCommunity } from '../utils/storage';
 import CommunityPhotoPicker from '../components/shared/CommunityPhotoPicker';
 import CommunityInfoFields from '../components/shared/CommunityInfoFields';
 import DiceAvatar from '../components/shared/DiceAvatar';
+import { usePractice } from '../practice/usePractice';
+import PracticeBand from '../components/practice/PracticeBand';
+import CoachNote from '../components/practice/CoachNote';
+import { practiceRing } from '../components/practice/practiceRing';
 
 const CreateCommunity = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { t } = useLanguage();
+  const practice = usePractice();
+  const inPractice = practice.at('createCommunity');
 
-  const [name, setName] = useState('');
+  // 연습은 이름을 미리 채워 둔다 — 버튼만 누르면 다음으로 간다
+  const [name, setName] = useState(() => (inPractice ? t('practice', 'communityName') : ''));
   const [region, setRegion] = useState('South Korea');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -58,9 +65,10 @@ const CreateCommunity = () => {
       });
       setMyCommunity(res);
       enterCommunity(res, getAuthUserId());
+      practice.advance('createCommunity', 'newRoom');
       queryClient.invalidateQueries({ queryKey: ['myCommunitiesList'] });
-      // 혼자서는 쓸 수 없는 앱이다 — 만들자마자 친구 부르기로 이어간다
-      navigate('/invite-friends', { replace: true });
+      // 만들면 바로 로비로. 친구는 로비의 초대 코드로 부르고, 연습은 로비에서 「게임방」 옆 + 를 직접 누르게 한다
+      navigate('/lobby', { replace: true });
     } catch {
       setError(t('community', 'createFailed'));
     } finally {
@@ -76,7 +84,7 @@ const CreateCommunity = () => {
         <div style={{ maxWidth: 390, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <button
-              onClick={() => navigate(-1)}
+              onClick={practice.back(() => navigate(-1))}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
             >
               <ArrowLeft size={22} color={V('--th-primary')} />
@@ -100,7 +108,18 @@ const CreateCommunity = () => {
         </div>
       </div>
 
+      <PracticeBand t={t} />
+
       <div style={{ maxWidth: 390, margin: '0 auto', padding: '28px 20px' }}>
+
+        {inPractice && (
+          <CoachNote
+            title={t('practice', 'createCommunityTitle')}
+            desc={t('practice', 'createCommunityDesc')}
+            arrow="down"
+            style={{ marginBottom: 20 }}
+          />
+        )}
 
         <CommunityPhotoPicker imagePreview={imagePreview} onSelect={handlePhotoSelect} t={t} />
 
@@ -111,7 +130,9 @@ const CreateCommunity = () => {
           display: 'flex', flexDirection: 'column', gap: '22px',
         }}>
 
-          <CommunityInfoFields name={name} onNameChange={setName} region={region} onRegionChange={setRegion} t={t} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '22px', ...(inPractice && { borderRadius: 14, padding: 10, margin: -10, ...practiceRing(true) }) }}>
+            <CommunityInfoFields name={name} onNameChange={setName} region={region} onRegionChange={setRegion} t={t} />
+          </div>
 
           {/* Terms */}
           <p style={{ fontSize: '12px', color: V('--th-text-sub'), margin: 0, lineHeight: 1.6, textAlign: 'center' }}>
@@ -136,6 +157,7 @@ const CreateCommunity = () => {
               : 'linear-gradient(135deg, #6B5CE7 0%, #7B8FF5 100%)',
             color: '#fff', fontSize: '16px', fontWeight: '700',
             boxShadow: (isSubmitting || isUploading) ? 'none' : '0 4px 16px rgba(107,92,231,0.35)',
+            ...practiceRing(inPractice, { pulse: true }),
           }}
         >
           {isUploading ? t('common', 'imageUploading') : isSubmitting ? t('community', 'creating') : t('community', 'createCommunity')}
